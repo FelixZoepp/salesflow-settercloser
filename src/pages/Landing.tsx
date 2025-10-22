@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Check, Phone, Users, TrendingUp, Target, Zap, BarChart3, MessageSquare, Linkedin, Mail, Brain, Shield, Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import SkyBackground from "@/components/ui/SkyBackground";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -182,8 +183,11 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Sky Background with Stars */}
+      <SkyBackground starCount={250} shootingEveryMs={[3000, 8000]} enableParallax={true} />
+      
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b">
+      <nav className="fixed top-0 w-full z-50 bg-background/10 backdrop-blur-lg border-b border-white/10">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -208,10 +212,8 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section - Dark */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-gradient-to-br from-[hsl(var(--hero-dark))] via-[hsl(var(--hero-dark))] to-primary/20">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40"></div>
-        
-        <div className="container mx-auto text-center max-w-5xl relative z-10">
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+        <div className="container mx-auto text-center max-w-5xl relative z-[1]">
           <div className="inline-block mb-6 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
             <Zap className="inline h-4 w-4 mr-2" />
             Der KI-Co-Pilot für Outbound-Akquise
