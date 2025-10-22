@@ -56,6 +56,20 @@ export type Database = {
             foreignKeyName: "activities_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contact_last_activity"
+            referencedColumns: ["contact_id"]
+          },
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
@@ -121,6 +135,8 @@ export type Database = {
           owner_user_id: string | null
           phone: string | null
           source: string | null
+          stage: string | null
+          status: string | null
           tags: string[] | null
           updated_at: string
         }
@@ -134,6 +150,8 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           source?: string | null
+          stage?: string | null
+          status?: string | null
           tags?: string[] | null
           updated_at?: string
         }
@@ -147,6 +165,8 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           source?: string | null
+          stage?: string | null
+          status?: string | null
           tags?: string[] | null
           updated_at?: string
         }
@@ -213,6 +233,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contact_last_activity"
+            referencedColumns: ["contact_id"]
           },
           {
             foreignKeyName: "deals_contact_id_fkey"
@@ -303,10 +337,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      cold_call_queue: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          last_activity_at: string | null
+          last_name: string | null
+          owner_user_id: string | null
+          phone: string | null
+          source: string | null
+          stage: string | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_last_activity: {
+        Row: {
+          contact_id: string | null
+          last_activity_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      refresh_contact_last_activity: { Args: never; Returns: undefined }
     }
     Enums: {
       activity_outcome:

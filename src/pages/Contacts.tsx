@@ -17,6 +17,8 @@ interface Contact {
   phone: string | null;
   tags: string[];
   source: string | null;
+  stage: string | null;
+  status: string | null;
 }
 
 const Contacts = () => {
@@ -104,9 +106,16 @@ const Contacts = () => {
           {filteredContacts.map(contact => (
             <Card key={contact.id} className="hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">
-                  {contact.first_name} {contact.last_name}
-                </h3>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-lg">
+                    {contact.first_name} {contact.last_name}
+                  </h3>
+                  {contact.stage && (
+                    <Badge variant="outline" className="text-xs">
+                      {contact.stage}
+                    </Badge>
+                  )}
+                </div>
                 
                 {contact.company && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
