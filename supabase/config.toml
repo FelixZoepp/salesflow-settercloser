@@ -1,1 +1,16 @@
 project_id = "dxdknkeexankgtkpeuvt"
+
+[functions.power-dialer-log]
+verify_jwt = true
+
+[functions.power-dialer-next]
+verify_jwt = true
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true
+
+[functions.customer-portal]
+verify_jwt = true

@@ -12,6 +12,8 @@ import Contacts from "./pages/Contacts";
 import KPI from "./pages/KPI";
 import ActivityLog from "./pages/ActivityLog";
 import PowerDialer from "./pages/PowerDialer";
+import Billing from "./pages/Billing";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,13 +53,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
-            <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
-            <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-            <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
-            <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
-            <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
+          <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
+          <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
+          <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+          <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
+          <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
+          <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
+          <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
