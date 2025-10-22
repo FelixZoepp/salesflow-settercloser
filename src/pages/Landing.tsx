@@ -1,79 +1,178 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Phone, Users, TrendingUp, Target, Clock, BarChart3 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Check, Phone, Users, TrendingUp, Target, Zap, BarChart3, MessageSquare, Linkedin, Mail, Brain, Shield, Clock } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-fade-in");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll(".fade-on-scroll").forEach((el) => {
+      observerRef.current?.observe(el);
+    });
+
+    return () => observerRef.current?.disconnect();
+  }, []);
+
+  const challenges = [
+    { icon: Target, title: "Gute Leads, aber keine Meetings" },
+    { icon: Phone, title: "Calls enden ohne Deal" },
+    { icon: BarChart3, title: "Zu viele Tools, kein Überblick" },
+  ];
 
   const features = [
     {
-      icon: Phone,
-      title: "Power Dialer",
-      description: "Effizientes Cold Calling mit automatischer Anwahlhilfe"
+      icon: MessageSquare,
+      title: "Multi-Channel Outreach",
+      description: "Email, LinkedIn, Telefon – alles aus einer Platform koordiniert"
     },
     {
-      icon: Users,
-      title: "Kontaktmanagement",
-      description: "Zentrale Verwaltung aller Kontakte und Kundeninformationen"
+      icon: Brain,
+      title: "Live-Coach im Call",
+      description: "Einwand erkannt – passende Antwort vorgeschlagen, in Echtzeit"
     },
     {
-      icon: Target,
-      title: "Pipeline Management",
-      description: "Visualisierung und Steuerung Ihrer Sales-Pipeline"
-    },
-    {
-      icon: Clock,
-      title: "Aufgabenverwaltung",
-      description: "Nie wieder wichtige Follow-ups verpassen"
+      icon: Zap,
+      title: "Automatische Notizen",
+      description: "Deal-Erstellung im CRM nach jedem Gespräch automatisch"
     },
     {
       icon: BarChart3,
-      title: "KPI Dashboard",
-      description: "Echtzeitanalyse Ihrer Vertriebsperformance"
+      title: "Analyse-Dashboard",
+      description: "Conversion-Rate & Pipeline in Echtzeit überwachen"
     },
     {
-      icon: TrendingUp,
-      title: "Aktivitätsprotokoll",
-      description: "Lückenlose Dokumentation aller Kundeninteraktionen"
+      icon: Users,
+      title: "Team-Management",
+      description: "Alle Aktivitäten und KPIs Ihres Teams auf einen Blick"
+    },
+    {
+      icon: Shield,
+      title: "DSGVO-konform",
+      description: "Höchste Datenschutz-Standards für Ihre Kundendaten"
+    }
+  ];
+
+  const steps = [
+    {
+      number: "01",
+      title: "Lead importieren & sequenzieren",
+      description: "Importieren Sie Ihre Kontakte und starten Sie automatisierte Outreach-Kampagnen über mehrere Kanäle.",
+      icon: Users
+    },
+    {
+      number: "02",
+      title: "Gespräche führen mit Live-Coach",
+      description: "Unser KI-Coach analysiert das Gespräch in Echtzeit und gibt Ihnen passende Antworten auf Einwände.",
+      icon: Brain
+    },
+    {
+      number: "03",
+      title: "Deals gewinnen & CRM synchronisieren",
+      description: "Automatische Dokumentation und Deal-Erstellung. Alle Daten landen direkt in Ihrem CRM.",
+      icon: TrendingUp
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Michael Schmidt",
+      role: "Sales Director, TechCorp GmbH",
+      image: "/placeholder.svg",
+      quote: "Unsere Meeting-Rate stieg um 340% innerhalb von 8 Wochen. Der Live-Coach ist ein Game-Changer."
+    },
+    {
+      name: "Sarah Weber",
+      role: "Gründerin, Growth Agency",
+      image: "/placeholder.svg",
+      quote: "Endlich ein Tool, das alle Outbound-Kanäle vereint. Wir sparen 15 Stunden pro Woche."
+    },
+    {
+      name: "Thomas Müller",
+      role: "Head of Sales, Digital Solutions",
+      image: "/placeholder.svg",
+      quote: "Die Conversion-Rate hat sich verdoppelt. Das Dashboard gibt uns volle Transparenz."
+    }
+  ];
+
+  const faqs = [
+    {
+      question: "Welche Kanäle unterstützt das Tool?",
+      answer: "SalesFlow unterstützt Email, LinkedIn und Telefon – alles aus einer zentralen Platform. Sie können Multi-Channel-Sequenzen erstellen und automatisieren."
+    },
+    {
+      question: "Brauche ich spezielle Hardware?",
+      answer: "Nein, SalesFlow läuft komplett in der Cloud. Sie benötigen nur einen Browser und optional ein Headset für Telefonate."
+    },
+    {
+      question: "Wie sicher sind meine Daten?",
+      answer: "Wir sind DSGVO-konform und hosten alle Daten in Deutschland. Ihre Kundendaten werden verschlüsselt und nach höchsten Sicherheitsstandards behandelt."
+    },
+    {
+      question: "Kann ich das Tool mit meinem CRM verbinden?",
+      answer: "Ja, SalesFlow lässt sich mit allen gängigen CRM-Systemen integrieren (Salesforce, HubSpot, Pipedrive, etc.)."
+    },
+    {
+      question: "Gibt es eine Testphase?",
+      answer: "Ja, Sie können SalesFlow 14 Tage kostenlos testen – ohne Kreditkarte und ohne Verpflichtungen."
     }
   ];
 
   const plans = [
     {
-      name: "Basic",
+      name: "Starter",
       price: "340",
+      description: "Perfekt für kleine Teams",
       features: [
         "Bis zu 3 Benutzer",
+        "1.000 Kontakte",
+        "Email & LinkedIn Outreach",
         "Basis CRM-Funktionen",
-        "E-Mail Support",
-        "5GB Speicher"
+        "E-Mail Support"
       ]
     },
     {
-      name: "Pro",
+      name: "Team",
       price: "760",
       popular: true,
+      description: "Für wachsende Sales-Teams",
       features: [
         "Bis zu 10 Benutzer",
-        "Erweiterte CRM-Funktionen",
+        "10.000 Kontakte",
+        "Alle Outreach-Kanäle",
+        "Live-Coach & KI-Assistent",
         "Power Dialer",
         "Prioritäts-Support",
-        "50GB Speicher",
         "Custom Reports"
       ]
     },
     {
       name: "Enterprise",
       price: "1.430",
+      description: "Für große Organisationen",
       features: [
         "Unbegrenzte Benutzer",
-        "Alle Pro-Features",
+        "Unbegrenzte Kontakte",
+        "Alle Team-Features",
         "API-Zugang",
         "Dedizierter Support",
-        "Unbegrenzter Speicher",
         "White-Label Option",
-        "SLA Garantie"
+        "SLA Garantie",
+        "Custom Onboarding"
       ]
     }
   ];
@@ -81,63 +180,200 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b">
+      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-primary">SalesFlow</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              SalesFlow
+            </div>
+            <div className="hidden md:flex gap-8 text-sm">
+              <a href="#features" className="hover:text-primary transition-colors">Features</a>
+              <a href="#how-it-works" className="hover:text-primary transition-colors">So funktioniert's</a>
+              <a href="#pricing" className="hover:text-primary transition-colors">Preise</a>
+              <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+            </div>
             <div className="flex gap-4">
               <Button variant="ghost" onClick={() => navigate("/auth")}>
                 Anmelden
               </Button>
-              <Button onClick={() => navigate("/auth")}>
-                Kostenlos starten
+              <Button onClick={() => navigate("/auth")} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90">
+                Demo buchen
               </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto text-center max-w-4xl">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Ihr Vertriebsteam verdient bessere Tools
+      {/* Hero Section - Dark */}
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-gradient-to-br from-[hsl(var(--hero-dark))] via-[hsl(var(--hero-dark))] to-primary/20">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40"></div>
+        
+        <div className="container mx-auto text-center max-w-5xl relative z-10">
+          <div className="inline-block mb-6 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+            <Zap className="inline h-4 w-4 mr-2" />
+            Der KI-Co-Pilot für Outbound-Akquise
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white leading-tight">
+            Mehr Anrufe. <br />
+            <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Mehr Gespräche.
+            </span><br />
+            Mehr Abschlüsse.
           </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            SalesFlow vereint CRM, Power Dialer und Pipeline-Management in einer intuitiven Plattform. 
-            Steigern Sie Ihre Conversion-Rate und schließen Sie mehr Deals.
+          
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
+            SalesFlow vereint Power Dialer, CRM und KI-Coach in einer Plattform. 
+            Steigern Sie Ihre Conversion-Rate um bis zu 340%.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate("/auth")}>
-              Jetzt kostenlos testen
+          
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Button 
+              size="lg" 
+              onClick={() => navigate("/auth")}
+              className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-8 h-14 text-lg"
+            >
+              14 Tage kostenlos testen
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
-              Demo ansehen
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10 px-8 h-14 text-lg"
+            >
+              Video ansehen
             </Button>
+          </div>
+
+          <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto text-white">
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">340%</div>
+              <div className="text-sm text-gray-400">Mehr Meetings</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">15h</div>
+              <div className="text-sm text-gray-400">Zeitersparnis/Woche</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">2x</div>
+              <div className="text-sm text-gray-400">Conversion-Rate</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Challenge Section */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Kennen Sie diese Herausforderungen?
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {challenges.map((challenge, idx) => (
+              <Card key={idx} className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardHeader className="text-center">
+                  <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <challenge.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{challenge.title}</CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Alles was Sie für erfolgreichen Vertrieb brauchen
+      <section id="features" className="py-20 px-6">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              Alles was Sie für erfolgreichen <br />
+              <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+                Outbound-Vertrieb
+              </span> brauchen
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Leistungsstarke Features, die Ihr Team produktiver machen
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, idx) => (
-              <Card key={idx}>
+              <Card key={idx} className="group hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50">
                 <CardHeader>
-                  <feature.icon className="h-10 w-10 text-primary mb-2" />
-                  <CardTitle>{feature.title}</CardTitle>
+                  <div className="mb-4 h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <feature.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>{feature.description}</CardDescription>
+                  <CardDescription className="text-base">{feature.description}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="how-it-works" className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              So einfach funktioniert's
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              In 3 Schritten zu mehr Abschlüssen
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-12">
+            {steps.map((step, idx) => (
+              <div key={idx} className="relative">
+                {idx < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-20 left-full w-full h-0.5 bg-gradient-to-r from-primary to-transparent"></div>
+                )}
+                <div className="text-center">
+                  <div className="mx-auto mb-6 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-purple-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-primary/50">
+                    {step.number}
+                  </div>
+                  <div className="mb-4 h-12 w-12 mx-auto">
+                    <step.icon className="h-full w-full text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof / Testimonials */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              Das sagen unsere Kunden
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Über 500 Sales-Teams vertrauen auf SalesFlow
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, idx) => (
+              <Card key={idx} className="hover:shadow-2xl transition-all">
+                <CardHeader>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-purple-400"></div>
+                    <div>
+                      <div className="font-bold">{testimonial.name}</div>
+                      <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
                 </CardContent>
               </Card>
             ))}
@@ -146,49 +382,54 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section id="pricing" className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
               Transparent und fair
             </h2>
             <p className="text-muted-foreground text-lg">
               Wählen Sie den Plan, der zu Ihrem Team passt
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
             {plans.map((plan, idx) => (
               <Card 
                 key={idx}
-                className={plan.popular ? "border-primary shadow-lg relative" : ""}
+                className={`relative hover:scale-105 transition-all ${
+                  plan.popular ? "border-primary border-2 shadow-2xl shadow-primary/20" : ""
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                      Beliebt
+                    <span className="bg-gradient-to-r from-primary to-purple-400 text-white px-6 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      Beliebteste Wahl
                     </span>
                   </div>
                 )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>
-                    <span className="text-4xl font-bold text-foreground">
-                      €{plan.price}
-                    </span>
+                <CardHeader className="text-center pb-8">
+                  <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
+                  <CardDescription className="mb-4">{plan.description}</CardDescription>
+                  <div>
+                    <span className="text-5xl font-bold">€{plan.price}</span>
                     <span className="text-muted-foreground">/Jahr</span>
-                  </CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-4 mb-8">
                     {plan.features.map((feature, fidx) => (
                       <li key={fidx} className="flex items-start">
-                        <Check className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                        <Check className="h-5 w-5 text-primary mr-3 flex-shrink-0 mt-0.5" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   <Button 
-                    className="w-full"
+                    className={`w-full ${
+                      plan.popular 
+                        ? "bg-gradient-to-r from-primary to-purple-400 hover:opacity-90" 
+                        : ""
+                    }`}
                     variant={plan.popular ? "default" : "outline"}
                     onClick={() => navigate("/auth")}
                   >
@@ -201,29 +442,103 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 px-6">
+        <div className="container mx-auto max-w-4xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              Häufig gestellte Fragen
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Alles was Sie wissen müssen
+            </p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`} className="border-b-2">
+                <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-base">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-20 px-6 bg-gradient-to-br from-primary via-blue-500 to-purple-500 text-white">
+        <div className="container mx-auto text-center max-w-4xl fade-on-scroll">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Bereit, Ihren Vertrieb zu revolutionieren?
           </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Starten Sie noch heute und überzeugen Sie sich selbst. Keine Kreditkarte erforderlich.
+          <p className="text-xl mb-8 opacity-95">
+            Starten Sie noch heute und überzeugen Sie sich selbst. <br />
+            Keine Kreditkarte erforderlich. 14 Tage kostenlos.
           </p>
           <Button 
             size="lg" 
             variant="secondary"
             onClick={() => navigate("/auth")}
+            className="bg-white text-primary hover:bg-gray-100 shadow-2xl px-10 h-14 text-lg font-bold"
           >
-            Kostenlos testen
+            Jetzt kostenlos testen
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-6">
-        <div className="container mx-auto text-center text-muted-foreground">
-          <p>© 2025 SalesFlow. Alle Rechte vorbehalten.</p>
+      <footer className="border-t py-12 px-6 bg-background">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
+                SalesFlow
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Der KI-Co-Pilot für Ihre Outbound-Akquise
+              </p>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Produkt</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Preise</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Demo</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Updates</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Unternehmen</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-primary transition-colors">Über uns</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Karriere</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Kontakt</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Rechtliches</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-primary transition-colors">Datenschutz</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Impressum</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">AGB</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
+            <p>© 2025 SalesFlow. Alle Rechte vorbehalten.</p>
+            <div className="flex gap-6 mt-4 md:mt-0">
+              <a href="#" className="hover:text-primary transition-colors">
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a href="#" className="hover:text-primary transition-colors">
+                <Mail className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

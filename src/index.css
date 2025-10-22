@@ -50,6 +50,11 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
+    /* Modern Landing Page Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(271 91% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(200 100% 50%) 100%);
+    --hero-dark: 222 47% 11%;
+
     /* Sidebar */
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
@@ -108,6 +113,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222 47% 15%;
     --sidebar-ring: 221 83% 53%;
+    
+    /* Dark mode gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(271 91% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(200 100% 50%) 100%);
+    --hero-dark: 222 47% 8%;
   }
 }
 
