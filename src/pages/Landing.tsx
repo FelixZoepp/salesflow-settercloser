@@ -487,11 +487,11 @@ const Landing = () => {
           </div>
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, idx) => (
-              <AccordionItem key={idx} value={`item-${idx}`} className="border-b-2">
-                <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+              <AccordionItem key={idx} value={`item-${idx}`} className="border-b-2 border-white/10">
+                <AccordionTrigger className="text-lg font-semibold text-white hover:text-primary">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base">
+                <AccordionContent className="text-gray-300 text-base">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
