@@ -276,7 +276,7 @@ const Landing = () => {
       <section className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Kennen Sie diese Herausforderungen?
             </h2>
           </div>
@@ -299,11 +299,11 @@ const Landing = () => {
       <section id="features" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              Das <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">einfachste</span> Outbound-CRM <br />
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
+              Das <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">einfachste</span> Outbound-CRM <br />
               für maximalen Umsatz
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
               Speziell für Agenturen, Coaches, Berater & Dienstleister entwickelt. Kein Schnickschnack – nur was Sie wirklich brauchen.
             </p>
           </div>
@@ -329,10 +329,10 @@ const Landing = () => {
       <section id="how-it-works" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               So einfach funktioniert's
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-gray-300 text-lg">
               In 3 Schritten zu mehr Abschlüssen
             </p>
           </div>
@@ -349,8 +349,8 @@ const Landing = () => {
                   <div className="mb-4 h-12 w-12 mx-auto">
                     <step.icon className="h-full w-full text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.description}</p>
+                  <h3 className="text-xl font-bold mb-3 text-white">{step.title}</h3>
+                  <p className="text-gray-300">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -362,10 +362,10 @@ const Landing = () => {
       <section className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent">
               Das sagen unsere Kunden
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-gray-300 text-lg">
               Über 500 Agenturen, Coaches & Berater vertrauen auf SalesFlow
             </p>
           </div>
@@ -394,10 +394,10 @@ const Landing = () => {
       <section id="pricing" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
               Transparent und fair
             </h2>
-            <p className="text-muted-foreground text-lg mb-8">
+            <p className="text-gray-300 text-lg mb-8">
               Wählen Sie den Plan, der zu Ihrem Team passt
             </p>
             <div className="flex items-center justify-center gap-4">
@@ -478,10 +478,10 @@ const Landing = () => {
       <section id="faq" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-4xl fade-on-scroll">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               Häufig gestellte Fragen
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-gray-300 text-lg">
               Alles was Sie wissen müssen
             </p>
           </div>
