@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import Today from "./pages/Today";
 import Contacts from "./pages/Contacts";
 import KPI from "./pages/KPI";
+import ActivityLog from "./pages/ActivityLog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,9 +52,10 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
-          <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
-          <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-          <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
+            <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
+            <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+            <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
+            <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

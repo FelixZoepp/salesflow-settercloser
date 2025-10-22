@@ -4,31 +4,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Euro } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Calendar, Euro, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
-
-type DealStage = 'New' | 'Qualifiziert' | 'Termin gesetzt' | 'Angebot' | 'Verhandlung' | 'Gewonnen' | 'Verloren';
+import { PipelineType, getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 
 interface Deal {
   id: string;
   title: string;
-  stage: DealStage;
+  stage: string;
+  pipeline: PipelineType;
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
   contacts: { first_name: string; last_name: string } | null;
   setter: { name: string } | null;
+  closer: { name: string } | null;
 }
 
 const Pipeline = () => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activePipeline, setActivePipeline] = useState<PipelineType>('cold');
 
-  const stages: DealStage[] = ['New', 'Qualifiziert', 'Termin gesetzt', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
+  const stages = getPipelineStages(activePipeline);
 
   useEffect(() => {
     fetchDeals();
-  }, []);
+  }, [activePipeline]);
 
   const fetchDeals = async () => {
     try {
@@ -37,8 +40,10 @@ const Pipeline = () => {
         .select(`
           *,
           contacts (first_name, last_name),
-          setter:setter_id (name)
+          setter:setter_id (name),
+          closer:closer_id (name)
         `)
+        .eq('pipeline', activePipeline)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -62,9 +67,26 @@ const Pipeline = () => {
     return "";
   };
 
-  const getStageDeals = (stage: DealStage) => {
+  const getStageDeals = (stage: string) => {
     return deals.filter(deal => deal.stage === stage);
   };
+
+  const getPipelineStats = () => {
+    const total = deals.length;
+    const totalValue = deals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
+    
+    if (activePipeline === 'cold') {
+      const appointments = deals.filter(d => d.stage === 'Termin gelegt').length;
+      return { total, totalValue, appointments };
+    } else {
+      const won = deals.filter(d => d.stage === 'Abgeschlossen').length;
+      const lost = deals.filter(d => d.stage === 'Verloren').length;
+      const winRate = total > 0 ? ((won / (won + lost)) * 100).toFixed(1) : '0';
+      return { total, totalValue, won, lost, winRate };
+    }
+  };
+
+  const stats = getPipelineStats();
 
   if (loading) {
     return (
@@ -79,7 +101,7 @@ const Pipeline = () => {
   return (
     <Layout>
       <div className="p-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Pipeline</h1>
           <Button>
             <Plus className="w-4 h-4 mr-2" />
@@ -87,7 +109,45 @@ const Pipeline = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-4 overflow-x-auto">
+        {/* Pipeline Tabs */}
+        <Tabs value={activePipeline} onValueChange={(v) => setActivePipeline(v as PipelineType)} className="mb-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="cold">Kaltakquise</TabsTrigger>
+            <TabsTrigger value="setting_closing">Setter/Closer</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* KPI Badge Bar */}
+        <div className="flex gap-4 mb-6 flex-wrap">
+          <Badge variant="secondary" className="px-4 py-2 text-sm">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            {stats.total} Deals
+          </Badge>
+          <Badge variant="secondary" className="px-4 py-2 text-sm">
+            <Euro className="w-4 h-4 mr-2" />
+            €{stats.totalValue.toLocaleString()}
+          </Badge>
+          {activePipeline === 'cold' && 'appointments' in stats && (
+            <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
+              {stats.appointments} Termine gelegt
+            </Badge>
+          )}
+          {activePipeline === 'setting_closing' && 'won' in stats && (
+            <>
+              <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
+                {stats.won} Gewonnen
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]">
+                {stats.lost} Verloren
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm">
+                Win Rate: {stats.winRate}%
+              </Badge>
+            </>
+          )}
+        </div>
+
+        <div className={`grid gap-4 overflow-x-auto`} style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(280px, 1fr))` }}>
           {stages.map(stage => {
             const stageDeals = getStageDeals(stage);
             const totalAmount = stageDeals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
@@ -95,7 +155,7 @@ const Pipeline = () => {
             return (
               <div key={stage} className="min-w-[280px]">
                 <div className="mb-4">
-                  <h3 className="font-semibold mb-1">{stage}</h3>
+                  <Badge className={`${getStageColor(stage)} mb-2`}>{stage}</Badge>
                   <div className="text-sm text-muted-foreground">
                     {stageDeals.length} Deals • €{totalAmount.toLocaleString()}
                   </div>
@@ -109,6 +169,16 @@ const Pipeline = () => {
                         {deal.contacts && (
                           <p className="text-sm text-muted-foreground">
                             {deal.contacts.first_name} {deal.contacts.last_name}
+                          </p>
+                        )}
+                        {deal.setter && (
+                          <p className="text-xs text-muted-foreground">
+                            Setter: {deal.setter.name}
+                          </p>
+                        )}
+                        {deal.closer && (
+                          <p className="text-xs text-muted-foreground">
+                            Closer: {deal.closer.name}
                           </p>
                         )}
                       </CardHeader>
