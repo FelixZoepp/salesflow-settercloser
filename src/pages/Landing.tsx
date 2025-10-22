@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Check, Phone, Users, TrendingUp, Target, Zap, BarChart3, MessageSquare, Linkedin, Mail, Brain, Shield, Clock } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Landing = () => {
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [isYearly, setIsYearly] = useState(true);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -36,9 +37,19 @@ const Landing = () => {
 
   const features = [
     {
+      icon: BarChart3,
+      title: "Klare Kennzahlen",
+      description: "Conversion-Rate, Anrufquote, Pipeline-Wert – alles auf einen Blick"
+    },
+    {
+      icon: Target,
+      title: "Einfache Pipelines",
+      description: "Übersichtliche Deal-Phasen von Erstkontakt bis Abschluss – keine Komplexität"
+    },
+    {
       icon: MessageSquare,
       title: "Multi-Channel Outreach",
-      description: "Email, LinkedIn, Telefon – alles aus einer Platform koordiniert"
+      description: "Email, LinkedIn, Telefon – koordiniert aus einer Platform"
     },
     {
       icon: Brain,
@@ -47,23 +58,13 @@ const Landing = () => {
     },
     {
       icon: Zap,
-      title: "Automatische Notizen",
-      description: "Deal-Erstellung im CRM nach jedem Gespräch automatisch"
-    },
-    {
-      icon: BarChart3,
-      title: "Analyse-Dashboard",
-      description: "Conversion-Rate & Pipeline in Echtzeit überwachen"
+      title: "Automatische Dokumentation",
+      description: "Notizen & Deal-Updates automatisch – Sie konzentrieren sich aufs Verkaufen"
     },
     {
       icon: Users,
-      title: "Team-Management",
-      description: "Alle Aktivitäten und KPIs Ihres Teams auf einen Blick"
-    },
-    {
-      icon: Shield,
-      title: "DSGVO-konform",
-      description: "Höchste Datenschutz-Standards für Ihre Kundendaten"
+      title: "Perfekt für Dienstleister",
+      description: "Entwickelt für Agenturen, Coaches, Berater – nicht für komplexe Enterprise-Sales"
     }
   ];
 
@@ -135,44 +136,46 @@ const Landing = () => {
   const plans = [
     {
       name: "Starter",
-      price: "340",
-      description: "Perfekt für kleine Teams",
+      priceMonthly: "29",
+      priceYearly: "340",
+      description: "Perfekt für Solo-Dienstleister",
       features: [
-        "Bis zu 3 Benutzer",
-        "1.000 Kontakte",
-        "Email & LinkedIn Outreach",
-        "Basis CRM-Funktionen",
+        "1 Benutzer",
+        "500 Kontakte",
+        "Einfache Pipeline",
+        "Basis-Kennzahlen",
         "E-Mail Support"
       ]
     },
     {
-      name: "Team",
-      price: "760",
+      name: "Professional",
+      priceMonthly: "79",
+      priceYearly: "760",
       popular: true,
-      description: "Für wachsende Sales-Teams",
+      description: "Für Agenturen & Berater",
       features: [
-        "Bis zu 10 Benutzer",
-        "10.000 Kontakte",
+        "Bis zu 5 Benutzer",
+        "5.000 Kontakte",
         "Alle Outreach-Kanäle",
         "Live-Coach & KI-Assistent",
         "Power Dialer",
-        "Prioritäts-Support",
-        "Custom Reports"
+        "Erweiterte Kennzahlen",
+        "Prioritäts-Support"
       ]
     },
     {
       name: "Enterprise",
-      price: "1.430",
-      description: "Für große Organisationen",
+      priceMonthly: "149",
+      priceYearly: "1.430",
+      description: "Für große Teams",
       features: [
         "Unbegrenzte Benutzer",
         "Unbegrenzte Kontakte",
-        "Alle Team-Features",
+        "Alle Professional-Features",
         "API-Zugang",
-        "Dedizierter Support",
+        "Dedizierter Account Manager",
         "White-Label Option",
-        "SLA Garantie",
-        "Custom Onboarding"
+        "SLA Garantie"
       ]
     }
   ];
@@ -223,8 +226,8 @@ const Landing = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-            SalesFlow vereint Power Dialer, CRM und KI-Coach in einer Plattform. 
-            Steigern Sie Ihre Conversion-Rate um bis zu 340%.
+            Das Outbound-CRM für Agenturen, Coaches, Berater & Dienstleister. 
+            Simpel. Übersichtlich. Fokussiert auf Akquise-Erfolg.
           </p>
           
           <div className="flex gap-4 justify-center flex-wrap">
@@ -238,7 +241,7 @@ const Landing = () => {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 px-8 h-14 text-lg"
+              className="border-white/20 bg-white text-black hover:bg-white/90 px-8 h-14 text-lg"
             >
               Video ansehen
             </Button>
@@ -289,13 +292,11 @@ const Landing = () => {
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              Alles was Sie für erfolgreichen <br />
-              <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                Outbound-Vertrieb
-              </span> brauchen
+              Das <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">einfachste</span> Outbound-CRM <br />
+              für maximalen Umsatz
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Leistungsstarke Features, die Ihr Team produktiver machen
+              Speziell für Agenturen, Coaches, Berater & Dienstleister entwickelt. Kein Schnickschnack – nur was Sie wirklich brauchen.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -357,7 +358,7 @@ const Landing = () => {
               Das sagen unsere Kunden
             </h2>
             <p className="text-muted-foreground text-lg">
-              Über 500 Sales-Teams vertrauen auf SalesFlow
+              Über 500 Agenturen, Coaches & Berater vertrauen auf SalesFlow
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -388,9 +389,30 @@ const Landing = () => {
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
               Transparent und fair
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg mb-8">
               Wählen Sie den Plan, der zu Ihrem Team passt
             </p>
+            <div className="flex items-center justify-center gap-4">
+              <span className={`text-sm font-medium ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                Monatlich
+              </span>
+              <button
+                onClick={() => setIsYearly(!isYearly)}
+                className="relative inline-flex h-8 w-16 items-center rounded-full bg-primary/20 transition-colors hover:bg-primary/30"
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-primary transition-transform ${
+                    isYearly ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-sm font-medium ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                Jährlich
+                <span className="ml-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                  2 Monate gratis
+                </span>
+              </span>
+            </div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {plans.map((plan, idx) => (
@@ -411,8 +433,10 @@ const Landing = () => {
                   <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
                   <CardDescription className="mb-4">{plan.description}</CardDescription>
                   <div>
-                    <span className="text-5xl font-bold">€{plan.price}</span>
-                    <span className="text-muted-foreground">/Jahr</span>
+                    <span className="text-5xl font-bold">
+                      €{isYearly ? plan.priceYearly : plan.priceMonthly}
+                    </span>
+                    <span className="text-muted-foreground">/{isYearly ? 'Jahr' : 'Monat'}</span>
                   </div>
                 </CardHeader>
                 <CardContent>
