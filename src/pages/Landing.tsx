@@ -182,9 +182,11 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sky Background with Stars */}
-      <SkyBackground starCount={250} shootingEveryMs={[3000, 8000]} enableParallax={true} />
+    <div className="min-h-screen bg-[#0a0e27] relative">
+      {/* Blurred Ellipse Background for rest of page */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/20 rounded-full blur-[120px]"></div>
+      </div>
       
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/10 backdrop-blur-lg border-b border-white/10">
@@ -193,17 +195,17 @@ const Landing = () => {
             <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               SalesFlow
             </div>
-            <div className="hidden md:flex gap-8 text-sm">
-              <a href="#features" className="hover:text-primary transition-colors">Features</a>
-              <a href="#how-it-works" className="hover:text-primary transition-colors">So funktioniert's</a>
-              <a href="#pricing" className="hover:text-primary transition-colors">Preise</a>
-              <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+            <div className="hidden md:flex gap-8 text-sm text-white/80">
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</a>
+              <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
+              <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
             </div>
             <div className="flex gap-4">
-              <Button variant="ghost" onClick={() => navigate("/auth")}>
+              <Button variant="ghost" onClick={() => navigate("/auth")} className="text-white hover:bg-white/10">
                 Anmelden
               </Button>
-              <Button onClick={() => navigate("/auth")} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90">
+              <Button onClick={() => navigate("/auth")} className="bg-white text-primary hover:bg-white/90">
                 Demo buchen
               </Button>
             </div>
@@ -211,8 +213,12 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Dark */}
+      {/* Hero Section - Dark with Stars */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+        {/* Sky Background only in Hero */}
+        <div className="absolute inset-0 overflow-hidden">
+          <SkyBackground starCount={250} shootingEveryMs={[3000, 8000]} enableParallax={true} />
+        </div>
         <div className="container mx-auto text-center max-w-5xl relative z-[1]">
           <div className="inline-block mb-6 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
             <Zap className="inline h-4 w-4 mr-2" />
@@ -267,7 +273,7 @@ const Landing = () => {
       </section>
 
       {/* Challenge Section */}
-      <section className="py-20 px-6 bg-muted/30">
+      <section className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -290,7 +296,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-6">
+      <section id="features" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -320,7 +326,7 @@ const Landing = () => {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-6 bg-muted/30">
+      <section id="how-it-works" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -353,7 +359,7 @@ const Landing = () => {
       </section>
 
       {/* Social Proof / Testimonials */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -385,7 +391,7 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6 bg-muted/30">
+      <section id="pricing" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -469,7 +475,7 @@ const Landing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 px-6">
+      <section id="faq" className="py-20 px-6 relative z-[1]">
         <div className="container mx-auto max-w-4xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -495,7 +501,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-br from-primary via-blue-500 to-purple-500 text-white">
+      <section className="py-20 px-6 bg-gradient-to-br from-primary via-blue-500 to-purple-500 text-white relative z-[1]">
         <div className="container mx-auto text-center max-w-4xl fade-on-scroll">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Bereit, Ihren Vertrieb zu revolutionieren?
@@ -516,7 +522,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-6 bg-background">
+      <footer className="border-t py-12 px-6 bg-[#0a0e27] relative z-[1]">
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>

@@ -134,8 +134,8 @@ export default function SkyBackground({
 
   return (
     <>
-      <div className="gradient-layer" aria-hidden />
-      <canvas ref={canvasRef} className="stars-layer" aria-hidden />
+      <div className="hero-gradient-layer" aria-hidden />
+      <canvas ref={canvasRef} className="hero-stars-layer" aria-hidden />
     </>
   );
 }

@@ -131,21 +131,21 @@ All colors MUST be HSL.
   }
 }
 
-/* Sky Background Gradient & Canvas Layers */
-.gradient-layer {
-  position: fixed;
+/* Hero Sky Background Gradient & Canvas Layers */
+.hero-gradient-layer {
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
     radial-gradient(circle at 20% -10%, #2f2b75 0%, transparent 40%),
     radial-gradient(circle at 80% -20%, #1b3a86 0%, transparent 45%),
-    linear-gradient(180deg, #0a0b1a 0%, #070816 60%, #060612 100%);
+    linear-gradient(180deg, #0a0b1a 0%, #070816 60%, #0a0e27 100%);
   opacity: 0.95;
 }
 
-.stars-layer {
-  position: fixed;
+.hero-stars-layer {
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
