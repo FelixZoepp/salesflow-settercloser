@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Mail, Phone, Building } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Contact {
   id: string;
@@ -22,6 +23,7 @@ interface Contact {
 }
 
 const Contacts = () => {
+  const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,10 +85,16 @@ const Contacts = () => {
       <div className="p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Kontakte</h1>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Neuer Kontakt
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/import-leads')}>
+              <Upload className="w-4 h-4 mr-2" />
+              Leads importieren
+            </Button>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Neuer Kontakt
+            </Button>
+          </div>
         </div>
 
         {/* Search */}

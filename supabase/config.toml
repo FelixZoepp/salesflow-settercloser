@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.customer-portal]
 verify_jwt = true
+
+[functions.import-leads]
+verify_jwt = true
+
+[functions.api-leads]
+verify_jwt = false

@@ -89,6 +89,36 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          last_used_at: string | null
+          token: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          last_used_at?: string | null
+          token: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       benchmarks: {
         Row: {
           created_at: string
@@ -124,16 +154,62 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string | null
+          phone: string | null
+          street: string | null
+          updated_at: string
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id?: string | null
+          phone?: string | null
+          street?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string | null
+          phone?: string | null
+          street?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           company: string | null
+          company_id: string | null
           created_at: string
           email: string | null
+          external_id: string | null
           first_name: string
           id: string
           last_name: string
+          mobile: string | null
           owner_user_id: string | null
           phone: string | null
+          position: string | null
           source: string | null
           stage: string | null
           status: string | null
@@ -142,13 +218,17 @@ export type Database = {
         }
         Insert: {
           company?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           first_name: string
           id?: string
           last_name: string
+          mobile?: string | null
           owner_user_id?: string | null
           phone?: string | null
+          position?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
@@ -157,13 +237,17 @@ export type Database = {
         }
         Update: {
           company?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           first_name?: string
           id?: string
           last_name?: string
+          mobile?: string | null
           owner_user_id?: string | null
           phone?: string | null
+          position?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
@@ -171,6 +255,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contacts_owner_user_id_fkey"
             columns: ["owner_user_id"]
