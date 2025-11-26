@@ -21,5 +21,11 @@ verify_jwt = true
 [functions.realtime-objection-handler]
 verify_jwt = false
 
+[functions.transcribe-audio]
+verify_jwt = true
+
+[functions.analyze-objections]
+verify_jwt = true
+
 [functions.api-leads]
 verify_jwt = false

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { COLD_PIPELINE_STAGES } from "@/lib/pipelineStages";
-import { RealtimeObjectionHandler, encodeAudioForAPI, ObjectionHandling } from "@/utils/realtimeObjectionHandler";
+import { WhisperGeminiHandler, ObjectionHandling } from "@/utils/whisperGeminiHandler";
 
 interface Contact {
   id: string;
@@ -64,11 +64,7 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
   const [isLiveCallActive, setIsLiveCallActive] = useState(false);
   const [callStatus, setCallStatus] = useState<string>('disconnected');
   const [objectionHandlings, setObjectionHandlings] = useState<ObjectionHandling[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const handlerRef = useRef<RealtimeObjectionHandler | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const handlerRef = useRef<WhisperGeminiHandler | null>(null);
 
   useEffect(() => {
     fetchLeadData();
@@ -77,12 +73,6 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
       // Cleanup on unmount
       if (handlerRef.current) {
         handlerRef.current.endSession();
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
       }
     };
   }, [dealId]);
@@ -230,36 +220,8 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
 
   const startLiveCall = async () => {
     try {
-      // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
-      
-      streamRef.current = stream;
-      
-      // Setup audio context
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
-      
-      processorRef.current.onaudioprocess = (e) => {
-        if (!handlerRef.current || !isRecording) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const encoded = encodeAudioForAPI(new Float32Array(inputData));
-        handlerRef.current.sendAudio(encoded);
-      };
-      
-      source.connect(processorRef.current);
-      processorRef.current.connect(audioContextRef.current.destination);
-      
       // Prepare context for AI
-      const systemContext = callScript || "No system context available";
+      const systemContext = callScript || "Keine System-Informationen verfügbar";
       const leadContext = `
 Lead: ${contact.first_name} ${contact.last_name}
 Company: ${contact.company || 'N/A'}
@@ -268,9 +230,8 @@ Source: ${contact.source || 'N/A'}
 Stage: ${deal.stage}
       `.trim();
       
-      // Initialize WebSocket handler
-      handlerRef.current = new RealtimeObjectionHandler(
-        'dxdknkeexankgtkpeuvt',
+      // Initialize Whisper + Gemini handler
+      handlerRef.current = new WhisperGeminiHandler(
         (handling) => {
           setObjectionHandlings(prev => [...prev, handling]);
           toast.info("Neue Einwandbehandlung verfügbar");
@@ -286,9 +247,8 @@ Stage: ${deal.stage}
       
       await handlerRef.current.startSession(systemContext, leadContext);
       setIsLiveCallActive(true);
-      setIsRecording(true);
       
-      toast.success("Live-Call gestartet - KI hört mit");
+      toast.success("Live-Call gestartet - KI analysiert alle 5 Sekunden");
     } catch (error) {
       console.error('Error starting live call:', error);
       toast.error("Fehler beim Starten des Live-Calls");
@@ -297,26 +257,9 @@ Stage: ${deal.stage}
   };
 
   const stopLiveCall = () => {
-    setIsRecording(false);
-    
     if (handlerRef.current) {
       handlerRef.current.endSession();
       handlerRef.current = null;
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    if (processorRef.current) {
-      processorRef.current.disconnect();
-      processorRef.current = null;
-    }
-    
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
     }
     
     setIsLiveCallActive(false);
@@ -361,11 +304,13 @@ Stage: ${deal.stage}
                 Live-Call aktiv
                 <Badge variant={
                   callStatus === 'active' ? 'default' : 
-                  callStatus === 'speaking' ? 'secondary' : 
+                  callStatus === 'transcribing' ? 'secondary' : 
+                  callStatus === 'analyzing' ? 'default' :
                   'outline'
                 }>
-                  {callStatus === 'active' ? 'Bereit' : 
-                   callStatus === 'speaking' ? 'Spricht' : 
+                  {callStatus === 'active' ? 'Aktiv' : 
+                   callStatus === 'transcribing' ? 'Transkribiert' : 
+                   callStatus === 'analyzing' ? 'Analysiert' : 
                    callStatus === 'listening' ? 'Hört zu' : 
                    callStatus}
                 </Badge>
@@ -395,7 +340,7 @@ Stage: ${deal.stage}
               
               {objectionHandlings.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  KI hört zu und erkennt automatisch Einwände...
+                  Whisper transkribiert alle 5 Sek. • Gemini analysiert auf Einwände
                 </p>
               )}
 
