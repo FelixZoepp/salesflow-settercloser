@@ -795,6 +795,23 @@ export type Database = {
         | "Verhandlung"
         | "Gewonnen"
         | "Verloren"
+        | "Lead"
+        | "1× nicht erreicht"
+        | "2× nicht erreicht"
+        | "3× nicht erreicht"
+        | "Entscheider nicht erreichbar"
+        | "Im Urlaub"
+        | "Kein Interesse / Kein Bedarf"
+        | "Termin gelegt"
+        | "Setting terminiert"
+        | "Setting No Show"
+        | "Setting Follow Up"
+        | "Closing terminiert"
+        | "Closing No Show"
+        | "Closing Follow Up"
+        | "CC2 terminiert"
+        | "Angebot versendet"
+        | "Abgeschlossen"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
       user_role: "setter" | "closer" | "admin"
@@ -945,6 +962,23 @@ export const Constants = {
         "Verhandlung",
         "Gewonnen",
         "Verloren",
+        "Lead",
+        "1× nicht erreicht",
+        "2× nicht erreicht",
+        "3× nicht erreicht",
+        "Entscheider nicht erreichbar",
+        "Im Urlaub",
+        "Kein Interesse / Kein Bedarf",
+        "Termin gelegt",
+        "Setting terminiert",
+        "Setting No Show",
+        "Setting Follow Up",
+        "Closing terminiert",
+        "Closing No Show",
+        "Closing Follow Up",
+        "CC2 terminiert",
+        "Angebot versendet",
+        "Abgeschlossen",
       ],
       task_related_type: ["deal", "contact"],
       task_status: ["open", "done"],
