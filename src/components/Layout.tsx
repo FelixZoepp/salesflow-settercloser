@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare } from "lucide-react";
+import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +15,47 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [viewingAccount, setViewingAccount] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkSuperAdmin();
+    checkViewingAccount();
+  }, []);
+
+  const checkSuperAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_super_admin')
+      .eq('id', user.id)
+      .single();
+
+    setIsSuperAdmin(profile?.is_super_admin || false);
+  };
+
+  const checkViewingAccount = () => {
+    const accountId = sessionStorage.getItem('master_admin_account_id');
+    if (accountId) {
+      // Fetch account name
+      supabase
+        .from('accounts')
+        .select('name')
+        .eq('id', accountId)
+        .single()
+        .then(({ data }) => {
+          if (data) setViewingAccount(data.name);
+        });
+    }
+  };
+
+  const clearAccountView = () => {
+    sessionStorage.removeItem('master_admin_account_id');
+    setViewingAccount(null);
+    navigate('/master-admin');
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -38,12 +81,32 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/billing", label: "Abrechnung", icon: CreditCard },
   ];
 
+  // Add Master Admin link if super admin
+  if (isSuperAdmin) {
+    navItems.push({ path: "/master-admin", label: "Master Admin", icon: Shield });
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
         <div className="p-6 border-b border-sidebar-border">
           <h1 className="text-2xl font-bold text-sidebar-foreground">SalesFlow</h1>
+          {viewingAccount && (
+            <div className="mt-2">
+              <Badge variant="secondary" className="text-xs">
+                Viewing: {viewingAccount}
+              </Badge>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={clearAccountView}
+                className="text-xs p-0 h-auto mt-1"
+              >
+                Zurück zu Master Admin
+              </Button>
+            </div>
+          )}
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
