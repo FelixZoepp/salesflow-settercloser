@@ -599,6 +599,7 @@ export type Database = {
           id: string
           is_super_admin: boolean
           name: string
+          phone_number: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -609,6 +610,7 @@ export type Database = {
           id: string
           is_super_admin?: boolean
           name: string
+          phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -619,6 +621,7 @@ export type Database = {
           id?: string
           is_super_admin?: boolean
           name?: string
+          phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }

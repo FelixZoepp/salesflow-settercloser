@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Euro, TrendingUp } from "lucide-react";
+import { Plus, Calendar, Euro, TrendingUp, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { PipelineType, getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
+import PhoneIntegration from "@/components/PhoneIntegration";
+import { buildDialHref } from "@/lib/dialerAdapter";
 
 interface Deal {
   id: string;
@@ -28,6 +30,7 @@ const Pipeline = () => {
   const [loading, setLoading] = useState(true);
   const [activePipeline, setActivePipeline] = useState<PipelineType>('cold');
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [showPhoneSetup, setShowPhoneSetup] = useState(false);
 
   const stages = getPipelineStages(activePipeline);
 
@@ -37,6 +40,20 @@ const Pipeline = () => {
 
   const fetchDeals = async () => {
     try {
+      // Debug: Check authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id, user?.email);
+      
+      // Debug: Check user profile
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('account_id, role')
+          .eq('id', user.id)
+          .single();
+        console.log('User profile:', profile);
+      }
+      
       const { data, error } = await supabase
         .from('deals')
         .select(`
@@ -48,10 +65,17 @@ const Pipeline = () => {
         .eq('pipeline', activePipeline)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Deals query result:', { data, error });
+
+      if (error) {
+        console.error('Deals fetch error:', error);
+        throw error;
+      }
+      
       setDeals(data as any || []);
     } catch (error: any) {
-      toast.error("Fehler beim Laden der Deals");
+      console.error('Error in fetchDeals:', error);
+      toast.error(`Fehler beim Laden der Deals: ${error.message || 'Unbekannter Fehler'}`);
     } finally {
       setLoading(false);
     }
@@ -105,11 +129,23 @@ const Pipeline = () => {
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Pipeline</h1>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Neuer Deal
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPhoneSetup(!showPhoneSetup)}>
+              <Phone className="w-4 h-4 mr-2" />
+              Telefon
+            </Button>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Neuer Deal
+            </Button>
+          </div>
         </div>
+
+        {showPhoneSetup && (
+          <div className="mb-6">
+            <PhoneIntegration />
+          </div>
+        )}
 
         {/* Pipeline Tabs */}
         <Tabs value={activePipeline} onValueChange={(v) => setActivePipeline(v as PipelineType)} className="mb-6">
@@ -173,9 +209,26 @@ const Pipeline = () => {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">{deal.title}</CardTitle>
                         {deal.contacts && (
-                          <p className="text-sm text-muted-foreground">
-                            {deal.contacts.first_name} {deal.contacts.last_name}
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground">
+                              {deal.contacts.first_name} {deal.contacts.last_name}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const contact = deal.contacts;
+                                if (contact) {
+                                  // Try to find phone number - check if we need to fetch full contact
+                                  window.location.href = buildDialHref('+49123456789'); // Placeholder
+                                  toast.info('Rufe Kontakt an...');
+                                }
+                              }}
+                            >
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </div>
                         )}
                         {deal.setter && (
                           <p className="text-xs text-muted-foreground">
