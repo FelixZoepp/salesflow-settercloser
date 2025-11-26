@@ -16,7 +16,6 @@ interface CSVRow {
   first_name?: string;
   last_name?: string;
   email?: string;
-  mobile?: string;
   position?: string;
   source?: string;
   external_id?: string;
@@ -169,6 +168,7 @@ Deno.serve(async (req) => {
         }
 
         // Find or create contact
+        let contactId: string | null = null;
         if (row.email) {
           // Check if contact exists by email
           const { data: existingContact } = await supabase
@@ -188,17 +188,17 @@ Deno.serve(async (req) => {
                 company: row.company_name || null,
                 company_id: companyId,
                 phone: row.phone || null,
-                mobile: row.mobile || null,
                 position: row.position || null,
                 source: row.source || null,
                 external_id: row.external_id || null,
               })
               .eq('id', existingContact.id);
             
+            contactId = existingContact.id;
             result.updated_count++;
           } else {
             // Create new contact
-            await supabase
+            const { data: newContact, error: contactError } = await supabase
               .from('contacts')
               .insert({
                 owner_user_id: user.id,
@@ -208,17 +208,33 @@ Deno.serve(async (req) => {
                 company_id: companyId,
                 email: row.email,
                 phone: row.phone || null,
-                mobile: row.mobile || null,
                 position: row.position || null,
                 source: row.source || null,
                 external_id: row.external_id || null,
-              });
+              })
+              .select()
+              .single();
             
+            if (contactError) throw contactError;
+            contactId = newContact.id;
             result.imported_count++;
+
+            // Create a deal for the new contact in the cold pipeline as "Lead"
+            await supabase
+              .from('deals')
+              .insert({
+                contact_id: contactId,
+                setter_id: user.id,
+                title: `${row.first_name || ''} ${row.last_name || ''} - ${row.company_name || 'Lead'}`.trim(),
+                stage: 'Lead',
+                pipeline: 'cold',
+                amount_eur: 0,
+                probability_pct: 0,
+              });
           }
         } else if (companyId) {
           // Create contact without email (if we have company)
-          await supabase
+          const { data: newContact, error: contactError } = await supabase
             .from('contacts')
             .insert({
               owner_user_id: user.id,
@@ -227,13 +243,29 @@ Deno.serve(async (req) => {
               company: row.company_name || null,
               company_id: companyId,
               phone: row.phone || null,
-              mobile: row.mobile || null,
               position: row.position || null,
               source: row.source || null,
               external_id: row.external_id || null,
-            });
+            })
+            .select()
+            .single();
           
+          if (contactError) throw contactError;
+          contactId = newContact.id;
           result.imported_count++;
+
+          // Create a deal for the new contact in the cold pipeline as "Lead"
+          await supabase
+            .from('deals')
+            .insert({
+              contact_id: contactId,
+              setter_id: user.id,
+              title: `${row.first_name || ''} ${row.last_name || ''} - ${row.company_name || 'Lead'}`.trim(),
+              stage: 'Lead',
+              pipeline: 'cold',
+              amount_eur: 0,
+              probability_pct: 0,
+            });
         }
 
       } catch (error) {

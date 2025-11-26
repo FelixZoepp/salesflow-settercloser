@@ -16,7 +16,6 @@ interface LeadPayload {
   first_name?: string;
   last_name?: string;
   email?: string;
-  mobile?: string;
   position?: string;
   source?: string;
   external_id?: string;
@@ -175,7 +174,6 @@ Deno.serve(async (req) => {
             company: payload.company_name || null,
             company_id: companyId,
             phone: payload.phone || null,
-            mobile: payload.mobile || null,
             position: payload.position || null,
             source: payload.source || null,
             external_id: payload.external_id || null,
@@ -196,7 +194,6 @@ Deno.serve(async (req) => {
             company_id: companyId,
             email: payload.email,
             phone: payload.phone || null,
-            mobile: payload.mobile || null,
             position: payload.position || null,
             source: payload.source || null,
             external_id: payload.external_id || null,
@@ -221,7 +218,6 @@ Deno.serve(async (req) => {
           company: payload.company_name || null,
           company_id: companyId,
           phone: payload.phone || null,
-          mobile: payload.mobile || null,
           position: payload.position || null,
           source: payload.source || null,
           external_id: payload.external_id || null,
@@ -234,10 +230,10 @@ Deno.serve(async (req) => {
       contactId = newContact.id;
     }
 
-    // Optionally create a deal for new contacts
+    // Create a deal for new contacts in the cold pipeline as "Lead"
     let dealId: string | null = null;
     if (isNewContact && contactId) {
-      const dealTitle = `New lead from API${payload.source ? ': ' + payload.source : ''}`;
+      const dealTitle = `${payload.first_name || ''} ${payload.last_name || ''} - ${payload.company_name || 'Lead'}`.trim();
       
       const { data: newDeal, error: dealError } = await supabase
         .from('deals')
@@ -245,8 +241,10 @@ Deno.serve(async (req) => {
           contact_id: contactId,
           setter_id: userId,
           title: dealTitle,
-          stage: 'New',
-          pipeline: 'Sales',
+          stage: 'Lead',
+          pipeline: 'cold',
+          amount_eur: 0,
+          probability_pct: 0,
         })
         .select()
         .single();
