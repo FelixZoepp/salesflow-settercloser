@@ -21,6 +21,9 @@ verify_jwt = true
 [functions.realtime-objection-handler]
 verify_jwt = false
 
+[functions.realtime-session]
+verify_jwt = true
+
 [functions.transcribe-audio]
 verify_jwt = true
 
