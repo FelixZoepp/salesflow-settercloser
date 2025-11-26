@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, TrendingUp, Phone, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Building2, Users, TrendingUp, Phone, AlertCircle, Plus, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +18,7 @@ interface Account {
   name: string;
   company_name: string | null;
   email: string | null;
+  phone: string | null;
   is_active: boolean;
   subscription_status: string;
   created_at: string;
@@ -32,6 +37,16 @@ export default function MasterAdmin() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    company_name: "",
+    email: "",
+    phone: "",
+    is_active: true,
+    subscription_status: "trial"
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,6 +134,84 @@ export default function MasterAdmin() {
     navigate(`/${view}`);
   };
 
+  const handleCreateAccount = async () => {
+    try {
+      const { error } = await supabase
+        .from('accounts')
+        .insert({
+          name: formData.name,
+          company_name: formData.company_name || null,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          is_active: formData.is_active,
+          subscription_status: formData.subscription_status
+        });
+
+      if (error) throw error;
+
+      toast.success("Account erfolgreich erstellt");
+      setIsCreateDialogOpen(false);
+      setFormData({
+        name: "",
+        company_name: "",
+        email: "",
+        phone: "",
+        is_active: true,
+        subscription_status: "trial"
+      });
+      
+      // Refresh accounts list
+      checkSuperAdminAndFetchAccounts();
+    } catch (error) {
+      console.error('Error creating account:', error);
+      toast.error("Fehler beim Erstellen des Accounts");
+    }
+  };
+
+  const handleEditAccount = async () => {
+    if (!selectedAccountId) return;
+
+    try {
+      const { error } = await supabase
+        .from('accounts')
+        .update({
+          name: formData.name,
+          company_name: formData.company_name || null,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          is_active: formData.is_active,
+          subscription_status: formData.subscription_status
+        })
+        .eq('id', selectedAccountId);
+
+      if (error) throw error;
+
+      toast.success("Account erfolgreich aktualisiert");
+      setIsEditDialogOpen(false);
+      
+      // Refresh accounts list
+      checkSuperAdminAndFetchAccounts();
+    } catch (error) {
+      console.error('Error updating account:', error);
+      toast.error("Fehler beim Aktualisieren des Accounts");
+    }
+  };
+
+  const openEditDialog = () => {
+    const account = accounts.find(a => a.id === selectedAccountId);
+    if (account) {
+      setFormData({
+        name: account.name,
+        company_name: account.company_name || "",
+        email: account.email || "",
+        phone: account.phone || "",
+        is_active: account.is_active,
+        subscription_status: account.subscription_status || "trial"
+      });
+      setIsEditDialogOpen(true);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -175,6 +268,18 @@ export default function MasterAdmin() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="flex gap-3 mb-4">
+              <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Neuer Account
+              </Button>
+              {selectedAccountId && (
+                <Button onClick={openEditDialog} variant="outline" size="sm">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Bearbeiten
+                </Button>
+              )}
+            </div>
             <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Account auswählen..." />
@@ -315,6 +420,172 @@ export default function MasterAdmin() {
           </>
         )}
       </div>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Neuen Account erstellen</DialogTitle>
+            <DialogDescription>
+              Erstelle einen neuen Kunden-Account für das System.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Account Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="z.B. Kunde GmbH"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="company_name">Firmenname</Label>
+              <Input
+                id="company_name"
+                value={formData.company_name}
+                onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                placeholder="Offizielle Firmenbezeichnung"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">E-Mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="kontakt@kunde.de"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+49 123 456789"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="subscription_status">Subscription Status</Label>
+              <Select
+                value={formData.subscription_status}
+                onValueChange={(value) => setFormData({ ...formData, subscription_status: value })}
+              >
+                <SelectTrigger id="subscription_status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="trial">Trial</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="is_active">Account aktiv</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleCreateAccount} disabled={!formData.name}>
+              Account erstellen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Account bearbeiten</DialogTitle>
+            <DialogDescription>
+              Aktualisiere die Account-Informationen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Account Name *</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="z.B. Kunde GmbH"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-company_name">Firmenname</Label>
+              <Input
+                id="edit-company_name"
+                value={formData.company_name}
+                onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                placeholder="Offizielle Firmenbezeichnung"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-email">E-Mail</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="kontakt@kunde.de"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-phone">Telefon</Label>
+              <Input
+                id="edit-phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+49 123 456789"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-subscription_status">Subscription Status</Label>
+              <Select
+                value={formData.subscription_status}
+                onValueChange={(value) => setFormData({ ...formData, subscription_status: value })}
+              >
+                <SelectTrigger id="edit-subscription_status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="trial">Trial</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="edit-is_active">Account aktiv</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleEditAccount} disabled={!formData.name}>
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
