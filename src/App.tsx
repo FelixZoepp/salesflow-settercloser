@@ -17,6 +17,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import ImportLeads from "./pages/ImportLeads";
 import ApiKeys from "./pages/ApiKeys";
+import CallScript from "./pages/CallScript";
 
 const queryClient = new QueryClient();
 
@@ -60,8 +61,9 @@ const App = () => (
           <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
           <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-          <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
-          <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+        <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
+        <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+        <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
           <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
