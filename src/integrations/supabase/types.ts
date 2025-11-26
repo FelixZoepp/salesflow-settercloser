@@ -236,41 +236,59 @@ export type Database = {
       call_sessions: {
         Row: {
           account_id: string | null
+          action_items: string[] | null
           created_at: string
           deal_id: string
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          key_points: string[] | null
           objections_detected: Json | null
           recording_duration_seconds: number | null
           recording_url: string | null
+          sentiment: string | null
           started_at: string
+          summary: string | null
+          summary_generated_at: string | null
+          transcript: string | null
           user_id: string
         }
         Insert: {
           account_id?: string | null
+          action_items?: string[] | null
           created_at?: string
           deal_id: string
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          key_points?: string[] | null
           objections_detected?: Json | null
           recording_duration_seconds?: number | null
           recording_url?: string | null
+          sentiment?: string | null
           started_at?: string
+          summary?: string | null
+          summary_generated_at?: string | null
+          transcript?: string | null
           user_id: string
         }
         Update: {
           account_id?: string | null
+          action_items?: string[] | null
           created_at?: string
           deal_id?: string
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          key_points?: string[] | null
           objections_detected?: Json | null
           recording_duration_seconds?: number | null
           recording_url?: string | null
+          sentiment?: string | null
           started_at?: string
+          summary?: string | null
+          summary_generated_at?: string | null
+          transcript?: string | null
           user_id?: string
         }
         Relationships: [
