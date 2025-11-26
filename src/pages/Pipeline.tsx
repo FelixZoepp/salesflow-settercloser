@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Calendar, Euro, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { PipelineType, getPipelineStages, getStageColor } from "@/lib/pipelineStages";
+import LeadDetailPanel from "@/components/LeadDetailPanel";
 
 interface Deal {
   id: string;
@@ -26,6 +27,7 @@ const Pipeline = () => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePipeline, setActivePipeline] = useState<PipelineType>('cold');
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
 
   const stages = getPipelineStages(activePipeline);
 
@@ -163,7 +165,11 @@ const Pipeline = () => {
 
                 <div className="space-y-3">
                   {stageDeals.map(deal => (
-                    <Card key={deal.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <Card 
+                      key={deal.id} 
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => setSelectedDealId(deal.id)}
+                    >
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">{deal.title}</CardTitle>
                         {deal.contacts && (
@@ -216,6 +222,13 @@ const Pipeline = () => {
             );
           })}
         </div>
+
+        {selectedDealId && (
+          <LeadDetailPanel 
+            dealId={selectedDealId} 
+            onClose={() => setSelectedDealId(null)} 
+          />
+        )}
       </div>
     </Layout>
   );
