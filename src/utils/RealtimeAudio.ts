@@ -67,6 +67,7 @@ export class RealtimeChat {
   private recorder: AudioRecorder | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
+  private transcriptParts: string[] = [];
 
   constructor(
     private onMessage: (message: any) => void,
@@ -111,6 +112,14 @@ export class RealtimeChat {
       this.dc.addEventListener("message", (e) => {
         const event = JSON.parse(e.data);
         console.log("Received event:", event.type);
+        
+        // Collect transcript parts
+        if (event.type === 'conversation.item.input_audio_transcription.completed') {
+          this.transcriptParts.push(`User: ${event.transcript}`);
+        } else if (event.type === 'response.audio_transcript.done') {
+          this.transcriptParts.push(`AI: ${event.transcript}`);
+        }
+        
         this.onMessage(event);
       });
 
@@ -199,6 +208,10 @@ export class RealtimeChat {
       return null;
     }
     return new Blob(this.recordedChunks, { type: 'audio/webm' });
+  }
+
+  getTranscript(): string {
+    return this.transcriptParts.join('\n\n');
   }
 
   private encodeAudioData(float32Array: Float32Array): string {

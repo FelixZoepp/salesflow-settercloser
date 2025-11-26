@@ -26,8 +26,10 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [transcript, setTranscript] = useState<string[]>([]);
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const chatRef = useRef<RealtimeChat | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   const handleMessage = (event: any) => {
     console.log('Received message:', event.type);
@@ -73,11 +75,16 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
 
   const endConversation = async () => {
     try {
-      // Get recording before disconnecting
+      setIsSummarizing(true);
+      
+      // Get recording and transcript before disconnecting
       const recording = await chatRef.current?.getRecording();
+      const fullTranscript = chatRef.current?.getTranscript() || '';
+      
+      let savedSessionId: string | null = null;
       
       if (recording && dealId) {
-        await saveRecording(recording);
+        savedSessionId = await saveRecording(recording);
       }
       
       chatRef.current?.disconnect();
@@ -89,17 +96,24 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
         timerRef.current = null;
       }
       
+      // Generate summary if we have transcript and session
+      if (fullTranscript && savedSessionId) {
+        await generateSummary(savedSessionId, fullTranscript);
+      }
+      
+      setIsSummarizing(false);
       onCallEnd();
     } catch (error) {
       console.error('Error ending conversation:', error);
+      setIsSummarizing(false);
       toast.error('Fehler beim Beenden des Calls');
     }
   };
 
-  const saveRecording = async (recording: Blob) => {
+  const saveRecording = async (recording: Blob): Promise<string | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) return null;
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `${user.id}/${dealId || 'unknown'}_${timestamp}.webm`;
@@ -121,7 +135,7 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
 
       // Save to call_sessions
       if (dealId) {
-        const { error: sessionError } = await supabase
+        const { data: sessionData, error: sessionError } = await supabase
           .from('call_sessions')
           .insert({
             deal_id: dealId,
@@ -131,15 +145,40 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
             started_at: new Date(Date.now() - callDuration * 1000).toISOString(),
             ended_at: new Date().toISOString(),
             duration_seconds: callDuration
-          });
+          })
+          .select('id')
+          .single();
 
         if (sessionError) throw sessionError;
+        
+        toast.success('Call-Recording gespeichert');
+        return sessionData?.id || null;
       }
-
-      toast.success('Call-Recording gespeichert');
+      
+      return null;
     } catch (error) {
       console.error('Error saving recording:', error);
       toast.error('Fehler beim Speichern der Aufnahme');
+      return null;
+    }
+  };
+
+  const generateSummary = async (sessionId: string, transcript: string) => {
+    try {
+      console.log('Generating summary for session:', sessionId);
+      toast.info('Generiere Call-Zusammenfassung...');
+      
+      const { data, error } = await supabase.functions.invoke('summarize-call', {
+        body: { sessionId, transcript }
+      });
+
+      if (error) throw error;
+
+      console.log('Summary generated:', data);
+      toast.success('Call-Zusammenfassung erstellt');
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast.error('Fehler beim Generieren der Zusammenfassung');
     }
   };
 
@@ -207,9 +246,10 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
                 onClick={endConversation}
                 variant="destructive"
                 size="lg"
+                disabled={isSummarizing}
               >
                 <PhoneOff className="mr-2 h-5 w-5" />
-                Auflegen
+                {isSummarizing ? 'Speichert...' : 'Auflegen'}
               </Button>
             </div>
 
