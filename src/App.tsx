@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import ImportLeads from "./pages/ImportLeads";
 import ApiKeys from "./pages/ApiKeys";
 import CallScript from "./pages/CallScript";
+import ObjectionLibrary from "./pages/ObjectionLibrary";
 
 const queryClient = new QueryClient();
 
@@ -63,7 +64,8 @@ const App = () => (
           <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
         <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
         <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
-        <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
+          <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
+          <Route path="/objections" element={<ProtectedRoute><ObjectionLibrary /></ProtectedRoute>} />
           <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
