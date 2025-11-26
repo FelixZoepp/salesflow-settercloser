@@ -78,13 +78,26 @@ const Contacts = () => {
         return;
       }
 
-      // Create deal in cold acquisition pipeline
+      // Check if deal already exists for this contact
+      const { data: existingDeal } = await supabase
+        .from('deals')
+        .select('id')
+        .eq('contact_id', contact.id)
+        .maybeSingle();
+
+      if (existingDeal) {
+        toast.info(`Deal existiert bereits für ${contact.first_name} ${contact.last_name}`);
+        navigate(`/pipeline`);
+        return;
+      }
+
+      // Create deal in cold acquisition pipeline with correct stage enum
       const { error } = await supabase
         .from('deals')
         .insert({
           contact_id: contact.id,
           title: `${contact.first_name} ${contact.last_name} - ${contact.company || 'Kaltakquise'}`,
-          stage: 'Lead' as any,
+          stage: 'New',
           pipeline: 'cold',
           amount_eur: 0,
           setter_id: user.id
