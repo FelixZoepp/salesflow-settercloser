@@ -14,8 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          subscription_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activities: {
         Row: {
+          account_id: string | null
           contact_id: string | null
           created_at: string
           deal_id: string | null
@@ -28,6 +65,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           contact_id?: string | null
           created_at?: string
           deal_id?: string | null
@@ -40,6 +78,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           contact_id?: string | null
           created_at?: string
           deal_id?: string | null
@@ -52,6 +91,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "activities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activities_contact_id_fkey"
             columns: ["contact_id"]
@@ -156,6 +202,7 @@ export type Database = {
       }
       call_scripts: {
         Row: {
+          account_id: string | null
           content: string
           created_at: string | null
           id: string
@@ -165,6 +212,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_id?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -174,6 +222,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
@@ -186,6 +235,7 @@ export type Database = {
       }
       call_sessions: {
         Row: {
+          account_id: string | null
           created_at: string
           deal_id: string
           duration_seconds: number | null
@@ -196,6 +246,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
           deal_id: string
           duration_seconds?: number | null
@@ -206,6 +257,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           created_at?: string
           deal_id?: string
           duration_seconds?: number | null
@@ -217,6 +269,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "call_sessions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "call_sessions_deal_id_fkey"
             columns: ["deal_id"]
             isOneToOne: false
@@ -227,6 +286,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          account_id: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -240,6 +300,7 @@ export type Database = {
           zip: string | null
         }
         Insert: {
+          account_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -253,6 +314,7 @@ export type Database = {
           zip?: string | null
         }
         Update: {
+          account_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -265,10 +327,19 @@ export type Database = {
           website?: string | null
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
+          account_id: string | null
           city: string | null
           company: string | null
           company_id: string | null
@@ -293,6 +364,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          account_id?: string | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -317,6 +389,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          account_id?: string | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -342,6 +415,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "contacts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contacts_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -359,6 +439,7 @@ export type Database = {
       }
       deals: {
         Row: {
+          account_id: string | null
           amount_eur: number | null
           closer_id: string | null
           contact_id: string | null
@@ -374,6 +455,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           amount_eur?: number | null
           closer_id?: string | null
           contact_id?: string | null
@@ -389,6 +471,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           amount_eur?: number | null
           closer_id?: string | null
           contact_id?: string | null
@@ -404,6 +487,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deals_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deals_closer_id_fkey"
             columns: ["closer_id"]
@@ -443,6 +533,7 @@ export type Database = {
       }
       objections: {
         Row: {
+          account_id: string | null
           category: string | null
           created_at: string
           id: string
@@ -453,6 +544,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           category?: string | null
           created_at?: string
           id?: string
@@ -463,6 +555,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           category?: string | null
           created_at?: string
           id?: string
@@ -476,30 +569,44 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_id: string | null
           created_at: string
           email: string
           id: string
+          is_super_admin: boolean
           name: string
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
           email: string
           id: string
+          is_super_admin?: boolean
           name: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           created_at?: string
           email?: string
           id?: string
+          is_super_admin?: boolean
           name?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -548,6 +655,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          account_id: string | null
           assignee_id: string
           created_at: string
           due_date: string | null
@@ -559,6 +667,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           assignee_id: string
           created_at?: string
           due_date?: string | null
@@ -570,6 +679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           assignee_id?: string
           created_at?: string
           due_date?: string | null
@@ -581,6 +691,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_assignee_id_fkey"
             columns: ["assignee_id"]
@@ -628,6 +745,8 @@ export type Database = {
       }
     }
     Functions: {
+      get_user_account_id: { Args: never; Returns: string }
+      is_super_admin: { Args: never; Returns: boolean }
       refresh_contact_last_activity: { Args: never; Returns: undefined }
     }
     Enums: {
