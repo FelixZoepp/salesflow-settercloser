@@ -65,6 +65,8 @@ export class RealtimeChat {
   private dc: RTCDataChannel | null = null;
   private audioEl: HTMLAudioElement;
   private recorder: AudioRecorder | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
 
   constructor(
     private onMessage: (message: any) => void,
@@ -162,11 +164,41 @@ export class RealtimeChat {
       await this.recorder.start();
       console.log("Audio recording started");
 
+      // Start recording for playback
+      await this.startRecording();
+
     } catch (error) {
       console.error("Error initializing chat:", error);
       this.onError(error instanceof Error ? error.message : "Failed to initialize");
       throw error;
     }
+  }
+
+  private async startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.start(1000); // Collect data every second
+      console.log("Call recording started");
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  }
+
+  async getRecording(): Promise<Blob | null> {
+    if (this.recordedChunks.length === 0) {
+      return null;
+    }
+    return new Blob(this.recordedChunks, { type: 'audio/webm' });
   }
 
   private encodeAudioData(float32Array: Float32Array): string {
@@ -214,6 +246,12 @@ export class RealtimeChat {
   disconnect() {
     console.log("Disconnecting...");
     this.recorder?.stop();
+    
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+      this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+    
     this.dc?.close();
     this.pc?.close();
     this.audioEl.srcObject = null;

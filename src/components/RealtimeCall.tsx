@@ -1,18 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RealtimeCallProps {
   contactName: string;
+  contactId?: string;
+  dealId?: string;
   onCallEnd: () => void;
   systemPrompt?: string;
 }
 
 const RealtimeCall: React.FC<RealtimeCallProps> = ({ 
-  contactName, 
+  contactName,
+  contactId,
+  dealId,
   onCallEnd,
   systemPrompt 
 }) => {
@@ -66,17 +71,76 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
     }
   };
 
-  const endConversation = () => {
-    chatRef.current?.disconnect();
-    setIsConnected(false);
-    setIsConnecting(false);
-    
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  const endConversation = async () => {
+    try {
+      // Get recording before disconnecting
+      const recording = await chatRef.current?.getRecording();
+      
+      if (recording && dealId) {
+        await saveRecording(recording);
+      }
+      
+      chatRef.current?.disconnect();
+      setIsConnected(false);
+      setIsConnecting(false);
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      onCallEnd();
+    } catch (error) {
+      console.error('Error ending conversation:', error);
+      toast.error('Fehler beim Beenden des Calls');
     }
-    
-    onCallEnd();
+  };
+
+  const saveRecording = async (recording: Blob) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `${user.id}/${dealId || 'unknown'}_${timestamp}.webm`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('call-recordings')
+        .upload(fileName, recording, {
+          contentType: 'audio/webm',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('call-recordings')
+        .getPublicUrl(fileName);
+
+      // Save to call_sessions
+      if (dealId) {
+        const { error: sessionError } = await supabase
+          .from('call_sessions')
+          .insert({
+            deal_id: dealId,
+            user_id: user.id,
+            recording_url: publicUrl,
+            recording_duration_seconds: callDuration,
+            started_at: new Date(Date.now() - callDuration * 1000).toISOString(),
+            ended_at: new Date().toISOString(),
+            duration_seconds: callDuration
+          });
+
+        if (sessionError) throw sessionError;
+      }
+
+      toast.success('Call-Recording gespeichert');
+    } catch (error) {
+      console.error('Error saving recording:', error);
+      toast.error('Fehler beim Speichern der Aufnahme');
+    }
   };
 
   const toggleMute = () => {
