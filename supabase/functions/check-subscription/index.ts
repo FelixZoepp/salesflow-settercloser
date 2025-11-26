@@ -65,15 +65,41 @@ serve(async (req) => {
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
+    let subscriptionStatus = "trial";
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       productId = subscription.items.data[0].price.product;
+      subscriptionStatus = "active";
       logStep("Determined subscription tier", { productId });
     } else {
       logStep("No active subscription found");
+      subscriptionStatus = "canceled";
+    }
+
+    // Update account status based on subscription
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("account_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.account_id) {
+      const { error: updateError } = await supabaseClient
+        .from("accounts")
+        .update({ 
+          subscription_status: subscriptionStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", profile.account_id);
+
+      if (updateError) {
+        logStep("ERROR updating account status", { error: updateError });
+      } else {
+        logStep("Account status updated", { accountId: profile.account_id, status: subscriptionStatus });
+      }
     }
 
     return new Response(JSON.stringify({
