@@ -20,7 +20,7 @@ interface Deal {
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
-  contacts: { first_name: string; last_name: string } | null;
+  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null } | null;
   setter: { name: string } | null;
   closer: { name: string } | null;
 }
@@ -58,7 +58,7 @@ const Pipeline = () => {
         .from('deals')
         .select(`
           *,
-          contacts (first_name, last_name),
+          contacts (first_name, last_name, phone, mobile),
           setter:setter_id (name),
           closer:closer_id (name)
         `)
@@ -220,11 +220,16 @@ const Pipeline = () => {
                                 e.stopPropagation();
                                 const contact = deal.contacts;
                                 if (contact) {
-                                  // Try to find phone number - check if we need to fetch full contact
-                                  window.location.href = buildDialHref('+49123456789'); // Placeholder
-                                  toast.info('Rufe Kontakt an...');
+                                  const phoneNumber = contact.phone || contact.mobile;
+                                  if (phoneNumber) {
+                                    window.location.href = buildDialHref(phoneNumber);
+                                    toast.info('Rufe Kontakt an...');
+                                  } else {
+                                    toast.error('Keine Telefonnummer vorhanden');
+                                  }
                                 }
                               }}
+                              disabled={!deal.contacts?.phone && !deal.contacts?.mobile}
                             >
                               <Phone className="h-4 w-4" />
                             </Button>
