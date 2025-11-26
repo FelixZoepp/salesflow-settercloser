@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Phone, UserX, Users, Target, Ban, Calendar, CheckCircle, Clock, Radio } from "lucide-react";
+import { Phone, UserX, Users, Target, Ban, Calendar, CheckCircle, Clock, Radio, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { buildDialHref, getDialerName } from "@/lib/dialerAdapter";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RealtimeCall from "@/components/RealtimeCall";
+import CallHistory from "@/components/CallHistory";
 
 type Contact = {
   id: string;
@@ -18,12 +19,20 @@ type Contact = {
   email?: string;
 };
 
+type Deal = {
+  id: string;
+  contact_id: string;
+  title: string;
+};
+
 export default function PowerDialerPanel() {
   const [current, setCurrent] = useState<Contact | null>(null);
+  const [currentDeal, setCurrentDeal] = useState<Deal | null>(null);
   const [loading, setLoading] = useState(false);
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [useWebRTC, setUseWebRTC] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   async function loadNext() {
     setLoading(true);
@@ -36,7 +45,17 @@ export default function PowerDialerPanel() {
       
       setCurrent(data || null);
       
-      if (!data) {
+      // Load deal for this contact
+      if (data) {
+        const { data: dealData } = await supabase
+          .from('deals')
+          .select('id, contact_id, title')
+          .eq('contact_id', data.id)
+          .single();
+        
+        setCurrentDeal(dealData);
+      } else {
+        setCurrentDeal(null);
         toast.success("🎉 Keine weiteren Leads in der Queue!");
       }
     } catch (error: any) {
@@ -136,11 +155,22 @@ export default function PowerDialerPanel() {
   const dialHref = buildDialHref(current.phone);
 
   // Show WebRTC call interface if in call
-  if (isInCall && useWebRTC) {
-    return <RealtimeCall 
-      contactName={`${current.first_name} ${current.last_name || ""}`}
-      onCallEnd={handleCallEnd}
-    />;
+  if (isInCall && useWebRTC && current) {
+    return (
+      <>
+        <RealtimeCall 
+          contactName={`${current.first_name} ${current.last_name || ""}`}
+          contactId={current.id}
+          dealId={currentDeal?.id}
+          onCallEnd={handleCallEnd}
+        />
+        {currentDeal && (
+          <div className="mt-4">
+            <CallHistory dealId={currentDeal.id} />
+          </div>
+        )}
+      </>
+    );
   }
 
   return (
@@ -299,6 +329,22 @@ export default function PowerDialerPanel() {
         <div className="text-xs text-muted-foreground border-t pt-4">
           Nach dem Call einen Outcome wählen → Activity wird geloggt und nächster Lead automatisch geladen.
         </div>
+
+        {/* Call History */}
+        {currentDeal && (
+          <div className="border-t pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+              className="mb-3"
+            >
+              <History className="mr-2 h-4 w-4" />
+              {showHistory ? 'History ausblenden' : 'Call-History anzeigen'}
+            </Button>
+            {showHistory && <CallHistory dealId={currentDeal.id} />}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

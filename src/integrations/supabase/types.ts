@@ -242,6 +242,8 @@ export type Database = {
           ended_at: string | null
           id: string
           objections_detected: Json | null
+          recording_duration_seconds: number | null
+          recording_url: string | null
           started_at: string
           user_id: string
         }
@@ -253,6 +255,8 @@ export type Database = {
           ended_at?: string | null
           id?: string
           objections_detected?: Json | null
+          recording_duration_seconds?: number | null
+          recording_url?: string | null
           started_at?: string
           user_id: string
         }
@@ -264,6 +268,8 @@ export type Database = {
           ended_at?: string | null
           id?: string
           objections_detected?: Json | null
+          recording_duration_seconds?: number | null
+          recording_url?: string | null
           started_at?: string
           user_id?: string
         }
