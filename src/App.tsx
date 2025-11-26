@@ -19,6 +19,7 @@ import ImportLeads from "./pages/ImportLeads";
 import ApiKeys from "./pages/ApiKeys";
 import CallScript from "./pages/CallScript";
 import ObjectionLibrary from "./pages/ObjectionLibrary";
+import MasterAdmin from "./pages/MasterAdmin";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
         <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
           <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
           <Route path="/objections" element={<ProtectedRoute><ObjectionLibrary /></ProtectedRoute>} />
+          <Route path="/master-admin" element={<ProtectedRoute><MasterAdmin /></ProtectedRoute>} />
           <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
