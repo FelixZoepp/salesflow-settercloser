@@ -20,9 +20,9 @@ export default function ImportLeads() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
-  const csvTemplate = `company_name,website,phone,street,zip,city,country,first_name,last_name,email,mobile,position,source,external_id
-Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,+49 171 1234567,Geschäftsführer,Website,ext_001
-Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,Erika,Musterfrau,erika@beispiel.de,+49 160 9876543,Vertriebsleiterin,Messe,ext_002`;
+  const csvTemplate = `company_name,website,phone,street,zip,city,country,first_name,last_name,email,position,source,external_id
+Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,Geschäftsführer,Website,ext_001
+Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,Erika,Musterfrau,erika@beispiel.de,Vertriebsleiterin,Messe,ext_002`;
 
   const downloadTemplate = () => {
     const blob = new Blob([csvTemplate], { type: 'text/csv' });
@@ -128,7 +128,6 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                 <div><code>country</code> - Land</div>
                 <div><code>first_name</code> - Vorname</div>
                 <div><code>last_name</code> - Nachname</div>
-                <div><code>mobile</code> - Mobil</div>
                 <div><code>position</code> - Position</div>
                 <div><code>source</code> - Quelle</div>
                 <div><code>external_id</code> - Externe ID</div>

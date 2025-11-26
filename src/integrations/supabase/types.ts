@@ -198,8 +198,10 @@ export type Database = {
       }
       contacts: {
         Row: {
+          city: string | null
           company: string | null
           company_id: string | null
+          country: string | null
           created_at: string
           email: string | null
           external_id: string | null
@@ -207,18 +209,23 @@ export type Database = {
           id: string
           last_name: string
           mobile: string | null
+          notes: string | null
           owner_user_id: string | null
           phone: string | null
           position: string | null
           source: string | null
           stage: string | null
           status: string | null
+          street: string | null
           tags: string[] | null
           updated_at: string
+          website: string | null
         }
         Insert: {
+          city?: string | null
           company?: string | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           external_id?: string | null
@@ -226,18 +233,23 @@ export type Database = {
           id?: string
           last_name: string
           mobile?: string | null
+          notes?: string | null
           owner_user_id?: string | null
           phone?: string | null
           position?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
+          street?: string | null
           tags?: string[] | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          city?: string | null
           company?: string | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           external_id?: string | null
@@ -245,14 +257,17 @@ export type Database = {
           id?: string
           last_name?: string
           mobile?: string | null
+          notes?: string | null
           owner_user_id?: string | null
           phone?: string | null
           position?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
+          street?: string | null
           tags?: string[] | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
