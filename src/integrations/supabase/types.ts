@@ -161,6 +161,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          system_context: string | null
           updated_at: string | null
         }
         Insert: {
@@ -169,6 +170,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          system_context?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -177,9 +179,51 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          system_context?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      call_sessions: {
+        Row: {
+          created_at: string
+          deal_id: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          objections_detected: Json | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          objections_detected?: Json | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          objections_detected?: Json | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sessions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       companies: {
         Row: {

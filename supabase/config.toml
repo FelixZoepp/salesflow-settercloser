@@ -18,5 +18,8 @@ verify_jwt = true
 [functions.import-leads]
 verify_jwt = true
 
+[functions.realtime-objection-handler]
+verify_jwt = false
+
 [functions.api-leads]
 verify_jwt = false

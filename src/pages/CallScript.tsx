@@ -16,6 +16,7 @@ interface CallScript {
   name: string;
   content: string;
   is_active: boolean;
+  system_context?: string;
 }
 
 export default function CallScript() {
@@ -56,6 +57,7 @@ export default function CallScript() {
         .update({
           name: script.name,
           content: script.content,
+          system_context: script.system_context,
         })
         .eq('id', script.id);
 
@@ -175,11 +177,29 @@ export default function CallScript() {
                 />
               </div>
 
+              <div>
+                <Label htmlFor="system_context">KI System-Context für Einwandbehandlung</Label>
+                <Textarea
+                  id="system_context"
+                  value={script.system_context || ''}
+                  onChange={(e) => setScript({ ...script, system_context: e.target.value })}
+                  rows={8}
+                  placeholder="Beschreiben Sie Ihr Produkt/Dienstleistung, häufige Einwände und allgemeine Behandlungsstrategien. Diese Informationen helfen der KI, während Live-Calls passende Einwandbehandlungen zu generieren.
+
+Beispiel:
+- Produkt: CRM-Software für KMUs
+- Hauptmerkmale: Pipeline-Management, Call-Tracking, Automatisierung
+- Preis: Ab 49€/Monat
+- USP: Deutsche Software mit DSGVO-Konformität
+- Häufige Einwände: Preis, Umstellung, Komplexität"
+                  className="font-mono text-sm"
+                />
+              </div>
+
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Verwenden Sie die Tags aus der Liste oben, um dynamische Werte einzufügen.
-                  Diese werden automatisch mit den Lead-Informationen ersetzt.
+                  Der System-Context wird von der KI verwendet, um während Live-Calls automatisch passende Einwandbehandlungen zu generieren. Je detaillierter die Informationen, desto besser die KI-Vorschläge.
                 </AlertDescription>
               </Alert>
 

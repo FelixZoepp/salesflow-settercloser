@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { COLD_PIPELINE_STAGES } from "@/lib/pipelineStages";
+import { RealtimeObjectionHandler, encodeAudioForAPI, ObjectionHandling } from "@/utils/realtimeObjectionHandler";
 
 interface Contact {
   id: string;
@@ -58,9 +59,32 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  
+  // Live call state
+  const [isLiveCallActive, setIsLiveCallActive] = useState(false);
+  const [callStatus, setCallStatus] = useState<string>('disconnected');
+  const [objectionHandlings, setObjectionHandlings] = useState<ObjectionHandling[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const handlerRef = useRef<RealtimeObjectionHandler | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     fetchLeadData();
+    
+    return () => {
+      // Cleanup on unmount
+      if (handlerRef.current) {
+        handlerRef.current.endSession();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
   }, [dealId]);
 
   const fetchLeadData = async () => {
@@ -204,6 +228,101 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
     }
   };
 
+  const startLiveCall = async () => {
+    try {
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
+      streamRef.current = stream;
+      
+      // Setup audio context
+      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      
+      processorRef.current.onaudioprocess = (e) => {
+        if (!handlerRef.current || !isRecording) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+        const encoded = encodeAudioForAPI(new Float32Array(inputData));
+        handlerRef.current.sendAudio(encoded);
+      };
+      
+      source.connect(processorRef.current);
+      processorRef.current.connect(audioContextRef.current.destination);
+      
+      // Prepare context for AI
+      const systemContext = callScript || "No system context available";
+      const leadContext = `
+Lead: ${contact.first_name} ${contact.last_name}
+Company: ${contact.company || 'N/A'}
+Position: ${contact.position || 'N/A'}
+Source: ${contact.source || 'N/A'}
+Stage: ${deal.stage}
+      `.trim();
+      
+      // Initialize WebSocket handler
+      handlerRef.current = new RealtimeObjectionHandler(
+        'dxdknkeexankgtkpeuvt',
+        (handling) => {
+          setObjectionHandlings(prev => [...prev, handling]);
+          toast.info("Neue Einwandbehandlung verfügbar");
+        },
+        (status) => {
+          setCallStatus(status);
+        },
+        (error) => {
+          toast.error(error);
+          stopLiveCall();
+        }
+      );
+      
+      await handlerRef.current.startSession(systemContext, leadContext);
+      setIsLiveCallActive(true);
+      setIsRecording(true);
+      
+      toast.success("Live-Call gestartet - KI hört mit");
+    } catch (error) {
+      console.error('Error starting live call:', error);
+      toast.error("Fehler beim Starten des Live-Calls");
+      stopLiveCall();
+    }
+  };
+
+  const stopLiveCall = () => {
+    setIsRecording(false);
+    
+    if (handlerRef.current) {
+      handlerRef.current.endSession();
+      handlerRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
+    
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    setIsLiveCallActive(false);
+    setCallStatus('disconnected');
+  };
+
   if (loading) {
     return (
       <div className="fixed right-0 top-0 h-screen w-[500px] bg-background border-l shadow-lg p-6 overflow-y-auto z-50">
@@ -233,6 +352,84 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
       </div>
 
       <div className="p-4 space-y-4">
+        {/* Live Call Section */}
+        {isLiveCallActive && (
+          <Card className="border-primary">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Radio className="h-4 w-4 text-destructive animate-pulse" />
+                Live-Call aktiv
+                <Badge variant={
+                  callStatus === 'active' ? 'default' : 
+                  callStatus === 'speaking' ? 'secondary' : 
+                  'outline'
+                }>
+                  {callStatus === 'active' ? 'Bereit' : 
+                   callStatus === 'speaking' ? 'Spricht' : 
+                   callStatus === 'listening' ? 'Hört zu' : 
+                   callStatus}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {objectionHandlings.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">KI-Einwandbehandlungen:</Label>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {objectionHandlings.map((handling, idx) => (
+                      <div key={idx} className="border border-primary/20 rounded-lg p-3 bg-primary/5">
+                        <div className="text-xs text-muted-foreground mb-1">
+                          Einwand: "{handling.objection}"
+                        </div>
+                        <div className="text-sm font-medium">
+                          {handling.response}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {new Date(handling.timestamp).toLocaleTimeString('de-DE')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {objectionHandlings.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  KI hört zu und erkennt automatisch Einwände...
+                </p>
+              )}
+
+              <Button 
+                onClick={stopLiveCall} 
+                variant="destructive" 
+                className="w-full"
+              >
+                <MicOff className="mr-2 h-4 w-4" />
+                Call beenden
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Start Live Call Button */}
+        {!isLiveCallActive && (
+          <Card>
+            <CardContent className="pt-6">
+              <Button 
+                onClick={startLiveCall} 
+                className="w-full"
+                variant="default"
+              >
+                <Mic className="mr-2 h-4 w-4" />
+                Live-Call mit KI-Support starten
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Externe Telefonie verbinden & KI erkennt Einwände live
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Contact Info */}
         <Card>
           <CardHeader>
