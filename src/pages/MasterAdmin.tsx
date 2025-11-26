@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Building2, Users, TrendingUp, Phone, AlertCircle, Plus, Pencil } from "lucide-react";
+import { Building2, Users, TrendingUp, Phone, AlertCircle, Plus, Pencil, CreditCard, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,20 @@ interface Account {
   created_at: string;
 }
 
+interface SubscriptionInfo {
+  account_id: string;
+  plan_name: string | null;
+  status: string;
+  current_period_end: string | null;
+  stripe_subscription_id: string | null;
+}
+
+const PLAN_DISPLAY: Record<string, { name: string; color: string }> = {
+  "prod_RdNTM2YT5z3lv6": { name: "Basic", color: "bg-blue-500" },
+  "prod_RdNTYNmG2Hn8Uk": { name: "Pro", color: "bg-purple-500" },
+  "prod_RdNTeXrcfCeBIv": { name: "Enterprise", color: "bg-amber-500" },
+};
+
 interface Stats {
   total_contacts: number;
   total_deals: number;
@@ -33,6 +47,7 @@ interface Stats {
 
 export default function MasterAdmin() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Map<string, SubscriptionInfo>>(new Map());
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,6 +106,9 @@ export default function MasterAdmin() {
       if (error) throw error;
       setAccounts(accountsData || []);
 
+      // Fetch subscription data for all accounts
+      await fetchSubscriptions(accountsData || []);
+
       // Select first account by default
       if (accountsData && accountsData.length > 0) {
         setSelectedAccountId(accountsData[0].id);
@@ -100,6 +118,48 @@ export default function MasterAdmin() {
       toast.error("Fehler beim Laden");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubscriptions = async (accountList: Account[]) => {
+    try {
+      // Get all user IDs for these accounts
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, account_id')
+        .in('account_id', accountList.map(a => a.id));
+
+      if (!profiles || profiles.length === 0) {
+        return;
+      }
+
+      // Get subscriptions for these users
+      const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .in('user_id', profiles.map(p => p.id));
+
+      if (subs) {
+        const subMap = new Map<string, SubscriptionInfo>();
+        
+        // Map subscriptions to accounts
+        subs.forEach(sub => {
+          const profile = profiles.find(p => p.id === sub.user_id);
+          if (profile?.account_id) {
+            subMap.set(profile.account_id, {
+              account_id: profile.account_id,
+              plan_name: sub.plan_name,
+              status: sub.status,
+              current_period_end: sub.current_period_end,
+              stripe_subscription_id: sub.stripe_subscription_id
+            });
+          }
+        });
+        
+        setSubscriptions(subMap);
+      }
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
     }
   };
 
@@ -259,68 +319,181 @@ export default function MasterAdmin() {
           </Card>
         </div>
 
-        {/* Account Selector */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Kunden-Account auswählen</CardTitle>
-            <CardDescription>
-              {accounts.length} Accounts verfügbar
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 mb-4">
-              <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Neuer Account
-              </Button>
-              {selectedAccountId && (
-                <Button onClick={openEditDialog} variant="outline" size="sm">
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Bearbeiten
-                </Button>
-              )}
+        {/* Account List with Subscriptions */}
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Alle Accounts</h2>
+              <p className="text-sm text-muted-foreground">{accounts.length} Accounts verfügbar</p>
             </div>
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Account auswählen..." />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      <span className="font-medium">{account.name}</span>
-                      {account.company_name && (
-                        <span className="text-muted-foreground">({account.company_name})</span>
-                      )}
-                      {!account.is_active && (
-                        <Badge variant="secondary">Inaktiv</Badge>
-                      )}
-                      <Badge variant="outline">{account.subscription_status}</Badge>
+            <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Neuer Account
+            </Button>
+          </div>
+
+          <div className="grid gap-4">
+            {accounts.map((account) => {
+              const sub = subscriptions.get(account.id);
+              const planInfo = sub?.plan_name ? PLAN_DISPLAY[sub.plan_name] : null;
+              
+              return (
+                <Card 
+                  key={account.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedAccountId === account.id ? "ring-2 ring-primary" : ""
+                  }`}
+                  onClick={() => setSelectedAccountId(account.id)}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Building2 className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <h3 className="font-semibold text-lg">{account.name}</h3>
+                            {account.company_name && (
+                              <p className="text-sm text-muted-foreground">{account.company_name}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          <Badge variant={account.is_active ? "default" : "secondary"}>
+                            {account.is_active ? "Aktiv" : "Inaktiv"}
+                          </Badge>
+                          <Badge variant="outline">{account.subscription_status}</Badge>
+                          {account.email && (
+                            <span className="text-xs text-muted-foreground">{account.email}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Subscription Info */}
+                      <div className="ml-4 flex flex-col items-end gap-2">
+                        {sub ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-4 w-4 text-muted-foreground" />
+                              <div className="text-right">
+                                {planInfo ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${planInfo.color}`} />
+                                    <span className="font-medium">{planInfo.name}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Kein Plan</span>
+                                )}
+                                <p className="text-xs text-muted-foreground">
+                                  Status: {sub.status}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {sub.current_period_end && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Calendar className="h-3 w-3" />
+                                <span>
+                                  Läuft bis: {new Date(sub.current_period_end).toLocaleDateString('de-DE')}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CreditCard className="h-3 w-3" />
+                            Keine Subscription
+                          </div>
+                        )}
+                        
+                        {selectedAccountId === account.id && (
+                          <Button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog();
+                            }} 
+                            variant="outline" 
+                            size="sm"
+                            className="mt-2"
+                          >
+                            <Pencil className="h-3 w-3 mr-1" />
+                            Bearbeiten
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
 
         {selectedAccount && stats && (
           <>
-            {/* Account Info */}
+            {/* Account Info with Subscription */}
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>{selectedAccount.name}</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{selectedAccount.name}</span>
+                  {(() => {
+                    const sub = subscriptions.get(selectedAccount.id);
+                    const planInfo = sub?.plan_name ? PLAN_DISPLAY[sub.plan_name] : null;
+                    return planInfo ? (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${planInfo.color}`} />
+                        <Badge variant="outline">{planInfo.name} Plan</Badge>
+                      </div>
+                    ) : null;
+                  })()}
+                </CardTitle>
                 <CardDescription>
                   {selectedAccount.email} • Erstellt am {new Date(selectedAccount.created_at).toLocaleDateString('de-DE')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2">
-                  <Badge variant={selectedAccount.is_active ? "default" : "secondary"}>
-                    {selectedAccount.is_active ? "Aktiv" : "Inaktiv"}
-                  </Badge>
-                  <Badge variant="outline">{selectedAccount.subscription_status}</Badge>
+                <div className="grid gap-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={selectedAccount.is_active ? "default" : "secondary"}>
+                      {selectedAccount.is_active ? "Aktiv" : "Inaktiv"}
+                    </Badge>
+                    <Badge variant="outline">{selectedAccount.subscription_status}</Badge>
+                  </div>
+                  
+                  {(() => {
+                    const sub = subscriptions.get(selectedAccount.id);
+                    if (sub) {
+                      return (
+                        <div className="border-t pt-4 space-y-2">
+                          <h4 className="font-semibold text-sm flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Subscription Details
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Status:</span>
+                              <span className="ml-2 font-medium">{sub.status}</span>
+                            </div>
+                            {sub.current_period_end && (
+                              <div>
+                                <span className="text-muted-foreground">Läuft bis:</span>
+                                <span className="ml-2 font-medium">
+                                  {new Date(sub.current_period_end).toLocaleDateString('de-DE')}
+                                </span>
+                              </div>
+                            )}
+                            {sub.stripe_subscription_id && (
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">Stripe ID:</span>
+                                <span className="ml-2 font-mono text-xs">{sub.stripe_subscription_id}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
