@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Phone, UserX, Users, Target, Ban, Calendar, CheckCircle, Clock } from "lucide-react";
+import { Phone, UserX, Users, Target, Ban, Calendar, CheckCircle, Clock, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buildDialHref, getDialerName } from "@/lib/dialerAdapter";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import RealtimeCall from "@/components/RealtimeCall";
 
 type Contact = {
   id: string;
@@ -21,6 +22,8 @@ export default function PowerDialerPanel() {
   const [current, setCurrent] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
+  const [useWebRTC, setUseWebRTC] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
 
   async function loadNext() {
     setLoading(true);
@@ -86,6 +89,16 @@ export default function PowerDialerPanel() {
     toast.info(`📞 Rufe an: ${current?.phone}`);
   };
 
+  const handleWebRTCCall = () => {
+    setIsInCall(true);
+    setCallStartTime(new Date());
+  };
+
+  const handleCallEnd = () => {
+    setIsInCall(false);
+    setCallStartTime(null);
+  };
+
   if (loading && !current) {
     return (
       <Card>
@@ -122,6 +135,14 @@ export default function PowerDialerPanel() {
 
   const dialHref = buildDialHref(current.phone);
 
+  // Show WebRTC call interface if in call
+  if (isInCall && useWebRTC) {
+    return <RealtimeCall 
+      contactName={`${current.first_name} ${current.last_name || ""}`}
+      onCallEnd={handleCallEnd}
+    />;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -141,17 +162,28 @@ export default function PowerDialerPanel() {
               )}
             </div>
           </div>
-          <Button
-            size="lg"
-            onClick={handleCallClick}
-            asChild
-            className="ml-4"
-          >
-            <a href={dialHref}>
-              <Phone className="mr-2 h-5 w-5" />
-              Anrufen ({getDialerName()})
-            </a>
-          </Button>
+          <div className="ml-4 flex gap-2">
+            <Button
+              size="lg"
+              onClick={handleWebRTCCall}
+              variant={useWebRTC ? "default" : "outline"}
+              className={useWebRTC ? "bg-success hover:bg-success/90" : ""}
+            >
+              <Radio className="mr-2 h-5 w-5" />
+              WebRTC Call
+            </Button>
+            <Button
+              size="lg"
+              onClick={handleCallClick}
+              asChild
+              variant={!useWebRTC ? "default" : "outline"}
+            >
+              <a href={dialHref}>
+                <Phone className="mr-2 h-5 w-5" />
+                {getDialerName()}
+              </a>
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
