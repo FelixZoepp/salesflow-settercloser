@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Send, Megaphone, ExternalLink } from "lucide-react";
+import { Copy, Check, Send, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -52,11 +52,14 @@ const OutboundLeads = () => {
   };
 
   const copyMessage = (contact: Contact) => {
-    if (!contact.outreach_message) {
+    if (!contact.outreach_message || !contact.personalized_url) {
       toast.error("Keine Nachricht vorhanden");
       return;
     }
-    navigator.clipboard.writeText(contact.outreach_message);
+    // Replace relative URL with full URL in the message
+    const fullUrl = `${window.location.origin}${contact.personalized_url}`;
+    const messageWithFullUrl = contact.outreach_message.replace(contact.personalized_url, fullUrl);
+    navigator.clipboard.writeText(messageWithFullUrl);
     setCopiedId(contact.id);
     toast.success("Nachricht kopiert!");
     
@@ -112,55 +115,19 @@ const OutboundLeads = () => {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-medium">Vorname</TableHead>
-                  <TableHead className="font-medium">Nachname</TableHead>
+                  <TableHead className="font-medium">Name</TableHead>
                   <TableHead className="font-medium">Firma</TableHead>
-                  <TableHead className="font-medium">URL</TableHead>
-                  <TableHead className="font-medium w-[300px]">Nachricht</TableHead>
                   <TableHead className="font-medium text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {contacts.map((contact) => (
                   <TableRow key={contact.id} className="group">
-                    <TableCell className="font-medium">{contact.first_name}</TableCell>
-                    <TableCell>{contact.last_name}</TableCell>
+                    <TableCell className="font-medium">
+                      {contact.first_name} {contact.last_name}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {contact.company || "–"}
-                    </TableCell>
-                    <TableCell>
-                      {contact.personalized_url ? (
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`${window.location.origin}${contact.personalized_url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm truncate max-w-[200px]"
-                          >
-                            {`${window.location.origin}${contact.personalized_url}`}
-                            <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                          </a>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 flex-shrink-0"
-                            onClick={() => {
-                              const fullUrl = `${window.location.origin}${contact.personalized_url}`;
-                              navigator.clipboard.writeText(fullUrl);
-                              toast.success("URL kopiert!");
-                            }}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">–</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm text-muted-foreground line-clamp-2 max-w-[300px]">
-                        {contact.outreach_message || "–"}
-                      </p>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -172,15 +139,9 @@ const OutboundLeads = () => {
                           className="h-8"
                         >
                           {copiedId === contact.id ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 mr-1.5 text-green-500" />
-                              Copied!
-                            </>
+                            <Check className="w-3.5 h-3.5 text-green-500" />
                           ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5 mr-1.5" />
-                              Copy to Clipboard
-                            </>
+                            <Copy className="w-3.5 h-3.5" />
                           )}
                         </Button>
                         <Button
@@ -188,8 +149,7 @@ const OutboundLeads = () => {
                           onClick={() => markAsSent(contact)}
                           className="h-8 bg-cyan-600 hover:bg-cyan-700"
                         >
-                          <Send className="w-3.5 h-3.5 mr-1.5" />
-                          Gesendet
+                          <Send className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </TableCell>
