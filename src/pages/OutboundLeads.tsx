@@ -130,15 +130,29 @@ const OutboundLeads = () => {
                     </TableCell>
                     <TableCell>
                       {contact.personalized_url ? (
-                        <a
-                          href={`${window.location.origin}${contact.personalized_url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm"
-                        >
-                          {`${window.location.origin}${contact.personalized_url}`}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`${window.location.origin}${contact.personalized_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm truncate max-w-[200px]"
+                          >
+                            {`${window.location.origin}${contact.personalized_url}`}
+                            <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                          </a>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 flex-shrink-0"
+                            onClick={() => {
+                              const fullUrl = `${window.location.origin}${contact.personalized_url}`;
+                              navigator.clipboard.writeText(fullUrl);
+                              toast.success("URL kopiert!");
+                            }}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">–</span>
                       )}
