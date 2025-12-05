@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,6 +21,11 @@ interface Contact {
   company: string | null;
   source: string | null;
   company_id: string | null;
+  slug: string | null;
+  video_url: string | null;
+  viewed: boolean | null;
+  viewed_at: string | null;
+  view_count: number | null;
 }
 
 interface Company {
@@ -59,6 +65,10 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  
+  // Video note state
+  const [videoSlug, setVideoSlug] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   
   // Live call state
   const [isLiveCallActive, setIsLiveCallActive] = useState(false);
@@ -106,6 +116,12 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
       
       setDeal(dealData);
       setContact(dealData.contacts);
+      
+      // Set video note fields
+      if (dealData.contacts) {
+        setVideoSlug(dealData.contacts.slug || '');
+        setVideoUrl(dealData.contacts.video_url || '');
+      }
 
       // Get company if exists
       if (dealData.contacts?.company_id) {
@@ -214,6 +230,28 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
       fetchLeadData(); // Refresh activities
     } catch (error) {
       console.error('Error adding note:', error);
+      toast.error("Fehler beim Speichern");
+    }
+  };
+
+  const handleSaveVideoNote = async () => {
+    if (!contact) return;
+
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .update({
+          slug: videoSlug.trim() || null,
+          video_url: videoUrl.trim() || null
+        })
+        .eq('id', contact.id);
+
+      if (error) throw error;
+
+      toast.success("Videonotiz gespeichert");
+      fetchLeadData();
+    } catch (error) {
+      console.error('Error saving video note:', error);
       toast.error("Fehler beim Speichern");
     }
   };
@@ -417,6 +455,75 @@ Stage: ${deal.stage}
                 )}
               </>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Video Note */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Videonotiz
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-sm">Slug (für personalisierte URL)</Label>
+              <Input
+                value={videoSlug}
+                onChange={(e) => setVideoSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="max-mustermann-acme"
+              />
+              {videoSlug && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">URL:</span>
+                  <a 
+                    href={`/p/${videoSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {window.location.origin}/p/{videoSlug}
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/p/${videoSlug}`);
+                      toast.success("Link kopiert!");
+                    }}
+                  >
+                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm">Video URL</Label>
+              <Input
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://cdn.example.com/video.mp4"
+              />
+            </div>
+
+            {/* View Status */}
+            {contact.viewed !== null && (
+              <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                <Eye className="w-4 h-4" />
+                {contact.viewed ? (
+                  <span className="text-green-600">
+                    Angesehen ({contact.view_count || 0}x)
+                    {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Noch nicht angesehen</span>
+                )}
+              </div>
+            )}
+
+            <Button onClick={handleSaveVideoNote} className="w-full" size="sm">
+              Videonotiz speichern
+            </Button>
           </CardContent>
         </Card>
 

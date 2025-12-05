@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,11 @@ interface Contact {
   source: string | null;
   stage: string | null;
   status: string | null;
+  slug: string | null;
+  video_url: string | null;
+  viewed: boolean | null;
+  viewed_at: string | null;
+  view_count: number | null;
 }
 
 const Contacts = () => {
@@ -209,6 +214,43 @@ const Contacts = () => {
                   <p className="text-xs text-muted-foreground mt-3 mb-3">
                     Quelle: {contact.source}
                   </p>
+                )}
+
+                {/* Video Note Status */}
+                {contact.slug && (
+                  <div className="mt-3 p-2 bg-muted/50 rounded-lg space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Video className="w-3 h-3 text-primary" />
+                      <a 
+                        href={`/p/${contact.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline truncate"
+                      >
+                        /p/{contact.slug}
+                      </a>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/p/${contact.slug}`);
+                          toast.success("Link kopiert!");
+                        }}
+                        className="ml-auto"
+                      >
+                        <Link className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Eye className="w-3 h-3" />
+                      {contact.viewed ? (
+                        <span className="text-green-600">
+                          Angesehen ({contact.view_count || 0}x)
+                          {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
+                        </span>
+                      ) : (
+                        <span>Nicht angesehen</span>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Action Buttons */}
