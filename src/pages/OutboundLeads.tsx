@@ -160,12 +160,12 @@ const OutboundLeads = () => {
                           {copiedId === contact.id ? (
                             <>
                               <Check className="w-3.5 h-3.5 mr-1.5 text-green-500" />
-                              Kopiert
+                              Copied!
                             </>
                           ) : (
                             <>
                               <Copy className="w-3.5 h-3.5 mr-1.5" />
-                              Kopieren
+                              Copy to Clipboard
                             </>
                           )}
                         </Button>
