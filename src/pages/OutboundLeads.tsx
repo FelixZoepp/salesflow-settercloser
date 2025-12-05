@@ -12,6 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Contact {
   id: string;
@@ -131,19 +137,33 @@ const OutboundLeads = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => copyMessage(contact)}
-                          disabled={!contact.outreach_message}
-                          className="h-8"
-                        >
-                          {copiedId === contact.id ? (
-                            <Check className="w-3.5 h-3.5 text-green-500" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyMessage(contact)}
+                                disabled={!contact.outreach_message}
+                                className="h-8"
+                              >
+                                {copiedId === contact.id ? (
+                                  <Check className="w-3.5 h-3.5 text-green-500" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="max-w-[300px] text-xs">
+                              {contact.outreach_message && contact.personalized_url
+                                ? contact.outreach_message.replace(
+                                    contact.personalized_url,
+                                    `${window.location.origin}${contact.personalized_url}`
+                                  )
+                                : "Keine Nachricht"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         <Button
                           size="sm"
                           onClick={() => markAsSent(contact)}
