@@ -98,7 +98,7 @@ const OutboundLeads = () => {
     try {
       const { error } = await supabase
         .from('contacts')
-        .update({ outreach_status: 'sent' })
+        .update({ outreach_status: 'gesendet' as any })
         .eq('id', contact.id);
 
       if (error) throw error;

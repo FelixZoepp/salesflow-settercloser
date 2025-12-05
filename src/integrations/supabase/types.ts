@@ -378,7 +378,7 @@ export type Database = {
           mobile: string | null
           notes: string | null
           outreach_message: string | null
-          outreach_status: string | null
+          outreach_status: Database["public"]["Enums"]["outreach_status"] | null
           owner_user_id: string | null
           personalized_url: string | null
           phone: string | null
@@ -412,7 +412,9 @@ export type Database = {
           mobile?: string | null
           notes?: string | null
           outreach_message?: string | null
-          outreach_status?: string | null
+          outreach_status?:
+            | Database["public"]["Enums"]["outreach_status"]
+            | null
           owner_user_id?: string | null
           personalized_url?: string | null
           phone?: string | null
@@ -446,7 +448,9 @@ export type Database = {
           mobile?: string | null
           notes?: string | null
           outreach_message?: string | null
-          outreach_status?: string | null
+          outreach_status?:
+            | Database["public"]["Enums"]["outreach_status"]
+            | null
           owner_user_id?: string | null
           personalized_url?: string | null
           phone?: string | null
@@ -851,6 +855,7 @@ export type Database = {
         | "Angebot versendet"
         | "Abgeschlossen"
       lead_type: "inbound" | "outbound"
+      outreach_status: "offen" | "gesendet" | "follow_up" | "geschlossen"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
       user_role: "setter" | "closer" | "admin"
@@ -1020,6 +1025,7 @@ export const Constants = {
         "Abgeschlossen",
       ],
       lead_type: ["inbound", "outbound"],
+      outreach_status: ["offen", "gesendet", "follow_up", "geschlossen"],
       task_related_type: ["deal", "contact"],
       task_status: ["open", "done"],
       user_role: ["setter", "closer", "admin"],
