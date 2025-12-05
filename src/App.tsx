@@ -20,6 +20,7 @@ import ApiKeys from "./pages/ApiKeys";
 import CallScript from "./pages/CallScript";
 import ObjectionLibrary from "./pages/ObjectionLibrary";
 import MasterAdmin from "./pages/MasterAdmin";
+import VideoNote from "./pages/VideoNote";
 
 const queryClient = new QueryClient();
 
@@ -63,8 +64,8 @@ const App = () => (
           <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
           <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-        <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
-        <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+          <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
+          <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
           <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
           <Route path="/objections" element={<ProtectedRoute><ObjectionLibrary /></ProtectedRoute>} />
           <Route path="/master-admin" element={<ProtectedRoute><MasterAdmin /></ProtectedRoute>} />
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
           <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+          <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -379,12 +379,17 @@ export type Database = {
           owner_user_id: string | null
           phone: string | null
           position: string | null
+          slug: string | null
           source: string | null
           stage: string | null
           status: string | null
           street: string | null
           tags: string[] | null
           updated_at: string
+          video_url: string | null
+          view_count: number | null
+          viewed: boolean | null
+          viewed_at: string | null
           website: string | null
         }
         Insert: {
@@ -404,12 +409,17 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           position?: string | null
+          slug?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
           street?: string | null
           tags?: string[] | null
           updated_at?: string
+          video_url?: string | null
+          view_count?: number | null
+          viewed?: boolean | null
+          viewed_at?: string | null
           website?: string | null
         }
         Update: {
@@ -429,12 +439,17 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           position?: string | null
+          slug?: string | null
           source?: string | null
           stage?: string | null
           status?: string | null
           street?: string | null
           tags?: string[] | null
           updated_at?: string
+          video_url?: string | null
+          view_count?: number | null
+          viewed?: boolean | null
+          viewed_at?: string | null
           website?: string | null
         }
         Relationships: [
