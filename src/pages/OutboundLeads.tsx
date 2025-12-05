@@ -131,12 +131,12 @@ const OutboundLeads = () => {
                     <TableCell>
                       {contact.personalized_url ? (
                         <a
-                          href={contact.personalized_url}
+                          href={`${window.location.origin}${contact.personalized_url}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm"
                         >
-                          {contact.personalized_url}
+                          {`${window.location.origin}${contact.personalized_url}`}
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       ) : (
