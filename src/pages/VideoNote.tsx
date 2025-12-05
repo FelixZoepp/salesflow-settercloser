@@ -17,6 +17,7 @@ interface ContactData {
   video_url: string | null;
   company: string | null;
   email: string | null;
+  lead_type: 'inbound' | 'outbound' | null;
 }
 
 const VideoNote = () => {
@@ -34,19 +35,29 @@ const VideoNote = () => {
 
   const loadContactAndTrackView = async () => {
     try {
-      const { data, error: fetchError } = await (supabase
-        .rpc as any)('get_contact_by_slug', { contact_slug: slug });
+      // First get contact by slug with lead_type check
+      const { data: contactResult, error: contactError } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, video_url, company, email, lead_type')
+        .eq('slug', slug)
+        .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      if (contactError) throw contactError;
 
-      if (!data || data.length === 0) {
+      if (!contactResult) {
         setError("Video nicht gefunden");
         setLoading(false);
         return;
       }
 
-      const contactData = data[0];
-      setContact(contactData);
+      // Check if lead is outbound - only outbound leads can have video notes
+      if (contactResult.lead_type !== 'outbound') {
+        setError("Diese Seite ist nicht verfügbar");
+        setLoading(false);
+        return;
+      }
+
+      setContact(contactResult);
 
       try {
         await supabase.functions.invoke('track-video-view', {
