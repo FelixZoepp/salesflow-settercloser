@@ -374,9 +374,13 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          lead_type: Database["public"]["Enums"]["lead_type"] | null
           mobile: string | null
           notes: string | null
+          outreach_message: string | null
+          outreach_status: string | null
           owner_user_id: string | null
+          personalized_url: string | null
           phone: string | null
           position: string | null
           slug: string | null
@@ -404,9 +408,13 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
+          lead_type?: Database["public"]["Enums"]["lead_type"] | null
           mobile?: string | null
           notes?: string | null
+          outreach_message?: string | null
+          outreach_status?: string | null
           owner_user_id?: string | null
+          personalized_url?: string | null
           phone?: string | null
           position?: string | null
           slug?: string | null
@@ -434,9 +442,13 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          lead_type?: Database["public"]["Enums"]["lead_type"] | null
           mobile?: string | null
           notes?: string | null
+          outreach_message?: string | null
+          outreach_status?: string | null
           owner_user_id?: string | null
+          personalized_url?: string | null
           phone?: string | null
           position?: string | null
           slug?: string | null
@@ -838,6 +850,7 @@ export type Database = {
         | "CC2 terminiert"
         | "Angebot versendet"
         | "Abgeschlossen"
+      lead_type: "inbound" | "outbound"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
       user_role: "setter" | "closer" | "admin"
@@ -1006,6 +1019,7 @@ export const Constants = {
         "Angebot versendet",
         "Abgeschlossen",
       ],
+      lead_type: ["inbound", "outbound"],
       task_related_type: ["deal", "contact"],
       task_status: ["open", "done"],
       user_role: ["setter", "closer", "admin"],

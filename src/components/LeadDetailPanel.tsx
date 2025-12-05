@@ -26,6 +26,9 @@ interface Contact {
   viewed: boolean | null;
   viewed_at: string | null;
   view_count: number | null;
+  lead_type: 'inbound' | 'outbound' | null;
+  outreach_status: string | null;
+  outreach_message: string | null;
 }
 
 interface Company {
@@ -458,74 +461,106 @@ Stage: ${deal.stage}
           </CardContent>
         </Card>
 
-        {/* Video Note */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Video className="h-4 w-4" />
-              Videonotiz
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-sm">Slug (für personalisierte URL)</Label>
-              <Input
-                value={videoSlug}
-                onChange={(e) => setVideoSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                placeholder="max-mustermann-acme"
-              />
-              {videoSlug && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">URL:</span>
-                  <a 
-                    href={`/p/${videoSlug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    {window.location.origin}/p/{videoSlug}
-                  </a>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/p/${videoSlug}`);
-                      toast.success("Link kopiert!");
-                    }}
-                  >
-                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm">Video URL</Label>
-              <Input
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://cdn.example.com/video.mp4"
-              />
-            </div>
-
-            {/* View Status */}
-            {contact.viewed !== null && (
-              <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
-                <Eye className="w-4 h-4" />
-                {contact.viewed ? (
-                  <span className="text-green-600">
-                    Angesehen ({contact.view_count || 0}x)
-                    {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Noch nicht angesehen</span>
+        {/* Video Note - Only show for outbound leads */}
+        {contact.lead_type === 'outbound' && (
+          <Card className="border-cyan-500/30">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Video className="h-4 w-4 text-cyan-500" />
+                Videonotiz
+                <Badge variant="outline" className="ml-auto text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
+                  Outbound
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm">Slug (für personalisierte URL)</Label>
+                <Input
+                  value={videoSlug}
+                  onChange={(e) => setVideoSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="max-mustermann-acme"
+                />
+                {videoSlug && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">URL:</span>
+                    <a 
+                      href={`/p/${videoSlug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {window.location.origin}/p/{videoSlug}
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/p/${videoSlug}`);
+                        toast.success("Link kopiert!");
+                      }}
+                    >
+                      <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  </div>
                 )}
               </div>
-            )}
+              
+              <div className="space-y-2">
+                <Label className="text-sm">Video URL</Label>
+                <Input
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://cdn.example.com/video.mp4"
+                />
+              </div>
 
-            <Button onClick={handleSaveVideoNote} className="w-full" size="sm">
-              Videonotiz speichern
-            </Button>
-          </CardContent>
-        </Card>
+              {/* View Status */}
+              {contact.viewed !== null && (
+                <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                  <Eye className="w-4 h-4" />
+                  {contact.viewed ? (
+                    <span className="text-green-600">
+                      Angesehen ({contact.view_count || 0}x)
+                      {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Noch nicht angesehen</span>
+                  )}
+                </div>
+              )}
+
+              <Button onClick={handleSaveVideoNote} className="w-full" size="sm">
+                Videonotiz speichern
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Inbound Lead Priority Fields */}
+        {contact.lead_type === 'inbound' && (
+          <Card className="border-green-500/30">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                Inbound-Lead Details
+                <Badge variant="outline" className="ml-auto text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                  Inbound
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="p-3 bg-green-500/5 rounded-lg">
+                <p className="text-muted-foreground text-xs mb-1">Priorität</p>
+                <p className="font-medium text-green-600">Eingehender Lead – schnell kontaktieren!</p>
+              </div>
+              {contact.source && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Quelle:</span>
+                  <Badge variant="secondary">{contact.source}</Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Call Script */}
         {callScript && (

@@ -21,6 +21,8 @@ import CallScript from "./pages/CallScript";
 import ObjectionLibrary from "./pages/ObjectionLibrary";
 import MasterAdmin from "./pages/MasterAdmin";
 import VideoNote from "./pages/VideoNote";
+import InboundLeads from "./pages/InboundLeads";
+import OutboundLeads from "./pages/OutboundLeads";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,8 @@ const App = () => (
           <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
           <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+          <Route path="/inbound" element={<ProtectedRoute><InboundLeads /></ProtectedRoute>} />
+          <Route path="/outbound" element={<ProtectedRoute><OutboundLeads /></ProtectedRoute>} />
           <Route path="/import-leads" element={<ProtectedRoute><ImportLeads /></ProtectedRoute>} />
           <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
           <Route path="/call-script" element={<ProtectedRoute><CallScript /></ProtectedRoute>} />
