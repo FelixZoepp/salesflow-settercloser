@@ -127,21 +127,21 @@ const VideoNote = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="py-20 md:py-32">
+        <div className="max-w-7xl mx-auto px-8 lg:px-16">
+          <div className="grid md:grid-cols-2 gap-16 lg:gap-24 items-center">
             
             {/* Left Content */}
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+            <div className="space-y-8">
+              <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.1]">
                 Hey {contact.first_name}, sieh dir das 2-minütige Video an
               </h1>
-              <p className="text-lg text-slate-300">
+              <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
                 … und erfahre, wie <span className="text-cyan-400 font-semibold">{companyName}</span> mit personalisierten Outreach-Kampagnen und starkem Content qualifizierte Leads generiert.
               </p>
               <a 
                 href={`mailto:${contact.email || ''}?subject=Gratis Termin - ${contact.first_name}`}
-                className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-8 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
+                className="inline-flex items-center gap-3 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-xl transition-all text-lg shadow-lg shadow-cyan-500/25"
               >
                 <Calendar className="w-5 h-5" />
                 Gratis Termin vereinbaren
@@ -151,11 +151,11 @@ const VideoNote = () => {
             {/* Right - Video */}
             <div id="video-section" className="relative">
               {/* Pointing Hand */}
-              <div className="absolute -top-8 right-1/4 text-5xl animate-bounce z-10">
+              <div className="absolute -top-12 right-1/4 text-6xl animate-bounce z-10">
                 👇
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/10 border border-slate-700">
+              <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-cyan-500/20 border border-slate-600/50 bg-slate-800">
                 {contact.video_url ? (
                   <>
                     {!isVideoPlaying ? (
@@ -168,9 +168,9 @@ const VideoNote = () => {
                           className="w-full aspect-video object-cover"
                           muted
                         />
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                          <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-8 py-4 rounded-full flex items-center gap-3 transition-all transform group-hover:scale-105 shadow-lg shadow-cyan-500/30">
-                            <Play className="w-6 h-6 fill-current" />
+                        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                          <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-full flex items-center gap-4 transition-all transform group-hover:scale-105 shadow-xl shadow-cyan-500/40 text-lg">
+                            <Play className="w-7 h-7 fill-current" />
                             Jetzt ansehen
                           </button>
                         </div>
@@ -188,15 +188,15 @@ const VideoNote = () => {
                 ) : (
                   <div className="aspect-video bg-slate-800 flex items-center justify-center">
                     <div className="text-center">
-                      <Play className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                      <p className="text-slate-500">Video wird vorbereitet...</p>
+                      <Play className="w-20 h-20 text-slate-600 mx-auto mb-4" />
+                      <p className="text-slate-500 text-lg">Video wird vorbereitet...</p>
                     </div>
                   </div>
                 )}
               </div>
               
-              <p className="text-center text-slate-400 mt-4 text-sm">
-                Nur für dich {contact.first_name}, nimm dir die 2 Minuten und schau kurz rein!
+              <p className="text-center text-slate-400 mt-6 text-base">
+                Nur für dich {contact.first_name}, nimm dir die 2 Minuten und schau kurz rein!!
               </p>
             </div>
           </div>
