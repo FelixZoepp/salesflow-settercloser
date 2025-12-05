@@ -118,7 +118,7 @@ const VideoNote = () => {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
           <a 
-            href="https://calendly.com/your-link"
+            href="https://calendly.com/zoepp-media/vorbereitungsgesprach-mit-felix-zoepp-klon"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-2.5 rounded-lg transition-all text-sm"
@@ -142,7 +142,7 @@ const VideoNote = () => {
                 … und erfahre, wie <span className="text-cyan-400 font-semibold">{companyName}</span> mit personalisierten Outreach-Kampagnen und starkem Content qualifizierte Leads generiert.
               </p>
               <a 
-                href="https://calendly.com/your-link"
+                href="https://calendly.com/zoepp-media/vorbereitungsgesprach-mit-felix-zoepp-klon"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-xl transition-all text-lg shadow-lg shadow-cyan-500/25"
@@ -298,7 +298,7 @@ const VideoNote = () => {
           <div className="inline-flex flex-col items-center gap-4">
             <p className="text-slate-300 font-medium">{contact.first_name} {contact.last_name}</p>
             <a 
-              href="https://calendly.com/your-link"
+              href="https://calendly.com/zoepp-media/vorbereitungsgesprach-mit-felix-zoepp-klon"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
@@ -440,7 +440,7 @@ const VideoNote = () => {
               Lass uns in einem kurzen Gespräch herausfinden, wie wir {companyName} mit Outreach & Content unterstützen können.
             </p>
             <a 
-              href="https://calendly.com/your-link"
+              href="https://calendly.com/zoepp-media/vorbereitungsgesprach-mit-felix-zoepp-klon"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
