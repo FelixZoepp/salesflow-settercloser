@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap } from "lucide-react";
+import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone } from "lucide-react";
+import { useState as useStateLocal } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ContactData {
   id: string;
@@ -103,7 +110,7 @@ const VideoNote = () => {
       <header className="border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="text-xl font-bold text-white">
-            <span className="text-cyan-400">LinkedIn</span>Outreach
+            <span className="text-cyan-400">LinkedIn</span>Growth
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-300">
             <a href="#vorteile" className="hover:text-white transition-colors">Warum wir?</a>
@@ -130,7 +137,7 @@ const VideoNote = () => {
                 Hey {contact.first_name}, sieh dir das 2-minütige Video an
               </h1>
               <p className="text-lg text-slate-300">
-                … und erfahre, wie <span className="text-cyan-400 font-semibold">{companyName}</span> mit unserem LinkedIn-Outreach-System qualifizierte Leads generiert.
+                … und erfahre, wie <span className="text-cyan-400 font-semibold">{companyName}</span> mit personalisierten Outreach-Kampagnen und starkem Content qualifizierte Leads generiert.
               </p>
               <a 
                 href={`mailto:${contact.email || ''}?subject=Gratis Termin - ${contact.first_name}`}
@@ -196,58 +203,35 @@ const VideoNote = () => {
         </div>
       </section>
 
-      {/* Comparison Section */}
+      {/* Services Section */}
       <section id="vorteile" className="py-20 bg-slate-900/50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Warum LinkedIn-Outreach? Der Vergleich:
+              Unsere zwei Säulen für deinen LinkedIn-Erfolg
             </h2>
             <p className="text-slate-400 text-lg">
-              Was sich für <span className="text-cyan-400">{companyName}</span> ändert, wenn ihr euch für uns entscheidet.
+              Personalisierter Outreach + hochwertiger Content = maximale Reichweite für <span className="text-cyan-400">{companyName}</span>
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Without */}
-            <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
-                  <ThumbsDown className="w-6 h-6 text-red-400" />
-                </div>
-                <h3 className="text-xl font-bold text-white">Ohne LinkedIn-Outreach</h3>
-              </div>
-              <ul className="space-y-4">
-                {[
-                  "Kalte Kontakte ohne echtes Interesse",
-                  "Ständige Ablehnungen und Absagen",
-                  "0815-Nachrichten werden ignoriert",
-                  "Team jagt kalte Leads und vergeudet Energie",
-                  "Hoher Aufwand, hohe Kosten, wenig Termine"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-300">
-                    <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* With */}
+            {/* Outreach */}
             <div className="bg-gradient-to-br from-cyan-500/10 to-slate-800/50 rounded-2xl p-8 border border-cyan-500/30">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
-                  <ThumbsUp className="w-6 h-6 text-cyan-400" />
+                  <Megaphone className="w-6 h-6 text-cyan-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Mit LinkedIn-Outreach</h3>
+                <h3 className="text-xl font-bold text-white">Personalisierte Outreach-Kampagnen</h3>
               </div>
+              <p className="text-slate-400 mb-6">Wir entwickeln maßgeschneiderte Kampagnen, die direkt bei deiner Zielgruppe ankommen.</p>
               <ul className="space-y-4">
                 {[
-                  "Outreach generiert direkte Terminbuchungen",
-                  "Personalisierte Inhalte erzeugen maximale Aufmerksamkeit",
-                  "Leads sind vorgewärmt und interessiert",
-                  "Dein Team spricht nur noch mit echten Chancen",
-                  "Weniger Aufwand, mehr Umsatz & Motivation"
+                  "Hyperpersonalisierte Nachrichten für jeden Lead",
+                  "Direkte Terminbuchungen durch warme Kontakte",
+                  "Datengetriebene Zielgruppenansprache",
+                  "A/B-Tests für maximale Conversion",
+                  "Vollständig Done-for-You Service"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
                     <Check className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
@@ -256,6 +240,42 @@ const VideoNote = () => {
                 ))}
               </ul>
             </div>
+
+            {/* Content */}
+            <div className="bg-gradient-to-br from-purple-500/10 to-slate-800/50 rounded-2xl p-8 border border-purple-500/30">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                  <Pen className="w-6 h-6 text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">LinkedIn Content-Strategie</h3>
+              </div>
+              <p className="text-slate-400 mb-6">Hochwertiger Content, der deine Expertise zeigt und organisch Leads anzieht.</p>
+              <ul className="space-y-4">
+                {[
+                  "Professionelle Ghostwriting-Posts",
+                  "Thought Leadership Content",
+                  "Regelmäßige Posting-Frequenz",
+                  "Engagement & Community Building",
+                  "Branding & Sichtbarkeit steigern"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-300">
+                    <Check className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Combined Effect */}
+          <div className="mt-12 bg-slate-800/50 rounded-2xl p-8 border border-slate-700 text-center">
+            <h3 className="text-xl font-bold text-white mb-4">
+              🚀 Outreach + Content = Maximale Wirkung
+            </h3>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Während unser Outreach aktiv Termine generiert, baut dein Content gleichzeitig Vertrauen und Autorität auf. 
+              Leads, die dich kontaktieren, kennen dich bereits – das macht jeden Termin wertvoller.
+            </p>
           </div>
         </div>
       </section>
@@ -293,7 +313,7 @@ const VideoNote = () => {
               So profitiert {companyName}!
             </h2>
             <p className="text-slate-400 text-lg">
-              Unser Ansatz in 4 Schritten für hyperpersonalisierte LinkedIn-Kampagnen.
+              Unser Ansatz in 4 Schritten für maximale LinkedIn-Resultate.
             </p>
           </div>
 
@@ -301,23 +321,23 @@ const VideoNote = () => {
             {[
               {
                 icon: Target,
-                title: "Zielgruppen-Analyse",
-                desc: "Wir identifizieren eure idealen Kunden auf LinkedIn."
+                title: "Strategie & Analyse",
+                desc: "Wir analysieren eure Zielgruppe und entwickeln die perfekte Strategie."
               },
               {
-                icon: MessageSquare,
-                title: "Personalisierte Ansprache",
-                desc: "Jede Nachricht wird individuell auf den Lead zugeschnitten."
+                icon: Pen,
+                title: "Content Creation",
+                desc: "Professioneller Content, der deine Expertise sichtbar macht."
               },
               {
-                icon: Users,
-                title: "Warme Leads",
-                desc: "Ihr sprecht nur mit Interessenten, die bereit sind."
+                icon: Megaphone,
+                title: "Outreach-Kampagnen",
+                desc: "Personalisierte Nachrichten, die Termine generieren."
               },
               {
                 icon: TrendingUp,
-                title: "Skalierbare Termine",
-                desc: "Planbar mehr Termine, mehr Umsatz, mehr Wachstum."
+                title: "Skalierung",
+                desc: "Kontinuierliche Optimierung für mehr Wachstum."
               }
             ].map((step, i) => (
               <div key={i} className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-cyan-500/50 transition-colors">
@@ -332,6 +352,76 @@ const VideoNote = () => {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="py-20">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Häufige Fragen
+            </h2>
+            <p className="text-slate-400 text-lg">
+              Alles, was du wissen musst, {contact.first_name}
+            </p>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            <AccordionItem value="item-1" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Wie funktioniert der Outreach genau?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Wir identifizieren deine idealen Kunden auf LinkedIn, entwickeln hyperpersonalisierte Nachrichten und führen die Kampagne komplett für dich durch. Du bekommst nur noch die qualifizierten Termine in deinen Kalender.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Was ist im Content-Service enthalten?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Unser Content-Team erstellt professionelle LinkedIn-Posts in deinem Namen (Ghostwriting). Wir kümmern uns um Themenrecherche, Texterstellung, Bildauswahl und Veröffentlichung – du musst nur noch die Resultate genießen.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Brauche ich Outreach UND Content?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Beide Services können einzeln gebucht werden. Die Kombination ist jedoch am effektivsten: Outreach generiert aktiv Termine, während Content langfristig Vertrauen aufbaut und passive Leads anzieht.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Wie schnell sehe ich Ergebnisse?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Outreach-Kampagnen generieren typischerweise innerhalb der ersten 2-4 Wochen die ersten Termine. Content braucht 2-3 Monate, um seine volle Wirkung zu entfalten – dafür ist der Effekt nachhaltiger.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-5" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Gibt es eine Mindestlaufzeit?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Wir empfehlen mindestens 3 Monate für optimale Ergebnisse, aber es gibt keine langfristige Bindung. Im kostenlosen Erstgespräch klären wir alle Details.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-6" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
+              <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
+                Wie läuft das Erstgespräch ab?
+              </AccordionTrigger>
+              <AccordionContent className="text-slate-400">
+                Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, definieren deine Ziele und zeigen dir konkret, wie wir {companyName} unterstützen können. Komplett kostenlos und unverbindlich.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
@@ -341,7 +431,7 @@ const VideoNote = () => {
               Bereit, {contact.first_name}?
             </h2>
             <p className="text-slate-400 mb-8">
-              Lass uns in einem kurzen Gespräch herausfinden, wie wir {companyName} mit LinkedIn-Outreach unterstützen können.
+              Lass uns in einem kurzen Gespräch herausfinden, wie wir {companyName} mit Outreach & Content unterstützen können.
             </p>
             <a 
               href={`mailto:${contact.email || ''}?subject=Lass uns sprechen - ${contact.first_name}`}
