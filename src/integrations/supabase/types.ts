@@ -787,6 +787,17 @@ export type Database = {
       }
     }
     Functions: {
+      get_contact_by_slug: {
+        Args: { contact_slug: string }
+        Returns: {
+          company: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          video_url: string
+        }[]
+      }
       get_user_account_id: { Args: never; Returns: string }
       is_super_admin: { Args: never; Returns: boolean }
       refresh_contact_last_activity: { Args: never; Returns: undefined }

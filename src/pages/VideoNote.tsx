@@ -26,21 +26,20 @@ const VideoNote = () => {
 
   const loadContactAndTrackView = async () => {
     try {
-      const { data, error: fetchError } = await supabase
-        .from('contacts')
-        .select('id, first_name, last_name, video_url, company, email')
-        .eq('slug', slug)
-        .maybeSingle();
+      // Use RPC function to bypass RLS for public access
+      const { data, error: fetchError } = await (supabase
+        .rpc as any)('get_contact_by_slug', { contact_slug: slug });
 
       if (fetchError) throw fetchError;
 
-      if (!data) {
+      if (!data || data.length === 0) {
         setError("Video nicht gefunden");
         setLoading(false);
         return;
       }
 
-      setContact(data);
+      const contactData = data[0];
+      setContact(contactData);
 
       // Track view via edge function
       try {
