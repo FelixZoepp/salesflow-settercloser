@@ -1,15 +1,27 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield, TrendingUp, Megaphone } from "lucide-react";
+import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield, TrendingUp, Megaphone, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface LayoutProps {
   children: ReactNode;
+}
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: any;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
 }
 
 const Layout = ({ children }: LayoutProps) => {
@@ -39,7 +51,6 @@ const Layout = ({ children }: LayoutProps) => {
   const checkViewingAccount = () => {
     const accountId = sessionStorage.getItem('master_admin_account_id');
     if (accountId) {
-      // Fetch account name
       supabase
         .from('accounts')
         .select('name')
@@ -67,33 +78,61 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
-  const navItems = [
-    { path: "/pipeline", label: "Pipeline", icon: Home },
-    { path: "/today", label: "Heute", icon: CheckSquare },
-    { path: "/inbound", label: "Inbound", icon: TrendingUp },
-    { path: "/outbound", label: "Outbound", icon: Megaphone },
-    { path: "/contacts", label: "Alle Kontakte", icon: Users },
-    { path: "/import-leads", label: "Import Leads", icon: Upload },
-    { path: "/power-dialer", label: "Power Dialer", icon: Phone },
-    { path: "/activity-log", label: "Activity Log", icon: Activity },
-    { path: "/kpi", label: "KPIs", icon: BarChart3 },
-    { path: "/call-script", label: "Call Script", icon: FileText },
-    { path: "/objections", label: "Einwände", icon: MessageSquare },
-    { path: "/api-keys", label: "API Keys", icon: Key },
-    { path: "/billing", label: "Abrechnung", icon: CreditCard },
+  const navSections: NavSection[] = [
+    {
+      title: "Sales",
+      items: [
+        { path: "/pipeline", label: "Pipeline", icon: Home },
+        { path: "/today", label: "Heute", icon: CheckSquare },
+        { path: "/inbound", label: "Inbound", icon: TrendingUp },
+        { path: "/outbound", label: "Outbound", icon: Megaphone },
+      ]
+    },
+    {
+      title: "Kontakte",
+      items: [
+        { path: "/contacts", label: "Alle Kontakte", icon: Users },
+        { path: "/import-leads", label: "Import", icon: Upload },
+      ]
+    },
+    {
+      title: "Calling",
+      items: [
+        { path: "/power-dialer", label: "Power Dialer", icon: Phone },
+        { path: "/activity-log", label: "Activity Log", icon: Activity },
+      ]
+    },
+    {
+      title: "Tools",
+      items: [
+        { path: "/kpi", label: "KPIs", icon: BarChart3 },
+        { path: "/call-script", label: "Call Script", icon: FileText },
+        { path: "/objections", label: "Einwände", icon: MessageSquare },
+      ]
+    },
+    {
+      title: "Einstellungen",
+      items: [
+        { path: "/api-keys", label: "API Keys", icon: Key },
+        { path: "/billing", label: "Abrechnung", icon: CreditCard },
+      ]
+    },
   ];
 
-  // Add Master Admin link if super admin
+  // Add Master Admin section if super admin
   if (isSuperAdmin) {
-    navItems.push({ path: "/master-admin", label: "Master Admin", icon: Shield });
+    navSections.push({
+      title: "Admin",
+      items: [{ path: "/master-admin", label: "Master Admin", icon: Shield }]
+    });
   }
 
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-        <div className="p-6 border-b border-sidebar-border">
-          <h1 className="text-2xl font-bold text-sidebar-foreground">SalesFlow</h1>
+      <aside className="w-56 bg-sidebar border-r border-sidebar-border flex flex-col">
+        <div className="p-4 border-b border-sidebar-border">
+          <h1 className="text-xl font-bold text-sidebar-foreground">SalesFlow</h1>
           {viewingAccount && (
             <div className="mt-2">
               <Badge variant="secondary" className="text-xs">
@@ -111,34 +150,46 @@ const Layout = ({ children }: LayoutProps) => {
           )}
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <ScrollArea className="flex-1">
+          <nav className="p-3 space-y-4">
+            {navSections.map((section) => (
+              <div key={section.title}>
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                  {section.title}
+                </p>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-sm ${
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </ScrollArea>
 
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-3 border-t border-sidebar-border">
           <Button
             variant="ghost"
-            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             onClick={handleLogout}
           >
-            <LogOut className="w-5 h-5 mr-3" />
+            <LogOut className="w-4 h-4 mr-2" />
             Abmelden
           </Button>
         </div>
