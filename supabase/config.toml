@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.track-video-view]
 verify_jwt = false
+
+[functions.update-lead-video]
+verify_jwt = false
