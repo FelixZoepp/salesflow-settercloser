@@ -118,7 +118,9 @@ const VideoNote = () => {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
           <a 
-            href={`mailto:${contact.email || ''}?subject=Termin vereinbaren - ${contact.first_name}`}
+            href="https://calendly.com/your-link"
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-2.5 rounded-lg transition-all text-sm"
           >
             Lass uns sprechen {contact.first_name}!
@@ -140,7 +142,9 @@ const VideoNote = () => {
                 … und erfahre, wie <span className="text-cyan-400 font-semibold">{companyName}</span> mit personalisierten Outreach-Kampagnen und starkem Content qualifizierte Leads generiert.
               </p>
               <a 
-                href={`mailto:${contact.email || ''}?subject=Gratis Termin - ${contact.first_name}`}
+                href="https://calendly.com/your-link"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-xl transition-all text-lg shadow-lg shadow-cyan-500/25"
               >
                 <Calendar className="w-5 h-5" />
@@ -294,7 +298,9 @@ const VideoNote = () => {
           <div className="inline-flex flex-col items-center gap-4">
             <p className="text-slate-300 font-medium">{contact.first_name} {contact.last_name}</p>
             <a 
-              href={`mailto:${contact.email || ''}?subject=Termin sichern - ${contact.first_name}`}
+              href="https://calendly.com/your-link"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
             >
               <Calendar className="w-5 h-5" />
@@ -367,16 +373,16 @@ const VideoNote = () => {
           <Accordion type="single" collapsible className="space-y-4">
             <AccordionItem value="item-1" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Wie funktioniert der Outreach genau?
+                {contact.first_name}, wie funktioniert der Outreach genau?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Wir identifizieren deine idealen Kunden auf LinkedIn, entwickeln hyperpersonalisierte Nachrichten und führen die Kampagne komplett für dich durch. Du bekommst nur noch die qualifizierten Termine in deinen Kalender.
+                Wir identifizieren deine idealen Kunden auf LinkedIn, entwickeln hyperpersonalisierte Nachrichten und führen die Kampagne komplett für dich durch. Du bekommst nur noch die qualifizierten Termine in deinen Kalender, {contact.first_name}.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-2" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Was ist im Content-Service enthalten?
+                Was ist im Content-Service enthalten, {contact.first_name}?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Unser Content-Team erstellt professionelle LinkedIn-Posts in deinem Namen (Ghostwriting). Wir kümmern uns um Themenrecherche, Texterstellung, Bildauswahl und Veröffentlichung – du musst nur noch die Resultate genießen.
@@ -385,16 +391,16 @@ const VideoNote = () => {
 
             <AccordionItem value="item-3" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Brauche ich Outreach UND Content?
+                Braucht {companyName} Outreach UND Content?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Beide Services können einzeln gebucht werden. Die Kombination ist jedoch am effektivsten: Outreach generiert aktiv Termine, während Content langfristig Vertrauen aufbaut und passive Leads anzieht.
+                Beide Services können einzeln gebucht werden, {contact.first_name}. Die Kombination ist jedoch am effektivsten: Outreach generiert aktiv Termine, während Content langfristig Vertrauen aufbaut und passive Leads anzieht.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-4" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Wie schnell sehe ich Ergebnisse?
+                {contact.first_name}, wie schnell sehe ich Ergebnisse?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Outreach-Kampagnen generieren typischerweise innerhalb der ersten 2-4 Wochen die ersten Termine. Content braucht 2-3 Monate, um seine volle Wirkung zu entfalten – dafür ist der Effekt nachhaltiger.
@@ -403,16 +409,16 @@ const VideoNote = () => {
 
             <AccordionItem value="item-5" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Gibt es eine Mindestlaufzeit?
+                Gibt es eine Mindestlaufzeit für {companyName}?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Wir empfehlen mindestens 3 Monate für optimale Ergebnisse, aber es gibt keine langfristige Bindung. Im kostenlosen Erstgespräch klären wir alle Details.
+                Wir empfehlen mindestens 3 Monate für optimale Ergebnisse, aber es gibt keine langfristige Bindung, {contact.first_name}. Im kostenlosen Erstgespräch klären wir alle Details.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-6" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Wie läuft das Erstgespräch ab?
+                {contact.first_name}, wie läuft das Erstgespräch ab?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, definieren deine Ziele und zeigen dir konkret, wie wir {companyName} unterstützen können. Komplett kostenlos und unverbindlich.
@@ -434,7 +440,9 @@ const VideoNote = () => {
               Lass uns in einem kurzen Gespräch herausfinden, wie wir {companyName} mit Outreach & Content unterstützen können.
             </p>
             <a 
-              href={`mailto:${contact.email || ''}?subject=Lass uns sprechen - ${contact.first_name}`}
+              href="https://calendly.com/your-link"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
             >
               Jetzt Gespräch vereinbaren
