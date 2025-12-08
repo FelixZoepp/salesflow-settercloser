@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield, TrendingUp, Megaphone, Settings } from "lucide-react";
+import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield, TrendingUp, Megaphone, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -82,6 +82,7 @@ const Layout = ({ children }: LayoutProps) => {
     {
       title: "Sales",
       items: [
+        { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { path: "/pipeline", label: "Pipeline", icon: Home },
         { path: "/today", label: "Heute", icon: CheckSquare },
         { path: "/inbound", label: "Inbound", icon: TrendingUp },
