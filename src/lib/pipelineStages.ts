@@ -35,12 +35,36 @@ export const SETTER_CLOSER_STAGES = [
 ] as const;
 
 export type ColdStage = typeof COLD_PIPELINE_STAGES[number];
+export type InboundStage = typeof INBOUND_PIPELINE_STAGES[number];
 export type SetterCloserStage = typeof SETTER_CLOSER_STAGES[number];
 
 export const getStageColor = (stage: string): string => {
-  // Cold Pipeline - Grau
+  // Cold Pipeline - Grau (außer Termin gelegt)
   if (COLD_PIPELINE_STAGES.includes(stage as ColdStage)) {
+    if (stage === 'Termin gelegt') {
+      return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
+    }
     return 'bg-muted text-muted-foreground';
+  }
+  
+  // Inbound Pipeline Stages
+  if (stage === 'New') {
+    return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
+  }
+  if (stage === 'Qualifiziert') {
+    return 'bg-blue-500/20 text-blue-600 border border-blue-500/30';
+  }
+  if (stage === 'Termin gesetzt') {
+    return 'bg-indigo-500/20 text-indigo-600 border border-indigo-500/30';
+  }
+  if (stage === 'Angebot') {
+    return 'bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]';
+  }
+  if (stage === 'Verhandlung') {
+    return 'bg-orange-500/20 text-orange-600 border border-orange-500/30';
+  }
+  if (stage === 'Gewonnen') {
+    return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
   }
   
   // Setting stages - Blau
@@ -48,13 +72,18 @@ export const getStageColor = (stage: string): string => {
     return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
   }
   
-  // Follow Up stages - Orange
+  // Closing stages - Lila
+  if (stage.includes('Closing') || stage === 'CC2 terminiert') {
+    return 'bg-purple-500/20 text-purple-600 border border-purple-500/30';
+  }
+  
+  // Follow Up / No Show stages - Orange
   if (stage.includes('Follow Up') || stage.includes('No Show')) {
     return 'bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]';
   }
   
   // Won stages - Grün
-  if (stage === 'Abgeschlossen') {
+  if (stage === 'Abgeschlossen' || stage === 'Angebot versendet') {
     return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
   }
   
