@@ -88,7 +88,7 @@ const InboundLeads = () => {
 
       if (existingDeal) {
         toast.info(`Deal existiert bereits für ${contact.first_name} ${contact.last_name}`);
-        navigate(`/pipeline`);
+        navigate(`/pipeline?tab=inbound`);
         return;
       }
 
@@ -106,7 +106,7 @@ const InboundLeads = () => {
       if (error) throw error;
 
       toast.success(`Deal erstellt für ${contact.first_name} ${contact.last_name}`);
-      navigate(`/pipeline`);
+      navigate(`/pipeline?tab=inbound`);
     } catch (error: any) {
       console.error('Error creating deal:', error);
       toast.error("Fehler beim Erstellen des Deals");

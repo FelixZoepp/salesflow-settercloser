@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,9 +30,16 @@ interface Deal {
 }
 
 const Pipeline = () => {
+  const [searchParams] = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activePipeline, setActivePipeline] = useState<PipelineType>('cold');
+  const [activePipeline, setActivePipeline] = useState<PipelineType>(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'inbound' || tabParam === 'cold' || tabParam === 'setting_closing') {
+      return tabParam;
+    }
+    return 'cold';
+  });
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [showPhoneSetup, setShowPhoneSetup] = useState(false);
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
