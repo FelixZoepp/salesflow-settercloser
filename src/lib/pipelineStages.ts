@@ -1,4 +1,4 @@
-export type PipelineType = 'cold' | 'setting_closing';
+export type PipelineType = 'cold' | 'setting_closing' | 'inbound';
 
 export const COLD_PIPELINE_STAGES = [
   'Lead',
@@ -9,6 +9,16 @@ export const COLD_PIPELINE_STAGES = [
   'Im Urlaub',
   'Kein Interesse / Kein Bedarf',
   'Termin gelegt'
+] as const;
+
+export const INBOUND_PIPELINE_STAGES = [
+  'New',
+  'Qualifiziert',
+  'Termin gesetzt',
+  'Angebot',
+  'Verhandlung',
+  'Gewonnen',
+  'Verloren'
 ] as const;
 
 export const SETTER_CLOSER_STAGES = [
@@ -57,5 +67,7 @@ export const getStageColor = (stage: string): string => {
 };
 
 export const getPipelineStages = (pipeline: PipelineType) => {
-  return pipeline === 'cold' ? COLD_PIPELINE_STAGES : SETTER_CLOSER_STAGES;
+  if (pipeline === 'cold') return COLD_PIPELINE_STAGES;
+  if (pipeline === 'inbound') return INBOUND_PIPELINE_STAGES;
+  return SETTER_CLOSER_STAGES;
 };
