@@ -322,8 +322,104 @@ const VideoNote = () => {
         </div>
       </section>
 
+      {/* Case Studies Section */}
+      <section className="py-20 bg-slate-900/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Das könnten deine Ergebnisse sein, {contact.first_name}
+            </h2>
+            <p className="text-slate-400 text-lg">
+              Echte Kunden. Echte Resultate. Sieh selbst.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Max Müller",
+                company: "Consulting Agentur",
+                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+                beforeRevenue: "8.000€",
+                afterRevenue: "32.000€",
+                testimonial: "In 3 Monaten haben wir unseren Umsatz vervierfacht!"
+              },
+              {
+                name: "Lisa Schmidt",
+                company: "Marketing Beratung",
+                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+                beforeRevenue: "12.000€",
+                afterRevenue: "45.000€",
+                testimonial: "Endlich planbare Termine und qualifizierte Leads."
+              },
+              {
+                name: "Thomas Weber",
+                company: "IT Dienstleister",
+                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+                beforeRevenue: "15.000€",
+                afterRevenue: "58.000€",
+                testimonial: "Die beste Investition für unser Business!"
+              }
+            ].map((caseStudy, i) => (
+              <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700 hover:border-cyan-500/50 transition-colors">
+                {/* Video */}
+                <div className="aspect-video bg-slate-900 relative">
+                  <iframe
+                    src={caseStudy.videoUrl}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400 font-bold">
+                      {caseStudy.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{caseStudy.name}</p>
+                      <p className="text-slate-400 text-sm">{caseStudy.company}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Before/After Revenue */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-red-500/10 rounded-xl p-4 text-center border border-red-500/30">
+                      <p className="text-slate-400 text-xs uppercase mb-1">Vorher</p>
+                      <p className="text-red-400 text-xl font-bold">{caseStudy.beforeRevenue}</p>
+                      <p className="text-slate-500 text-xs">pro Monat</p>
+                    </div>
+                    <div className="bg-green-500/10 rounded-xl p-4 text-center border border-green-500/30">
+                      <p className="text-slate-400 text-xs uppercase mb-1">Nachher</p>
+                      <p className="text-green-400 text-xl font-bold">{caseStudy.afterRevenue}</p>
+                      <p className="text-slate-500 text-xs">pro Monat</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-slate-300 text-sm italic">"{caseStudy.testimonial}"</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <a 
+              href="https://calendly.com/zoepp-media/vorbereitungsgesprach-mit-felix-zoepp-klon"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
+            >
+              <Calendar className="w-5 h-5" />
+              Das will ich auch, {contact.first_name}!
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Process Section */}
-      <section id="ansatz" className="py-20 bg-slate-900/50">
+      <section id="ansatz" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
