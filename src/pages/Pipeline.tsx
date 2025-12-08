@@ -199,8 +199,9 @@ const Pipeline = () => {
 
         {/* Pipeline Tabs */}
         <Tabs value={activePipeline} onValueChange={(v) => setActivePipeline(v as PipelineType)} className="mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="cold">Kaltakquise</TabsTrigger>
+            <TabsTrigger value="inbound">Inbound</TabsTrigger>
             <TabsTrigger value="setting_closing">Setter/Closer</TabsTrigger>
           </TabsList>
         </Tabs>
