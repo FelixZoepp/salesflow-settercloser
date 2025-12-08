@@ -30,6 +30,17 @@ interface KPIData {
   noShowRate: number;
 }
 
+interface TrendData {
+  dialAttempts: number;
+  appointmentsSet: number;
+  firstCalls: number;
+  secondCalls: number;
+  closedDeals: number;
+  totalRevenue: number;
+  revenuePerCustomer: number;
+  revenuePerDial: number;
+}
+
 interface MonthlyData {
   month: string;
   revenue: number;
@@ -51,6 +62,16 @@ const Dashboard = () => {
     noShowRate: 0,
   });
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [trends, setTrends] = useState<TrendData>({
+    dialAttempts: 0,
+    appointmentsSet: 0,
+    firstCalls: 0,
+    secondCalls: 0,
+    closedDeals: 0,
+    totalRevenue: 0,
+    revenuePerCustomer: 0,
+    revenuePerDial: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("month");
 
@@ -58,19 +79,41 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [dateRange]);
 
-  const getDateRange = () => {
+  const getDateRanges = () => {
     const now = new Date();
-    let startDate: Date;
+    let currentStart: Date;
+    let previousStart: Date;
+    let previousEnd: Date;
     
     if (dateRange === 'today') {
-      startDate = new Date(now.setHours(0, 0, 0, 0));
+      currentStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      previousEnd = new Date(currentStart);
+      previousEnd.setDate(previousEnd.getDate() - 1);
+      previousStart = new Date(previousEnd.getFullYear(), previousEnd.getMonth(), previousEnd.getDate());
     } else if (dateRange === 'week') {
-      startDate = new Date(now.setDate(now.getDate() - 7));
+      currentStart = new Date(now);
+      currentStart.setDate(currentStart.getDate() - 7);
+      previousEnd = new Date(currentStart);
+      previousStart = new Date(previousEnd);
+      previousStart.setDate(previousStart.getDate() - 7);
     } else {
-      startDate = new Date(now.setDate(now.getDate() - 30));
+      currentStart = new Date(now);
+      currentStart.setDate(currentStart.getDate() - 30);
+      previousEnd = new Date(currentStart);
+      previousStart = new Date(previousEnd);
+      previousStart.setDate(previousStart.getDate() - 30);
     }
     
-    return startDate.toISOString();
+    return {
+      currentStart: currentStart.toISOString(),
+      previousStart: previousStart.toISOString(),
+      previousEnd: previousEnd.toISOString(),
+    };
+  };
+
+  const calculateTrend = (current: number, previous: number): number => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
   };
 
   const fetchDashboardData = async () => {
@@ -78,55 +121,99 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const startDate = getDateRange();
+      const { currentStart, previousStart, previousEnd } = getDateRanges();
 
-      // Fetch activities (calls)
-      const { data: activities } = await supabase
+      // Fetch current period activities (calls)
+      const { data: currentActivities } = await supabase
         .from('activities')
         .select('*')
         .eq('type', 'call')
-        .gte('timestamp', startDate);
+        .gte('timestamp', currentStart);
 
-      const dialAttempts = activities?.length || 0;
-      const reached = activities?.filter(a => a.outcome === 'reached' || a.outcome === 'interested').length || 0;
+      // Fetch previous period activities
+      const { data: previousActivities } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('type', 'call')
+        .gte('timestamp', previousStart)
+        .lt('timestamp', previousEnd);
 
-      // Fetch deals
-      const { data: deals } = await supabase
+      const dialAttempts = currentActivities?.length || 0;
+      const prevDialAttempts = previousActivities?.length || 0;
+      const reached = currentActivities?.filter(a => a.outcome === 'reached' || a.outcome === 'interested').length || 0;
+
+      // Fetch current period deals
+      const { data: currentDeals } = await supabase
         .from('deals')
         .select('*')
-        .gte('created_at', startDate);
+        .gte('created_at', currentStart);
 
-      const allDeals = deals || [];
+      // Fetch previous period deals
+      const { data: previousDeals } = await supabase
+        .from('deals')
+        .select('*')
+        .gte('created_at', previousStart)
+        .lt('created_at', previousEnd);
+
+      const allDeals = currentDeals || [];
+      const prevDeals = previousDeals || [];
       
-      // Cold pipeline stats
+      // Cold pipeline stats - current
       const appointmentsSet = allDeals.filter(d => d.stage === 'Termin gelegt').length;
+      const prevAppointmentsSet = prevDeals.filter(d => d.stage === 'Termin gelegt').length;
       
-      // Setter/Closer pipeline stats
+      // Setter/Closer pipeline stats - current
       const settingDeals = allDeals.filter(d => d.pipeline === 'setting_closing');
+      const prevSettingDeals = prevDeals.filter(d => d.pipeline === 'setting_closing');
+      
       const firstCalls = settingDeals.filter(d => 
         d.stage === 'Setting terminiert' || d.stage === 'Closing terminiert'
       ).length;
-      const secondCalls = settingDeals.filter(d => 
-        d.stage === 'CC2 terminiert'
+      const prevFirstCalls = prevSettingDeals.filter(d => 
+        d.stage === 'Setting terminiert' || d.stage === 'Closing terminiert'
       ).length;
+      
+      const secondCalls = settingDeals.filter(d => d.stage === 'CC2 terminiert').length;
+      const prevSecondCalls = prevSettingDeals.filter(d => d.stage === 'CC2 terminiert').length;
+      
       const closedDeals = allDeals.filter(d => d.stage === 'Abgeschlossen').length;
+      const prevClosedDeals = prevDeals.filter(d => d.stage === 'Abgeschlossen').length;
+      
       const noShows = settingDeals.filter(d => 
         d.stage === 'Setting No Show' || d.stage === 'Closing No Show'
       ).length;
 
-      // Revenue calculations
+      // Revenue calculations - current
       const totalRevenue = allDeals
+        .filter(d => d.stage === 'Abgeschlossen')
+        .reduce((sum, d) => sum + Number(d.amount_eur || 0), 0);
+      const prevTotalRevenue = prevDeals
         .filter(d => d.stage === 'Abgeschlossen')
         .reduce((sum, d) => sum + Number(d.amount_eur || 0), 0);
       
       const revenuePerCustomer = closedDeals > 0 ? totalRevenue / closedDeals : 0;
+      const prevRevenuePerCustomer = prevClosedDeals > 0 ? prevTotalRevenue / prevClosedDeals : 0;
+      
       const revenuePerDial = dialAttempts > 0 ? totalRevenue / dialAttempts : 0;
+      const prevRevenuePerDial = prevDialAttempts > 0 ? prevTotalRevenue / prevDialAttempts : 0;
 
       // Rates
       const appointmentRate = dialAttempts > 0 ? (appointmentsSet / dialAttempts) * 100 : 0;
       const qualificationRate = reached > 0 ? (appointmentsSet / reached) * 100 : 0;
       const closingRate = settingDeals.length > 0 ? (closedDeals / settingDeals.length) * 100 : 0;
       const noShowRate = settingDeals.length > 0 ? (noShows / settingDeals.length) * 100 : 0;
+
+      // Calculate trends
+      setTrends({
+        dialAttempts: calculateTrend(dialAttempts, prevDialAttempts),
+        appointmentsSet: calculateTrend(appointmentsSet, prevAppointmentsSet),
+        firstCalls: calculateTrend(firstCalls, prevFirstCalls),
+        secondCalls: calculateTrend(secondCalls, prevSecondCalls),
+        closedDeals: calculateTrend(closedDeals, prevClosedDeals),
+        totalRevenue: calculateTrend(totalRevenue, prevTotalRevenue),
+        revenuePerCustomer: calculateTrend(revenuePerCustomer, prevRevenuePerCustomer),
+        revenuePerDial: calculateTrend(revenuePerDial, prevRevenuePerDial),
+      });
 
       setKPIs({
         dialAttempts,
@@ -195,6 +282,12 @@ const Dashboard = () => {
     }).format(value);
   };
 
+  const getTrendLabel = () => {
+    if (dateRange === 'today') return 'zum Vortag';
+    if (dateRange === 'week') return 'zur Vorwoche';
+    return 'zum Vormonat';
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -229,32 +322,32 @@ const Dashboard = () => {
             <KPICard
               label="Wählversuche"
               value={formatCurrency(kpis.dialAttempts)}
-              trend={6.5}
-              trendLabel="zum Vormonat"
+              trend={trends.dialAttempts}
+              trendLabel={getTrendLabel()}
             />
             <KPICard
               label="Termine gelegt"
               value={kpis.appointmentsSet.toString()}
-              trend={-1.5}
-              trendLabel="zum Vormonat"
+              trend={trends.appointmentsSet}
+              trendLabel={getTrendLabel()}
             />
             <KPICard
               label="Erstgespräche"
               value={kpis.firstCalls.toString()}
-              trend={-1.5}
-              trendLabel="zum Vormonat"
+              trend={trends.firstCalls}
+              trendLabel={getTrendLabel()}
             />
             <KPICard
               label="Zweitgespräche"
               value={kpis.secondCalls.toString()}
-              trend={-8.5}
-              trendLabel="zum Vormonat"
+              trend={trends.secondCalls}
+              trendLabel={getTrendLabel()}
             />
             <KPICard
               label="Abschlüsse"
               value={kpis.closedDeals.toString()}
-              trend={1.5}
-              trendLabel="zum Vormonat"
+              trend={trends.closedDeals}
+              trendLabel={getTrendLabel()}
               highlighted
             />
           </div>
@@ -338,8 +431,14 @@ const Dashboard = () => {
                   {formatCurrency(kpis.totalRevenue)}€
                 </p>
                 <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="w-3 h-3 text-[hsl(var(--success))]" />
-                  <span className="text-xs text-[hsl(var(--success))]">8.5% zum Vormonat</span>
+                  {trends.totalRevenue >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-[hsl(var(--success))]" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-[hsl(var(--danger))]" />
+                  )}
+                  <span className={`text-xs ${trends.totalRevenue >= 0 ? 'text-[hsl(var(--success))]' : 'text-[hsl(var(--danger))]'}`}>
+                    {trends.totalRevenue >= 0 ? '+' : ''}{trends.totalRevenue.toFixed(1)}% {getTrendLabel()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -351,8 +450,14 @@ const Dashboard = () => {
                   {formatCurrency(kpis.revenuePerCustomer)}€
                 </p>
                 <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="w-3 h-3 text-[hsl(var(--success))]" />
-                  <span className="text-xs text-[hsl(var(--success))]">8.5% zum Vormonat</span>
+                  {trends.revenuePerCustomer >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-[hsl(var(--success))]" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-[hsl(var(--danger))]" />
+                  )}
+                  <span className={`text-xs ${trends.revenuePerCustomer >= 0 ? 'text-[hsl(var(--success))]' : 'text-[hsl(var(--danger))]'}`}>
+                    {trends.revenuePerCustomer >= 0 ? '+' : ''}{trends.revenuePerCustomer.toFixed(1)}% {getTrendLabel()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -364,8 +469,14 @@ const Dashboard = () => {
                   {kpis.revenuePerDial.toFixed(2)}€
                 </p>
                 <div className="flex items-center gap-1 mt-2">
-                  <TrendingDown className="w-3 h-3 text-[hsl(var(--danger))]" />
-                  <span className="text-xs text-[hsl(var(--danger))]">1.5% zum Vormonat</span>
+                  {trends.revenuePerDial >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-[hsl(var(--success))]" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-[hsl(var(--danger))]" />
+                  )}
+                  <span className={`text-xs ${trends.revenuePerDial >= 0 ? 'text-[hsl(var(--success))]' : 'text-[hsl(var(--danger))]'}`}>
+                    {trends.revenuePerDial >= 0 ? '+' : ''}{trends.revenuePerDial.toFixed(1)}% {getTrendLabel()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
