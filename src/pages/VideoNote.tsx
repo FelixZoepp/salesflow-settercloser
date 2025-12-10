@@ -121,7 +121,7 @@ const VideoNote = () => {
       <header className="border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="text-xl font-bold text-white">
-            <span className="text-cyan-400">LinkedIn</span>Growth
+            <span className="text-cyan-400">Content</span>-Leads
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-300">
             <a href="#vorteile" className="hover:text-white transition-colors">Warum wir?</a>
@@ -411,6 +411,181 @@ const VideoNote = () => {
               <Calendar className="w-5 h-5" />
               Das will ich auch, {contact.first_name}!
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Inbound Strategy Section */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium mb-4">
+              Inbound Strategie
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Organische Reichweite durch LinkedIn-Content
+            </h2>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Mit strategischem Content ziehen wir qualifizierte Leads direkt zu dir, {contact.first_name}.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Post Example */}
+            <div className="bg-slate-800/70 rounded-2xl p-6 border border-slate-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full"></div>
+                <div>
+                  <p className="text-white font-semibold">Felix Zöpp</p>
+                  <p className="text-slate-500 text-sm">LinkedIn Growth Experte</p>
+                </div>
+              </div>
+              <div className="text-slate-300 text-sm leading-relaxed mb-4">
+                <p className="mb-3">Ich habe 147 Kaltakquise-Nachrichten analysiert.</p>
+                <p className="mb-3">Das Ergebnis? 96% machen den gleichen Fehler.</p>
+                <p className="mb-3">Sie reden nur über sich selbst. ❌</p>
+                <p className="mb-3">Die Top 4% machen es anders:</p>
+                <p className="mb-1">→ Sie starten mit dem Problem des Kunden</p>
+                <p className="mb-1">→ Sie zeigen konkrete Resultate</p>
+                <p className="mb-3">→ Sie machen es persönlich</p>
+                <p className="text-cyan-400">So gewinnst du 3x mehr Antworten...</p>
+              </div>
+              <div className="flex items-center gap-6 text-slate-500 text-sm border-t border-slate-700 pt-4">
+                <span className="flex items-center gap-1">
+                  <ThumbsUp className="w-4 h-4" /> 847
+                </span>
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="w-4 h-4" /> 124 Kommentare
+                </span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-white mb-6">
+                Das Ergebnis eines Posts:
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-purple-500/30">
+                  <p className="text-3xl md:text-4xl font-bold text-purple-400">42K</p>
+                  <p className="text-slate-400 text-sm mt-1">Impressionen</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-cyan-500/30">
+                  <p className="text-3xl md:text-4xl font-bold text-cyan-400">124</p>
+                  <p className="text-slate-400 text-sm mt-1">Kommentare</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-green-500/30">
+                  <p className="text-3xl md:text-4xl font-bold text-green-400">18</p>
+                  <p className="text-slate-400 text-sm mt-1">Leads</p>
+                </div>
+              </div>
+              <p className="text-slate-400">
+                Ein einziger Post kann Tausende erreichen und qualifizierte Leads generieren – 
+                ohne einen Cent für Werbung auszugeben, {contact.first_name}.
+              </p>
+              <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/30">
+                <p className="text-purple-300 text-sm">
+                  💡 <strong>Für {companyName}:</strong> Wir erstellen 3-4 Posts pro Woche, 
+                  die deine Expertise zeigen und organisch Leads anziehen.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Outbound Strategy Section */}
+      <section className="py-20 bg-slate-900/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-full text-sm font-medium mb-4">
+              Outbound Strategie
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Personalisierte Video-Nachrichten wie diese hier
+            </h2>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Genau wie die Seite, auf der du gerade bist, {contact.first_name} – erstellen wir für jeden Lead individuell.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Explanation */}
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-white">
+                So funktioniert es:
+              </h3>
+              <div className="space-y-4">
+                {[
+                  {
+                    step: "1",
+                    title: "Zielgruppe definieren",
+                    desc: "Wir identifizieren deine idealen Kunden auf LinkedIn."
+                  },
+                  {
+                    step: "2",
+                    title: "Personalisierte Seite erstellen",
+                    desc: "Jeder Lead bekommt eine eigene Landingpage – wie diese hier."
+                  },
+                  {
+                    step: "3",
+                    title: "Video aufnehmen",
+                    desc: "Ein kurzes, persönliches Video speziell für den Lead."
+                  },
+                  {
+                    step: "4",
+                    title: "Nachricht senden",
+                    desc: "Wir senden den Link direkt per LinkedIn-Nachricht."
+                  }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400 font-bold flex-shrink-0">
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{item.title}</p>
+                      <p className="text-slate-400 text-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/30">
+                <p className="text-cyan-300 text-sm">
+                  🎯 <strong>Warum das funktioniert:</strong> 73% höhere Antwortrate als normale Nachrichten, 
+                  weil der Lead sich persönlich angesprochen fühlt.
+                </p>
+              </div>
+            </div>
+
+            {/* Visual */}
+            <div className="relative">
+              <div className="bg-slate-800/70 rounded-2xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                <div className="aspect-video bg-slate-900 rounded-xl mb-4 flex items-center justify-center border border-slate-700">
+                  <div className="text-center">
+                    <Play className="w-16 h-16 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-slate-400 text-sm">Persönliches Video für</p>
+                    <p className="text-white font-semibold">{contact.first_name} {contact.last_name}</p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Personalisierte URL:</span>
+                    <span className="text-cyan-400 font-mono">content-leads.de/p/{contact.first_name.toLowerCase()}-...</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Erstellt für:</span>
+                    <span className="text-white">{contact.first_name} {contact.last_name}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Unternehmen:</span>
+                    <span className="text-white">{companyName}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -top-4 -right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                LIVE BEISPIEL
+              </div>
+            </div>
           </div>
         </div>
       </section>
