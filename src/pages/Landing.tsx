@@ -114,11 +114,11 @@ const Landing = () => {
   const faqs = [
     {
       question: "Welche Kanäle unterstützt das Tool?",
-      answer: "SalesFlow unterstützt Email, LinkedIn und Telefon – alles aus einer zentralen Platform. Sie können Multi-Channel-Sequenzen erstellen und automatisieren."
+      answer: "Hochpreis-Leads unterstützt Email, LinkedIn und Telefon – alles aus einer zentralen Platform. Sie können Multi-Channel-Sequenzen erstellen und automatisieren."
     },
     {
       question: "Brauche ich spezielle Hardware?",
-      answer: "Nein, SalesFlow läuft komplett in der Cloud. Sie benötigen nur einen Browser und optional ein Headset für Telefonate."
+      answer: "Nein, Hochpreis-Leads läuft komplett in der Cloud. Sie benötigen nur einen Browser und optional ein Headset für Telefonate."
     },
     {
       question: "Wie sicher sind meine Daten?",
@@ -126,11 +126,11 @@ const Landing = () => {
     },
     {
       question: "Kann ich das Tool mit meinem CRM verbinden?",
-      answer: "Ja, SalesFlow lässt sich mit allen gängigen CRM-Systemen integrieren (Salesforce, HubSpot, Pipedrive, etc.)."
+      answer: "Ja, Hochpreis-Leads lässt sich mit allen gängigen CRM-Systemen integrieren (Salesforce, HubSpot, Pipedrive, etc.)."
     },
     {
       question: "Gibt es eine Testphase?",
-      answer: "Ja, Sie können SalesFlow 14 Tage kostenlos testen – ohne Kreditkarte und ohne Verpflichtungen."
+      answer: "Ja, Sie können Hochpreis-Leads 14 Tage kostenlos testen – ohne Kreditkarte und ohne Verpflichtungen."
     }
   ];
 
@@ -193,7 +193,7 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              SalesFlow
+              Hochpreis-Leads
             </div>
             <div className="hidden md:flex gap-8 text-sm text-white/80">
               <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -366,7 +366,7 @@ const Landing = () => {
               Das sagen unsere Kunden
             </h2>
             <p className="text-gray-300 text-lg">
-              Über 500 Agenturen, Coaches & Berater vertrauen auf SalesFlow
+              Über 500 Agenturen, Coaches & Berater vertrauen auf Hochpreis-Leads
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -527,7 +527,7 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
-                SalesFlow
+                Hochpreis-Leads
               </div>
               <p className="text-sm text-muted-foreground">
                 Der KI-Co-Pilot für Ihre Outbound-Akquise
@@ -561,7 +561,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-            <p>© 2025 SalesFlow. Alle Rechte vorbehalten.</p>
+            <p>© 2025 Hochpreis-Leads. Alle Rechte vorbehalten.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-primary transition-colors">
                 <Linkedin className="h-5 w-5" />
