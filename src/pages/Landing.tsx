@@ -31,106 +31,106 @@ const Landing = () => {
   }, []);
 
   const challenges = [
-    { icon: Target, title: "Gute Leads, aber keine Meetings" },
-    { icon: Phone, title: "Calls enden ohne Deal" },
-    { icon: BarChart3, title: "Zu viele Tools, kein Überblick" },
+    { icon: Target, title: "Kaltakquise auf LinkedIn bringt keine Termine" },
+    { icon: Phone, title: "Leads antworten nicht auf generische Nachrichten" },
+    { icon: BarChart3, title: "Kein System für konstante Neukundengewinnung" },
   ];
 
   const features = [
     {
-      icon: BarChart3,
-      title: "Klare Kennzahlen",
-      description: "Conversion-Rate, Anrufquote, Pipeline-Wert – alles auf einen Blick"
+      icon: Linkedin,
+      title: "LinkedIn Outreach auf Autopilot",
+      description: "Personalisierte Video-Nachrichten und Kampagnen, die Entscheider wirklich erreichen"
     },
     {
       icon: Target,
-      title: "Einfache Pipelines",
-      description: "Übersichtliche Deal-Phasen von Erstkontakt bis Abschluss – keine Komplexität"
+      title: "Vertriebsmaschine für Hochpreisangebote",
+      description: "Pipeline speziell für Premium-Dienstleistungen – von Erstgespräch bis Closing"
     },
     {
       icon: MessageSquare,
-      title: "Multi-Channel Outreach",
-      description: "Email, LinkedIn, Telefon – koordiniert aus einer Platform"
+      title: "Personalisierte Video-Landingpages",
+      description: "Jeder Lead bekommt seine eigene Seite – wie die, die du gerade gesehen hast"
     },
     {
       icon: Brain,
-      title: "Live-Coach im Call",
-      description: "Einwand erkannt – passende Antwort vorgeschlagen, in Echtzeit"
+      title: "KI-Coach im Sales Call",
+      description: "Einwände in Echtzeit erkennen und die perfekte Antwort vorgeschlagen bekommen"
     },
     {
-      icon: Zap,
-      title: "Automatische Dokumentation",
-      description: "Notizen & Deal-Updates automatisch – Sie konzentrieren sich aufs Verkaufen"
+      icon: TrendingUp,
+      title: "Content-Strategie für Inbound",
+      description: "Ghostwriting + Posting für organische Reichweite und warme Leads"
     },
     {
-      icon: Users,
-      title: "Perfekt für Dienstleister",
-      description: "Entwickelt für Agenturen, Coaches, Berater – nicht für komplexe Enterprise-Sales"
+      icon: Shield,
+      title: "Exklusiv für Hochpreis-Anbieter",
+      description: "Gebaut für Coaches, Berater, Agenturen & Dienstleister – nicht für Massenverkauf"
     }
   ];
 
   const steps = [
     {
       number: "01",
-      title: "Lead importieren & sequenzieren",
-      description: "Importieren Sie Ihre Kontakte und starten Sie automatisierte Outreach-Kampagnen über mehrere Kanäle.",
+      title: "LinkedIn-Leads importieren",
+      description: "Importiere deine Zielkunden und starte personalisierte Outreach-Kampagnen mit Video-Nachrichten.",
       icon: Users
     },
     {
       number: "02",
-      title: "Gespräche führen mit Live-Coach",
-      description: "Unser KI-Coach analysiert das Gespräch in Echtzeit und gibt Ihnen passende Antworten auf Einwände.",
+      title: "Termine generieren & closen",
+      description: "Unser KI-Coach unterstützt dich im Call mit Einwandbehandlung in Echtzeit.",
       icon: Brain
     },
     {
       number: "03",
-      title: "Deals gewinnen & CRM synchronisieren",
-      description: "Automatische Dokumentation und Deal-Erstellung. Alle Daten landen direkt in Ihrem CRM.",
+      title: "Hochpreis-Deals abschließen",
+      description: "Systematisch von Erstgespräch zum Abschluss. Deine Vertriebsmaschine für 5-6 stellige Deals.",
       icon: TrendingUp
     }
   ];
 
   const testimonials = [
     {
-      name: "Michael Schmidt",
-      role: "Sales Director, TechCorp GmbH",
+      name: "Hendrik Hoffmann",
+      role: "Webseiten-Agentur",
       image: "/placeholder.svg",
-      quote: "Unsere Meeting-Rate stieg um 340% innerhalb von 8 Wochen. Der Live-Coach ist ein Game-Changer."
+      quote: "Von 15k auf 30k Monatsumsatz in 8 Wochen. Die personalisierten Video-Nachrichten sind ein Game-Changer."
     },
     {
-      name: "Sarah Weber",
-      role: "Gründerin, Growth Agency",
+      name: "Lisa Weber",
+      role: "Business Coach",
       image: "/placeholder.svg",
-      quote: "Endlich ein Tool, das alle Outbound-Kanäle vereint. Wir sparen 15 Stunden pro Woche."
+      quote: "Endlich ein System, das LinkedIn Outreach + CRM vereint. Wir gewinnen jetzt 8-12 Termine pro Woche."
     },
     {
       name: "Thomas Müller",
-      role: "Head of Sales, Digital Solutions",
+      role: "Unternehmensberater",
       image: "/placeholder.svg",
-      quote: "Die Conversion-Rate hat sich verdoppelt. Das Dashboard gibt uns volle Transparenz."
+      quote: "Hochpreis-Leads hat unsere Akquise komplett transformiert. Jetzt verkaufen wir nur noch an Premium-Kunden."
     }
   ];
 
   const faqs = [
     {
-      question: "Welche Kanäle unterstützt das Tool?",
-      answer: "Hochpreis-Leads unterstützt Email, LinkedIn und Telefon – alles aus einer zentralen Platform. Sie können Multi-Channel-Sequenzen erstellen und automatisieren."
+      question: "Für wen ist Hochpreis-Leads geeignet?",
+      answer: "Hochpreis-Leads ist exklusiv für Coaches, Berater, Agenturen und Premium-Dienstleister entwickelt. Wenn du Hochpreis-Angebote (ab 3.000€) über LinkedIn verkaufst, ist das dein Tool."
     },
     {
-      question: "Brauche ich spezielle Hardware?",
-      answer: "Nein, Hochpreis-Leads läuft komplett in der Cloud. Sie benötigen nur einen Browser und optional ein Headset für Telefonate."
+      question: "Was macht Hochpreis-Leads anders als andere CRMs?",
+      answer: "Wir kombinieren LinkedIn Outreach mit personalisierten Video-Landingpages + KI-gestütztem Sales Coaching. Das ist keine Standard-CRM-Software, sondern eine komplette Vertriebsmaschine."
     },
     {
-      question: "Wie sicher sind meine Daten?",
-      answer: "Wir sind DSGVO-konform und hosten alle Daten in Deutschland. Ihre Kundendaten werden verschlüsselt und nach höchsten Sicherheitsstandards behandelt."
+      question: "Wie funktioniert der LinkedIn Outreach?",
+      answer: "Du importierst deine Zielkunden, wir generieren personalisierte Video-Nachrichten und Landingpages für jeden Lead. Die Öffnungsraten sind 5x höher als bei normalen Nachrichten."
     },
     {
-      question: "Kann ich das Tool mit meinem CRM verbinden?",
-      answer: "Ja, Hochpreis-Leads lässt sich mit allen gängigen CRM-Systemen integrieren (Salesforce, HubSpot, Pipedrive, etc.)."
+      question: "Brauche ich ein Premium LinkedIn Account?",
+      answer: "Nein, Hochpreis-Leads funktioniert mit jedem LinkedIn Account. Wir optimieren deine Outreach-Strategie unabhängig von deinem LinkedIn-Plan."
     },
     {
       question: "Gibt es eine Testphase?",
-      answer: "Ja, Sie können Hochpreis-Leads 14 Tage kostenlos testen – ohne Kreditkarte und ohne Verpflichtungen."
+      answer: "Ja, du kannst Hochpreis-Leads 14 Tage kostenlos testen – ohne Kreditkarte. Perfekt um zu sehen, ob es für dein Business passt."
     }
   ];
 
@@ -221,21 +221,25 @@ const Landing = () => {
         </div>
         <div className="container mx-auto text-center max-w-5xl relative z-[1]">
           <div className="inline-block mb-6 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
-            <Zap className="inline h-4 w-4 mr-2" />
-            Der KI-Co-Pilot für Outbound-Akquise
+            <Linkedin className="inline h-4 w-4 mr-2" />
+            Die Vertriebsmaschine für LinkedIn Outreach
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white leading-tight">
-            Mehr Anrufe. <br />
+            LinkedIn Outreach<br />
             <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Mehr Gespräche.
+              für Hochpreis-Angebote.
             </span><br />
-            Mehr Abschlüsse.
+            Systematisch.
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-            Das Outbound-CRM für Agenturen, Coaches, Berater & Dienstleister. 
-            Simpel. Übersichtlich. Fokussiert auf Akquise-Erfolg.
+          <p className="text-xl md:text-2xl text-gray-300 mb-6 max-w-3xl mx-auto">
+            Die All-in-One Vertriebsmaschine für Coaches, Berater, Agenturen & Dienstleister.
+            Personalisierte Video-Outreach + KI-gestütztes Sales Coaching + Pipeline Management.
+          </p>
+          
+          <p className="text-lg text-primary/80 mb-12 font-medium">
+            ⚡ Nicht für jeden. Nur für Premium-Anbieter mit Hochpreis-Angeboten.
           </p>
           
           <div className="flex gap-4 justify-center flex-wrap">
@@ -257,16 +261,16 @@ const Landing = () => {
 
           <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto text-white">
             <div>
-              <div className="text-4xl font-bold text-primary mb-2">340%</div>
-              <div className="text-sm text-gray-400">Mehr Meetings</div>
+              <div className="text-4xl font-bold text-primary mb-2">73%</div>
+              <div className="text-sm text-gray-400">Höhere Antwortrate</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-primary mb-2">15h</div>
-              <div className="text-sm text-gray-400">Zeitersparnis/Woche</div>
+              <div className="text-4xl font-bold text-primary mb-2">8-12</div>
+              <div className="text-sm text-gray-400">Termine pro Woche</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-primary mb-2">2x</div>
-              <div className="text-sm text-gray-400">Conversion-Rate</div>
+              <div className="text-4xl font-bold text-primary mb-2">5-6</div>
+              <div className="text-sm text-gray-400">Stellige Deals</div>
             </div>
           </div>
         </div>
@@ -300,11 +304,11 @@ const Landing = () => {
         <div className="container mx-auto max-w-6xl fade-on-scroll">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
-              Das <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">einfachste</span> Outbound-CRM <br />
-              für maximalen Umsatz
+              Die <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">komplette Vertriebsmaschine</span><br />
+              für LinkedIn Outreach
             </h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              Speziell für Agenturen, Coaches, Berater & Dienstleister entwickelt. Kein Schnickschnack – nur was Sie wirklich brauchen.
+              Outreach-Strategie + Content + CRM in einem System. Speziell für Hochpreis-Anbieter.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -530,7 +534,7 @@ const Landing = () => {
                 Hochpreis-Leads
               </div>
               <p className="text-sm text-muted-foreground">
-                Der KI-Co-Pilot für Ihre Outbound-Akquise
+                Die Vertriebsmaschine für LinkedIn Outreach
               </p>
             </div>
             <div>
