@@ -42,7 +42,7 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json();
+    const { audio, mimeType } = await req.json();
     
     if (!audio) {
       throw new Error('No audio data provided');
@@ -56,10 +56,26 @@ serve(async (req) => {
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
     
+    // Determine file extension based on mimeType
+    const mimeToExt: Record<string, string> = {
+      'audio/webm': 'webm',
+      'audio/webm;codecs=opus': 'webm',
+      'audio/mp4': 'm4a',
+      'audio/ogg': 'ogg',
+      'audio/ogg;codecs=opus': 'ogg',
+      'audio/mpeg': 'mp3',
+      'audio/wav': 'wav',
+    };
+    
+    const audioMimeType = mimeType || 'audio/webm';
+    const ext = mimeToExt[audioMimeType] || 'webm';
+    
+    console.log('Transcribing audio with mimeType:', audioMimeType, 'extension:', ext);
+    
     // Prepare form data for Whisper
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    const blob = new Blob([binaryAudio], { type: audioMimeType });
+    formData.append('file', blob, `audio.${ext}`);
     formData.append('model', 'whisper-1');
     formData.append('language', 'de'); // German language
 

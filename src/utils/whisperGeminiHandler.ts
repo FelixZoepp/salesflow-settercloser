@@ -13,6 +13,7 @@ export class WhisperGeminiHandler {
   private transcriptionInterval: number | null = null;
   private systemContext = "";
   private leadContext = "";
+  private mimeType = "";
   
   constructor(
     private onObjection: (handling: ObjectionHandling) => void,
@@ -36,8 +37,28 @@ export class WhisperGeminiHandler {
         }
       });
       
-      // Setup MediaRecorder for WebM format
-      const options = { mimeType: 'audio/webm' };
+      // Setup MediaRecorder with supported mimeType
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+        ''  // fallback to browser default
+      ];
+      
+      let selectedMimeType = '';
+      for (const mimeType of mimeTypes) {
+        if (mimeType === '' || MediaRecorder.isTypeSupported(mimeType)) {
+          selectedMimeType = mimeType;
+          break;
+        }
+      }
+      
+      console.log('Selected mimeType:', selectedMimeType || 'browser default');
+      this.mimeType = selectedMimeType || 'audio/webm';
+      
+      const options = selectedMimeType ? { mimeType: selectedMimeType } : undefined;
       this.mediaRecorder = new MediaRecorder(stream, options);
       
       this.mediaRecorder.ondataavailable = (event) => {
@@ -46,8 +67,8 @@ export class WhisperGeminiHandler {
         }
       };
       
-      // Start recording and collect chunks every 5 seconds
-      this.mediaRecorder.start();
+      // Start recording with timeslice for regular chunks
+      this.mediaRecorder.start(1000); // Get chunks every second
       this.isRecording = true;
       this.onStatus('active');
       
@@ -56,7 +77,7 @@ export class WhisperGeminiHandler {
         await this.processAudioChunks();
       }, 5000);
       
-      console.log('Whisper + Gemini session started');
+      console.log('Whisper + Gemini session started with mimeType:', this.mimeType);
       
     } catch (error) {
       console.error('Error starting session:', error);
@@ -69,8 +90,8 @@ export class WhisperGeminiHandler {
     if (this.audioChunks.length === 0) return;
     
     try {
-      // Combine all chunks into a single blob
-      const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+      // Combine all chunks into a single blob with correct mimeType
+      const audioBlob = new Blob(this.audioChunks, { type: this.mimeType });
       this.audioChunks = []; // Clear chunks
       
       // Convert to base64
@@ -79,7 +100,7 @@ export class WhisperGeminiHandler {
       // Transcribe with Whisper
       this.onStatus('transcribing');
       const { data: transcribeData, error: transcribeError } = await supabase.functions.invoke('transcribe-audio', {
-        body: { audio: base64Audio }
+        body: { audio: base64Audio, mimeType: this.mimeType }
       });
       
       if (transcribeError) {
