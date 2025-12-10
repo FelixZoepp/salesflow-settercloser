@@ -337,28 +337,25 @@ const VideoNote = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Max Müller",
-                company: "Consulting Agentur",
-                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-                beforeRevenue: "8.000€",
-                afterRevenue: "32.000€",
-                testimonial: "In 3 Monaten haben wir unseren Umsatz vervierfacht!"
-              },
-              {
-                name: "Lisa Schmidt",
-                company: "Marketing Beratung",
-                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-                beforeRevenue: "12.000€",
-                afterRevenue: "45.000€",
-                testimonial: "Endlich planbare Termine und qualifizierte Leads."
-              },
-              {
-                name: "Thomas Weber",
-                company: "IT Dienstleister",
-                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+                name: "Hendrik Hoffmann",
+                company: "Webseitenagentur",
+                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
                 beforeRevenue: "15.000€",
-                afterRevenue: "58.000€",
-                testimonial: "Die beste Investition für unser Business!"
+                afterRevenue: "30.800€"
+              },
+              {
+                name: "Daddel GmbH",
+                company: "Webseitenagentur",
+                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
+                beforeRevenue: "12.000€",
+                afterRevenue: "41.000€"
+              },
+              {
+                name: "Te Hentzschel",
+                company: "Webseitenagentur",
+                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
+                beforeRevenue: "14.000€",
+                afterRevenue: "32.000€"
               }
             ].map((caseStudy, i) => (
               <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700 hover:border-cyan-500/50 transition-colors">
@@ -398,7 +395,7 @@ const VideoNote = () => {
                     </div>
                   </div>
                   
-                  <p className="text-slate-300 text-sm italic">"{caseStudy.testimonial}"</p>
+                  
                 </div>
               </div>
             ))}
