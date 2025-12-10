@@ -5,6 +5,8 @@ import { Phone, PhoneOff, Mic, MicOff, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { supabase } from '@/integrations/supabase/client';
+import AITrainerPanel from './AITrainerPanel';
+import { useAITrainer } from '@/hooks/useAITrainer';
 
 interface RealtimeCallProps {
   contactName: string;
@@ -12,6 +14,7 @@ interface RealtimeCallProps {
   dealId?: string;
   onCallEnd: () => void;
   systemPrompt?: string;
+  leadContext?: string;
 }
 
 const RealtimeCall: React.FC<RealtimeCallProps> = ({ 
@@ -19,7 +22,8 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   contactId,
   dealId,
   onCallEnd,
-  systemPrompt 
+  systemPrompt,
+  leadContext = ''
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -30,6 +34,13 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const chatRef = useRef<RealtimeChat | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+  
+  // AI Trainer integration
+  const aiTrainer = useAITrainer({
+    onObjectionDetected: (objection) => {
+      console.log('Objection detected in call:', objection);
+    }
+  });
 
   const handleMessage = (event: any) => {
     console.log('Received message:', event.type);
@@ -57,6 +68,11 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
       chatRef.current = new RealtimeChat(handleMessage, handleError);
       await chatRef.current.init(systemPrompt || defaultPrompt);
       
+      // Start AI Trainer for objection detection
+      const systemContext = systemPrompt || defaultPrompt;
+      const contextInfo = leadContext || `Gespräch mit ${contactName}`;
+      await aiTrainer.startTrainer(systemContext, contextInfo);
+      
       setIsConnected(true);
       setIsConnecting(false);
       
@@ -76,6 +92,9 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const endConversation = async () => {
     try {
       setIsSummarizing(true);
+      
+      // Stop AI Trainer
+      aiTrainer.stopTrainer();
       
       // Get recording and transcript before disconnecting
       const recording = await chatRef.current?.getRecording();
@@ -100,6 +119,9 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
       if (fullTranscript && savedSessionId) {
         await generateSummary(savedSessionId, fullTranscript);
       }
+      
+      // Clear objections for next call
+      aiTrainer.clearObjections();
       
       setIsSummarizing(false);
       onCallEnd();
@@ -204,71 +226,84 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>WebRTC Call: {contactName}</span>
-          {isConnected && (
-            <span className="text-sm font-normal text-muted-foreground">
-              {formatDuration(callDuration)}
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!isConnected && !isConnecting ? (
-          <div className="text-center py-8">
-            <Button 
-              onClick={startConversation}
-              size="lg"
-              className="bg-success hover:bg-success/90"
-            >
-              <Phone className="mr-2 h-5 w-5" />
-              Anruf starten
-            </Button>
-          </div>
-        ) : isConnecting ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Verbinde...</p>
-          </div>
-        ) : (
-          <>
-            <div className="flex gap-2 justify-center">
+    <div className="flex gap-4 w-full">
+      {/* Call Card */}
+      <Card className="flex-1">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>WebRTC Call: {contactName}</span>
+            {isConnected && (
+              <span className="text-sm font-normal text-muted-foreground">
+                {formatDuration(callDuration)}
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!isConnected && !isConnecting ? (
+            <div className="text-center py-8">
               <Button 
-                onClick={toggleMute}
-                variant="outline"
+                onClick={startConversation}
                 size="lg"
+                className="bg-success hover:bg-success/90"
               >
-                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </Button>
-              <Button 
-                onClick={endConversation}
-                variant="destructive"
-                size="lg"
-                disabled={isSummarizing}
-              >
-                <PhoneOff className="mr-2 h-5 w-5" />
-                {isSummarizing ? 'Speichert...' : 'Auflegen'}
+                <Phone className="mr-2 h-5 w-5" />
+                Anruf starten
               </Button>
             </div>
-
-            {transcript.length > 0 && (
-              <div className="bg-muted/50 rounded-lg p-4 max-h-60 overflow-y-auto">
-                <h4 className="text-sm font-semibold mb-2">Transkript:</h4>
-                <div className="space-y-1 text-sm">
-                  {transcript.map((line, i) => (
-                    <div key={i} className={line.startsWith('Du:') ? 'text-primary' : 'text-foreground'}>
-                      {line}
-                    </div>
-                  ))}
-                </div>
+          ) : isConnecting ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Verbinde...</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2 justify-center">
+                <Button 
+                  onClick={toggleMute}
+                  variant="outline"
+                  size="lg"
+                >
+                  {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </Button>
+                <Button 
+                  onClick={endConversation}
+                  variant="destructive"
+                  size="lg"
+                  disabled={isSummarizing}
+                >
+                  <PhoneOff className="mr-2 h-5 w-5" />
+                  {isSummarizing ? 'Speichert...' : 'Auflegen'}
+                </Button>
               </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+
+              {transcript.length > 0 && (
+                <div className="bg-muted/50 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-semibold mb-2">Transkript:</h4>
+                  <div className="space-y-1 text-sm">
+                    {transcript.map((line, i) => (
+                      <div key={i} className={line.startsWith('Du:') ? 'text-primary' : 'text-foreground'}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* AI Trainer Panel */}
+      <div className="w-80 min-h-[400px]">
+        <AITrainerPanel
+          isActive={aiTrainer.isActive}
+          status={aiTrainer.status}
+          objections={aiTrainer.objections}
+          error={aiTrainer.error}
+        />
+      </div>
+    </div>
   );
 };
 
