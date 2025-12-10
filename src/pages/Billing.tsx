@@ -12,7 +12,7 @@ const PLANS = {
   basic: {
     product_id: "prod_RdNTM2YT5z3lv6",
     price_id: "price_1QLsQhIhWxcRSQb4yZtc4D3H",
-    name: "SalesFlow Basic",
+    name: "Hochpreis-Leads Basic",
     price: "€340/Jahr",
     features: [
       "Bis zu 3 Benutzer",
@@ -24,7 +24,7 @@ const PLANS = {
   pro: {
     product_id: "prod_RdNTYNmG2Hn8Uk",
     price_id: "price_1QLsSjIhWxcRSQb4Sd1G56q0",
-    name: "SalesFlow Pro",
+    name: "Hochpreis-Leads Pro",
     price: "€760/Jahr",
     features: [
       "Bis zu 10 Benutzer",
@@ -38,7 +38,7 @@ const PLANS = {
   enterprise: {
     product_id: "prod_RdNTeXrcfCeBIv",
     price_id: "price_1QLsUQIhWxcRSQb4Yr8mq04N",
-    name: "SalesFlow Enterprise",
+    name: "Hochpreis-Leads Enterprise",
     price: "€1.430/Jahr",
     features: [
       "Unbegrenzte Benutzer",
@@ -156,7 +156,7 @@ const Billing = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Abrechnung & Abonnements</h1>
           <p className="text-muted-foreground">
-            Verwalten Sie Ihr SalesFlow Abonnement
+            Verwalten Sie Ihr Hochpreis-Leads Abonnement
           </p>
         </div>
 

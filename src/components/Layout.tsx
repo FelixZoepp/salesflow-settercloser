@@ -133,7 +133,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Sidebar */}
       <aside className="w-56 bg-sidebar border-r border-sidebar-border flex flex-col">
         <div className="p-4 border-b border-sidebar-border">
-          <h1 className="text-xl font-bold text-sidebar-foreground">SalesFlow</h1>
+          <h1 className="text-xl font-bold text-sidebar-foreground">Hochpreis-Leads</h1>
           {viewingAccount && (
             <div className="mt-2">
               <Badge variant="secondary" className="text-xs">
