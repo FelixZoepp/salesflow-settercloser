@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, PhoneOff, Mic, MicOff, Download } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { supabase } from '@/integrations/supabase/client';
 import AITrainerPanel from './AITrainerPanel';
 import { useAITrainer } from '@/hooks/useAITrainer';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RealtimeCallProps {
   contactName: string;
@@ -16,6 +17,8 @@ interface RealtimeCallProps {
   systemPrompt?: string;
   leadContext?: string;
 }
+
+type MicrophoneStatus = 'checking' | 'available' | 'denied' | 'unavailable';
 
 const RealtimeCall: React.FC<RealtimeCallProps> = ({ 
   contactName,
@@ -31,9 +34,53 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const [callDuration, setCallDuration] = useState(0);
   const [transcript, setTranscript] = useState<string[]>([]);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [microphoneStatus, setMicrophoneStatus] = useState<MicrophoneStatus>('checking');
   const chatRef = useRef<RealtimeChat | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+
+  // Check microphone availability on mount
+  useEffect(() => {
+    checkMicrophone();
+  }, []);
+
+  const checkMicrophone = async () => {
+    try {
+      // First check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicrophoneStatus('unavailable');
+        return;
+      }
+
+      // Check permission state if available
+      if (navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          if (permissionStatus.state === 'denied') {
+            setMicrophoneStatus('denied');
+            return;
+          }
+        } catch {
+          // Permission query not supported, continue with getUserMedia check
+        }
+      }
+
+      // Try to get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Stop all tracks immediately - we just wanted to check access
+      stream.getTracks().forEach(track => track.stop());
+      setMicrophoneStatus('available');
+    } catch (error: any) {
+      console.error('Microphone check error:', error);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setMicrophoneStatus('denied');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setMicrophoneStatus('unavailable');
+      } else {
+        setMicrophoneStatus('unavailable');
+      }
+    }
+  };
   
   // AI Trainer integration
   const aiTrainer = useAITrainer({
@@ -240,16 +287,46 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Microphone Warning */}
+          {microphoneStatus === 'denied' && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Mikrofon-Zugriff wurde verweigert. Bitte erlaube den Zugriff in deinen Browser-Einstellungen und lade die Seite neu.
+              </AlertDescription>
+            </Alert>
+          )}
+          {microphoneStatus === 'unavailable' && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an und lade die Seite neu.
+              </AlertDescription>
+            </Alert>
+          )}
+          {microphoneStatus === 'checking' && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground py-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm">Mikrofon wird geprüft...</span>
+            </div>
+          )}
+
           {!isConnected && !isConnecting ? (
             <div className="text-center py-8">
               <Button 
                 onClick={startConversation}
                 size="lg"
                 className="bg-success hover:bg-success/90"
+                disabled={microphoneStatus !== 'available'}
               >
                 <Phone className="mr-2 h-5 w-5" />
                 Anruf starten
               </Button>
+              {microphoneStatus === 'available' && (
+                <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                  <Mic className="h-3 w-3" /> Mikrofon bereit
+                </p>
+              )}
             </div>
           ) : isConnecting ? (
             <div className="text-center py-8">
