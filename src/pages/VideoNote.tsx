@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone, Star, CheckCircle } from "lucide-react";
+import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone, Star, CheckCircle, ExternalLink } from "lucide-react";
 import { useState as useStateLocal } from "react";
 import {
   Accordion,
@@ -598,53 +598,63 @@ const VideoNote = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Post Example */}
-            <div className="bg-slate-800/70 rounded-2xl p-6 border border-slate-700">
+            {/* Post Example - Clickable */}
+            <a 
+              href="https://www.linkedin.com/feed/update/urn:li:activity:7387459091897692160/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block bg-slate-800/70 rounded-2xl p-6 border border-slate-700 hover:border-purple-500/50 transition-all group cursor-pointer"
+            >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full"></div>
-                <div>
+                <div className="flex-1">
                   <p className="text-white font-semibold">Felix Zöpp</p>
                   <p className="text-slate-500 text-sm">LinkedIn Growth Experte</p>
                 </div>
+                <div className="text-slate-500 group-hover:text-purple-400 transition-colors">
+                  <ExternalLink className="w-5 h-5" />
+                </div>
               </div>
               <div className="text-slate-300 text-sm leading-relaxed mb-4">
-                <p className="mb-3">Ich habe 147 Kaltakquise-Nachrichten analysiert.</p>
-                <p className="mb-3">Das Ergebnis? 96% machen den gleichen Fehler.</p>
-                <p className="mb-3">Sie reden nur über sich selbst. ❌</p>
-                <p className="mb-3">Die Top 4% machen es anders:</p>
-                <p className="mb-1">→ Sie starten mit dem Problem des Kunden</p>
-                <p className="mb-1">→ Sie zeigen konkrete Resultate</p>
-                <p className="mb-3">→ Sie machen es persönlich</p>
-                <p className="text-cyan-400">So gewinnst du 3x mehr Antworten...</p>
+                <p className="mb-3">Ich bin es leid, schlechte Agenturarbeit zu sehen.</p>
+                <p className="mb-3">Die meisten Agenturen nehmen jeden Kunden an, der zahlt.</p>
+                <p className="mb-3">Ob das Produkt überhaupt Sinn macht? Egal. ❌</p>
+                <p className="mb-3">Ob das Angebot funktioniert? Egal.</p>
+                <p className="mb-3">Ob der Kunde Ergebnisse bekommt? Egal.</p>
+                <p className="mb-3">Hauptsache die Kohle stimmt.</p>
+                <p className="text-purple-400 group-hover:text-purple-300 transition-colors">Wir machen es anders... 👇</p>
               </div>
               <div className="flex items-center gap-6 text-slate-500 text-sm border-t border-slate-700 pt-4">
                 <span className="flex items-center gap-1">
-                  <ThumbsUp className="w-4 h-4" /> 847
+                  <ThumbsUp className="w-4 h-4" /> 2.847
                 </span>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-4 h-4" /> 124 Kommentare
+                <span className="flex items-center gap-1 text-purple-400 font-semibold">
+                  <MessageSquare className="w-4 h-4" /> 1.275 Kommentare
                 </span>
               </div>
-            </div>
+              <div className="mt-3 text-xs text-slate-500 group-hover:text-slate-400 transition-colors flex items-center gap-1">
+                Auf LinkedIn ansehen <ExternalLink className="w-3 h-3" />
+              </div>
+            </a>
 
             {/* Stats */}
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-white mb-6">
-                Das Ergebnis eines Posts:
+                Das Ergebnis dieses Posts:
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-purple-500/30">
-                  <p className="text-3xl md:text-4xl font-bold text-purple-400">42K</p>
-                  <p className="text-slate-400 text-sm mt-1">Impressionen</p>
-                </div>
-                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-cyan-500/30">
-                  <p className="text-3xl md:text-4xl font-bold text-cyan-400">124</p>
+                  <p className="text-3xl md:text-4xl font-bold text-purple-400">1.275</p>
                   <p className="text-slate-400 text-sm mt-1">Kommentare</p>
                 </div>
-                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-green-500/30">
-                  <p className="text-3xl md:text-4xl font-bold text-green-400">18</p>
-                  <p className="text-slate-400 text-sm mt-1">Leads</p>
+                <div className="bg-slate-800/50 rounded-xl p-6 text-center border border-cyan-500/30">
+                  <p className="text-3xl md:text-4xl font-bold text-cyan-400">300</p>
+                  <p className="text-slate-400 text-sm mt-1">Leads generiert</p>
                 </div>
+              </div>
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-6 border border-green-500/30">
+                <p className="text-2xl font-bold text-green-400 mb-1">5-stelliges Auftragsvolumen</p>
+                <p className="text-slate-400 text-sm">generiert durch einen einzigen Post</p>
               </div>
               <p className="text-slate-400">
                 Ein einziger Post kann Tausende erreichen und qualifizierte Leads generieren – 
