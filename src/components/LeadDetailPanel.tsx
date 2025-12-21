@@ -33,6 +33,7 @@ interface Contact {
   lead_type: 'inbound' | 'outbound' | null;
   outreach_status: string | null;
   outreach_message: string | null;
+  lead_score: number | null;
 }
 
 interface Company {
@@ -86,7 +87,9 @@ export default function LeadDetailPanel({ dealId, open, onClose }: LeadDetailPan
   const handlerRef = useRef<WhisperGeminiHandler | null>(null);
 
   useEffect(() => {
-    fetchLeadData();
+    if (dealId && open) {
+      fetchLeadData();
+    }
     
     return () => {
       // Cleanup on unmount
@@ -94,9 +97,14 @@ export default function LeadDetailPanel({ dealId, open, onClose }: LeadDetailPan
         handlerRef.current.endSession();
       }
     };
-  }, [dealId]);
+  }, [dealId, open]);
 
   const fetchLeadData = async () => {
+    if (!dealId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -386,31 +394,83 @@ Stage: ${deal.stage}
 
               <ScrollArea className="flex-1 overflow-auto max-h-[calc(90vh-180px)]">
                 <TabsContent value="overview" className="p-6 space-y-6 mt-0">
-                  {/* Status Row */}
-                  <div className="grid grid-cols-3 gap-4">
+                  {/* Status Row with Lead Score */}
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Lead Score</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-foreground">{contact.lead_score || 0}</span>
+                        <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all ${
+                              (contact.lead_score || 0) >= 70 ? 'bg-green-500' : 
+                              (contact.lead_score || 0) >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(100, contact.lead_score || 0)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <div className="stat-card !p-4">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Status</p>
+                      <Badge 
+                        variant="secondary" 
+                        className={`${
+                          (contact.lead_score || 0) >= 70 ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
+                          (contact.lead_score || 0) >= 40 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 
+                          'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {(contact.lead_score || 0) >= 70 ? '🔥 Hot' : (contact.lead_score || 0) >= 40 ? 'Warm' : 'Cold'}
+                      </Badge>
+                    </div>
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Ansichten</p>
+                      <div className="flex items-center gap-2">
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-lg font-semibold text-foreground">{contact.view_count || 0}</span>
+                        {contact.viewed && (
+                          <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
+                            Gesehen
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Phase</p>
                       <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
                         {deal.stage}
                       </Badge>
                     </div>
-                    <div className="stat-card !p-4">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Lead Typ</p>
-                      <Badge 
-                        variant="outline" 
-                        className={`${contact.lead_type === 'inbound' 
-                          ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                          : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                        }`}
-                      >
-                        {contact.lead_type === 'inbound' ? 'Inbound' : 'Outbound'}
-                      </Badge>
-                    </div>
-                    <div className="stat-card !p-4">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Quelle</p>
-                      <span className="text-sm text-foreground">{contact.source || '—'}</span>
-                    </div>
                   </div>
+
+                  {/* Personalized URL Section */}
+                  {contact.lead_type === 'outbound' && contact.slug && (
+                    <div className="stat-card !p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Personalisierte Seite</p>
+                          <a 
+                            href={`${window.location.origin}/p/${contact.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline flex items-center gap-2"
+                          >
+                            {window.location.origin}/p/{contact.slug}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(`${window.location.origin}/p/${contact.slug}`, "URL")}
+                        >
+                          <Copy className="w-3.5 h-3.5 mr-2" />
+                          Kopieren
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Contact Data */}
                   <div>
