@@ -65,13 +65,25 @@ const Dashboard = () => {
       // Fetch leads count
       const { count: totalLeads } = await supabase.from("contacts").select("id", { count: "exact", head: true });
 
-      // Fetch tracking stats
+      // Fetch tracking stats for page views
       const { data: trackingEvents } = await supabase
         .from("lead_tracking_events")
         .select("event_type");
 
       const pageViews = trackingEvents?.filter(e => e.event_type === "page_view").length || 0;
-      const bookings = trackingEvents?.filter(e => e.event_type === "booking_click").length || 0;
+
+      // Fetch REAL bookings: Deals moved to "Erstgespräch gelegt" in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // Fetch REAL bookings: Deals moved to "Erstgespräch gelegt" in last 30 days
+      const { data: allDeals } = await supabase
+        .from("deals")
+        .select("id, stage, updated_at")
+        .gte("updated_at", thirtyDaysAgo.toISOString());
+      
+      // Cast stage to string to compare with inbound pipeline stages
+      const bookings = allDeals?.filter(d => (d.stage as string) === "Erstgespräch gelegt").length || 0;
 
       // Fetch hot leads (score >= 70)
       const { count: hotLeads } = await supabase
@@ -85,7 +97,7 @@ const Dashboard = () => {
         totalLeads: totalLeads || 0,
         pageViews,
         hotLeads: hotLeads || 0,
-        bookings,
+        bookings: bookings || 0,
       });
 
       // Fetch recent events
