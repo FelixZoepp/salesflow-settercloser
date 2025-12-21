@@ -1,4 +1,4 @@
-export type PipelineType = 'cold' | 'setting_closing' | 'inbound';
+export type PipelineType = 'cold' | 'inbound';
 
 export const COLD_PIPELINE_STAGES = [
   'Lead',
@@ -12,31 +12,19 @@ export const COLD_PIPELINE_STAGES = [
 ] as const;
 
 export const INBOUND_PIPELINE_STAGES = [
-  'New',
-  'Qualifiziert',
-  'Termin gesetzt',
-  'Angebot',
-  'Verhandlung',
-  'Gewonnen',
-  'Verloren'
-] as const;
-
-export const SETTER_CLOSER_STAGES = [
-  'Setting terminiert',
+  'Neuer Lead',
+  'Erstgespräch gelegt',
   'Setting No Show',
   'Setting Follow Up',
-  'Closing terminiert',
+  'Closing gelegt',
   'Closing No Show',
   'Closing Follow Up',
-  'CC2 terminiert',
-  'Angebot versendet',
-  'Abgeschlossen',
-  'Verloren'
+  'Verloren',
+  'Gewonnen'
 ] as const;
 
 export type ColdStage = typeof COLD_PIPELINE_STAGES[number];
 export type InboundStage = typeof INBOUND_PIPELINE_STAGES[number];
-export type SetterCloserStage = typeof SETTER_CLOSER_STAGES[number];
 
 export const getStageColor = (stage: string): string => {
   // Cold Pipeline - Grau (außer Termin gelegt)
@@ -48,47 +36,36 @@ export const getStageColor = (stage: string): string => {
   }
   
   // Inbound Pipeline Stages
-  if (stage === 'New') {
+  if (stage === 'Neuer Lead') {
     return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
   }
-  if (stage === 'Qualifiziert') {
-    return 'bg-blue-500/20 text-blue-600 border border-blue-500/30';
+  if (stage === 'Erstgespräch gelegt') {
+    return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
   }
-  if (stage === 'Termin gesetzt') {
-    return 'bg-indigo-500/20 text-indigo-600 border border-indigo-500/30';
+  if (stage === 'Setting No Show' || stage === 'Closing No Show') {
+    return 'bg-red-500/20 text-red-400 border border-red-500/30';
   }
-  if (stage === 'Angebot') {
-    return 'bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]';
+  if (stage === 'Setting Follow Up' || stage === 'Closing Follow Up') {
+    return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
   }
-  if (stage === 'Verhandlung') {
-    return 'bg-orange-500/20 text-orange-600 border border-orange-500/30';
+  if (stage === 'Closing gelegt') {
+    return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
   }
   if (stage === 'Gewonnen') {
     return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
   }
+  if (stage === 'Verloren') {
+    return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
+  }
   
-  // Setting stages - Blau
+  // Legacy support for old stages
   if (stage.includes('Setting')) {
     return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
   }
-  
-  // Closing stages - Lila
-  if (stage.includes('Closing') || stage === 'CC2 terminiert') {
-    return 'bg-purple-500/20 text-purple-600 border border-purple-500/30';
+  if (stage.includes('Closing')) {
+    return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
   }
-  
-  // Follow Up / No Show stages - Orange
-  if (stage.includes('Follow Up') || stage.includes('No Show')) {
-    return 'bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]';
-  }
-  
-  // Won stages - Grün
-  if (stage === 'Abgeschlossen' || stage === 'Angebot versendet') {
-    return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
-  }
-  
-  // Lost stages - Rot
-  if (stage === 'Verloren' || stage === 'Kein Interesse / Kein Bedarf') {
+  if (stage === 'Kein Interesse / Kein Bedarf') {
     return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
   }
   
@@ -97,6 +74,5 @@ export const getStageColor = (stage: string): string => {
 
 export const getPipelineStages = (pipeline: PipelineType) => {
   if (pipeline === 'cold') return COLD_PIPELINE_STAGES;
-  if (pipeline === 'inbound') return INBOUND_PIPELINE_STAGES;
-  return SETTER_CLOSER_STAGES;
+  return INBOUND_PIPELINE_STAGES;
 };
