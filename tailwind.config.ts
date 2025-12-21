@@ -60,11 +60,19 @@ export default {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         danger: "hsl(var(--danger))",
+        "accent-blue": "hsl(var(--accent-blue))",
+        "accent-purple": "hsl(var(--accent-purple))",
+        "accent-green": "hsl(var(--accent-green))",
+        "accent-orange": "hsl(var(--accent-orange))",
+        "accent-cyan": "hsl(var(--accent-cyan))",
+        "accent-rose": "hsl(var(--accent-rose))",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
+        xl: "1.25rem",
+        "2xl": "1.5rem",
       },
       backdropBlur: {
         glass: "var(--glass-blur)",
@@ -74,6 +82,7 @@ export default {
         "glow-sm": "0 0 10px hsl(var(--primary) / 0.2)",
         "glow-md": "0 0 20px hsl(var(--primary) / 0.3)",
         "glow-lg": "0 0 40px hsl(var(--primary) / 0.4)",
+        "premium": "0 4px 24px hsl(222 47% 3% / 0.4), inset 0 1px 0 0 hsl(0 0% 100% / 0.06)",
       },
       keyframes: {
         "accordion-down": {
