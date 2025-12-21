@@ -286,12 +286,11 @@ const Pipeline = () => {
           </DragOverlay>
         </DndContext>
 
-        {selectedDealId && (
-          <LeadDetailPanel 
-            dealId={selectedDealId} 
-            onClose={() => setSelectedDealId(null)} 
-          />
-        )}
+        <LeadDetailPanel 
+          dealId={selectedDealId || ""} 
+          open={!!selectedDealId}
+          onClose={() => setSelectedDealId(null)} 
+        />
       </div>
     </Layout>
   );

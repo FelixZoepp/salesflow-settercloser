@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2 } from "lucide-react";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { COLD_PIPELINE_STAGES } from "@/lib/pipelineStages";
@@ -57,10 +60,11 @@ interface Activity {
 
 interface LeadDetailPanelProps {
   dealId: string;
+  open: boolean;
   onClose: () => void;
 }
 
-export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProps) {
+export default function LeadDetailPanel({ dealId, open, onClose }: LeadDetailPanelProps) {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -69,6 +73,7 @@ export default function LeadDetailPanel({ dealId, onClose }: LeadDetailPanelProp
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
   
   // Video note state
   const [videoSlug, setVideoSlug] = useState("");
@@ -308,372 +313,447 @@ Stage: ${deal.stage}
     setCallStatus('disconnected');
   };
 
-  if (loading) {
-    return (
-      <div className="fixed right-0 top-0 h-screen w-[500px] bg-background border-l shadow-lg p-6 overflow-y-auto z-50">
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Lädt...</p>
-        </div>
-      </div>
-    );
-  }
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} kopiert`);
+  };
 
-  if (!deal || !contact) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-[500px] bg-background border-l shadow-lg overflow-y-auto z-50">
-      <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">
-            {contact.first_name} {contact.last_name}
-          </h2>
-          <p className="text-sm text-muted-foreground">{contact.company}</p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
-        {/* Live Call Section */}
-        {isLiveCallActive && (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Radio className="h-4 w-4 text-destructive animate-pulse" />
-                Live-Call aktiv
-                <Badge variant={
-                  callStatus === 'active' ? 'default' : 
-                  callStatus === 'transcribing' ? 'secondary' : 
-                  callStatus === 'analyzing' ? 'default' :
-                  'outline'
-                }>
-                  {callStatus === 'active' ? 'Aktiv' : 
-                   callStatus === 'transcribing' ? 'Transkribiert' : 
-                   callStatus === 'analyzing' ? 'Analysiert' : 
-                   callStatus === 'listening' ? 'Hört zu' : 
-                   callStatus}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {objectionHandlings.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">KI-Einwandbehandlungen:</Label>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {objectionHandlings.map((handling, idx) => (
-                      <div key={idx} className="border border-primary/20 rounded-lg p-3 bg-primary/5">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Einwand: "{handling.objection}"
-                        </div>
-                        <div className="text-sm font-medium">
-                          {handling.response}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {new Date(handling.timestamp).toLocaleTimeString('de-DE')}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {objectionHandlings.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Whisper transkribiert alle 5 Sek. • Gemini analysiert auf Einwände
-                </p>
-              )}
-
-              <Button 
-                onClick={stopLiveCall} 
-                variant="destructive" 
-                className="w-full"
-              >
-                <MicOff className="mr-2 h-4 w-4" />
-                Call beenden
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Start Live Call Button */}
-        {!isLiveCallActive && (
-          <Card>
-            <CardContent className="pt-6">
-              <Button 
-                onClick={startLiveCall} 
-                className="w-full"
-                variant="default"
-              >
-                <Mic className="mr-2 h-4 w-4" />
-                Live-Call mit KI-Support starten
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Externe Telefonie verbinden & KI erkennt Einwände live
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Contact Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Kontaktinformationen</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {contact.email && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Email:</span>
-                <span>{contact.email}</span>
-              </div>
-            )}
-            {contact.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{contact.phone}</span>
-              </div>
-            )}
-            {contact.position && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Position:</span>
-                <span>{contact.position}</span>
-              </div>
-            )}
-            {company && (
-              <>
-                {company.website && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Website:</span>
-                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      {company.website}
-                    </a>
-                  </div>
-                )}
-                {company.city && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Stadt:</span>
-                    <span>{company.city}</span>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Video Note - Only show for outbound leads */}
-        {contact.lead_type === 'outbound' && (
-          <Card className="border-cyan-500/30">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-4 w-4 text-cyan-500" />
-                Videonotiz
-                <Badge variant="outline" className="ml-auto text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
-                  Outbound
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <Label className="text-sm">Slug (für personalisierte URL)</Label>
-                <Input
-                  value={videoSlug}
-                  onChange={(e) => setVideoSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  placeholder="max-mustermann-acme"
-                />
-                {videoSlug && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">URL:</span>
-                    <a 
-                      href={`/p/${videoSlug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {window.location.origin}/p/{videoSlug}
-                    </a>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/p/${videoSlug}`);
-                        toast.success("Link kopiert!");
-                      }}
-                    >
-                      <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm">Video URL</Label>
-                <Input
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://cdn.example.com/video.mp4"
-                />
-              </div>
-
-              {/* View Status */}
-              {contact.viewed !== null && (
-                <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
-                  <Eye className="w-4 h-4" />
-                  {contact.viewed ? (
-                    <span className="text-green-600">
-                      Angesehen ({contact.view_count || 0}x)
-                      {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">Noch nicht angesehen</span>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 glass-card overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">Lädt...</p>
+          </div>
+        ) : !deal || !contact ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">Lead nicht gefunden</p>
+          </div>
+        ) : (
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-6 border-b border-white/5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">
+                    {contact.first_name} {contact.last_name}
+                  </h2>
+                  <p className="text-base text-muted-foreground">{contact.company}</p>
+                  {contact.position && (
+                    <p className="text-sm text-muted-foreground/70 mt-1">{contact.position}</p>
                   )}
                 </div>
-              )}
-
-              <Button onClick={handleSaveVideoNote} className="w-full" size="sm">
-                Videonotiz speichern
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Inbound Lead Priority Fields */}
-        {contact.lead_type === 'inbound' && (
-          <Card className="border-green-500/30">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                Inbound-Lead Details
-                <Badge variant="outline" className="ml-auto text-xs bg-green-500/10 text-green-600 border-green-500/30">
-                  Inbound
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="p-3 bg-green-500/5 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Priorität</p>
-                <p className="font-medium text-green-600">Eingehender Lead – schnell kontaktieren!</p>
-              </div>
-              {contact.source && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Quelle:</span>
-                  <Badge variant="secondary">{contact.source}</Badge>
+                  <Badge 
+                    variant="outline" 
+                    className={`${contact.lead_type === 'inbound' 
+                      ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                      : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                    }`}
+                  >
+                    {contact.lead_type === 'inbound' ? 'Inbound' : 'Outbound'}
+                  </Badge>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Call Script */}
-        {callScript && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Call Script
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="whitespace-pre-wrap text-sm bg-muted p-4 rounded-lg">
-                {callScript}
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              {COLD_PIPELINE_STAGES.map((stage) => (
-                <Button
-                  key={stage}
-                  variant={deal.stage === stage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStageUpdate(stage)}
-                  className="text-xs"
-                >
-                  {stage}
-                </Button>
-              ))}
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Add Note */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Notiz hinzufügen</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Notiz zum Call..."
-              rows={3}
-            />
-            <Button onClick={handleAddNote} className="w-full" disabled={!note.trim()}>
-              Notiz speichern
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Journey Timeline - Tracking Events */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Lead Journey
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <JourneyTimeline contactId={contact.id} />
-          </CardContent>
-        </Card>
-
-        {/* Call History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Call-Historie
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Noch keine Aktivitäten</p>
-            ) : (
-              <div className="space-y-3">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="border-l-2 border-primary pl-3 py-1">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="secondary" className="text-xs">
-                        {activity.type}
-                      </Badge>
-                      {activity.outcome && (
-                        <Badge variant="outline" className="text-xs">
-                          {activity.outcome}
-                        </Badge>
-                      )}
-                      <span>
-                        {new Date(activity.timestamp).toLocaleDateString('de-DE')} {new Date(activity.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    {activity.note && (
-                      <p className="text-sm mt-1">{activity.note}</p>
-                    )}
-                  </div>
-                ))}
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-6 pt-4 border-b border-white/5">
+                <TabsList className="bg-white/[0.03] border border-white/5 p-1 rounded-xl">
+                  <TabsTrigger 
+                    value="overview" 
+                    className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                  >
+                    Übersicht
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="activities" 
+                    className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                  >
+                    Aktivitäten
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="call" 
+                    className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                  >
+                    Call Script
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+
+              <ScrollArea className="flex-1">
+                <TabsContent value="overview" className="p-6 space-y-6 mt-0">
+                  {/* Status Row */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Status</p>
+                      <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                        {deal.stage}
+                      </Badge>
+                    </div>
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Lead Typ</p>
+                      <Badge 
+                        variant="outline" 
+                        className={`${contact.lead_type === 'inbound' 
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                          : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                        }`}
+                      >
+                        {contact.lead_type === 'inbound' ? 'Inbound' : 'Outbound'}
+                      </Badge>
+                    </div>
+                    <div className="stat-card !p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Quelle</p>
+                      <span className="text-sm text-foreground">{contact.source || '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Contact Data */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4 font-medium">Kontaktdaten</h3>
+                    <div className="space-y-2">
+                      {contact.email && (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                              <Mail className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <span className="text-sm text-foreground">{contact.email}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                            onClick={() => copyToClipboard(contact.email!, "E-Mail")}
+                          >
+                            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {contact.phone && (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                              <Phone className="w-4 h-4 text-green-400" />
+                            </div>
+                            <span className="text-sm text-foreground">{contact.phone}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                            onClick={() => copyToClipboard(contact.phone!, "Telefon")}
+                          >
+                            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {company?.website && (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                              <Globe className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                              {company.website}
+                            </a>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                            onClick={() => copyToClipboard(company.website!, "Website")}
+                          >
+                            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Company Info */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Unternehmen</span>
+                      </div>
+                      <p className="text-sm text-foreground">{contact.company || '—'}</p>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Stadt</span>
+                      </div>
+                      <p className="text-sm text-foreground">{company?.city || '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* Quick Stage Actions */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4 font-medium">Status ändern</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {COLD_PIPELINE_STAGES.slice(0, 6).map((stage) => (
+                        <Button
+                          key={stage}
+                          variant={deal.stage === stage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleStageUpdate(stage)}
+                          className="text-xs"
+                        >
+                          {stage}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add Note */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Notiz hinzufügen</span>
+                    </div>
+                    <Textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Notiz zum Lead..."
+                      rows={3}
+                      className="bg-white/[0.02] border-white/5"
+                    />
+                    <Button onClick={handleAddNote} className="w-full mt-2" disabled={!note.trim()}>
+                      Notiz speichern
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="activities" className="p-6 space-y-6 mt-0">
+                  {/* Journey Timeline */}
+                  <div className="stat-card !p-0 overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground">Journey Timeline</h4>
+                        <p className="text-xs text-muted-foreground">Lead-Aktivitäten</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <JourneyTimeline contactId={contact.id} />
+                    </div>
+                  </div>
+
+                  {/* Call History */}
+                  <div className="stat-card !p-0 overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Call-Historie
+                        </h4>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      {activities.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">Noch keine Aktivitäten</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {activities.map((activity) => (
+                            <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <Phone className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {activity.type}
+                                  </Badge>
+                                  {activity.outcome && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {activity.outcome}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {activity.note && (
+                                  <p className="text-sm mt-1 text-muted-foreground">{activity.note}</p>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(activity.timestamp).toLocaleDateString('de-DE')}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="call" className="p-6 space-y-6 mt-0">
+                  {/* Live Call Section */}
+                  {isLiveCallActive ? (
+                    <Card className="border-primary/30 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Radio className="h-4 w-4 text-destructive animate-pulse" />
+                          Live-Call aktiv
+                          <Badge variant={
+                            callStatus === 'active' ? 'default' : 
+                            callStatus === 'transcribing' ? 'secondary' : 
+                            callStatus === 'analyzing' ? 'default' :
+                            'outline'
+                          }>
+                            {callStatus === 'active' ? 'Aktiv' : 
+                             callStatus === 'transcribing' ? 'Transkribiert' : 
+                             callStatus === 'analyzing' ? 'Analysiert' : 
+                             callStatus === 'listening' ? 'Hört zu' : 
+                             callStatus}
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {objectionHandlings.length > 0 && (
+                          <div className="space-y-2">
+                            <Label className="text-sm font-semibold">KI-Einwandbehandlungen:</Label>
+                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                              {objectionHandlings.map((handling, idx) => (
+                                <div key={idx} className="border border-primary/20 rounded-lg p-3 bg-primary/5">
+                                  <div className="text-xs text-muted-foreground mb-1">
+                                    Einwand: "{handling.objection}"
+                                  </div>
+                                  <div className="text-sm font-medium">
+                                    {handling.response}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {new Date(handling.timestamp).toLocaleTimeString('de-DE')}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {objectionHandlings.length === 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            Whisper transkribiert alle 5 Sek. • Gemini analysiert auf Einwände
+                          </p>
+                        )}
+
+                        <Button 
+                          onClick={stopLiveCall} 
+                          variant="destructive" 
+                          className="w-full"
+                        >
+                          <MicOff className="mr-2 h-4 w-4" />
+                          Call beenden
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="stat-card !p-4">
+                      <Button 
+                        onClick={startLiveCall} 
+                        className="w-full"
+                        variant="default"
+                      >
+                        <Mic className="mr-2 h-4 w-4" />
+                        Live-Call mit KI-Support starten
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        Externe Telefonie verbinden & KI erkennt Einwände live
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Call Script */}
+                  {callScript && (
+                    <div className="stat-card !p-0 overflow-hidden">
+                      <div className="flex items-center gap-2 p-4 border-b border-white/5">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <h4 className="text-sm font-medium text-foreground">Call Script</h4>
+                      </div>
+                      <div className="p-4">
+                        <div className="whitespace-pre-wrap text-sm bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                          {callScript}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Video Note for Outbound */}
+                  {contact.lead_type === 'outbound' && (
+                    <div className="stat-card !p-0 overflow-hidden">
+                      <div className="flex items-center justify-between p-4 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <Video className="w-4 h-4 text-cyan-400" />
+                          <h4 className="text-sm font-medium text-foreground">Videonotiz</h4>
+                        </div>
+                        <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+                          Outbound
+                        </Badge>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm">Slug (für personalisierte URL)</Label>
+                          <Input
+                            value={videoSlug}
+                            onChange={(e) => setVideoSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                            placeholder="max-mustermann-acme"
+                            className="bg-white/[0.02] border-white/5"
+                          />
+                          {videoSlug && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground">URL:</span>
+                              <a 
+                                href={`/p/${videoSlug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                {window.location.origin}/p/{videoSlug}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm">Video URL</Label>
+                          <Input
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                            placeholder="https://cdn.example.com/video.mp4"
+                            className="bg-white/[0.02] border-white/5"
+                          />
+                        </div>
+
+                        {contact.viewed !== null && (
+                          <div className="flex items-center gap-2 text-sm p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                            <Eye className="w-4 h-4" />
+                            {contact.viewed ? (
+                              <span className="text-green-400">
+                                Angesehen ({contact.view_count || 0}x)
+                                {contact.viewed_at && ` • ${new Date(contact.viewed_at).toLocaleDateString('de-DE')}`}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">Noch nicht angesehen</span>
+                            )}
+                          </div>
+                        )}
+
+                        <Button onClick={handleSaveVideoNote} className="w-full" size="sm">
+                          Videonotiz speichern
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
