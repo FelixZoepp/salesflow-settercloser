@@ -308,6 +308,50 @@ export type Database = {
           },
         ]
       }
+      campaigns: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           account_id: string | null
@@ -364,6 +408,7 @@ export type Database = {
       contacts: {
         Row: {
           account_id: string | null
+          campaign_id: string | null
           city: string | null
           company: string | null
           company_id: string | null
@@ -374,6 +419,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          lead_score: number | null
           lead_type: Database["public"]["Enums"]["lead_type"] | null
           mobile: string | null
           notes: string | null
@@ -398,6 +444,7 @@ export type Database = {
         }
         Insert: {
           account_id?: string | null
+          campaign_id?: string | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -408,6 +455,7 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
+          lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
           mobile?: string | null
           notes?: string | null
@@ -434,6 +482,7 @@ export type Database = {
         }
         Update: {
           account_id?: string | null
+          campaign_id?: string | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -444,6 +493,7 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
           mobile?: string | null
           notes?: string | null
@@ -474,6 +524,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -582,6 +639,74 @@ export type Database = {
             columns: ["setter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_tracking_events: {
+        Row: {
+          account_id: string | null
+          contact_id: string
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          page_url: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          contact_id: string
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          contact_id?: string
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_tracking_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_tracking_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_tracking_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contact_last_activity"
+            referencedColumns: ["contact_id"]
+          },
+          {
+            foreignKeyName: "lead_tracking_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
