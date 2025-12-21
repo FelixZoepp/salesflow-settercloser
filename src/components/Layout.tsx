@@ -83,6 +83,7 @@ const Layout = ({ children }: LayoutProps) => {
       title: "Sales",
       items: [
         { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { path: "/campaigns", label: "Kampagnen", icon: Megaphone },
         { path: "/pipeline", label: "Pipeline", icon: Home },
         { path: "/today", label: "Heute", icon: CheckSquare },
         { path: "/inbound", label: "Inbound", icon: TrendingUp },

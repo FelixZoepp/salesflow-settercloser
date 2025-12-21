@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Users, Eye, Megaphone, Play, Calendar, Flame, Activity } from "lucide-react";
 import { toast } from "sonner";
 import {
   BarChart,
@@ -13,7 +13,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  AreaChart,
+  Area,
 } from "recharts";
+import EngagementFeed from "@/components/EngagementFeed";
 
 interface KPIData {
   dialAttempts: number;
@@ -46,6 +49,15 @@ interface MonthlyData {
   revenue: number;
 }
 
+interface LeadStats {
+  totalCampaigns: number;
+  activeCampaigns: number;
+  totalLeads: number;
+  pageViews: number;
+  hotLeads: number;
+  bookings: number;
+}
+
 const Dashboard = () => {
   const [kpis, setKPIs] = useState<KPIData>({
     dialAttempts: 0,
@@ -74,9 +86,18 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("month");
+  const [leadStats, setLeadStats] = useState<LeadStats>({
+    totalCampaigns: 0,
+    activeCampaigns: 0,
+    totalLeads: 0,
+    pageViews: 0,
+    hotLeads: 0,
+    bookings: 0,
+  });
 
   useEffect(() => {
     fetchDashboardData();
+    fetchLeadStats();
   }, [dateRange]);
 
   const getDateRanges = () => {
@@ -275,6 +296,43 @@ const Dashboard = () => {
     }
   };
 
+  const fetchLeadStats = async () => {
+    try {
+      // Fetch campaigns
+      const { data: campaigns } = await supabase.from("campaigns").select("id, status");
+      const totalCampaigns = campaigns?.length || 0;
+      const activeCampaigns = campaigns?.filter(c => c.status === "active").length || 0;
+
+      // Fetch leads count
+      const { count: totalLeads } = await supabase.from("contacts").select("id", { count: "exact", head: true });
+
+      // Fetch tracking stats
+      const { data: trackingEvents } = await supabase
+        .from("lead_tracking_events")
+        .select("event_type");
+
+      const pageViews = trackingEvents?.filter(e => e.event_type === "page_view").length || 0;
+      const bookings = trackingEvents?.filter(e => e.event_type === "booking_click").length || 0;
+
+      // Fetch hot leads (score >= 70)
+      const { count: hotLeads } = await supabase
+        .from("contacts")
+        .select("id", { count: "exact", head: true })
+        .gte("lead_score", 70);
+
+      setLeadStats({
+        totalCampaigns,
+        activeCampaigns,
+        totalLeads: totalLeads || 0,
+        pageViews,
+        hotLeads: hotLeads || 0,
+        bookings,
+      });
+    } catch (error) {
+      console.error("Error fetching lead stats:", error);
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('de-DE', { 
       minimumFractionDigits: 0,
@@ -317,6 +375,56 @@ const Dashboard = () => {
             </Select>
           </div>
 
+          {/* Lead Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Megaphone className="w-4 h-4" />
+                  <span className="text-xs">Kampagnen</span>
+                </div>
+                <p className="text-2xl font-bold">{leadStats.totalCampaigns}</p>
+                <p className="text-xs text-muted-foreground">{leadStats.activeCampaigns} aktiv</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs">Leads gesamt</span>
+                </div>
+                <p className="text-2xl font-bold">{leadStats.totalLeads}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Eye className="w-4 h-4" />
+                  <span className="text-xs">Seitenaufrufe</span>
+                </div>
+                <p className="text-2xl font-bold">{leadStats.pageViews}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Flame className="w-4 h-4" />
+                  <span className="text-xs">Heiße Leads</span>
+                </div>
+                <p className="text-2xl font-bold">{leadStats.hotLeads}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs">Termine gebucht</span>
+                </div>
+                <p className="text-2xl font-bold">{leadStats.bookings}</p>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* KPI Cards Row */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             <KPICard
@@ -352,9 +460,20 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Main Content Grid */}
+          {/* Engagement Feed Section */}
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Revenue Chart */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Engagement Feed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EngagementFeed />
+              </CardContent>
+            </Card>
+            <div className="lg:col-span-2">
             <div className="lg:col-span-2">
               <Card className="bg-card border-border h-full">
                 <CardContent className="p-6">
