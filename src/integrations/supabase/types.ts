@@ -928,6 +928,7 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_lead_score: { Args: { p_contact_id: string }; Returns: number }
       get_contact_by_slug: {
         Args: { contact_slug: string }
         Returns: {

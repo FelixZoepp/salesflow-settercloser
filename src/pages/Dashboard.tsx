@@ -17,6 +17,7 @@ import {
   Area,
 } from "recharts";
 import EngagementFeed from "@/components/EngagementFeed";
+import HotLeadsList from "@/components/HotLeadsList";
 
 interface KPIData {
   dialAttempts: number;
@@ -460,8 +461,8 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Engagement Feed Section */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Engagement Feed & Hot Leads Section */}
+          <div className="grid lg:grid-cols-4 gap-6 mb-8">
             <Card className="bg-card border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -471,6 +472,17 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <EngagementFeed />
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-orange-500" />
+                  Hot Leads
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HotLeadsList />
               </CardContent>
             </Card>
             <div className="lg:col-span-2">
