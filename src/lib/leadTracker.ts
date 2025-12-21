@@ -231,28 +231,38 @@ export const initializeTracking = (slug: string): (() => void) => {
 };
 
 // Video tracking helper - attach to video element
-export const attachVideoTracking = (slug: string, videoElement: HTMLVideoElement): void => {
+export const attachVideoTracking = (slug: string, videoElement: HTMLVideoElement): (() => void) => {
   let hasStarted = false;
   let hasCompleted = false;
 
-  videoElement.addEventListener('play', () => {
+  const handlePlay = () => {
     if (!hasStarted) {
       hasStarted = true;
       trackVideoPlay(slug);
     }
-  });
+  };
 
-  videoElement.addEventListener('timeupdate', () => {
+  const handleTimeUpdate = () => {
     if (videoElement.duration) {
       const progress = (videoElement.currentTime / videoElement.duration) * 100;
       trackVideoProgress(slug, progress);
     }
-  });
+  };
 
-  videoElement.addEventListener('ended', () => {
+  const handleEnded = () => {
     if (!hasCompleted) {
       hasCompleted = true;
       trackVideoComplete(slug);
     }
-  });
+  };
+
+  videoElement.addEventListener('play', handlePlay);
+  videoElement.addEventListener('timeupdate', handleTimeUpdate);
+  videoElement.addEventListener('ended', handleEnded);
+
+  return () => {
+    videoElement.removeEventListener('play', handlePlay);
+    videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+    videoElement.removeEventListener('ended', handleEnded);
+  };
 };

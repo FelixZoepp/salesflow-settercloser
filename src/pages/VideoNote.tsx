@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { initializeTracking, attachVideoTracking } from "@/lib/leadTracker";
 import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone, Star, CheckCircle, ExternalLink } from "lucide-react";
 import linkedinPostImage from "@/assets/linkedin-post-screenshot.png";
 import { useState as useStateLocal } from "react";
@@ -28,11 +29,34 @@ const VideoNote = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
+
   useEffect(() => {
     if (slug) {
       loadContactAndTrackView();
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug || !contact) return;
+    const cleanup = initializeTracking(slug);
+    return () => cleanup();
+  }, [slug, contact?.id]);
+
+  useEffect(() => {
+    if (!slug || !contact?.video_url) return;
+    if (!videoRef.current) return;
+
+    // Re-attach when the video element changes (preview vs. playing)
+    videoTrackingCleanupRef.current?.();
+    videoTrackingCleanupRef.current = attachVideoTracking(slug, videoRef.current);
+
+    return () => {
+      videoTrackingCleanupRef.current?.();
+      videoTrackingCleanupRef.current = null;
+    };
+  }, [slug, contact?.video_url, isVideoPlaying]);
 
   const loadContactAndTrackView = async () => {
     try {
@@ -180,6 +204,7 @@ const VideoNote = () => {
                         onClick={handlePlayVideo}
                       >
                         <video
+                          ref={videoRef}
                           src={contact.video_url}
                           className="w-full aspect-video object-cover"
                           muted
@@ -193,6 +218,7 @@ const VideoNote = () => {
                       </div>
                     ) : (
                       <video
+                        ref={videoRef}
                         src={contact.video_url}
                         controls
                         autoPlay
