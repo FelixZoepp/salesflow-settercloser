@@ -645,7 +645,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
               <UserPlus className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Neue Vernetzungen</span>
             </div>
-            <p className="text-2xl font-bold">{slotsAvailable > 0 ? slotsAvailable : 0} / 20</p>
+            <p className="text-2xl font-bold">
+              <span className="text-muted-foreground">{pendingConnections.length}</span>
+              {' / '}
+              <span>{MAX_PENDING_CONNECTIONS}</span>
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -654,7 +658,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Erstnachrichten heute</span>
             </div>
-            <p className="text-2xl font-bold">{messagesRemaining} / 8</p>
+            <p className="text-2xl font-bold">
+              <span className="text-muted-foreground">{todayMessageCount}</span>
+              {' / '}
+              <span>{MAX_DAILY_MESSAGES}</span>
+            </p>
           </CardContent>
         </Card>
         <Card>

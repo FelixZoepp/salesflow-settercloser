@@ -10,11 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CampaignWorkflow } from "@/components/CampaignWorkflow";
+import { CampaignStatistics } from "@/components/CampaignStatistics";
 
 interface Campaign {
   id: string;
@@ -343,12 +344,23 @@ const Campaigns = () => {
                           <Workflow className="h-4 w-4" />
                           Daily Workflow
                         </TabsTrigger>
+                        <TabsTrigger value="statistics" className="flex items-center gap-1">
+                          <BarChart3 className="h-4 w-4" />
+                          Statistiken
+                        </TabsTrigger>
                         <TabsTrigger value="overview">Übersicht</TabsTrigger>
                         <TabsTrigger value="tracking">Tracking</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="workflow" className="mt-6">
                         <CampaignWorkflow 
+                          campaignId={selectedCampaign.id} 
+                          campaignName={selectedCampaign.name} 
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="statistics" className="mt-6">
+                        <CampaignStatistics 
                           campaignId={selectedCampaign.id} 
                           campaignName={selectedCampaign.name} 
                         />
