@@ -1,5 +1,8 @@
 project_id = "dxdknkeexankgtkpeuvt"
 
+[functions.track-lead-event]
+verify_jwt = false
+
 [functions.power-dialer-log]
 verify_jwt = true
 

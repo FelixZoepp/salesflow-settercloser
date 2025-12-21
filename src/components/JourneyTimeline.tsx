@@ -25,9 +25,9 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
     if (contactId) {
       fetchEvents();
 
-      // Subscribe to new events for this contact
+      // Subscribe to new events for this contact in real-time
       const channel = supabase
-        .channel(`journey-${contactId}`)
+        .channel(`journey-realtime-${contactId}`)
         .on(
           "postgres_changes",
           {
@@ -37,10 +37,13 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
             filter: `contact_id=eq.${contactId}`,
           },
           (payload) => {
+            console.log("New tracking event received:", payload.new);
             setEvents((prev) => [payload.new as TrackingEvent, ...prev]);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log("Realtime subscription status:", status);
+        });
 
       return () => {
         supabase.removeChannel(channel);
