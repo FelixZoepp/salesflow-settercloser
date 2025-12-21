@@ -21,8 +21,15 @@ import {
   Flame,
   RefreshCw,
   Upload,
-  FileText
+  FileText,
+  Linkedin,
+  Plus,
+  Trash2,
+  Settings2
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -56,6 +63,16 @@ interface WorkflowContact {
   personalized_url: string | null;
   viewed: boolean | null;
   lead_score: number | null;
+  linkedin_url: string | null;
+}
+
+interface FollowupTemplate {
+  id: string;
+  campaign_id: string | null;
+  template_type: string;
+  name: string;
+  content: string;
+  is_default: boolean;
 }
 
 interface CampaignWorkflowProps {
@@ -84,6 +101,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importing, setImporting] = useState(false);
+  const [templates, setTemplates] = useState<FollowupTemplate[]>([]);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({ name: '', content: '', template_type: 'first_message' });
+  const [editingLinkedIn, setEditingLinkedIn] = useState<string | null>(null);
+  const [linkedInInput, setLinkedInInput] = useState("");
   const MAX_DAILY_MESSAGES = 10;
   const MAX_PENDING_CONNECTIONS = 15;
 
@@ -91,7 +113,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     setLoading(true);
     const { data, error } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, company, position, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score')
+      .select('id, first_name, last_name, company, position, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url')
       .eq('campaign_id', campaignId)
       .eq('lead_type', 'outbound')
       .order('created_at', { ascending: true });
@@ -112,9 +134,91 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     setLoading(false);
   };
 
+  const fetchTemplates = async () => {
+    const { data, error } = await supabase
+      .from('followup_templates')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      setTemplates(data as FollowupTemplate[]);
+    }
+  };
+
   useEffect(() => {
     fetchContacts();
+    fetchTemplates();
   }, [campaignId]);
+
+  const saveLinkedInUrl = async (contactId: string, url: string) => {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ linkedin_url: url || null, updated_at: new Date().toISOString() })
+      .eq('id', contactId);
+
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success("LinkedIn-URL gespeichert");
+      setEditingLinkedIn(null);
+      fetchContacts();
+    }
+  };
+
+  const createTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.content) {
+      toast.error("Name und Inhalt sind erforderlich");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("account_id")
+      .eq("id", user.id)
+      .single();
+
+    const { error } = await supabase
+      .from('followup_templates')
+      .insert({
+        campaign_id: campaignId,
+        account_id: profile?.account_id,
+        name: newTemplate.name,
+        content: newTemplate.content,
+        template_type: newTemplate.template_type,
+      });
+
+    if (error) {
+      toast.error("Fehler beim Erstellen");
+      console.error(error);
+    } else {
+      toast.success("Vorlage erstellt");
+      setNewTemplate({ name: '', content: '', template_type: 'first_message' });
+      fetchTemplates();
+    }
+  };
+
+  const deleteTemplate = async (id: string) => {
+    const { error } = await supabase
+      .from('followup_templates')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Fehler beim Löschen");
+    } else {
+      toast.success("Vorlage gelöscht");
+      fetchTemplates();
+    }
+  };
+
+  const copyTemplateContent = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast.success("Vorlage kopiert!");
+  };
 
   const updateStatus = async (contactId: string, newStatus: WorkflowStatus, timestampField?: string) => {
     const updateData: Record<string, any> = {
@@ -261,13 +365,23 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const slotsAvailable = MAX_PENDING_CONNECTIONS - pendingConnections.length;
   const messagesRemaining = MAX_DAILY_MESSAGES - todayMessageCount;
 
-  const ContactCard = ({ contact, actions }: { contact: WorkflowContact; actions: React.ReactNode }) => (
+  const ContactCard = ({ contact, actions, showLinkedIn = false }: { contact: WorkflowContact; actions: React.ReactNode; showLinkedIn?: boolean }) => (
     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium truncate">
             {contact.first_name} {contact.last_name}
           </span>
+          {contact.linkedin_url && (
+            <a 
+              href={contact.linkedin_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Linkedin className="h-4 w-4 text-[#0A66C2] hover:text-[#004182]" />
+            </a>
+          )}
           {contact.viewed && (
             <Badge variant="destructive" className="text-xs">
               <Flame className="h-3 w-3 mr-1" />
@@ -285,6 +399,39 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         </p>
       </div>
       <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+        {showLinkedIn && (
+          <Popover open={editingLinkedIn === contact.id} onOpenChange={(open) => {
+            if (open) {
+              setEditingLinkedIn(contact.id);
+              setLinkedInInput(contact.linkedin_url || '');
+            } else {
+              setEditingLinkedIn(null);
+            }
+          }}>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <Linkedin className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-2">
+                <Label>LinkedIn Profil-URL</Label>
+                <Input 
+                  placeholder="https://linkedin.com/in/..."
+                  value={linkedInInput}
+                  onChange={(e) => setLinkedInInput(e.target.value)}
+                />
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => saveLinkedInUrl(contact.id, linkedInInput)}
+                >
+                  Speichern
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
         {actions}
       </div>
     </div>
@@ -300,62 +447,185 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
   return (
     <div className="space-y-6">
-      {/* Header with Import Button */}
-      <div className="flex items-center justify-between">
+      {/* Header with Import and Templates Buttons */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-lg font-medium">Daily Workflow für {campaignName}</h3>
-        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Leads importieren
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Leads in Kampagne importieren
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label>Lead-Daten (CSV Format)</Label>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Füge Leads ein: Vorname, Nachname, Firma, Position (pro Zeile)
-                </p>
-                <Textarea
-                  value={importText}
-                  onChange={(e) => setImportText(e.target.value)}
-                  placeholder={`Max, Mustermann, Firma GmbH, CEO\nAnna, Schmidt, Beispiel AG, Marketing Manager\nThomas, Müller, Startup Inc, Founder`}
-                  className="h-48 font-mono text-sm"
-                />
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Tipp:</strong> Kopiere Daten aus Excel/Sheets. Trennzeichen: Komma oder Semikolon.
-                  <br />Alle importierten Leads werden auf "Bereit für Vernetzung" gesetzt.
-                </p>
-              </div>
-              <Button 
-                onClick={importLeads} 
-                disabled={importing || !importText.trim()} 
-                className="w-full"
-              >
-                {importing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Importiere...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Leads importieren
-                  </>
-                )}
+        <div className="flex items-center gap-2">
+          {/* Templates Dialog */}
+          <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Settings2 className="h-4 w-4 mr-2" />
+                Vorlagen ({templates.length})
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Follow-up Nachrichtenvorlagen
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                {/* Create new template */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Neue Vorlage erstellen</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label>Name</Label>
+                        <Input 
+                          placeholder="z.B. Freundliche Erinnerung"
+                          value={newTemplate.name}
+                          onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Typ</Label>
+                        <Select 
+                          value={newTemplate.template_type}
+                          onValueChange={(v) => setNewTemplate({ ...newTemplate, template_type: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="first_message">Erstnachricht</SelectItem>
+                            <SelectItem value="fu1">Follow-up 1</SelectItem>
+                            <SelectItem value="fu2">Follow-up 2</SelectItem>
+                            <SelectItem value="fu3">Follow-up 3</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Nachrichtentext</Label>
+                      <Textarea 
+                        placeholder="Hallo {vorname}, ..."
+                        value={newTemplate.content}
+                        onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
+                        className="h-24"
+                      />
+                    </div>
+                    <Button onClick={createTemplate} disabled={!newTemplate.name || !newTemplate.content}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Vorlage erstellen
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Existing templates */}
+                {templates.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    Noch keine Vorlagen erstellt
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {['first_message', 'fu1', 'fu2', 'fu3'].map(type => {
+                      const typeTemplates = templates.filter(t => t.template_type === type);
+                      if (typeTemplates.length === 0) return null;
+                      
+                      const typeLabel = {
+                        'first_message': 'Erstnachricht',
+                        'fu1': 'Follow-up 1',
+                        'fu2': 'Follow-up 2',
+                        'fu3': 'Follow-up 3'
+                      }[type];
+                      
+                      return (
+                        <div key={type}>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">{typeLabel}</h4>
+                          {typeTemplates.map(template => (
+                            <div key={template.id} className="flex items-start justify-between p-3 bg-muted/50 rounded-lg border mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium">{template.name}</p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{template.content}</p>
+                              </div>
+                              <div className="flex items-center gap-1 ml-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => copyTemplateContent(template.content)}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="text-destructive"
+                                  onClick={() => deleteTemplate(template.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Import Dialog */}
+          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Upload className="h-4 w-4 mr-2" />
+                Leads importieren
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Leads in Kampagne importieren
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Lead-Daten (CSV Format)</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Füge Leads ein: Vorname, Nachname, Firma, Position (pro Zeile)
+                  </p>
+                  <Textarea
+                    value={importText}
+                    onChange={(e) => setImportText(e.target.value)}
+                    placeholder={`Max, Mustermann, Firma GmbH, CEO\nAnna, Schmidt, Beispiel AG, Marketing Manager\nThomas, Müller, Startup Inc, Founder`}
+                    className="h-48 font-mono text-sm"
+                  />
+                </div>
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Tipp:</strong> Kopiere Daten aus Excel/Sheets. Trennzeichen: Komma oder Semikolon.
+                    <br />Alle importierten Leads werden auf "Bereit für Vernetzung" gesetzt.
+                  </p>
+                </div>
+                <Button 
+                  onClick={importLeads} 
+                  disabled={importing || !importText.trim()} 
+                  className="w-full"
+                >
+                  {importing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Importiere...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Leads importieren
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Daily Stats */}
@@ -474,15 +744,18 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
                           <>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => toast.info("Prüfe auf LinkedIn...")}
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </Button>
+                            {contact.linkedin_url && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(contact.linkedin_url!, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button 
                               size="sm" 
                               variant="default"
@@ -532,14 +805,26 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
-                          <Button 
-                            size="sm"
-                            onClick={() => updateStatus(contact.id, 'vernetzung_ausstehend', 'connection_sent_at')}
-                          >
-                            <UserPlus className="h-4 w-4 mr-1" />
-                            Vernetzung gesendet
-                          </Button>
+                          <>
+                            {contact.linkedin_url && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(contact.linkedin_url!, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm"
+                              onClick={() => updateStatus(contact.id, 'vernetzung_ausstehend', 'connection_sent_at')}
+                            >
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              Vernetzung gesendet
+                            </Button>
+                          </>
                         }
                       />
                     ))}
@@ -580,8 +865,32 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
                           <>
+                            {templates.filter(t => t.template_type === 'first_message').length > 0 && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2">
+                                  <p className="text-xs text-muted-foreground mb-2">Vorlage kopieren:</p>
+                                  {templates.filter(t => t.template_type === 'first_message').map(t => (
+                                    <Button 
+                                      key={t.id}
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="w-full justify-start text-left"
+                                      onClick={() => copyTemplateContent(t.content)}
+                                    >
+                                      {t.name}
+                                    </Button>
+                                  ))}
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -624,8 +933,32 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
                           <>
+                            {templates.filter(t => t.template_type === 'fu1').length > 0 && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2">
+                                  <p className="text-xs text-muted-foreground mb-2">Vorlage kopieren:</p>
+                                  {templates.filter(t => t.template_type === 'fu1').map(t => (
+                                    <Button 
+                                      key={t.id}
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="w-full justify-start text-left"
+                                      onClick={() => copyTemplateContent(t.content)}
+                                    >
+                                      {t.name}
+                                    </Button>
+                                  ))}
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -664,8 +997,32 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
                           <>
+                            {templates.filter(t => t.template_type === 'fu2').length > 0 && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2">
+                                  <p className="text-xs text-muted-foreground mb-2">Vorlage kopieren:</p>
+                                  {templates.filter(t => t.template_type === 'fu2').map(t => (
+                                    <Button 
+                                      key={t.id}
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="w-full justify-start text-left"
+                                      onClick={() => copyTemplateContent(t.content)}
+                                    >
+                                      {t.name}
+                                    </Button>
+                                  ))}
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -704,8 +1061,32 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
+                        showLinkedIn={true}
                         actions={
                           <>
+                            {templates.filter(t => t.template_type === 'fu3').length > 0 && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2">
+                                  <p className="text-xs text-muted-foreground mb-2">Vorlage kopieren:</p>
+                                  {templates.filter(t => t.template_type === 'fu3').map(t => (
+                                    <Button 
+                                      key={t.id}
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="w-full justify-start text-left"
+                                      onClick={() => copyTemplateContent(t.content)}
+                                    >
+                                      {t.name}
+                                    </Button>
+                                  ))}
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"

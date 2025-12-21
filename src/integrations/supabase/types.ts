@@ -422,6 +422,7 @@ export type Database = {
           last_name: string
           lead_score: number | null
           lead_type: Database["public"]["Enums"]["lead_type"] | null
+          linkedin_url: string | null
           mobile: string | null
           notes: string | null
           outreach_message: string | null
@@ -470,6 +471,7 @@ export type Database = {
           last_name: string
           lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
+          linkedin_url?: string | null
           mobile?: string | null
           notes?: string | null
           outreach_message?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           last_name?: string
           lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
+          linkedin_url?: string | null
           mobile?: string | null
           notes?: string | null
           outreach_message?: string | null
@@ -661,6 +664,57 @@ export type Database = {
             columns: ["setter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followup_templates: {
+        Row: {
+          account_id: string | null
+          campaign_id: string | null
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          campaign_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          campaign_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_templates_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followup_templates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
         ]
