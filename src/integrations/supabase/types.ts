@@ -405,12 +405,20 @@ export type Database = {
           city: string | null
           company: string | null
           company_id: string | null
+          connection_accepted_at: string | null
+          connection_sent_at: string | null
           country: string | null
           created_at: string
+          daily_messages_count: number | null
           email: string | null
           external_id: string | null
+          first_message_sent_at: string | null
           first_name: string
+          fu1_sent_at: string | null
+          fu2_sent_at: string | null
+          fu3_sent_at: string | null
           id: string
+          last_message_date: string | null
           last_name: string
           lead_score: number | null
           lead_type: Database["public"]["Enums"]["lead_type"] | null
@@ -422,6 +430,7 @@ export type Database = {
           personalized_url: string | null
           phone: string | null
           position: string | null
+          responded_at: string | null
           slug: string | null
           source: string | null
           stage: string | null
@@ -434,6 +443,9 @@ export type Database = {
           viewed: boolean | null
           viewed_at: string | null
           website: string | null
+          workflow_status:
+            | Database["public"]["Enums"]["linkedin_workflow_status"]
+            | null
         }
         Insert: {
           account_id?: string | null
@@ -441,12 +453,20 @@ export type Database = {
           city?: string | null
           company?: string | null
           company_id?: string | null
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
           country?: string | null
           created_at?: string
+          daily_messages_count?: number | null
           email?: string | null
           external_id?: string | null
+          first_message_sent_at?: string | null
           first_name: string
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
           id?: string
+          last_message_date?: string | null
           last_name: string
           lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
@@ -460,6 +480,7 @@ export type Database = {
           personalized_url?: string | null
           phone?: string | null
           position?: string | null
+          responded_at?: string | null
           slug?: string | null
           source?: string | null
           stage?: string | null
@@ -472,6 +493,9 @@ export type Database = {
           viewed?: boolean | null
           viewed_at?: string | null
           website?: string | null
+          workflow_status?:
+            | Database["public"]["Enums"]["linkedin_workflow_status"]
+            | null
         }
         Update: {
           account_id?: string | null
@@ -479,12 +503,20 @@ export type Database = {
           city?: string | null
           company?: string | null
           company_id?: string | null
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
           country?: string | null
           created_at?: string
+          daily_messages_count?: number | null
           email?: string | null
           external_id?: string | null
+          first_message_sent_at?: string | null
           first_name?: string
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
           id?: string
+          last_message_date?: string | null
           last_name?: string
           lead_score?: number | null
           lead_type?: Database["public"]["Enums"]["lead_type"] | null
@@ -498,6 +530,7 @@ export type Database = {
           personalized_url?: string | null
           phone?: string | null
           position?: string | null
+          responded_at?: string | null
           slug?: string | null
           source?: string | null
           stage?: string | null
@@ -510,6 +543,9 @@ export type Database = {
           viewed?: boolean | null
           viewed_at?: string | null
           website?: string | null
+          workflow_status?:
+            | Database["public"]["Enums"]["linkedin_workflow_status"]
+            | null
         }
         Relationships: [
           {
@@ -933,6 +969,16 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_followup_status: {
+        Args: {
+          p_first_message_sent_at: string
+          p_fu1_sent_at: string
+          p_fu2_sent_at: string
+          p_viewed: boolean
+          p_workflow_status: Database["public"]["Enums"]["linkedin_workflow_status"]
+        }
+        Returns: string
+      }
       get_user_account_id: { Args: never; Returns: string }
       is_super_admin: { Args: never; Returns: boolean }
       refresh_contact_last_activity: { Args: never; Returns: undefined }
@@ -974,6 +1020,18 @@ export type Database = {
         | "Angebot versendet"
         | "Abgeschlossen"
       lead_type: "inbound" | "outbound"
+      linkedin_workflow_status:
+        | "neu"
+        | "bereit_fuer_vernetzung"
+        | "vernetzung_ausstehend"
+        | "vernetzung_angenommen"
+        | "erstnachricht_gesendet"
+        | "kein_klick_fu_offen"
+        | "fu1_gesendet"
+        | "fu2_gesendet"
+        | "fu3_gesendet"
+        | "reagiert_warm"
+        | "abgeschlossen"
       outreach_status: "offen" | "gesendet" | "follow_up" | "geschlossen"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
@@ -1144,6 +1202,19 @@ export const Constants = {
         "Abgeschlossen",
       ],
       lead_type: ["inbound", "outbound"],
+      linkedin_workflow_status: [
+        "neu",
+        "bereit_fuer_vernetzung",
+        "vernetzung_ausstehend",
+        "vernetzung_angenommen",
+        "erstnachricht_gesendet",
+        "kein_klick_fu_offen",
+        "fu1_gesendet",
+        "fu2_gesendet",
+        "fu3_gesendet",
+        "reagiert_warm",
+        "abgeschlossen",
+      ],
       outreach_status: ["offen", "gesendet", "follow_up", "geschlossen"],
       task_related_type: ["deal", "contact"],
       task_status: ["open", "done"],
