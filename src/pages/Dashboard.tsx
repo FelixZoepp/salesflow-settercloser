@@ -14,8 +14,9 @@ import {
   ExternalLink,
   Clock
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subDays } from "date-fns";
 import { de } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface LeadStats {
   totalCampaigns: number;
@@ -39,6 +40,11 @@ interface TrackingEvent {
   };
 }
 
+interface Campaign {
+  id: string;
+  name: string;
+}
+
 const Dashboard = () => {
   const [leadStats, setLeadStats] = useState<LeadStats>({
     totalCampaigns: 0,
@@ -50,46 +56,93 @@ const Dashboard = () => {
   });
   const [events, setEvents] = useState<TrackingEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<"7" | "30">("30");
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [dateRange, selectedCampaign]);
+
+  const fetchCampaigns = async () => {
+    const { data } = await supabase
+      .from("campaigns")
+      .select("id, name")
+      .order("name");
+    setCampaigns(data || []);
+  };
 
   const fetchData = async () => {
     try {
+      const daysAgo = subDays(new Date(), parseInt(dateRange));
+      
       // Fetch campaigns
-      const { data: campaigns } = await supabase.from("campaigns").select("id, status");
-      const totalCampaigns = campaigns?.length || 0;
-      const activeCampaigns = campaigns?.filter(c => c.status === "active").length || 0;
+      const { data: allCampaigns } = await supabase.from("campaigns").select("id, status");
+      const totalCampaigns = allCampaigns?.length || 0;
+      const activeCampaigns = allCampaigns?.filter(c => c.status === "active").length || 0;
 
-      // Fetch leads count
-      const { count: totalLeads } = await supabase.from("contacts").select("id", { count: "exact", head: true });
+      // Build contacts query with optional campaign filter
+      let contactsQuery = supabase.from("contacts").select("id", { count: "exact", head: true });
+      if (selectedCampaign !== "all") {
+        contactsQuery = contactsQuery.eq("campaign_id", selectedCampaign);
+      }
+      const { count: totalLeads } = await contactsQuery;
 
-      // Fetch tracking stats for page views
-      const { data: trackingEvents } = await supabase
+      // Fetch tracking stats for page views with date and campaign filter
+      let trackingQuery = supabase
         .from("lead_tracking_events")
-        .select("event_type");
+        .select("event_type, contact_id, created_at")
+        .gte("created_at", daysAgo.toISOString());
 
-      const pageViews = trackingEvents?.filter(e => e.event_type === "page_view").length || 0;
+      const { data: trackingEvents } = await trackingQuery;
 
-      // Fetch REAL bookings: Deals moved to "Erstgespräch gelegt" in last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      // Fetch REAL bookings: Deals moved to "Erstgespräch gelegt" in last 30 days
-      const { data: allDeals } = await supabase
+      // If campaign filter, get contact IDs for that campaign
+      let campaignContactIds: string[] = [];
+      if (selectedCampaign !== "all") {
+        const { data: campaignContacts } = await supabase
+          .from("contacts")
+          .select("id")
+          .eq("campaign_id", selectedCampaign);
+        campaignContactIds = (campaignContacts || []).map(c => c.id);
+      }
+
+      const filteredEvents = selectedCampaign === "all" 
+        ? trackingEvents 
+        : trackingEvents?.filter(e => campaignContactIds.includes(e.contact_id));
+
+      const pageViews = filteredEvents?.filter(e => e.event_type === "page_view").length || 0;
+
+      // Fetch REAL bookings: Deals moved to "Erstgespräch gelegt" in date range
+      let dealsQuery = supabase
         .from("deals")
-        .select("id, stage, updated_at")
-        .gte("updated_at", thirtyDaysAgo.toISOString());
+        .select("id, stage, updated_at, contact_id")
+        .gte("updated_at", daysAgo.toISOString());
       
-      // Cast stage to string to compare with inbound pipeline stages
-      const bookings = allDeals?.filter(d => (d.stage as string) === "Erstgespräch gelegt").length || 0;
+      const { data: allDeals } = await dealsQuery;
+      
+      // Filter by campaign if selected
+      let filteredDeals = allDeals;
+      if (selectedCampaign !== "all" && allDeals) {
+        filteredDeals = allDeals.filter(d => campaignContactIds.includes(d.contact_id || ""));
+      }
+      
+      const bookings = filteredDeals?.filter(d => (d.stage as string) === "Erstgespräch gelegt").length || 0;
 
-      // Fetch hot leads (score >= 70)
-      const { count: hotLeads } = await supabase
+      // Fetch hot leads (score >= 70) with campaign filter
+      let hotLeadsQuery = supabase
         .from("contacts")
         .select("id", { count: "exact", head: true })
         .gte("lead_score", 70);
+      
+      if (selectedCampaign !== "all") {
+        hotLeadsQuery = hotLeadsQuery.eq("campaign_id", selectedCampaign);
+      }
+      
+      const { count: hotLeads } = await hotLeadsQuery;
 
       setLeadStats({
         totalCampaigns,
@@ -100,15 +153,23 @@ const Dashboard = () => {
         bookings: bookings || 0,
       });
 
-      // Fetch recent events
-      const { data: recentEvents } = await supabase
+      // Fetch recent events with campaign filter
+      let recentEventsQuery = supabase
         .from("lead_tracking_events")
         .select("id, contact_id, event_type, event_data, created_at")
+        .gte("created_at", daysAgo.toISOString())
         .order("created_at", { ascending: false })
         .limit(8);
 
+      const { data: recentEvents } = await recentEventsQuery;
+
+      // Filter by campaign if needed
+      const filteredRecentEvents = selectedCampaign === "all"
+        ? recentEvents
+        : recentEvents?.filter(e => campaignContactIds.includes(e.contact_id));
+
       const eventsWithContacts = await Promise.all(
-        (recentEvents || []).map(async (event) => {
+        (filteredRecentEvents || []).map(async (event) => {
           const { data: contact } = await supabase
             .from("contacts")
             .select("first_name, last_name, company")
@@ -206,13 +267,42 @@ const Dashboard = () => {
       <div className="min-h-screen noise-bg dotted-grid">
         <div className="max-w-7xl mx-auto p-1">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <LayoutDashboard className="w-5 h-5 text-primary" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <LayoutDashboard className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+                <p className="text-sm text-muted-foreground">Übersicht Ihrer Kampagnen und Leads</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Übersicht Ihrer Kampagnen und Leads</p>
+            
+            {/* Filters */}
+            <div className="flex items-center gap-3">
+              <Select value={dateRange} onValueChange={(v) => setDateRange(v as "7" | "30")}>
+                <SelectTrigger className="w-[140px] glass-card border-white/10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Letzte 7 Tage</SelectItem>
+                  <SelectItem value="30">Letzte 30 Tage</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+                <SelectTrigger className="w-[180px] glass-card border-white/10">
+                  <SelectValue placeholder="Alle Kampagnen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Kampagnen</SelectItem>
+                  {campaigns.map((campaign) => (
+                    <SelectItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -292,7 +382,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">Termine gebucht</p>
                       <p className="text-3xl font-bold text-foreground">{leadStats.bookings}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">letzte 30 Tage</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">letzte {dateRange} Tage</p>
                     </div>
                     <div className="icon-glow icon-glow-blue">
                       <Calendar className="w-5 h-5" />
