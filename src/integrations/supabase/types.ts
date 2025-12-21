@@ -109,13 +109,6 @@ export type Database = {
             foreignKeyName: "activities_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: "contact_last_activity"
-            referencedColumns: ["contact_id"]
-          },
-          {
-            foreignKeyName: "activities_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
@@ -624,13 +617,6 @@ export type Database = {
             foreignKeyName: "deals_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: "contact_last_activity"
-            referencedColumns: ["contact_id"]
-          },
-          {
-            foreignKeyName: "deals_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
@@ -694,13 +680,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cold_call_queue"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_tracking_events_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contact_last_activity"
-            referencedColumns: ["contact_id"]
           },
           {
             foreignKeyName: "lead_tracking_events_contact_id_fkey"
@@ -924,11 +903,27 @@ export type Database = {
           contact_id: string | null
           last_activity_at: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
       calculate_lead_score: { Args: { p_contact_id: string }; Returns: number }
+      contact_has_slug: { Args: { p_contact_id: string }; Returns: boolean }
       get_contact_by_slug: {
         Args: { contact_slug: string }
         Returns: {
