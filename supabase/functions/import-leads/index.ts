@@ -7,6 +7,7 @@ const corsHeaders = {
 
 interface CSVRow {
   company_name?: string;
+  company?: string;
   website?: string;
   phone?: string;
   street?: string;
@@ -19,6 +20,8 @@ interface CSVRow {
   position?: string;
   source?: string;
   external_id?: string;
+  linkedin_url?: string;
+  mobile?: string;
 }
 
 interface ImportResult {
@@ -59,11 +62,13 @@ Deno.serve(async (req) => {
 
     console.log(`Import leads request from user: ${user.id}`);
 
-    // Parse the CSV data from request body
-    const { csvData } = await req.json();
+    // Parse the CSV data and leadType from request body
+    const { csvData, leadType } = await req.json();
     if (!csvData) {
       throw new Error('Missing CSV data');
     }
+    
+    const isOutbound = leadType === 'outbound';
 
     const lines = csvData.trim().split('\n');
     if (lines.length < 2) {
@@ -93,19 +98,34 @@ Deno.serve(async (req) => {
           }
         });
 
-        // Validate: at least company_name or email must be present
-        if (!row.company_name && !row.email) {
-          result.errors.push({ 
-            row: rowNumber, 
-            message: 'Missing required field: company_name or email' 
-          });
-          result.skipped_count++;
-          continue;
+        // Use company from row (support both company_name and company fields)
+        const companyName = row.company_name || row.company;
+        
+        // For outbound leads, we only require first_name + last_name
+        // For inbound/other leads, we require company_name or email
+        if (isOutbound) {
+          if (!row.first_name || !row.last_name) {
+            result.errors.push({ 
+              row: rowNumber, 
+              message: 'Missing required field: first_name and last_name' 
+            });
+            result.skipped_count++;
+            continue;
+          }
+        } else {
+          if (!companyName && !row.email) {
+            result.errors.push({ 
+              row: rowNumber, 
+              message: 'Missing required field: company_name or email' 
+            });
+            result.skipped_count++;
+            continue;
+          }
         }
 
         // Find or create company
         let companyId: string | null = null;
-        if (row.company_name) {
+        if (companyName) {
           // Try to find existing company by website or name+zip
           let existingCompany = null;
           
@@ -123,7 +143,7 @@ Deno.serve(async (req) => {
             const { data } = await supabase
               .from('companies')
               .select('id')
-              .eq('name', row.company_name)
+              .eq('name', companyName)
               .eq('zip', row.zip)
               .eq('owner_user_id', user.id)
               .maybeSingle();
@@ -151,7 +171,7 @@ Deno.serve(async (req) => {
               .from('companies')
               .insert({
                 owner_user_id: user.id,
-                name: row.company_name,
+                name: companyName,
                 website: row.website || null,
                 phone: row.phone || null,
                 street: row.street || null,
@@ -169,8 +189,80 @@ Deno.serve(async (req) => {
 
         // Find or create contact
         let contactId: string | null = null;
-        if (row.email) {
-          // Check if contact exists by email
+        
+        // For outbound leads, we create contacts directly without requiring email
+        if (isOutbound) {
+          // Check if contact exists by linkedin_url or name+company combination
+          let existingContact = null;
+          
+          if (row.linkedin_url) {
+            const { data } = await supabase
+              .from('contacts')
+              .select('id')
+              .eq('linkedin_url', row.linkedin_url)
+              .eq('owner_user_id', user.id)
+              .maybeSingle();
+            existingContact = data;
+          }
+          
+          if (!existingContact && row.email) {
+            const { data } = await supabase
+              .from('contacts')
+              .select('id')
+              .eq('email', row.email)
+              .eq('owner_user_id', user.id)
+              .maybeSingle();
+            existingContact = data;
+          }
+
+          if (existingContact) {
+            // Update existing contact
+            await supabase
+              .from('contacts')
+              .update({
+                first_name: row.first_name || '',
+                last_name: row.last_name || '',
+                company: companyName || null,
+                company_id: companyId,
+                phone: row.phone || null,
+                mobile: row.mobile || null,
+                position: row.position || null,
+                source: row.source || null,
+                linkedin_url: row.linkedin_url || null,
+                email: row.email || null,
+              })
+              .eq('id', existingContact.id);
+            
+            contactId = existingContact.id;
+            result.updated_count++;
+          } else {
+            // Create new outbound contact
+            const { data: newContact, error: contactError } = await supabase
+              .from('contacts')
+              .insert({
+                owner_user_id: user.id,
+                first_name: row.first_name || '',
+                last_name: row.last_name || '',
+                company: companyName || null,
+                company_id: companyId,
+                email: row.email || null,
+                phone: row.phone || null,
+                mobile: row.mobile || null,
+                position: row.position || null,
+                source: row.source || null,
+                linkedin_url: row.linkedin_url || null,
+                lead_type: 'outbound',
+                workflow_status: 'neu',
+              })
+              .select()
+              .single();
+            
+            if (contactError) throw contactError;
+            contactId = newContact.id;
+            result.imported_count++;
+          }
+        } else if (row.email) {
+          // Original logic for inbound leads with email
           const { data: existingContact } = await supabase
             .from('contacts')
             .select('id')
@@ -185,12 +277,13 @@ Deno.serve(async (req) => {
               .update({
                 first_name: row.first_name || '',
                 last_name: row.last_name || '',
-                company: row.company_name || null,
+                company: companyName || null,
                 company_id: companyId,
                 phone: row.phone || null,
                 position: row.position || null,
                 source: row.source || null,
                 external_id: row.external_id || null,
+                linkedin_url: row.linkedin_url || null,
               })
               .eq('id', existingContact.id);
             
@@ -204,13 +297,14 @@ Deno.serve(async (req) => {
                 owner_user_id: user.id,
                 first_name: row.first_name || '',
                 last_name: row.last_name || '',
-                company: row.company_name || null,
+                company: companyName || null,
                 company_id: companyId,
                 email: row.email,
                 phone: row.phone || null,
                 position: row.position || null,
                 source: row.source || null,
                 external_id: row.external_id || null,
+                linkedin_url: row.linkedin_url || null,
               })
               .select()
               .single();
@@ -225,7 +319,7 @@ Deno.serve(async (req) => {
               .insert({
                 contact_id: contactId,
                 setter_id: user.id,
-                title: `${row.first_name || ''} ${row.last_name || ''} - ${row.company_name || 'Lead'}`.trim(),
+                title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
                 stage: 'Lead',
                 pipeline: 'cold',
                 amount_eur: 0,
@@ -240,12 +334,13 @@ Deno.serve(async (req) => {
               owner_user_id: user.id,
               first_name: row.first_name || '',
               last_name: row.last_name || '',
-              company: row.company_name || null,
+              company: companyName || null,
               company_id: companyId,
               phone: row.phone || null,
               position: row.position || null,
               source: row.source || null,
               external_id: row.external_id || null,
+              linkedin_url: row.linkedin_url || null,
             })
             .select()
             .single();
@@ -260,7 +355,7 @@ Deno.serve(async (req) => {
             .insert({
               contact_id: contactId,
               setter_id: user.id,
-              title: `${row.first_name || ''} ${row.last_name || ''} - ${row.company_name || 'Lead'}`.trim(),
+              title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
               stage: 'Lead',
               pipeline: 'cold',
               amount_eur: 0,
