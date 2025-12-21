@@ -219,15 +219,18 @@ const VideoNote = () => {
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Coaching Section */}
       <section id="vorteile" className="py-20 bg-slate-900/50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-full text-sm font-medium mb-4">
+              Exklusives Coaching-Programm
+            </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Unsere zwei Säulen für deinen LinkedIn-Erfolg
+              Die zwei Säulen für deinen LinkedIn-Erfolg
             </h2>
             <p className="text-slate-400 text-lg">
-              Personalisierter Outreach + hochwertiger Content = maximale Reichweite für <span className="text-cyan-400">{companyName}</span>
+              Lerne, wie du mit Outreach Umsatz generierst und mit Content Anfragen bekommst – für <span className="text-cyan-400">{companyName}</span>
             </p>
           </div>
 
@@ -238,16 +241,19 @@ const VideoNote = () => {
                 <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
                   <Megaphone className="w-6 h-6 text-cyan-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Personalisierte Outreach-Kampagnen</h3>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Säule 1: Outreach</h3>
+                  <p className="text-cyan-400 text-sm">= Umsatz generieren</p>
+                </div>
               </div>
-              <p className="text-slate-400 mb-6">Wir entwickeln maßgeschneiderte Kampagnen, die direkt bei deiner Zielgruppe ankommen.</p>
+              <p className="text-slate-400 mb-6">Wir zeigen dir, wie du personalisierte Kampagnen erstellst, die direkt bei deiner Zielgruppe ankommen.</p>
               <ul className="space-y-4">
                 {[
-                  "Hyperpersonalisierte Nachrichten für jeden Lead",
-                  "Direkte Terminbuchungen durch warme Kontakte",
-                  "Datengetriebene Zielgruppenansprache",
-                  "A/B-Tests für maximale Conversion",
-                  "Vollständig Done-for-You Service"
+                  "Du lernst hyperpersonalisierte Nachrichten zu schreiben",
+                  "Wie du direkte Terminbuchungen durch warme Kontakte bekommst",
+                  "Datengetriebene Zielgruppenansprache verstehen",
+                  "A/B-Tests für maximale Conversion durchführen",
+                  "Schritt-für-Schritt Anleitungen zum Nachmachen"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
                     <Check className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
@@ -263,16 +269,19 @@ const VideoNote = () => {
                 <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
                   <Pen className="w-6 h-6 text-purple-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">LinkedIn Content-Strategie</h3>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Säule 2: Inbound Content</h3>
+                  <p className="text-purple-400 text-sm">= Anfragen generieren</p>
+                </div>
               </div>
-              <p className="text-slate-400 mb-6">Hochwertiger Content, der deine Expertise zeigt und organisch Leads anzieht.</p>
+              <p className="text-slate-400 mb-6">Lerne, wie du hochwertigen Content erstellst, der deine Expertise zeigt und organisch Leads anzieht.</p>
               <ul className="space-y-4">
                 {[
-                  "Professionelle Ghostwriting-Posts",
-                  "Thought Leadership Content",
-                  "Regelmäßige Posting-Frequenz",
-                  "Engagement & Community Building",
-                  "Branding & Sichtbarkeit steigern"
+                  "So schreibst du Posts, die viral gehen",
+                  "Thought Leadership aufbauen",
+                  "Die richtige Posting-Frequenz finden",
+                  "Community Building & Engagement-Strategien",
+                  "Branding & Sichtbarkeit systematisch steigern"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
                     <Check className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
@@ -289,8 +298,8 @@ const VideoNote = () => {
               🚀 Outreach + Content = Maximale Wirkung
             </h3>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Während unser Outreach aktiv Termine generiert, baut dein Content gleichzeitig Vertrauen und Autorität auf. 
-              Leads, die dich kontaktieren, kennen dich bereits – das macht jeden Termin wertvoller.
+              Im Coaching lernst du beide Strategien zu meistern. Während dein Outreach aktiv Termine generiert, 
+              baut dein Content gleichzeitig Vertrauen und Autorität auf. Das Ergebnis: planbar mehr Umsatz und Anfragen.
             </p>
           </div>
         </div>
@@ -321,15 +330,15 @@ const VideoNote = () => {
                 <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
                   <X className="w-5 h-5 text-red-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Andere Agenturen</h3>
+                <h3 className="text-xl font-bold text-white">Andere Anbieter</h3>
               </div>
               <ul className="space-y-4">
                 {[
                   "Erste Ergebnisse nach 3-6 Monaten",
                   "Keine Umsatzgarantie",
-                  "Nur Leads, kein Vertriebstraining",
-                  "Standard-Templates für alle",
-                  "Fehlende Betreuung nach Übergabe"
+                  "Nur Theorie, keine Umsetzungsbegleitung",
+                  "Standard-Inhalte für alle",
+                  "Du bist nach dem Kurs auf dich allein gestellt"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-400">
                     <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
@@ -345,15 +354,15 @@ const VideoNote = () => {
                 <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Wir bei Content-Leads</h3>
+                <h3 className="text-xl font-bold text-white">Unser Coaching bei Content-Leads</h3>
               </div>
               <ul className="space-y-4">
                 {[
                   "Erste Anfragen bereits in 7 Tagen",
                   "Umsatzgarantie – wir verdoppeln dein Investment",
-                  "Ganzheitliche Betreuung inkl. Vertriebstraining",
-                  "Hyperpersonalisierte Strategien",
-                  "Persönlicher Ansprechpartner dauerhaft"
+                  "Intensive 1:1 Betreuung bei der Umsetzung",
+                  "Individuell auf deine Situation angepasst",
+                  "Persönlicher Coach dauerhaft an deiner Seite"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
                     <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
@@ -389,7 +398,7 @@ const VideoNote = () => {
             </div>
             <h3 className="text-2xl font-bold text-white mb-3">Unsere Umsatzgarantie</h3>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              Wir sind so überzeugt von unserer Methode, dass wir dir eine echte Umsatzgarantie geben. 
+              Wir sind so überzeugt von unserer Coaching-Methode, dass wir dir eine echte Umsatzgarantie geben. 
               Erreichst du keine Ergebnisse in der vereinbarten Zeit, arbeiten wir kostenlos weiter – solange, bis wir dein Investment verdoppelt haben.
             </p>
           </div>
@@ -671,7 +680,7 @@ const VideoNote = () => {
               Personalisierte Video-Nachrichten wie diese hier
             </h2>
             <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-              Genau wie die Seite, auf der du gerade bist, {contact.first_name} – erstellen wir für jeden Lead individuell.
+              Im Coaching lernst du, wie du solche Seiten für deine Leads erstellst, {contact.first_name}.
             </p>
           </div>
 
@@ -679,29 +688,29 @@ const VideoNote = () => {
             {/* Explanation */}
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-white">
-                So funktioniert es:
+                Das lernst du im Coaching:
               </h3>
               <div className="space-y-4">
                 {[
                   {
                     step: "1",
                     title: "Zielgruppe definieren",
-                    desc: "Wir identifizieren deine idealen Kunden auf LinkedIn."
+                    desc: "Du lernst, deine idealen Kunden auf LinkedIn zu identifizieren."
                   },
                   {
                     step: "2",
                     title: "Personalisierte Seite erstellen",
-                    desc: "Jeder Lead bekommt eine eigene Landingpage – wie diese hier."
+                    desc: "Wir zeigen dir, wie du solche Landingpages für jeden Lead erstellst."
                   },
                   {
                     step: "3",
                     title: "Video aufnehmen",
-                    desc: "Ein kurzes, persönliches Video speziell für den Lead."
+                    desc: "Du lernst, überzeugende persönliche Videos zu erstellen."
                   },
                   {
                     step: "4",
                     title: "Nachricht senden",
-                    desc: "Wir senden den Link direkt per LinkedIn-Nachricht."
+                    desc: "Wir zeigen dir die beste Strategie für maximale Antwortquoten."
                   }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4">
@@ -761,10 +770,10 @@ const VideoNote = () => {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              So profitiert {companyName}!
+              Das Coaching für {companyName}
             </h2>
             <p className="text-slate-400 text-lg">
-              Unser Ansatz in 4 Schritten für maximale LinkedIn-Resultate.
+              In 4 Phasen zum LinkedIn-Erfolg – du setzt alles selbst um, wir begleiten dich dabei.
             </p>
           </div>
 
@@ -772,23 +781,23 @@ const VideoNote = () => {
             {[
               {
                 icon: Target,
-                title: "Strategie & Analyse",
-                desc: "Wir analysieren eure Zielgruppe und entwickeln die perfekte Strategie."
+                title: "Phase 1: Strategie",
+                desc: "Du lernst, deine Zielgruppe zu analysieren und die perfekte Strategie zu entwickeln."
               },
               {
                 icon: Pen,
-                title: "Content Creation",
-                desc: "Professioneller Content, der deine Expertise sichtbar macht."
+                title: "Phase 2: Content lernen",
+                desc: "Wir zeigen dir, wie du Content erstellst, der Anfragen bringt."
               },
               {
                 icon: Megaphone,
-                title: "Outreach-Kampagnen",
-                desc: "Personalisierte Nachrichten, die Termine generieren."
+                title: "Phase 3: Outreach meistern",
+                desc: "Du lernst, personalisierte Nachrichten zu schreiben, die Umsatz generieren."
               },
               {
                 icon: TrendingUp,
-                title: "Skalierung",
-                desc: "Kontinuierliche Optimierung für mehr Wachstum."
+                title: "Phase 4: Skalieren",
+                desc: "Du optimierst und skalierst deine Strategien eigenständig."
               }
             ].map((step, i) => (
               <div key={i} className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-cyan-500/50 transition-colors">
@@ -818,28 +827,28 @@ const VideoNote = () => {
           <Accordion type="single" collapsible className="space-y-4">
             <AccordionItem value="item-1" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                {contact.first_name}, wie funktioniert der Outreach genau?
+                {contact.first_name}, wie funktioniert das Coaching genau?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Wir identifizieren deine idealen Kunden auf LinkedIn, entwickeln hyperpersonalisierte Nachrichten und führen die Kampagne komplett für dich durch. Du bekommst nur noch die qualifizierten Termine in deinen Kalender, {contact.first_name}.
+                Im Coaching lernst du Schritt für Schritt, wie du Outreach und Content-Strategien selbst umsetzt. Du bekommst 1:1 Betreuung, Vorlagen, Anleitungen und persönliches Feedback zu deiner Umsetzung, {contact.first_name}.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-2" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Was ist im Content-Service enthalten, {contact.first_name}?
+                Was lerne ich im Content-Bereich, {contact.first_name}?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Unser Content-Team erstellt professionelle LinkedIn-Posts in deinem Namen (Ghostwriting). Wir kümmern uns um Themenrecherche, Texterstellung, Bildauswahl und Veröffentlichung – du musst nur noch die Resultate genießen.
+                Du lernst, wie du selbst professionelle LinkedIn-Posts schreibst, die viral gehen können. Wir zeigen dir Themenrecherche, Post-Strukturen, Hook-Techniken und wie du kontinuierlich Content erstellst, der Anfragen generiert.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-3" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Braucht {companyName} Outreach UND Content?
+                Braucht {companyName} beide Säulen?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Beide Services können einzeln gebucht werden, {contact.first_name}. Die Kombination ist jedoch am effektivsten: Outreach generiert aktiv Termine, während Content langfristig Vertrauen aufbaut und passive Leads anzieht.
+                Beide Strategien ergänzen sich perfekt, {contact.first_name}. Outreach generiert aktiv Umsatz, während Content langfristig Anfragen bringt. Im Coaching lernst du beides zu meistern.
               </AccordionContent>
             </AccordionItem>
 
@@ -848,16 +857,16 @@ const VideoNote = () => {
                 {contact.first_name}, wie schnell sehe ich Ergebnisse?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Outreach-Kampagnen generieren typischerweise innerhalb der ersten 2-4 Wochen die ersten Termine. Content braucht 2-3 Monate, um seine volle Wirkung zu entfalten – dafür ist der Effekt nachhaltiger.
+                Mit unseren Outreach-Strategien generierst du typischerweise innerhalb der ersten 1-2 Wochen die ersten Termine. Der Content braucht etwas länger, zeigt aber nach 4-8 Wochen erste Anfragen.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-5" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Gibt es eine Mindestlaufzeit für {companyName}?
+                Wie lange dauert das Coaching für {companyName}?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Wir empfehlen mindestens 3 Monate für optimale Ergebnisse, aber es gibt keine langfristige Bindung, {contact.first_name}. Im kostenlosen Erstgespräch klären wir alle Details.
+                Das Coaching ist auf 12 Wochen ausgelegt, damit du beide Säulen vollständig lernst und umsetzt, {contact.first_name}. Danach kannst du alles eigenständig weiterführen.
               </AccordionContent>
             </AccordionItem>
 
@@ -866,7 +875,7 @@ const VideoNote = () => {
                 {contact.first_name}, wie läuft das Erstgespräch ab?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, definieren deine Ziele und zeigen dir konkret, wie wir {companyName} unterstützen können. Komplett kostenlos und unverbindlich.
+                Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, definieren deine Ziele und zeigen dir, ob das Coaching für {companyName} passt. Komplett kostenlos und unverbindlich.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
