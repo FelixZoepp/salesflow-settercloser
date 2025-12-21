@@ -84,8 +84,8 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importing, setImporting] = useState(false);
-  const MAX_DAILY_MESSAGES = 8;
-  const MAX_PENDING_CONNECTIONS = 20;
+  const MAX_DAILY_MESSAGES = 10;
+  const MAX_PENDING_CONNECTIONS = 15;
 
   const fetchContacts = async () => {
     setLoading(true);
