@@ -344,12 +344,12 @@ const VideoNote = () => {
                 <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Wir bei Zoepp Media</h3>
+                <h3 className="text-xl font-bold text-white">Wir bei Content-Leads</h3>
               </div>
               <ul className="space-y-4">
                 {[
                   "Erste Anfragen bereits in 7 Tagen",
-                  "Umsatzgarantie oder Geld zurück",
+                  "Umsatzgarantie – wir verdoppeln dein Investment",
                   "Ganzheitliche Betreuung inkl. Vertriebstraining",
                   "Hyperpersonalisierte Strategien",
                   "Persönlicher Ansprechpartner dauerhaft"
@@ -389,7 +389,7 @@ const VideoNote = () => {
             <h3 className="text-2xl font-bold text-white mb-3">Unsere Umsatzgarantie</h3>
             <p className="text-slate-300 max-w-2xl mx-auto">
               Wir sind so überzeugt von unserer Methode, dass wir dir eine echte Umsatzgarantie geben. 
-              Erreichst du keine Ergebnisse in der vereinbarten Zeit, arbeiten wir kostenlos weiter – oder du bekommst dein Geld zurück.
+              Erreichst du keine Ergebnisse in der vereinbarten Zeit, arbeiten wir kostenlos weiter – solange, bis wir dein Investment verdoppelt haben.
             </p>
           </div>
         </div>
@@ -451,7 +451,10 @@ const VideoNote = () => {
                 {/* Content */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-white">Daddel GmbH</h3>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Daddel GmbH</h3>
+                      <p className="text-slate-400 text-sm">Webseitenagentur</p>
+                    </div>
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
@@ -482,7 +485,10 @@ const VideoNote = () => {
                 {/* Content - Left side on this one */}
                 <div className="order-2 md:order-1">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-white">Teo Hentzschel</h3>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Teo Hentzschel</h3>
+                      <p className="text-slate-400 text-sm">Webseitenagentur</p>
+                    </div>
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
@@ -533,7 +539,10 @@ const VideoNote = () => {
                 {/* Content */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-white">Hendrik Hoffmann</h3>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Hendrik Hoffmann</h3>
+                      <p className="text-slate-400 text-sm">Webseitenagentur</p>
+                    </div>
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
