@@ -10,12 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3 } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CampaignWorkflow } from "@/components/CampaignWorkflow";
 import { CampaignStatistics } from "@/components/CampaignStatistics";
+import { CampaignComparison } from "@/components/CampaignComparison";
 
 interface Campaign {
   id: string;
@@ -262,17 +263,27 @@ const Campaigns = () => {
             </Dialog>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Campaign List */}
-            <div className="lg:col-span-1 space-y-4">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Alle Kampagnen ({campaigns.length})
-              </h2>
-              {campaigns.length === 0 ? (
-                <Card className="bg-card border-border">
-                  <CardContent className="p-6 text-center text-muted-foreground">
-                    Noch keine Kampagnen erstellt
-                  </CardContent>
+          <Tabs defaultValue="campaigns" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="campaigns">Kampagnen</TabsTrigger>
+              <TabsTrigger value="comparison" className="flex items-center gap-1">
+                <GitCompare className="h-4 w-4" />
+                Vergleich
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="campaigns">
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* Campaign List */}
+                <div className="lg:col-span-1 space-y-4">
+                  <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Alle Kampagnen ({campaigns.length})
+                  </h2>
+                  {campaigns.length === 0 ? (
+                    <Card className="bg-card border-border">
+                      <CardContent className="p-6 text-center text-muted-foreground">
+                        Noch keine Kampagnen erstellt
+                      </CardContent>
                 </Card>
               ) : (
                 campaigns.map((campaign) => (
@@ -470,6 +481,12 @@ const Campaigns = () => {
               )}
             </div>
           </div>
+            </TabsContent>
+
+            <TabsContent value="comparison">
+              <CampaignComparison />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Layout>
