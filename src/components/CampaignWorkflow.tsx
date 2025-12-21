@@ -25,7 +25,8 @@ import {
   Linkedin,
   Plus,
   Trash2,
-  Settings2
+  Settings2,
+  Pencil
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +53,8 @@ interface WorkflowContact {
   last_name: string;
   company: string | null;
   position: string | null;
+  email: string | null;
+  phone: string | null;
   workflow_status: WorkflowStatus | null;
   connection_sent_at: string | null;
   connection_accepted_at: string | null;
@@ -64,6 +67,17 @@ interface WorkflowContact {
   viewed: boolean | null;
   lead_score: number | null;
   linkedin_url: string | null;
+}
+
+interface EditingContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company: string;
+  position: string;
+  email: string;
+  phone: string;
+  linkedin_url: string;
 }
 
 interface FollowupTemplate {
@@ -106,6 +120,8 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [newTemplate, setNewTemplate] = useState({ name: '', content: '', template_type: 'first_message' });
   const [editingLinkedIn, setEditingLinkedIn] = useState<string | null>(null);
   const [linkedInInput, setLinkedInInput] = useState("");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
   const MAX_DAILY_MESSAGES = 10;
   const MAX_PENDING_CONNECTIONS = 15;
 
@@ -113,7 +129,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     setLoading(true);
     const { data, error } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, company, position, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url')
+      .select('id, first_name, last_name, company, position, email, phone, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url')
       .eq('campaign_id', campaignId)
       .eq('lead_type', 'outbound')
       .order('created_at', { ascending: true });
@@ -162,6 +178,48 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     } else {
       toast.success("LinkedIn-URL gespeichert");
       setEditingLinkedIn(null);
+      fetchContacts();
+    }
+  };
+
+  const openEditDialog = (contact: WorkflowContact) => {
+    setEditingContact({
+      id: contact.id,
+      first_name: contact.first_name,
+      last_name: contact.last_name,
+      company: contact.company || '',
+      position: contact.position || '',
+      email: contact.email || '',
+      phone: contact.phone || '',
+      linkedin_url: contact.linkedin_url || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const saveContact = async () => {
+    if (!editingContact) return;
+
+    const { error } = await supabase
+      .from('contacts')
+      .update({
+        first_name: editingContact.first_name,
+        last_name: editingContact.last_name,
+        company: editingContact.company || null,
+        position: editingContact.position || null,
+        email: editingContact.email || null,
+        phone: editingContact.phone || null,
+        linkedin_url: editingContact.linkedin_url || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', editingContact.id);
+
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      console.error(error);
+    } else {
+      toast.success("Lead aktualisiert");
+      setIsEditDialogOpen(false);
+      setEditingContact(null);
       fetchContacts();
     }
   };
@@ -401,7 +459,10 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           {contact.position ? `${contact.position} @ ` : ''}{contact.company || 'Keine Firma'}
         </p>
       </div>
-      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+      <div className="flex items-center gap-1 ml-4 flex-shrink-0">
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openEditDialog(contact)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
         {showLinkedIn && (
           <Popover open={editingLinkedIn === contact.id} onOpenChange={(open) => {
             if (open) {
@@ -1149,6 +1210,85 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Contact Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Lead bearbeiten
+            </DialogTitle>
+          </DialogHeader>
+          {editingContact && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Vorname</Label>
+                  <Input 
+                    value={editingContact.first_name}
+                    onChange={(e) => setEditingContact({ ...editingContact, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nachname</Label>
+                  <Input 
+                    value={editingContact.last_name}
+                    onChange={(e) => setEditingContact({ ...editingContact, last_name: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Firma</Label>
+                <Input 
+                  value={editingContact.company}
+                  onChange={(e) => setEditingContact({ ...editingContact, company: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Position</Label>
+                <Input 
+                  value={editingContact.position}
+                  onChange={(e) => setEditingContact({ ...editingContact, position: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>E-Mail</Label>
+                  <Input 
+                    type="email"
+                    value={editingContact.email}
+                    onChange={(e) => setEditingContact({ ...editingContact, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefon</Label>
+                  <Input 
+                    value={editingContact.phone}
+                    onChange={(e) => setEditingContact({ ...editingContact, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>LinkedIn URL</Label>
+                <Input 
+                  value={editingContact.linkedin_url}
+                  onChange={(e) => setEditingContact({ ...editingContact, linkedin_url: e.target.value })}
+                  placeholder="https://linkedin.com/in/..."
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="flex-1" onClick={() => setIsEditDialogOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button className="flex-1" onClick={saveContact}>
+                  Speichern
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
