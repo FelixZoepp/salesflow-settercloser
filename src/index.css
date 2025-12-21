@@ -2,122 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Apple-Style Dark Mode Design System with Liquid Glass Effect
+   All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Professional CRM Color System */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    /* Business Blue Primary */
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 221 83% 45%;
+    /* Force dark mode as default */
+    color-scheme: dark;
     
-    /* Status Colors */
-    --success: 142 76% 36%;
+    /* Apple Dark Mode Color Palette */
+    --background: 220 15% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 15% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 15% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Apple Blue Primary */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 211 100% 45%;
+    
+    /* Status Colors - Apple Style */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 84% 60%;
+    --warning-foreground: 0 0% 0%;
+    --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
     
     /* Neutral Tones */
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 221 83% 53%;
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 220 15% 20%;
+    --input: 220 15% 18%;
+    --ring: 211 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    /* Modern Landing Page Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(271 91% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(200 100% 50%) 100%);
-    --hero-dark: 222 47% 11%;
-
-    /* Sidebar */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 16%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 16%;
-    --sidebar-ring: 221 83% 53%;
+    /* Liquid Glass Effects */
+    --glass-bg: 220 15% 12% / 0.6;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-highlight: 0 0% 100% / 0.05;
+    --glass-blur: 20px;
+    --glass-shadow: 0 8px 32px hsl(220 15% 0% / 0.4);
     
-    /* Custom CRM Variables */
-    --stage-new: 220 14% 96%;
-    --stage-qualified: 221 83% 95%;
-    --stage-meeting: 142 76% 95%;
-    --stage-offer: 48 96% 95%;
-    --stage-negotiation: 38 92% 95%;
-    --stage-won: 142 76% 36%;
-    --stage-lost: 0 84% 60%;
+    /* Gradients */
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.02) 100%);
+    --gradient-glow: radial-gradient(ellipse at 50% 0%, hsl(211 100% 50% / 0.15) 0%, transparent 50%);
+
+    /* Sidebar - Frosted Glass */
+    --sidebar-background: 220 15% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 211 100% 50%;
+    
+    /* Pipeline Stage Colors - Refined for Dark Mode */
+    --stage-new: 220 15% 16%;
+    --stage-qualified: 211 100% 20%;
+    --stage-meeting: 142 71% 20%;
+    --stage-offer: 48 96% 20%;
+    --stage-negotiation: 38 92% 20%;
+    --stage-won: 142 71% 45%;
+    --stage-lost: 0 72% 51%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 15%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 15%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 221 83% 45%;
-
-    --secondary: 222 47% 20%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 222 47% 20%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 221 83% 53%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 222 47% 20%;
-    --input: 222 47% 20%;
-    --ring: 221 83% 53%;
-    
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 15%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 15%;
-    --sidebar-ring: 221 83% 53%;
-    
-    /* Dark mode gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(271 91% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(200 100% 50%) 100%);
-    --hero-dark: 222 47% 8%;
+    /* Same as root - always dark */
   }
 }
 
@@ -127,27 +95,125 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Hero Sky Background Gradient & Canvas Layers */
-.hero-gradient-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% -10%, #2f2b75 0%, transparent 40%),
-    radial-gradient(circle at 80% -20%, #1b3a86 0%, transparent 45%),
-    linear-gradient(180deg, #0a0b1a 0%, #070816 60%, #0a0e27 100%);
-  opacity: 0.95;
+/* Liquid Glass Component Styles */
+@layer components {
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 
+      var(--glass-shadow),
+      inset 0 1px 0 0 hsl(var(--glass-highlight));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-glass);
+    pointer-events: none;
+  }
+
+  .glass-sidebar {
+    background: linear-gradient(
+      180deg,
+      hsl(220 15% 8% / 0.95) 0%,
+      hsl(220 15% 6% / 0.98) 100%
+    );
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-right: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-input {
+    background: hsl(220 15% 10% / 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--glass-border));
+    transition: all 0.2s ease;
+  }
+
+  .glass-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  }
+
+  .glass-button {
+    background: hsl(220 15% 18% / 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--glass-border));
+    transition: all 0.2s ease;
+  }
+
+  .glass-button:hover {
+    background: hsl(220 15% 22% / 0.9);
+    border-color: hsl(0 0% 100% / 0.12);
+  }
+
+  /* Glow Effect for Active/Primary Elements */
+  .glow-primary {
+    box-shadow: 
+      0 0 20px hsl(211 100% 50% / 0.3),
+      0 0 40px hsl(211 100% 50% / 0.1);
+  }
+
+  .glow-success {
+    box-shadow: 
+      0 0 20px hsl(142 71% 45% / 0.3),
+      0 0 40px hsl(142 71% 45% / 0.1);
+  }
+
+  .glow-danger {
+    box-shadow: 
+      0 0 20px hsl(0 72% 51% / 0.3),
+      0 0 40px hsl(0 72% 51% / 0.1);
+  }
 }
 
-.hero-stars-layer {
-  position: absolute;
+/* Background ambient glow */
+.ambient-glow {
+  position: fixed;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
-  mix-blend-mode: screen;
+  z-index: -1;
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(211 100% 50% / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 100% 50%, hsl(280 80% 50% / 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 0% 80%, hsl(211 100% 50% / 0.05) 0%, transparent 50%);
+}
+
+/* Smooth scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(220 15% 10%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(220 15% 25%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 15% 35%);
 }

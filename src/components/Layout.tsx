@@ -133,21 +133,26 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-56 bg-sidebar border-r border-sidebar-border flex flex-col">
-        <div className="p-4 border-b border-sidebar-border">
-          <h1 className="text-xl font-bold text-sidebar-foreground">Hochpreis-Leads</h1>
+    <div className="flex h-screen bg-background relative">
+      {/* Ambient background glow */}
+      <div className="ambient-glow" />
+      
+      {/* Sidebar - Glass Effect */}
+      <aside className="w-56 glass-sidebar flex flex-col relative z-10">
+        <div className="p-4 border-b border-white/5">
+          <h1 className="text-xl font-bold text-foreground bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+            Hochpreis-Leads
+          </h1>
           {viewingAccount && (
             <div className="mt-2">
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs glass-button">
                 Viewing: {viewingAccount}
               </Badge>
               <Button
                 variant="link"
                 size="sm"
                 onClick={clearAccountView}
-                className="text-xs p-0 h-auto mt-1"
+                className="text-xs p-0 h-auto mt-1 text-primary"
               >
                 Zurück zu Master Admin
               </Button>
@@ -159,7 +164,7 @@ const Layout = ({ children }: LayoutProps) => {
           <nav className="p-3 space-y-4">
             {navSections.map((section) => (
               <div key={section.title}>
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {section.title}
                 </p>
                 <div className="space-y-0.5">
@@ -170,13 +175,13 @@ const Layout = ({ children }: LayoutProps) => {
                       <Link
                         key={item.path}
                         to={item.path}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-sm ${
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 text-sm ${
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                            ? "bg-primary/20 text-primary font-medium border border-primary/30 shadow-glow-sm"
+                            : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : ''}`} />
                         <span>{item.label}</span>
                       </Link>
                     );
@@ -187,11 +192,11 @@ const Layout = ({ children }: LayoutProps) => {
           </nav>
         </ScrollArea>
 
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-white/5">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            className="w-full justify-start text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
@@ -201,17 +206,17 @@ const Layout = ({ children }: LayoutProps) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto flex flex-col">
-        <div className="flex-1">
+      <main className="flex-1 overflow-auto flex flex-col relative z-10">
+        <div className="flex-1 p-6">
           {children}
         </div>
-        <footer className="py-4 px-6 border-t border-border text-center text-muted-foreground text-sm">
+        <footer className="py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
           <div className="flex justify-center gap-6">
             <a 
               href="https://www.content-leads.de/impressum" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Impressum
             </a>
@@ -219,7 +224,7 @@ const Layout = ({ children }: LayoutProps) => {
               href="https://www.content-leads.de/datenschutz" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Datenschutzerklärung
             </a>
