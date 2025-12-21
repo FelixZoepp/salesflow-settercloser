@@ -135,7 +135,7 @@ const VideoNote = () => {
             rel="noopener noreferrer"
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-2.5 rounded-lg transition-all text-sm"
           >
-            Lass uns sprechen {contact.first_name}!
+            {contact.first_name}, lass uns sprechen!
           </a>
         </div>
       </header>
@@ -409,7 +409,7 @@ const VideoNote = () => {
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            {contact.first_name}, bereit für qualifizierte Leads?
+            Bereit für qualifizierte Leads, {contact.first_name}?
           </h2>
           <p className="text-slate-400 text-lg mb-8">
             Starte mit einem kostenlosen Erstgespräch.<br />
@@ -586,7 +586,7 @@ const VideoNote = () => {
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/25"
             >
               <Calendar className="w-5 h-5" />
-              Das will ich auch, {contact.first_name}!
+              {contact.first_name}, das will ich auch!
             </a>
           </div>
         </div>
@@ -888,7 +888,7 @@ const VideoNote = () => {
           <div className="bg-gradient-to-br from-cyan-500/20 to-slate-800 rounded-2xl p-10 border border-cyan-500/30">
             <Zap className="w-12 h-12 text-cyan-400 mx-auto mb-6" />
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Bereit, {contact.first_name}?
+              Bist du bereit, {contact.first_name}?
             </h2>
             <p className="text-slate-400 mb-8">
               Lass uns in einem kurzen Gespräch herausfinden, wie wir {companyName} mit Outreach & Content unterstützen können.
