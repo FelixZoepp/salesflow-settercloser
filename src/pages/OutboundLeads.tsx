@@ -54,9 +54,9 @@ const OutboundLeads = () => {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
-  const csvTemplate = `first_name,last_name,company,email,phone,linkedin_url,position,source
-Max,Mustermann,Musterfirma GmbH,max@musterfirma.de,+49 30 12345678,https://linkedin.com/in/max-mustermann,Geschäftsführer,LinkedIn
-Erika,Musterfrau,Beispiel AG,erika@beispiel.de,+49 89 87654321,https://linkedin.com/in/erika-musterfrau,Vertriebsleiterin,Messe`;
+  const csvTemplate = `first_name,last_name,company,email,linkedin_url,phone
+Max,Mustermann,Musterfirma GmbH,max@musterfirma.de,https://linkedin.com/in/max-mustermann,+49 30 12345678
+Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-musterfrau,+49 89 87654321`;
 
   useEffect(() => {
     fetchContacts();
@@ -224,16 +224,14 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,+49 89 87654321,https://linkedin.
                 
                 {/* Fields Info */}
                 <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold mb-2 text-sm">Verfügbare Felder</h4>
+                  <h4 className="font-semibold mb-2 text-sm">Erforderliche Felder</h4>
                   <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
                     <div><code>first_name</code> - Vorname *</div>
                     <div><code>last_name</code> - Nachname *</div>
-                    <div><code>company</code> - Firma</div>
-                    <div><code>email</code> - E-Mail</div>
-                    <div><code>phone</code> - Telefon</div>
-                    <div><code>linkedin_url</code> - LinkedIn</div>
-                    <div><code>position</code> - Position</div>
-                    <div><code>source</code> - Quelle</div>
+                    <div><code>company</code> - Firma *</div>
+                    <div><code>email</code> - E-Mail *</div>
+                    <div><code>linkedin_url</code> - LinkedIn URL *</div>
+                    <div><code>phone</code> - Telefon *</div>
                   </div>
                 </div>
                 
