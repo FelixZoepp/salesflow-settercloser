@@ -474,7 +474,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
             <div className="lg:col-span-2">
-            <div className="lg:col-span-2">
               <Card className="bg-card border-border h-full">
                 <CardContent className="p-6">
                   <h3 className="text-sm font-medium text-muted-foreground mb-4">
