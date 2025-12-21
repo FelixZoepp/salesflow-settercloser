@@ -123,6 +123,26 @@ const Auth = () => {
           </div>
         </CardContent>
       </Card>
+      <footer className="mt-8 text-center text-muted-foreground text-sm">
+        <div className="flex justify-center gap-6">
+          <a 
+            href="https://www.content-leads.de/impressum" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            Impressum
+          </a>
+          <a 
+            href="https://www.content-leads.de/datenschutz" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            Datenschutzerklärung
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };

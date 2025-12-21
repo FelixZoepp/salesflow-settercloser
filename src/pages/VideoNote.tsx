@@ -908,7 +908,25 @@ const VideoNote = () => {
       {/* Footer */}
       <footer className="py-8 border-t border-slate-800">
         <div className="max-w-6xl mx-auto px-6 text-center text-slate-500 text-sm">
-          <p>Persönlich erstellt für {contact.first_name} {contact.last_name}{contact.company && ` bei ${contact.company}`}</p>
+          <p className="mb-4">Persönlich erstellt für {contact.first_name} {contact.last_name}{contact.company && ` bei ${contact.company}`}</p>
+          <div className="flex justify-center gap-6">
+            <a 
+              href="https://www.content-leads.de/impressum" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-cyan-400 transition-colors"
+            >
+              Impressum
+            </a>
+            <a 
+              href="https://www.content-leads.de/datenschutz" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-cyan-400 transition-colors"
+            >
+              Datenschutzerklärung
+            </a>
+          </div>
         </div>
       </footer>
 
