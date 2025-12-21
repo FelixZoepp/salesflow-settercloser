@@ -281,6 +281,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         last_name: string;
         company?: string;
         position?: string;
+        linkedin_url?: string;
       }> = [];
 
       for (const line of lines) {
@@ -291,12 +292,13 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
             last_name: parts[1]?.trim() || '',
             company: parts[2]?.trim() || undefined,
             position: parts[3]?.trim() || undefined,
+            linkedin_url: parts[4]?.trim() || undefined,
           });
         }
       }
 
       if (leads.length === 0) {
-        toast.error("Keine gültigen Leads gefunden. Format: Vorname, Nachname, Firma, Position");
+        toast.error("Keine gültigen Leads gefunden. Format: Vorname, Nachname, Firma, Position, LinkedIn-URL");
         return;
       }
 
@@ -306,6 +308,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         last_name: lead.last_name,
         company: lead.company || null,
         position: lead.position || null,
+        linkedin_url: lead.linkedin_url || null,
         campaign_id: campaignId,
         lead_type: 'outbound' as const,
         workflow_status: 'bereit_fuer_vernetzung' as const,
@@ -590,12 +593,12 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                 <div>
                   <Label>Lead-Daten (CSV Format)</Label>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Füge Leads ein: Vorname, Nachname, Firma, Position (pro Zeile)
+                    Füge Leads ein: Vorname, Nachname, Firma, Position, LinkedIn-URL (pro Zeile)
                   </p>
                   <Textarea
                     value={importText}
                     onChange={(e) => setImportText(e.target.value)}
-                    placeholder={`Max, Mustermann, Firma GmbH, CEO\nAnna, Schmidt, Beispiel AG, Marketing Manager\nThomas, Müller, Startup Inc, Founder`}
+                    placeholder={`Max, Mustermann, Firma GmbH, CEO, https://linkedin.com/in/max-mustermann\nAnna, Schmidt, Beispiel AG, Marketing Manager, https://linkedin.com/in/anna-schmidt\nThomas, Müller, Startup Inc, Founder, https://linkedin.com/in/thomas-mueller`}
                     className="h-48 font-mono text-sm"
                   />
                 </div>
