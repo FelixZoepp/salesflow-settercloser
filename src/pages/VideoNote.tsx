@@ -339,14 +339,14 @@ const VideoNote = () => {
               {
                 name: "Hendrik Hoffmann",
                 company: "Webseitenagentur",
-                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
+                videoUrl: "https://www.youtube.com/embed/evcR2kC6otA",
                 beforeRevenue: "15.000€",
                 afterRevenue: "30.800€"
               },
               {
                 name: "Daddel GmbH",
                 company: "Webseitenagentur",
-                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
+                videoUrl: "https://www.youtube.com/embed/fldoX_f864Y",
                 beforeRevenue: "12.000€",
                 afterRevenue: "41.000€"
               },
