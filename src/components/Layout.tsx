@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
+import contentLeadsLogo from "@/assets/content-leads-logo.png";
 interface LayoutProps {
   children: ReactNode;
 }
@@ -100,10 +100,12 @@ const Layout = ({ children }: LayoutProps) => {
         
         {/* Sidebar - Minimal Icon Only */}
         <aside className="w-20 glass-sidebar flex flex-col relative z-10 items-center">
-          <div className="p-4 border-b border-white/5 w-full flex justify-center">
-            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-              HL
-            </h1>
+        <div className="p-3 border-b border-white/5 w-full flex justify-center">
+            <img 
+              src={contentLeadsLogo} 
+              alt="Content Leads" 
+              className="w-12 h-12 rounded-full object-cover"
+            />
           </div>
           {viewingAccount && (
             <div className="p-2 text-center">
