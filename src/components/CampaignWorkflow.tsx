@@ -646,7 +646,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
               <span className="text-sm text-muted-foreground">Neue Vernetzungen</span>
             </div>
             <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{pendingConnections.length}</span>
+              <span className="text-muted-foreground">{slotsAvailable > 0 ? slotsAvailable : 0}</span>
               {' / '}
               <span>{MAX_PENDING_CONNECTIONS}</span>
             </p>
@@ -659,7 +659,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
               <span className="text-sm text-muted-foreground">Erstnachrichten heute</span>
             </div>
             <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{todayMessageCount}</span>
+              <span className="text-muted-foreground">{messagesRemaining > 0 ? messagesRemaining : 0}</span>
               {' / '}
               <span>{MAX_DAILY_MESSAGES}</span>
             </p>
