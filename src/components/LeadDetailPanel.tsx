@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity } from "lucide-react";
+import JourneyTimeline from "@/components/JourneyTimeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -619,6 +620,19 @@ Stage: ${deal.stage}
             <Button onClick={handleAddNote} className="w-full" disabled={!note.trim()}>
               Notiz speichern
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Journey Timeline - Tracking Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Lead Journey
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <JourneyTimeline contactId={contact.id} />
           </CardContent>
         </Card>
 
