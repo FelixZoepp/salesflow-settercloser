@@ -197,8 +197,30 @@ const Layout = ({ children }: LayoutProps) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1 overflow-auto flex flex-col">
+        <div className="flex-1">
+          {children}
+        </div>
+        <footer className="py-4 px-6 border-t border-border text-center text-muted-foreground text-sm">
+          <div className="flex justify-center gap-6">
+            <a 
+              href="https://www.content-leads.de/impressum" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Impressum
+            </a>
+            <a 
+              href="https://www.content-leads.de/datenschutz" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Datenschutzerklärung
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   );

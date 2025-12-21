@@ -558,8 +558,8 @@ const Landing = () => {
             <div>
               <h3 className="font-bold mb-4">Rechtliches</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">Datenschutz</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Impressum</a></li>
+                <li><a href="https://www.content-leads.de/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Datenschutz</a></li>
+                <li><a href="https://www.content-leads.de/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">AGB</a></li>
               </ul>
             </div>
