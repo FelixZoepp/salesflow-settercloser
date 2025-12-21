@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   Users, 
@@ -16,7 +19,9 @@ import {
   ExternalLink,
   Copy,
   Flame,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  FileText
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
@@ -76,6 +81,9 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [contacts, setContacts] = useState<WorkflowContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayMessageCount, setTodayMessageCount] = useState(0);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importing, setImporting] = useState(false);
   const MAX_DAILY_MESSAGES = 8;
   const MAX_PENDING_CONNECTIONS = 20;
 
@@ -139,6 +147,84 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     }
     navigator.clipboard.writeText(contact.outreach_message);
     toast.success("Nachricht kopiert!");
+  };
+
+  const importLeads = async () => {
+    if (!importText.trim()) {
+      toast.error("Bitte füge Lead-Daten ein");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      // Get user's account_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Nicht eingeloggt");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_id")
+        .eq("id", user.id)
+        .single();
+
+      // Parse CSV/text - support both comma and semicolon
+      const lines = importText.trim().split('\n');
+      const leads: Array<{
+        first_name: string;
+        last_name: string;
+        company?: string;
+        position?: string;
+      }> = [];
+
+      for (const line of lines) {
+        const parts = line.includes(';') ? line.split(';') : line.split(',');
+        if (parts.length >= 2) {
+          leads.push({
+            first_name: parts[0]?.trim() || '',
+            last_name: parts[1]?.trim() || '',
+            company: parts[2]?.trim() || undefined,
+            position: parts[3]?.trim() || undefined,
+          });
+        }
+      }
+
+      if (leads.length === 0) {
+        toast.error("Keine gültigen Leads gefunden. Format: Vorname, Nachname, Firma, Position");
+        return;
+      }
+
+      // Insert leads with workflow_status = 'bereit_fuer_vernetzung'
+      const leadsToInsert = leads.map(lead => ({
+        first_name: lead.first_name,
+        last_name: lead.last_name,
+        company: lead.company || null,
+        position: lead.position || null,
+        campaign_id: campaignId,
+        lead_type: 'outbound' as const,
+        workflow_status: 'bereit_fuer_vernetzung' as const,
+        account_id: profile?.account_id,
+        owner_user_id: user.id,
+      }));
+
+      const { error } = await supabase
+        .from('contacts')
+        .insert(leadsToInsert);
+
+      if (error) throw error;
+
+      toast.success(`${leads.length} Leads importiert und bereit für Vernetzung`);
+      setImportText("");
+      setIsImportDialogOpen(false);
+      fetchContacts();
+    } catch (error: any) {
+      console.error("Import error:", error);
+      toast.error("Fehler beim Import: " + error.message);
+    } finally {
+      setImporting(false);
+    }
   };
 
   // Filter contacts by status
@@ -214,6 +300,64 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
   return (
     <div className="space-y-6">
+      {/* Header with Import Button */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Daily Workflow für {campaignName}</h3>
+        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Leads importieren
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Leads in Kampagne importieren
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label>Lead-Daten (CSV Format)</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Füge Leads ein: Vorname, Nachname, Firma, Position (pro Zeile)
+                </p>
+                <Textarea
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder={`Max, Mustermann, Firma GmbH, CEO\nAnna, Schmidt, Beispiel AG, Marketing Manager\nThomas, Müller, Startup Inc, Founder`}
+                  className="h-48 font-mono text-sm"
+                />
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Tipp:</strong> Kopiere Daten aus Excel/Sheets. Trennzeichen: Komma oder Semikolon.
+                  <br />Alle importierten Leads werden auf "Bereit für Vernetzung" gesetzt.
+                </p>
+              </div>
+              <Button 
+                onClick={importLeads} 
+                disabled={importing || !importText.trim()} 
+                className="w-full"
+              >
+                {importing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Importiere...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Leads importieren
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {/* Daily Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
