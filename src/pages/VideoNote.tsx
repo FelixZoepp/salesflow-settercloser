@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone, Star, CheckCircle, ExternalLink } from "lucide-react";
+import linkedinPostImage from "@/assets/linkedin-post-screenshot.png";
 import { useState as useStateLocal } from "react";
 import {
   Accordion,
@@ -598,42 +599,30 @@ const VideoNote = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Post Example - Clickable */}
+            {/* Post Example - Clickable with Screenshot */}
             <a 
               href="https://www.linkedin.com/feed/update/urn:li:activity:7387459091897692160/"
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-slate-800/70 rounded-2xl p-6 border border-slate-700 hover:border-purple-500/50 transition-all group cursor-pointer"
+              className="block bg-slate-800/70 rounded-2xl overflow-hidden border border-slate-700 hover:border-purple-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-white font-semibold">Felix Zöpp</p>
-                  <p className="text-slate-500 text-sm">LinkedIn Growth Experte</p>
+              <img 
+                src={linkedinPostImage} 
+                alt="LinkedIn Post - Ich zahle meinem besten Vertriebler 0€" 
+                className="w-full object-cover"
+              />
+              <div className="p-4 bg-slate-800/90">
+                <div className="flex items-center justify-between text-slate-400 text-sm">
+                  <span className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4" /> 155+ Reaktionen
+                  </span>
+                  <span className="flex items-center gap-1 text-purple-400 font-semibold">
+                    <MessageSquare className="w-4 h-4" /> 1.275 Kommentare
+                  </span>
                 </div>
-                <div className="text-slate-500 group-hover:text-purple-400 transition-colors">
-                  <ExternalLink className="w-5 h-5" />
+                <div className="mt-3 text-xs text-slate-500 group-hover:text-purple-400 transition-colors flex items-center gap-1">
+                  Auf LinkedIn ansehen <ExternalLink className="w-3 h-3" />
                 </div>
-              </div>
-              <div className="text-slate-300 text-sm leading-relaxed mb-4">
-                <p className="mb-3">Ich bin es leid, schlechte Agenturarbeit zu sehen.</p>
-                <p className="mb-3">Die meisten Agenturen nehmen jeden Kunden an, der zahlt.</p>
-                <p className="mb-3">Ob das Produkt überhaupt Sinn macht? Egal. ❌</p>
-                <p className="mb-3">Ob das Angebot funktioniert? Egal.</p>
-                <p className="mb-3">Ob der Kunde Ergebnisse bekommt? Egal.</p>
-                <p className="mb-3">Hauptsache die Kohle stimmt.</p>
-                <p className="text-purple-400 group-hover:text-purple-300 transition-colors">Wir machen es anders... 👇</p>
-              </div>
-              <div className="flex items-center gap-6 text-slate-500 text-sm border-t border-slate-700 pt-4">
-                <span className="flex items-center gap-1">
-                  <ThumbsUp className="w-4 h-4" /> 2.847
-                </span>
-                <span className="flex items-center gap-1 text-purple-400 font-semibold">
-                  <MessageSquare className="w-4 h-4" /> 1.275 Kommentare
-                </span>
-              </div>
-              <div className="mt-3 text-xs text-slate-500 group-hover:text-slate-400 transition-colors flex items-center gap-1">
-                Auf LinkedIn ansehen <ExternalLink className="w-3 h-3" />
               </div>
             </a>
 
