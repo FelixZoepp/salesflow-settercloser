@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone } from "lucide-react";
+import { Play, ThumbsDown, ThumbsUp, Check, X, Calendar, MessageSquare, Users, Target, TrendingUp, Zap, ChevronDown, Pen, Megaphone, Star, CheckCircle } from "lucide-react";
 import { useState as useStateLocal } from "react";
 import {
   Accordion,
@@ -334,35 +334,14 @@ const VideoNote = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Hendrik Hoffmann",
-                company: "Webseitenagentur",
-                videoUrl: "https://www.youtube.com/embed/evcR2kC6otA",
-                beforeRevenue: "15.000€",
-                afterRevenue: "30.800€"
-              },
-              {
-                name: "Daddel GmbH",
-                company: "Webseitenagentur",
-                videoUrl: "https://www.youtube.com/embed/fldoX_f864Y",
-                beforeRevenue: "12.000€",
-                afterRevenue: "41.000€"
-              },
-              {
-                name: "Te Hentzschel",
-                company: "Webseitenagentur",
-                videoUrl: "https://www.youtube.com/embed/PXuqgYS5uiE",
-                beforeRevenue: "14.000€",
-                afterRevenue: "32.000€"
-              }
-            ].map((caseStudy, i) => (
-              <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700 hover:border-cyan-500/50 transition-colors">
+          <div className="space-y-8">
+            {/* Case Study 1 - Daddel GmbH */}
+            <div className="bg-slate-800/30 rounded-2xl overflow-hidden border border-slate-700/50 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
                 {/* Video */}
-                <div className="aspect-video bg-slate-900 relative">
+                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
                   <iframe
-                    src={caseStudy.videoUrl}
+                    src="https://www.youtube.com/embed/evcR2kC6otA"
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -370,35 +349,114 @@ const VideoNote = () => {
                 </div>
                 
                 {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400 font-bold">
-                      {caseStudy.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold">{caseStudy.name}</p>
-                      <p className="text-slate-400 text-sm">{caseStudy.company}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Before/After Revenue */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-red-500/10 rounded-xl p-4 text-center border border-red-500/30">
-                      <p className="text-slate-400 text-xs uppercase mb-1">Vorher</p>
-                      <p className="text-red-400 text-xl font-bold">{caseStudy.beforeRevenue}</p>
-                      <p className="text-slate-500 text-xs">pro Monat</p>
-                    </div>
-                    <div className="bg-green-500/10 rounded-xl p-4 text-center border border-green-500/30">
-                      <p className="text-slate-400 text-xs uppercase mb-1">Nachher</p>
-                      <p className="text-green-400 text-xl font-bold">{caseStudy.afterRevenue}</p>
-                      <p className="text-slate-500 text-xs">pro Monat</p>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-white">Daddel GmbH</h3>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
+                      ))}
                     </div>
                   </div>
                   
+                  <div className="space-y-4 mb-6">
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Vorher:</span> „Wir hatten keinen planbaren Kanal, um Neukunden zu gewinnen. Jeden Monat war ungewiss, ob genug Umsatz reinkommt."
+                    </p>
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Nachher:</span> „Durch die Zusammenarbeit sind wir in nur 60 Tagen von 10.000€ auf über 20.000€ monatlich gewachsen – planbar und konstant."
+                    </p>
+                  </div>
                   
+                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    <span className="text-white font-semibold">Von 10k auf 20k+ in 60 Tagen</span>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Case Study 2 - Teo Hentzschel */}
+            <div className="bg-slate-800/30 rounded-2xl overflow-hidden border border-slate-700/50 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                {/* Content - Left side on this one */}
+                <div className="order-2 md:order-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-white">Teo Hentzschel</h3>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Vorher:</span> „Ich wusste nicht, wie ich über LinkedIn an Kunden komme. Alles fühlte sich nach Zufall an."
+                    </p>
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Nachher:</span> „Nach nur 3 Tagen habe ich über LinkedIn 10.000€ abgeschlossen. Die Strategie funktioniert einfach."
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    <span className="text-white font-semibold">10.000€ in 3 Tagen via LinkedIn</span>
+                  </div>
+                </div>
+                
+                {/* Video - Right side */}
+                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden order-1 md:order-2">
+                  <iframe
+                    src="https://www.youtube.com/embed/fldoX_f864Y"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Case Study 3 - Hendrik Hoffmann */}
+            <div className="bg-slate-800/30 rounded-2xl overflow-hidden border border-slate-700/50 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                {/* Video */}
+                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
+                  <iframe
+                    src="https://www.youtube.com/embed/PXuqgYS5uiE"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                
+                {/* Content */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-white">Hendrik Hoffmann</h3>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-emerald-400 text-emerald-400" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Vorher:</span> „Ich hatte keine planbare Methode, um konstant Kunden zu gewinnen. Der Umsatz schwankte stark."
+                    </p>
+                    <p className="text-slate-300">
+                      <span className="text-emerald-400 font-semibold">Nachher:</span> „Bereits in den ersten 30 Tagen hatte ich 5-stellig zusätzlichen Cashflow. Das System funktioniert."
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    <span className="text-white font-semibold">5-stellig Cashflow in 30 Tagen</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="text-center mt-12">
