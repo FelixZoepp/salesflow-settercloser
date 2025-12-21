@@ -58,14 +58,12 @@ const OutboundLeads = () => {
   };
 
   const copyMessage = (contact: Contact) => {
-    if (!contact.outreach_message || !contact.personalized_url) {
+    if (!contact.outreach_message) {
       toast.error("Keine Nachricht vorhanden");
       return;
     }
-    // Replace relative URL with full URL in the message
-    const fullUrl = `${window.location.origin}${contact.personalized_url}`;
-    const messageWithFullUrl = contact.outreach_message.replace(contact.personalized_url, fullUrl);
-    navigator.clipboard.writeText(messageWithFullUrl);
+    // The outreach_message already contains the full URL from the database
+    navigator.clipboard.writeText(contact.outreach_message);
     setCopiedId(contact.id);
     toast.success("Nachricht kopiert!");
     
@@ -155,12 +153,7 @@ const OutboundLeads = () => {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="left" className="max-w-[300px] text-xs">
-                              {contact.outreach_message && contact.personalized_url
-                                ? contact.outreach_message.replace(
-                                    contact.personalized_url,
-                                    `${window.location.origin}${contact.personalized_url}`
-                                  )
-                                : "Keine Nachricht"}
+                              {contact.outreach_message || "Keine Nachricht"}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
