@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +41,19 @@ interface Contact {
   viewed_at: string | null;
   view_count: number | null;
   lead_type: 'inbound' | 'outbound' | null;
+  position: string | null;
+  linkedin_url: string | null;
+}
+
+interface EditingContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company: string;
+  email: string;
+  phone: string;
+  position: string;
+  linkedin_url: string;
 }
 
 const Contacts = () => {
@@ -51,6 +64,8 @@ const Contacts = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -202,6 +217,48 @@ const Contacts = () => {
     } catch (error: any) {
       console.error('Error creating deal:', error);
       toast.error("Fehler beim Erstellen des Deals");
+    }
+  };
+
+  const openEditDialog = (contact: Contact) => {
+    setEditingContact({
+      id: contact.id,
+      first_name: contact.first_name,
+      last_name: contact.last_name,
+      company: contact.company || '',
+      email: contact.email || '',
+      phone: contact.phone || '',
+      position: contact.position || '',
+      linkedin_url: contact.linkedin_url || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const saveContact = async () => {
+    if (!editingContact) return;
+
+    const { error } = await supabase
+      .from('contacts')
+      .update({
+        first_name: editingContact.first_name,
+        last_name: editingContact.last_name,
+        company: editingContact.company || null,
+        email: editingContact.email || null,
+        phone: editingContact.phone || null,
+        position: editingContact.position || null,
+        linkedin_url: editingContact.linkedin_url || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', editingContact.id);
+
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      console.error(error);
+    } else {
+      toast.success("Kontakt aktualisiert");
+      setIsEditDialogOpen(false);
+      setEditingContact(null);
+      fetchContacts();
     }
   };
 
@@ -379,7 +436,10 @@ const Contacts = () => {
                   <h3 className="font-semibold text-lg">
                     {contact.first_name} {contact.last_name}
                   </h3>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditDialog(contact)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     {contact.lead_type && (
                       <Badge variant="outline" className={`text-xs ${
                         contact.lead_type === 'outbound' ? 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30' :
@@ -498,6 +558,75 @@ const Contacts = () => {
             <p className="text-muted-foreground">Keine Kontakte gefunden</p>
           </div>
         )}
+
+        {/* Edit Contact Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Kontakt bearbeiten</DialogTitle>
+            </DialogHeader>
+            {editingContact && (
+              <div className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Vorname</Label>
+                    <Input 
+                      value={editingContact.first_name}
+                      onChange={(e) => setEditingContact({...editingContact, first_name: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nachname</Label>
+                    <Input 
+                      value={editingContact.last_name}
+                      onChange={(e) => setEditingContact({...editingContact, last_name: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Firma</Label>
+                  <Input 
+                    value={editingContact.company}
+                    onChange={(e) => setEditingContact({...editingContact, company: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Position</Label>
+                  <Input 
+                    value={editingContact.position}
+                    onChange={(e) => setEditingContact({...editingContact, position: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-Mail</Label>
+                  <Input 
+                    type="email"
+                    value={editingContact.email}
+                    onChange={(e) => setEditingContact({...editingContact, email: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefon</Label>
+                  <Input 
+                    value={editingContact.phone}
+                    onChange={(e) => setEditingContact({...editingContact, phone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>LinkedIn URL</Label>
+                  <Input 
+                    value={editingContact.linkedin_url}
+                    onChange={(e) => setEditingContact({...editingContact, linkedin_url: e.target.value})}
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                </div>
+                <Button onClick={saveContact} className="w-full">
+                  Speichern
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
