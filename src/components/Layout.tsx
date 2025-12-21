@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,6 +31,8 @@ const Layout = ({ children }: LayoutProps) => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [viewingAccount, setViewingAccount] = useState<string | null>(null);
 
+  // Enable hot lead notifications
+  useHotLeadNotifications();
   useEffect(() => {
     checkSuperAdmin();
     checkViewingAccount();
