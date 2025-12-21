@@ -35,7 +35,7 @@ const Pipeline = () => {
   const [loading, setLoading] = useState(true);
   const [activePipeline, setActivePipeline] = useState<PipelineType>(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'inbound' || tabParam === 'cold' || tabParam === 'setting_closing') {
+    if (tabParam === 'inbound' || tabParam === 'cold') {
       return tabParam;
     }
     return 'cold';
@@ -229,7 +229,7 @@ const Pipeline = () => {
               {stats.appointments} Termine gelegt
             </Badge>
           )}
-          {activePipeline === 'setting_closing' && 'won' in stats && (
+          {activePipeline === 'inbound' && 'won' in stats && (
             <>
               <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
                 {stats.won} Gewonnen
