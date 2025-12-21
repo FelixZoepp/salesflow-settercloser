@@ -141,16 +141,16 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
     { name: 'Warm/Reagiert', value: warmLeads, fill: 'hsl(var(--destructive))' },
   ];
 
-  // Status distribution for pie chart
+  // Status distribution for pie chart with vibrant colors
   const statusData = [
-    { name: 'Neu', value: stats.neu, color: 'hsl(var(--muted-foreground))' },
-    { name: 'Bereit', value: stats.bereit_fuer_vernetzung, color: 'hsl(var(--primary))' },
-    { name: 'Ausstehend', value: stats.vernetzung_ausstehend, color: 'hsl(var(--chart-2))' },
-    { name: 'Angenommen', value: stats.vernetzung_angenommen, color: 'hsl(var(--chart-3))' },
-    { name: 'Erstnachricht', value: stats.erstnachricht_gesendet, color: 'hsl(var(--chart-4))' },
-    { name: 'Follow-ups', value: stats.fu1_gesendet + stats.fu2_gesendet + stats.fu3_gesendet, color: 'hsl(var(--chart-5))' },
-    { name: 'Warm', value: stats.reagiert_warm, color: 'hsl(var(--destructive))' },
-    { name: 'Abgeschlossen', value: stats.abgeschlossen, color: 'hsl(120, 60%, 40%)' },
+    { name: 'Neu', value: stats.neu, color: '#94a3b8' },
+    { name: 'Bereit', value: stats.bereit_fuer_vernetzung, color: '#3b82f6' },
+    { name: 'Ausstehend', value: stats.vernetzung_ausstehend, color: '#f59e0b' },
+    { name: 'Angenommen', value: stats.vernetzung_angenommen, color: '#10b981' },
+    { name: 'Erstnachricht', value: stats.erstnachricht_gesendet, color: '#8b5cf6' },
+    { name: 'Follow-ups', value: stats.fu1_gesendet + stats.fu2_gesendet + stats.fu3_gesendet, color: '#ec4899' },
+    { name: 'Warm', value: stats.reagiert_warm, color: '#ef4444' },
+    { name: 'Abgeschlossen', value: stats.abgeschlossen, color: '#22c55e' },
   ].filter(d => d.value > 0);
 
   return (
