@@ -295,6 +295,106 @@ const VideoNote = () => {
         </div>
       </section>
 
+      {/* #1 LinkedIn Beratung Section */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/50 rounded-full px-6 py-2 mb-6">
+              <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+              <span className="text-amber-300 font-semibold">#1 LinkedIn Beratung in der DACH-Region</span>
+              <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Was uns von anderen unterscheidet
+            </h2>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Keine leeren Versprechungen – wir liefern Ergebnisse mit Garantie.
+            </p>
+          </div>
+
+          {/* Comparison Grid */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Others */}
+            <div className="bg-red-500/5 rounded-2xl p-8 border border-red-500/20">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <X className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Andere Agenturen</h3>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Erste Ergebnisse nach 3-6 Monaten",
+                  "Keine Umsatzgarantie",
+                  "Nur Leads, kein Vertriebstraining",
+                  "Standard-Templates für alle",
+                  "Fehlende Betreuung nach Übergabe"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-400">
+                    <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Us */}
+            <div className="bg-emerald-500/5 rounded-2xl p-8 border border-emerald-500/20">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Wir bei Zoepp Media</h3>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Erste Anfragen bereits in 7 Tagen",
+                  "Umsatzgarantie oder Geld zurück",
+                  "Ganzheitliche Betreuung inkl. Vertriebstraining",
+                  "Hyperpersonalisierte Strategien",
+                  "Persönlicher Ansprechpartner dauerhaft"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-300">
+                    <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 text-center">
+              <div className="text-4xl font-bold text-cyan-400 mb-2">7 Tage</div>
+              <p className="text-slate-400">Erste qualifizierte Anfragen</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 text-center">
+              <div className="text-4xl font-bold text-emerald-400 mb-2">30 Tage</div>
+              <p className="text-slate-400">Durchschnittlich erste Umsätze</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 text-center">
+              <div className="text-4xl font-bold text-amber-400 mb-2">100%</div>
+              <p className="text-slate-400">Umsatzgarantie</p>
+            </div>
+          </div>
+
+          {/* Guarantee Badge */}
+          <div className="mt-12 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 rounded-2xl p-8 border border-emerald-500/30 text-center">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-emerald-400" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">Unsere Umsatzgarantie</h3>
+            <p className="text-slate-300 max-w-2xl mx-auto">
+              Wir sind so überzeugt von unserer Methode, dass wir dir eine echte Umsatzgarantie geben. 
+              Erreichst du keine Ergebnisse in der vereinbarten Zeit, arbeiten wir kostenlos weiter – oder du bekommst dein Geld zurück.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-6 text-center">
