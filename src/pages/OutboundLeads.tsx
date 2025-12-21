@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Send, Megaphone } from "lucide-react";
+import { Copy, Check, Send, Megaphone, Upload, Download, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -18,6 +18,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Contact {
   id: string;
@@ -29,10 +38,25 @@ interface Contact {
   created_at: string;
 }
 
+interface ImportResult {
+  imported_count: number;
+  updated_count: number;
+  skipped_count: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
 const OutboundLeads = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+
+  const csvTemplate = `first_name,last_name,company,email,phone,linkedin_url,position,source
+Max,Mustermann,Musterfirma GmbH,max@musterfirma.de,+49 30 12345678,https://linkedin.com/in/max-mustermann,Geschäftsführer,LinkedIn
+Erika,Musterfrau,Beispiel AG,erika@beispiel.de,+49 89 87654321,https://linkedin.com/in/erika-musterfrau,Vertriebsleiterin,Messe`;
 
   useEffect(() => {
     fetchContacts();
@@ -55,6 +79,59 @@ const OutboundLeads = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([csvTemplate], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'outbound_leads_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setImportResult(null);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!file) {
+      toast.error("Bitte wählen Sie eine CSV-Datei aus");
+      return;
+    }
+
+    setImporting(true);
+    setImportResult(null);
+
+    try {
+      const fileContent = await file.text();
+      
+      const { data, error } = await supabase.functions.invoke('import-leads', {
+        body: { csvData: fileContent, leadType: 'outbound' },
+      });
+
+      if (error) throw error;
+
+      setImportResult(data);
+      toast.success(`${data.imported_count} importiert, ${data.updated_count} aktualisiert`);
+      fetchContacts();
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const resetImportDialog = () => {
+    setFile(null);
+    setImportResult(null);
   };
 
   const copyMessage = (contact: Contact) => {
@@ -103,14 +180,139 @@ const OutboundLeads = () => {
     <Layout>
       <div className="p-12 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-2">
-            <Megaphone className="w-6 h-6 text-cyan-500" />
-            <h1 className="text-2xl font-semibold text-foreground">Outbound Pipeline</h1>
+        <div className="mb-12 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Megaphone className="w-6 h-6 text-cyan-500" />
+              <h1 className="text-2xl font-semibold text-foreground">Outbound Pipeline</h1>
+            </div>
+            <p className="text-muted-foreground">
+              {contacts.length} offene Leads • Limit 20 pro Tag
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            {contacts.length} offene Leads • Limit 20 pro Tag
-          </p>
+          
+          <Dialog open={importDialogOpen} onOpenChange={(open) => {
+            setImportDialogOpen(open);
+            if (!open) resetImportDialog();
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Upload className="w-4 h-4" />
+                CSV Import
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Outbound Leads importieren</DialogTitle>
+                <DialogDescription>
+                  Laden Sie eine CSV-Datei mit Ihren Outbound-Leads hoch
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                {/* Template Download */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2 text-sm">CSV-Vorlage</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Laden Sie unsere Vorlage herunter und füllen Sie sie mit Ihren Daten aus.
+                  </p>
+                  <Button onClick={downloadTemplate} variant="outline" size="sm">
+                    <Download className="mr-2 h-3.5 w-3.5" />
+                    Vorlage herunterladen
+                  </Button>
+                </div>
+                
+                {/* Fields Info */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2 text-sm">Verfügbare Felder</h4>
+                  <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                    <div><code>first_name</code> - Vorname *</div>
+                    <div><code>last_name</code> - Nachname *</div>
+                    <div><code>company</code> - Firma</div>
+                    <div><code>email</code> - E-Mail</div>
+                    <div><code>phone</code> - Telefon</div>
+                    <div><code>linkedin_url</code> - LinkedIn</div>
+                    <div><code>position</code> - Position</div>
+                    <div><code>source</code> - Quelle</div>
+                  </div>
+                </div>
+                
+                {/* File Upload */}
+                <div>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-muted-foreground
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-primary file:text-primary-foreground
+                      hover:file:bg-primary/90"
+                  />
+                </div>
+
+                {file && (
+                  <Alert>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertDescription>
+                      {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button 
+                  onClick={handleImport} 
+                  disabled={!file || importing}
+                  className="w-full"
+                >
+                  {importing ? (
+                    <>Importiere...</>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Import starten
+                    </>
+                  )}
+                </Button>
+                
+                {/* Import Result */}
+                {importResult && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg text-center">
+                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {importResult.imported_count}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Neu</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-center">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {importResult.updated_count}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Aktualisiert</div>
+                      </div>
+                      <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg text-center">
+                        <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                          {importResult.skipped_count}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Übersprungen</div>
+                      </div>
+                    </div>
+                    
+                    {importResult.errors.length > 0 && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          {importResult.errors.length} Fehler: {importResult.errors[0]?.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Table */}
