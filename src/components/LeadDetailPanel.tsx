@@ -322,7 +322,7 @@ Stage: ${deal.stage}
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 glass-card overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 glass-card flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground">Lädt...</p>
@@ -332,7 +332,7 @@ Stage: ${deal.stage}
             <p className="text-muted-foreground">Lead nicht gefunden</p>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col min-h-0 flex-1">
             {/* Header */}
             <div className="p-6 border-b border-white/5">
               <div className="flex items-start justify-between">
@@ -360,7 +360,7 @@ Stage: ${deal.stage}
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               <div className="px-6 pt-4 border-b border-white/5">
                 <TabsList className="bg-white/[0.03] border border-white/5 p-1 rounded-xl">
                   <TabsTrigger 
@@ -384,7 +384,7 @@ Stage: ${deal.stage}
                 </TabsList>
               </div>
 
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1 overflow-auto max-h-[calc(90vh-180px)]">
                 <TabsContent value="overview" className="p-6 space-y-6 mt-0">
                   {/* Status Row */}
                   <div className="grid grid-cols-3 gap-4">
