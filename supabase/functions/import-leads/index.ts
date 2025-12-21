@@ -62,13 +62,14 @@ Deno.serve(async (req) => {
 
     console.log(`Import leads request from user: ${user.id}`);
 
-    // Parse the CSV data and leadType from request body
-    const { csvData, leadType } = await req.json();
+    // Parse the CSV data, leadType and optional campaignId from request body
+    const { csvData, leadType, campaignId } = await req.json();
     if (!csvData) {
       throw new Error('Missing CSV data');
     }
     
     const isOutbound = leadType === 'outbound';
+    console.log(`Import type: ${leadType}, campaign_id: ${campaignId || 'none'}`);
 
     const lines = csvData.trim().split('\n');
     if (lines.length < 2) {
@@ -252,7 +253,8 @@ Deno.serve(async (req) => {
                 source: row.source || null,
                 linkedin_url: row.linkedin_url || null,
                 lead_type: 'outbound',
-                workflow_status: 'neu',
+                workflow_status: 'bereit_fuer_vernetzung',
+                campaign_id: campaignId || null,
               })
               .select()
               .single();

@@ -27,6 +27,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface Campaign {
+  id: string;
+  name: string;
+}
 
 interface Contact {
   id: string;
@@ -53,6 +60,8 @@ const OutboundLeads = () => {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
 
   const csvTemplate = `first_name,last_name,company,email,linkedin_url,phone
 Max,Mustermann,Musterfirma GmbH,max@musterfirma.de,https://linkedin.com/in/max-mustermann,+49 30 12345678
@@ -60,7 +69,19 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
 
   useEffect(() => {
     fetchContacts();
+    fetchCampaigns();
   }, []);
+
+  const fetchCampaigns = async () => {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('id, name')
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setCampaigns(data);
+    }
+  };
 
   const fetchContacts = async () => {
     try {
@@ -105,6 +126,11 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
       toast.error("Bitte wählen Sie eine CSV-Datei aus");
       return;
     }
+    
+    if (!selectedCampaignId) {
+      toast.error("Bitte wählen Sie eine Kampagne aus");
+      return;
+    }
 
     setImporting(true);
     setImportResult(null);
@@ -113,7 +139,7 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
       const fileContent = await file.text();
       
       const { data, error } = await supabase.functions.invoke('import-leads', {
-        body: { csvData: fileContent, leadType: 'outbound' },
+        body: { csvData: fileContent, leadType: 'outbound', campaignId: selectedCampaignId },
       });
 
       if (error) throw error;
@@ -132,6 +158,7 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
   const resetImportDialog = () => {
     setFile(null);
     setImportResult(null);
+    setSelectedCampaignId("");
   };
 
   const copyMessage = (contact: Contact) => {
@@ -235,8 +262,26 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
                   </div>
                 </div>
                 
+                {/* Campaign Selection */}
+                <div className="space-y-2">
+                  <Label>Kampagne auswählen *</Label>
+                  <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Kampagne wählen..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaigns.map((campaign) => (
+                        <SelectItem key={campaign.id} value={campaign.id}>
+                          {campaign.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 {/* File Upload */}
-                <div>
+                <div className="space-y-2">
+                  <Label>CSV-Datei *</Label>
                   <input
                     type="file"
                     accept=".csv"
@@ -261,7 +306,7 @@ Erika,Musterfrau,Beispiel AG,erika@beispiel.de,https://linkedin.com/in/erika-mus
 
                 <Button 
                   onClick={handleImport} 
-                  disabled={!file || importing}
+                  disabled={!file || !selectedCampaignId || importing}
                   className="w-full"
                 >
                   {importing ? (
