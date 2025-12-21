@@ -827,25 +827,25 @@ const VideoNote = () => {
           <Accordion type="single" collapsible className="space-y-4">
             <AccordionItem value="item-1" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                {contact.first_name}, wie funktioniert das Coaching genau?
+                Wie funktioniert das Coaching genau?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Im Coaching lernst du Schritt für Schritt, wie du Outreach und Content-Strategien selbst umsetzt. Du bekommst 1:1 Betreuung, Vorlagen, Anleitungen und persönliches Feedback zu deiner Umsetzung, {contact.first_name}.
+                Im Coaching lernst du Schritt für Schritt, wie du Outreach und Content-Strategien selbst umsetzt, {contact.first_name}. Du bekommst 1:1 Betreuung, Vorlagen, Anleitungen und persönliches Feedback zu deiner Umsetzung.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-2" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Was lerne ich im Content-Bereich, {contact.first_name}?
+                Was lerne ich im Content-Bereich?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Du lernst, wie du selbst professionelle LinkedIn-Posts schreibst, die viral gehen können. Wir zeigen dir Themenrecherche, Post-Strukturen, Hook-Techniken und wie du kontinuierlich Content erstellst, der Anfragen generiert.
+                Du lernst, wie du selbst professionelle LinkedIn-Posts schreibst, die viral gehen können, {contact.first_name}. Wir zeigen dir Themenrecherche, Post-Strukturen, Hook-Techniken und wie du kontinuierlich Content erstellst, der Anfragen generiert.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-3" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Braucht {companyName} beide Säulen?
+                Brauche ich beide Säulen?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Beide Strategien ergänzen sich perfekt, {contact.first_name}. Outreach generiert aktiv Umsatz, während Content langfristig Anfragen bringt. Im Coaching lernst du beides zu meistern.
@@ -854,7 +854,7 @@ const VideoNote = () => {
 
             <AccordionItem value="item-4" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                {contact.first_name}, wie schnell sehe ich Ergebnisse?
+                Du fragst dich, wie schnell du Ergebnisse siehst, {contact.first_name}?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Mit unseren Outreach-Strategien generierst du typischerweise innerhalb der ersten 1-2 Wochen die ersten Termine. Der Content braucht etwas länger, zeigt aber nach 4-8 Wochen erste Anfragen.
@@ -863,7 +863,7 @@ const VideoNote = () => {
 
             <AccordionItem value="item-5" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                Wie lange dauert das Coaching für {companyName}?
+                Wie lange dauert das Coaching?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
                 Das Coaching ist auf 12 Wochen ausgelegt, damit du beide Säulen vollständig lernst und umsetzt, {contact.first_name}. Danach kannst du alles eigenständig weiterführen.
@@ -872,10 +872,10 @@ const VideoNote = () => {
 
             <AccordionItem value="item-6" className="bg-slate-800/50 rounded-xl border border-slate-700 px-6">
               <AccordionTrigger className="text-white hover:text-cyan-400 text-left">
-                {contact.first_name}, wie läuft das Erstgespräch ab?
+                Wie läuft das Erstgespräch ab?
               </AccordionTrigger>
               <AccordionContent className="text-slate-400">
-                Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, definieren deine Ziele und zeigen dir, ob das Coaching für {companyName} passt. Komplett kostenlos und unverbindlich.
+                Im 15-20 minütigen Gespräch analysieren wir gemeinsam deine aktuelle Situation, {contact.first_name}, definieren deine Ziele und zeigen dir, ob das Coaching für dich passt. Komplett kostenlos und unverbindlich.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
