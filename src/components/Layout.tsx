@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, CheckSquare, Users, BarChart3, LogOut, Activity, Phone, CreditCard, Key, FileText, Upload, MessageSquare, Shield, TrendingUp, Megaphone, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LayoutProps {
   children: ReactNode;
@@ -18,11 +19,7 @@ interface NavItem {
   path: string;
   label: string;
   icon: any;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
+  color: string;
 }
 
 const Layout = ({ children }: LayoutProps) => {
@@ -81,157 +78,123 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
-  const navSections: NavSection[] = [
-    {
-      title: "Sales",
-      items: [
-        { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { path: "/campaigns", label: "Kampagnen", icon: Megaphone },
-        { path: "/pipeline", label: "Pipeline", icon: Home },
-        { path: "/today", label: "Heute", icon: CheckSquare },
-        { path: "/inbound", label: "Inbound", icon: TrendingUp },
-        { path: "/outbound", label: "Outbound", icon: Megaphone },
-      ]
-    },
-    {
-      title: "Kontakte",
-      items: [
-        { path: "/contacts", label: "Alle Kontakte", icon: Users },
-        { path: "/import-leads", label: "Import", icon: Upload },
-      ]
-    },
-    {
-      title: "Calling",
-      items: [
-        { path: "/power-dialer", label: "Power Dialer", icon: Phone },
-        { path: "/activity-log", label: "Activity Log", icon: Activity },
-      ]
-    },
-    {
-      title: "Tools",
-      items: [
-        { path: "/kpi", label: "KPIs", icon: BarChart3 },
-        { path: "/call-script", label: "Call Script", icon: FileText },
-        { path: "/objections", label: "Einwände", icon: MessageSquare },
-      ]
-    },
-    {
-      title: "Einstellungen",
-      items: [
-        { path: "/api-keys", label: "API Keys", icon: Key },
-        { path: "/billing", label: "Abrechnung", icon: CreditCard },
-      ]
-    },
+  const navItems: NavItem[] = [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-blue-400" },
+    { path: "/campaigns", label: "Kampagnen", icon: Megaphone, color: "text-purple-400" },
+    { path: "/contacts", label: "Kontakte", icon: Users, color: "text-green-400" },
+    { path: "/pipeline", label: "Vertrieb", icon: Briefcase, color: "text-amber-400" },
+    { path: "/power-dialer", label: "Calling", icon: Phone, color: "text-rose-400" },
+    { path: "/api-keys", label: "Einstellungen", icon: Settings, color: "text-slate-400" },
   ];
 
-  // Add Master Admin section if super admin
+  // Add Master Admin if super admin
   if (isSuperAdmin) {
-    navSections.push({
-      title: "Admin",
-      items: [{ path: "/master-admin", label: "Master Admin", icon: Shield }]
-    });
+    navItems.push({ path: "/master-admin", label: "Admin", icon: Shield, color: "text-red-400" });
   }
 
   return (
-    <div className="flex h-screen bg-background relative">
-      {/* Ambient background glow */}
-      <div className="ambient-glow" />
-      
-      {/* Sidebar - Glass Effect */}
-      <aside className="w-56 glass-sidebar flex flex-col relative z-10">
-        <div className="p-4 border-b border-white/5">
-          <h1 className="text-xl font-bold text-foreground bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-            Hochpreis-Leads
-          </h1>
+    <TooltipProvider>
+      <div className="flex h-screen bg-background relative">
+        {/* Ambient background glow */}
+        <div className="ambient-glow" />
+        
+        {/* Sidebar - Minimal Icon Only */}
+        <aside className="w-20 glass-sidebar flex flex-col relative z-10 items-center">
+          <div className="p-4 border-b border-white/5 w-full flex justify-center">
+            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+              HL
+            </h1>
+          </div>
           {viewingAccount && (
-            <div className="mt-2">
-              <Badge variant="secondary" className="text-xs glass-button">
-                Viewing: {viewingAccount}
+            <div className="p-2 text-center">
+              <Badge variant="secondary" className="text-[10px] glass-button">
+                {viewingAccount.slice(0, 8)}...
               </Badge>
               <Button
                 variant="link"
                 size="sm"
                 onClick={clearAccountView}
-                className="text-xs p-0 h-auto mt-1 text-primary"
+                className="text-[10px] p-0 h-auto mt-1 text-primary"
               >
-                Zurück zu Master Admin
+                ← Zurück
               </Button>
             </div>
           )}
-        </div>
-        
-        <ScrollArea className="flex-1">
-          <nav className="p-3 space-y-4">
-            {navSections.map((section) => (
-              <div key={section.title}>
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {section.title}
-                </p>
-                <div className="space-y-0.5">
-                  {section.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = location.pathname === item.path;
-                    return (
+          
+          <ScrollArea className="flex-1 w-full">
+            <nav className="p-2 flex flex-col items-center gap-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Tooltip key={item.path}>
+                    <TooltipTrigger asChild>
                       <Link
-                        key={item.path}
                         to={item.path}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 text-sm ${
+                        className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
                           isActive
-                            ? "bg-primary/20 text-primary font-medium border border-primary/30 shadow-glow-sm"
-                            : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                            ? "bg-white/10 border border-white/20 shadow-glow-sm"
+                            : "hover:bg-white/5"
                         }`}
                       >
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : ''}`} />
-                        <span>{item.label}</span>
+                        <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-muted-foreground'} ${isActive ? '' : `hover:${item.color}`}`} />
                       </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </ScrollArea>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="glass-card border-white/10">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </nav>
+          </ScrollArea>
 
-        <div className="p-3 border-t border-white/5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Abmelden
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto flex flex-col relative z-10">
-        <div className="flex-1 p-6">
-          {children}
-        </div>
-        <footer className="py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
-          <div className="flex justify-center gap-6">
-            <a 
-              href="https://www.content-leads.de/impressum" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-colors"
-            >
-              Impressum
-            </a>
-            <a 
-              href="https://www.content-leads.de/datenschutz" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-colors"
-            >
-              Datenschutzerklärung
-            </a>
+          <div className="p-3 border-t border-white/5 w-full flex justify-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-12 h-12 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="glass-card border-white/10">
+                <p>Abmelden</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        </footer>
-      </main>
-    </div>
+        </aside>
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto flex flex-col relative z-10">
+          <div className="flex-1 p-6">
+            {children}
+          </div>
+          <footer className="py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
+            <div className="flex justify-center gap-6">
+              <a 
+                href="https://www.content-leads.de/impressum" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Impressum
+              </a>
+              <a 
+                href="https://www.content-leads.de/datenschutz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Datenschutzerklärung
+              </a>
+            </div>
+          </footer>
+        </main>
+      </div>
+    </TooltipProvider>
   );
 };
 
