@@ -17,9 +17,6 @@ interface ContactData {
   first_name: string;
   last_name: string;
   video_url: string | null;
-  company: string | null;
-  email: string | null;
-  lead_type: 'inbound' | 'outbound' | null;
 }
 
 const VideoNote = () => {
@@ -60,29 +57,22 @@ const VideoNote = () => {
 
   const loadContactAndTrackView = async () => {
     try {
-      // First get contact by slug with lead_type check
+      // Use the secure get_contact_by_slug function (returns minimal data only)
       const { data: contactResult, error: contactError } = await supabase
-        .from('contacts')
-        .select('id, first_name, last_name, video_url, company, email, lead_type')
-        .eq('slug', slug)
-        .maybeSingle();
+        .rpc('get_contact_by_slug', { contact_slug: slug });
 
       if (contactError) throw contactError;
 
-      if (!contactResult) {
+      // The function returns an array, get first result
+      const contact = Array.isArray(contactResult) ? contactResult[0] : contactResult;
+
+      if (!contact) {
         setError("Video nicht gefunden");
         setLoading(false);
         return;
       }
 
-      // Check if lead is outbound - only outbound leads can have video notes
-      if (contactResult.lead_type !== 'outbound') {
-        setError("Diese Seite ist nicht verfügbar");
-        setLoading(false);
-        return;
-      }
-
-      setContact(contactResult);
+      setContact(contact);
 
       try {
         await supabase.functions.invoke('track-video-view', {
@@ -137,7 +127,7 @@ const VideoNote = () => {
     );
   }
 
-  const companyName = contact.company || "euer Unternehmen";
+  const companyName = "euer Unternehmen";
 
   return (
     <div className="min-h-screen bg-[#0f172a]" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -934,7 +924,7 @@ const VideoNote = () => {
       {/* Footer */}
       <footer className="py-8 border-t border-slate-800">
         <div className="max-w-6xl mx-auto px-6 text-center text-slate-500 text-sm">
-          <p className="mb-4">Persönlich erstellt für {contact.first_name} {contact.last_name}{contact.company && ` bei ${contact.company}`}</p>
+          <p className="mb-4">Persönlich erstellt für {contact.first_name} {contact.last_name}</p>
           <div className="flex justify-center gap-6">
             <a 
               href="https://www.content-leads.de/impressum" 

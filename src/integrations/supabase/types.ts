@@ -927,8 +927,6 @@ export type Database = {
       get_contact_by_slug: {
         Args: { contact_slug: string }
         Returns: {
-          company: string
-          email: string
           first_name: string
           id: string
           last_name: string
