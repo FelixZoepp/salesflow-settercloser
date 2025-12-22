@@ -80,8 +80,32 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
 
       if (error) throw error;
       
-      setEvents((prev) => prev.filter((e) => e.id !== eventId));
-      toast.success("Event gelöscht");
+      // Update local state
+      const remainingEvents = events.filter((e) => e.id !== eventId);
+      setEvents(remainingEvents);
+      
+      // Recalculate lead score using the database function
+      const { data: scoreData } = await supabase.rpc('calculate_lead_score', {
+        p_contact_id: contactId
+      });
+      
+      // Count remaining page_views for view_count
+      const pageViewCount = remainingEvents.filter(e => e.event_type === 'page_view').length;
+      const hasViewed = pageViewCount > 0;
+      
+      // Update contact with recalculated values
+      await supabase
+        .from("contacts")
+        .update({
+          lead_score: scoreData || 0,
+          view_count: pageViewCount,
+          viewed: hasViewed,
+          viewed_at: hasViewed ? undefined : null,
+          workflow_status: hasViewed ? undefined : 'neu'
+        })
+        .eq("id", contactId);
+      
+      toast.success("Event gelöscht, Lead Score aktualisiert");
     } catch (error) {
       console.error("Error deleting event:", error);
       toast.error("Fehler beim Löschen");
