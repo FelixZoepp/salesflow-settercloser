@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle } from "lucide-react";
+import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface TrackingEvent {
   id: string;
@@ -66,6 +68,23 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       console.error("Error fetching journey events:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from("lead_tracking_events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+      
+      setEvents((prev) => prev.filter((e) => e.id !== eventId));
+      toast.success("Event gelöscht");
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Fehler beim Löschen");
     }
   };
 
@@ -220,6 +239,14 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
                   <span className="text-sm font-medium">{getEventTitle(event)}</span>
                   {getEventBadge(event.event_type)}
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleDeleteEvent(event.id)}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {format(new Date(event.created_at), "dd.MM.yyyy, HH:mm", { locale: de })} Uhr
