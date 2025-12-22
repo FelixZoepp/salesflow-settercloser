@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -18,6 +18,7 @@ import { CampaignWorkflow } from "@/components/CampaignWorkflow";
 import { CampaignStatistics } from "@/components/CampaignStatistics";
 import { CampaignComparison } from "@/components/CampaignComparison";
 import { CampaignLeadsTable } from "@/components/CampaignLeadsTable";
+import { VideoWorkflowPanel } from "@/components/VideoWorkflowPanel";
 
 interface Campaign {
   id: string;
@@ -354,6 +355,10 @@ const Campaigns = () => {
                             <BarChart3 className="h-4 w-4" />
                             Statistiken
                           </TabsTrigger>
+                          <TabsTrigger value="video-workflow" className="flex items-center gap-1">
+                            <Video className="h-4 w-4" />
+                            Video-Workflow
+                          </TabsTrigger>
                           <TabsTrigger value="overview">Übersicht</TabsTrigger>
                           <TabsTrigger value="tracking">Tracking</TabsTrigger>
                         </TabsList>
@@ -374,6 +379,13 @@ const Campaigns = () => {
 
                         <TabsContent value="statistics" className="mt-6">
                           <CampaignStatistics 
+                            campaignId={selectedCampaign.id} 
+                            campaignName={selectedCampaign.name} 
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="video-workflow" className="mt-6">
+                          <VideoWorkflowPanel 
                             campaignId={selectedCampaign.id} 
                             campaignName={selectedCampaign.name} 
                           />

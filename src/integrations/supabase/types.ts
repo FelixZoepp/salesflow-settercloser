@@ -307,8 +307,11 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          heygen_avatar_id: string | null
+          heygen_voice_id: string | null
           id: string
           name: string
+          pitch_video_url: string | null
           start_date: string | null
           status: string
           updated_at: string
@@ -318,8 +321,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          heygen_avatar_id?: string | null
+          heygen_voice_id?: string | null
           id?: string
           name: string
+          pitch_video_url?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
@@ -329,8 +335,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          heygen_avatar_id?: string | null
+          heygen_voice_id?: string | null
           id?: string
           name?: string
+          pitch_video_url?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
@@ -417,7 +426,9 @@ export type Database = {
           fu1_sent_at: string | null
           fu2_sent_at: string | null
           fu3_sent_at: string | null
+          heygen_video_id: string | null
           id: string
+          intro_video_url: string | null
           last_message_date: string | null
           last_name: string
           lead_score: number | null
@@ -439,6 +450,9 @@ export type Database = {
           street: string | null
           tags: string[] | null
           updated_at: string
+          video_error: string | null
+          video_generated_at: string | null
+          video_status: string | null
           video_url: string | null
           view_count: number | null
           viewed: boolean | null
@@ -466,7 +480,9 @@ export type Database = {
           fu1_sent_at?: string | null
           fu2_sent_at?: string | null
           fu3_sent_at?: string | null
+          heygen_video_id?: string | null
           id?: string
+          intro_video_url?: string | null
           last_message_date?: string | null
           last_name: string
           lead_score?: number | null
@@ -490,6 +506,9 @@ export type Database = {
           street?: string | null
           tags?: string[] | null
           updated_at?: string
+          video_error?: string | null
+          video_generated_at?: string | null
+          video_status?: string | null
           video_url?: string | null
           view_count?: number | null
           viewed?: boolean | null
@@ -517,7 +536,9 @@ export type Database = {
           fu1_sent_at?: string | null
           fu2_sent_at?: string | null
           fu3_sent_at?: string | null
+          heygen_video_id?: string | null
           id?: string
+          intro_video_url?: string | null
           last_message_date?: string | null
           last_name?: string
           lead_score?: number | null
@@ -541,6 +562,9 @@ export type Database = {
           street?: string | null
           tags?: string[] | null
           updated_at?: string
+          video_error?: string | null
+          video_generated_at?: string | null
+          video_status?: string | null
           video_url?: string | null
           view_count?: number | null
           viewed?: boolean | null
