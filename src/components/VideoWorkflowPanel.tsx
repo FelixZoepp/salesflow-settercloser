@@ -115,30 +115,54 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
     },
   });
 
-  // Generate videos for all pending contacts
+  // Generate videos for ALL pending contacts
   const generateAllVideos = useMutation({
     mutationFn: async () => {
       const pendingContacts = contacts?.filter(c => c.video_status === 'pending') || [];
+      const totalPending = pendingContacts.length;
       
-      for (const contact of pendingContacts.slice(0, 10)) { // Batch of 10
-        await supabase.functions.invoke('generate-heygen-video', {
-          body: {
-            contactId: contact.id,
-            firstName: contact.first_name,
-            avatarId: campaign?.heygen_avatar_id,
-            voiceId: campaign?.heygen_voice_id,
-          },
-        });
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (totalPending === 0) {
+        throw new Error('Keine ausstehenden Leads');
       }
+
+      // Process all contacts in batches of 10 with delay
+      const batchSize = 10;
+      let processed = 0;
+      
+      for (let i = 0; i < pendingContacts.length; i += batchSize) {
+        const batch = pendingContacts.slice(i, i + batchSize);
+        
+        // Process batch in parallel
+        await Promise.all(
+          batch.map(contact =>
+            supabase.functions.invoke('generate-heygen-video', {
+              body: {
+                contactId: contact.id,
+                firstName: contact.first_name,
+                avatarId: campaign?.heygen_avatar_id,
+                voiceId: campaign?.heygen_voice_id,
+              },
+            })
+          )
+        );
+        
+        processed += batch.length;
+        toast.info(`${processed}/${totalPending} Videos gestartet...`);
+        
+        // Delay between batches to avoid rate limiting
+        if (i + batchSize < pendingContacts.length) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      return { total: totalPending };
     },
-    onSuccess: () => {
-      toast.success('Video-Generierung für Batch gestartet');
+    onSuccess: (data) => {
+      toast.success(`Alle ${data?.total} Videos werden generiert!`);
       queryClient.invalidateQueries({ queryKey: ['campaign-video-contacts', campaignId] });
     },
-    onError: () => {
-      toast.error('Fehler beim Starten der Batch-Generierung');
+    onError: (error) => {
+      toast.error(`Fehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     },
   });
 
@@ -213,19 +237,28 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-3">
             <Button 
               onClick={() => generateAllVideos.mutate()}
               disabled={generateAllVideos.isPending || stats.pending === 0 || !campaign?.pitch_video_url}
-              className="flex-1"
+              className="w-full"
+              size="lg"
             >
               {generateAllVideos.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <Play className="h-4 w-4 mr-2" />
               )}
-              Nächste 10 Videos generieren
+              Alle {stats.pending} Videos generieren
             </Button>
+            
+            {stats.pending > 0 && (
+              <p className="text-xs text-muted-foreground text-center">
+                Geschätzte Kosten: ~${((stats.pending * 6 / 60) * 1).toFixed(2)} - ${((stats.pending * 6 / 60) * 2).toFixed(2)} bei HeyGen
+                <br />
+                <span className="text-yellow-500">(6 Sek. × {stats.pending} Leads = {(stats.pending * 6 / 60).toFixed(1)} Min.)</span>
+              </p>
+            )}
           </div>
 
           {!campaign?.pitch_video_url && (
