@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -274,225 +274,261 @@ const Campaigns = () => {
             </TabsList>
 
             <TabsContent value="campaigns">
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Campaign List */}
-                <div className="lg:col-span-1 space-y-4">
-                  <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Alle Kampagnen ({campaigns.length})
-                  </h2>
+              {selectedCampaign ? (
+                // Full-width campaign detail view
+                <div className="space-y-6">
+                  {/* Header with back button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedCampaign(null)}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Zurück zur Übersicht
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedCampaign(null)}
+                      className="h-8 w-8"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Campaign Card */}
+                  <Card className="bg-card border-border">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-xl">{selectedCampaign.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Leads dieser Kampagne • Erstellt am {new Date(selectedCampaign.created_at).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(selectedCampaign.status)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => updateCampaignStatus(selectedCampaign.id, "active")}>
+                                <Play className="w-4 h-4 mr-2" /> Aktivieren
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateCampaignStatus(selectedCampaign.id, "paused")}>
+                                <Clock className="w-4 h-4 mr-2" /> Pausieren
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => {
+                                  deleteCampaign(selectedCampaign.id);
+                                  setSelectedCampaign(null);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Löschen
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Tabs defaultValue="leads">
+                        <TabsList>
+                          <TabsTrigger value="leads" className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            Leads
+                          </TabsTrigger>
+                          <TabsTrigger value="workflow" className="flex items-center gap-1">
+                            <Workflow className="h-4 w-4" />
+                            Daily Workflow
+                          </TabsTrigger>
+                          <TabsTrigger value="statistics" className="flex items-center gap-1">
+                            <BarChart3 className="h-4 w-4" />
+                            Statistiken
+                          </TabsTrigger>
+                          <TabsTrigger value="overview">Übersicht</TabsTrigger>
+                          <TabsTrigger value="tracking">Tracking</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="leads" className="mt-6">
+                          <CampaignLeadsTable 
+                            campaignId={selectedCampaign.id} 
+                            campaignName={selectedCampaign.name} 
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="workflow" className="mt-6">
+                          <CampaignWorkflow 
+                            campaignId={selectedCampaign.id} 
+                            campaignName={selectedCampaign.name} 
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="statistics" className="mt-6">
+                          <CampaignStatistics 
+                            campaignId={selectedCampaign.id} 
+                            campaignName={selectedCampaign.name} 
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="overview" className="mt-6">
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <Users className="w-4 h-4" />
+                                <span className="text-xs">Leads</span>
+                              </div>
+                              <p className="text-2xl font-bold">{campaignStats?.totalLeads || 0}</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <Eye className="w-4 h-4" />
+                                <span className="text-xs">Seitenaufrufe</span>
+                              </div>
+                              <p className="text-2xl font-bold">{campaignStats?.pageViews || 0}</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <Play className="w-4 h-4" />
+                                <span className="text-xs">Videos</span>
+                              </div>
+                              <p className="text-2xl font-bold">{campaignStats?.videoPlays || 0}</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <MousePointer className="w-4 h-4" />
+                                <span className="text-xs">CTA Klicks</span>
+                              </div>
+                              <p className="text-2xl font-bold">{campaignStats?.ctaClicks || 0}</p>
+                            </div>
+                          </div>
+
+                          {/* Pie Chart */}
+                          <div className="bg-muted/30 rounded-lg p-6">
+                            <h3 className="font-medium mb-4">Lead-Verteilung</h3>
+                            {pieChartData.length > 0 ? (
+                              <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={pieChartData}
+                                      cx="50%"
+                                      cy="50%"
+                                      innerRadius={60}
+                                      outerRadius={80}
+                                      paddingAngle={5}
+                                      dataKey="value"
+                                      label={({ name, value }) => `${name}: ${value}`}
+                                    >
+                                      {pieChartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip />
+                                    <Legend />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                            ) : (
+                              <p className="text-muted-foreground text-center py-8">
+                                Noch keine Leads in dieser Kampagne
+                              </p>
+                            )}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="tracking" className="mt-6">
+                          <div className="space-y-4">
+                            <div className="bg-muted/30 rounded-lg p-6">
+                              <h3 className="font-medium mb-4">Tracking-Übersicht</h3>
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Seitenaufrufe</span>
+                                  <span className="font-medium">{campaignStats?.pageViews || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Video gestartet</span>
+                                  <span className="font-medium">{campaignStats?.videoPlays || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">CTA-Klicks</span>
+                                  <span className="font-medium">{campaignStats?.ctaClicks || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Detaillierte Tracking-Events werden automatisch erfasst, wenn Leads deine personalisierten Seiten besuchen.
+                            </p>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                // Campaign list view
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {campaigns.length === 0 ? (
-                    <Card className="bg-card border-border">
+                    <Card className="bg-card border-border col-span-full">
                       <CardContent className="p-6 text-center text-muted-foreground">
                         Noch keine Kampagnen erstellt
                       </CardContent>
-                </Card>
-              ) : (
-                campaigns.map((campaign) => (
-                  <Card
-                    key={campaign.id}
-                    className={`bg-card border-border cursor-pointer transition-all hover:border-primary/50 ${
-                      selectedCampaign?.id === campaign.id ? "border-primary ring-1 ring-primary" : ""
-                    }`}
-                    onClick={() => setSelectedCampaign(campaign)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-foreground">{campaign.name}</h3>
-                          {campaign.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {campaign.description}
-                            </p>
-                          )}
-                          <div className="mt-2">{getStatusBadge(campaign.status)}</div>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateCampaignStatus(campaign.id, "active")}>
-                              <Play className="w-4 h-4 mr-2" /> Aktivieren
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateCampaignStatus(campaign.id, "paused")}>
-                              <Clock className="w-4 h-4 mr-2" /> Pausieren
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => deleteCampaign(campaign.id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" /> Löschen
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                    </Card>
+                  ) : (
+                    campaigns.map((campaign) => (
+                      <Card
+                        key={campaign.id}
+                        className="bg-card border-border cursor-pointer transition-all hover:border-primary/50 hover:shadow-lg"
+                        onClick={() => setSelectedCampaign(campaign)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-medium text-foreground">{campaign.name}</h3>
+                              {campaign.description && (
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                  {campaign.description}
+                                </p>
+                              )}
+                              <div className="mt-2">{getStatusBadge(campaign.status)}</div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => updateCampaignStatus(campaign.id, "active")}>
+                                  <Play className="w-4 h-4 mr-2" /> Aktivieren
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateCampaignStatus(campaign.id, "paused")}>
+                                  <Clock className="w-4 h-4 mr-2" /> Pausieren
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => deleteCampaign(campaign.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" /> Löschen
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
               )}
-            </div>
-
-            {/* Campaign Detail */}
-            <div className="lg:col-span-2">
-              {selectedCampaign ? (
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>{selectedCampaign.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Erstellt am {new Date(selectedCampaign.created_at).toLocaleDateString("de-DE")}
-                        </p>
-                      </div>
-                      {getStatusBadge(selectedCampaign.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Tabs defaultValue="leads">
-                      <TabsList>
-                        <TabsTrigger value="leads" className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          Leads
-                        </TabsTrigger>
-                        <TabsTrigger value="workflow" className="flex items-center gap-1">
-                          <Workflow className="h-4 w-4" />
-                          Daily Workflow
-                        </TabsTrigger>
-                        <TabsTrigger value="statistics" className="flex items-center gap-1">
-                          <BarChart3 className="h-4 w-4" />
-                          Statistiken
-                        </TabsTrigger>
-                        <TabsTrigger value="overview">Übersicht</TabsTrigger>
-                        <TabsTrigger value="tracking">Tracking</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="leads" className="mt-6">
-                        <CampaignLeadsTable 
-                          campaignId={selectedCampaign.id} 
-                          campaignName={selectedCampaign.name} 
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="workflow" className="mt-6">
-                        <CampaignWorkflow 
-                          campaignId={selectedCampaign.id} 
-                          campaignName={selectedCampaign.name} 
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="statistics" className="mt-6">
-                        <CampaignStatistics 
-                          campaignId={selectedCampaign.id} 
-                          campaignName={selectedCampaign.name} 
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="overview" className="mt-6">
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                              <Users className="w-4 h-4" />
-                              <span className="text-xs">Leads</span>
-                            </div>
-                            <p className="text-2xl font-bold">{campaignStats?.totalLeads || 0}</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                              <Eye className="w-4 h-4" />
-                              <span className="text-xs">Seitenaufrufe</span>
-                            </div>
-                            <p className="text-2xl font-bold">{campaignStats?.pageViews || 0}</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                              <Play className="w-4 h-4" />
-                              <span className="text-xs">Videos</span>
-                            </div>
-                            <p className="text-2xl font-bold">{campaignStats?.videoPlays || 0}</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                              <MousePointer className="w-4 h-4" />
-                              <span className="text-xs">CTA Klicks</span>
-                            </div>
-                            <p className="text-2xl font-bold">{campaignStats?.ctaClicks || 0}</p>
-                          </div>
-                        </div>
-
-                        {/* Pie Chart */}
-                        <div className="bg-muted/30 rounded-lg p-6">
-                          <h3 className="font-medium mb-4">Lead-Verteilung</h3>
-                          {pieChartData.length > 0 ? (
-                            <div className="h-64">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                  <Pie
-                                    data={pieChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    label={({ name, value }) => `${name}: ${value}`}
-                                  >
-                                    {pieChartData.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                  </Pie>
-                                  <Tooltip />
-                                  <Legend />
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground text-center py-8">
-                              Noch keine Leads in dieser Kampagne
-                            </p>
-                          )}
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="tracking" className="mt-6">
-                        <div className="space-y-4">
-                          <div className="bg-muted/30 rounded-lg p-6">
-                            <h3 className="font-medium mb-4">Tracking-Übersicht</h3>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Seitenaufrufe</span>
-                                <span className="font-medium">{campaignStats?.pageViews || 0}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Video gestartet</span>
-                                <span className="font-medium">{campaignStats?.videoPlays || 0}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">CTA-Klicks</span>
-                                <span className="font-medium">{campaignStats?.ctaClicks || 0}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Detaillierte Tracking-Events werden automatisch erfasst, wenn Leads deine personalisierten Seiten besuchen.
-                          </p>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="bg-card border-border h-full flex items-center justify-center">
-                  <CardContent className="text-center text-muted-foreground py-12">
-                    <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Wähle eine Kampagne aus, um Details zu sehen</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
             </TabsContent>
 
             <TabsContent value="comparison">
