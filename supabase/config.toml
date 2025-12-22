@@ -47,3 +47,12 @@ verify_jwt = false
 
 [functions.update-lead-video]
 verify_jwt = false
+
+[functions.generate-heygen-video]
+verify_jwt = true
+
+[functions.check-heygen-status]
+verify_jwt = true
+
+[functions.merge-videos]
+verify_jwt = true
