@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { CampaignWorkflow } from "@/components/CampaignWorkflow";
 import { CampaignStatistics } from "@/components/CampaignStatistics";
 import { CampaignComparison } from "@/components/CampaignComparison";
+import { CampaignLeadsTable } from "@/components/CampaignLeadsTable";
 
 interface Campaign {
   id: string;
@@ -349,8 +350,12 @@ const Campaigns = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <Tabs defaultValue="workflow">
+                    <Tabs defaultValue="leads">
                       <TabsList>
+                        <TabsTrigger value="leads" className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          Leads
+                        </TabsTrigger>
                         <TabsTrigger value="workflow" className="flex items-center gap-1">
                           <Workflow className="h-4 w-4" />
                           Daily Workflow
@@ -362,6 +367,13 @@ const Campaigns = () => {
                         <TabsTrigger value="overview">Übersicht</TabsTrigger>
                         <TabsTrigger value="tracking">Tracking</TabsTrigger>
                       </TabsList>
+
+                      <TabsContent value="leads" className="mt-6">
+                        <CampaignLeadsTable 
+                          campaignId={selectedCampaign.id} 
+                          campaignName={selectedCampaign.name} 
+                        />
+                      </TabsContent>
 
                       <TabsContent value="workflow" className="mt-6">
                         <CampaignWorkflow 
