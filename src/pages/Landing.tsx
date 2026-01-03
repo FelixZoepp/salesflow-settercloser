@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle } from "lucide-react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import contentLeadsLogo from "@/assets/content-leads-logo-round.png";
@@ -441,6 +441,148 @@ const Landing = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 px-6 relative z-[1]">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <p className="text-primary text-sm font-medium mb-4">Kundenstimmen</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
+              Echte Ergebnisse unserer Kunden
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Sieh dir an, wie unsere Kunden mit Content-Leads ihre Umsätze steigern.
+            </p>
+          </div>
+          
+          <div className="space-y-8">
+            {/* Testimonial 1 - Daddel GmbH */}
+            <div className="bg-white/[0.03] rounded-2xl overflow-hidden border border-white/10 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="aspect-video bg-[#0d1117] rounded-xl overflow-hidden">
+                  <iframe
+                    src="https://www.youtube.com/embed/Wb2nYqjw6ok"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Daddel GmbH</h3>
+                      <p className="text-gray-400 text-sm">Webseitenagentur</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Vorher:</span> „Wir hatten keinen planbaren Kanal, um Neukunden zu gewinnen. Jeden Monat war ungewiss, ob genug Umsatz reinkommt."
+                    </p>
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Nachher:</span> „Durch die Zusammenarbeit sind wir in nur 60 Tagen von 10.000€ auf über 20.000€ monatlich gewachsen – planbar und konstant."
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-primary" />
+                    <span className="text-white font-semibold">Von 10k auf 20k+ in 60 Tagen</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 - Teo Hentzschel */}
+            <div className="bg-white/[0.03] rounded-2xl overflow-hidden border border-white/10 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="order-2 md:order-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Teo Hentzschel</h3>
+                      <p className="text-gray-400 text-sm">Webseitenagentur</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Vorher:</span> „Ich wusste nicht, wie ich über LinkedIn an Kunden komme. Alles fühlte sich nach Zufall an."
+                    </p>
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Nachher:</span> „Nach nur 3 Tagen habe ich über LinkedIn 10.000€ abgeschlossen. Die Strategie funktioniert einfach."
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-primary" />
+                    <span className="text-white font-semibold">10.000€ in 3 Tagen via LinkedIn</span>
+                  </div>
+                </div>
+                
+                <div className="aspect-video bg-[#0d1117] rounded-xl overflow-hidden order-1 md:order-2">
+                  <iframe
+                    src="https://www.youtube.com/embed/fldoX_f864Y"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 - Hendrik Hoffmann */}
+            <div className="bg-white/[0.03] rounded-2xl overflow-hidden border border-white/10 p-6 md:p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="aspect-video bg-[#0d1117] rounded-xl overflow-hidden">
+                  <iframe
+                    src="https://www.youtube.com/embed/PXuqgYS5uiE"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Hendrik Hoffmann</h3>
+                      <p className="text-gray-400 text-sm">Webseitenagentur</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Vorher:</span> „Ich hatte keine planbare Methode, um konstant Kunden zu gewinnen. Der Umsatz schwankte stark."
+                    </p>
+                    <p className="text-gray-300">
+                      <span className="text-primary font-semibold">Nachher:</span> „Bereits in den ersten 30 Tagen hatte ich 5-stellig zusätzlichen Cashflow. Das System funktioniert."
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3">
+                    <CheckCircle className="w-5 h-5 text-primary" />
+                    <span className="text-white font-semibold">5-stellig Cashflow in 30 Tagen</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
