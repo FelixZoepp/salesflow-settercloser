@@ -464,7 +464,7 @@ const Landing = () => {
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div className="aspect-video bg-[#0d1117] rounded-xl overflow-hidden">
                   <iframe
-                    src="https://www.youtube.com/embed/Wb2nYqjw6ok"
+                    src="https://www.youtube.com/embed/evcR2kC6otA"
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
