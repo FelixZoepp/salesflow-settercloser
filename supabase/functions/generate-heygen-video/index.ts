@@ -60,12 +60,12 @@ serve(async (req) => {
         speed: 1.0,
       };
     } else {
-      // Fallback to German standard voice
-      console.log('Using default German voice');
+      // Fallback to German standard voice - Klaus Natural
+      console.log('Using default German voice: Klaus - Natural');
       voiceConfig = {
         type: 'text',
         input_text: introScript,
-        voice_id: 'de_male_1',
+        voice_id: '7addb1d6eaba435da3bbd4abcb26407a',
         speed: 1.0,
       };
     }
