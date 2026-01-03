@@ -58,7 +58,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.check-heygen-status]
-verify_jwt = true
+verify_jwt = false
 
 [functions.merge-videos]
 verify_jwt = true
