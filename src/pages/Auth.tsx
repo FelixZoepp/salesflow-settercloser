@@ -15,16 +15,38 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const checkOnboardingAndRedirect = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.onboarding_completed) {
+        navigate("/");
+      } else {
+        navigate("/onboarding");
+      }
+    } catch (error) {
+      // If profile doesn't exist yet, redirect to onboarding
+      navigate("/onboarding");
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        checkOnboardingAndRedirect(session.user.id);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/");
+        // Use setTimeout to defer the async call
+        setTimeout(() => {
+          checkOnboardingAndRedirect(session.user.id);
+        }, 0);
       }
     });
 
