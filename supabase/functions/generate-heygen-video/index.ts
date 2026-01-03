@@ -36,8 +36,10 @@ serve(async (req) => {
       .update({ video_status: 'generating_intro', video_error: null })
       .eq('id', contactId);
 
+    // Default script template - can be overridden via script parameter
+    const defaultScript = `Hey ${firstName}, ich habe dir dieses Video einfach mal kurz aufgenommen, weil ich auf dein LinkedIn Profil gestoßen bin und dir einfach mal zeigen wollte, wie wir mindestens mal 3-5 Kunden in den nächsten 90 Tagen nur über LinkedIn für dich gewinnen.`;
+
     // Create HeyGen video generation request
-    // Using the Talking Photo or Avatar API
     const heygenResponse = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -49,12 +51,12 @@ serve(async (req) => {
           {
             character: {
               type: 'avatar',
-              avatar_id: avatarId || 'default', // Use provided avatar or default
+              avatar_id: avatarId,
               avatar_style: 'normal',
             },
             voice: {
               type: 'text',
-              input_text: `Hallo ${firstName}, ich habe ein Video für dich aufgenommen.`,
+              input_text: defaultScript,
               voice_id: voiceId || 'de_male_1', // German male voice
               speed: 1.0,
             },
