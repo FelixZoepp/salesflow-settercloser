@@ -359,6 +359,7 @@ export type Database = {
           start_date: string | null
           status: string
           updated_at: string
+          voice_source_audio_url: string | null
         }
         Insert: {
           account_id?: string | null
@@ -373,6 +374,7 @@ export type Database = {
           start_date?: string | null
           status?: string
           updated_at?: string
+          voice_source_audio_url?: string | null
         }
         Update: {
           account_id?: string | null
@@ -387,6 +389,7 @@ export type Database = {
           start_date?: string | null
           status?: string
           updated_at?: string
+          voice_source_audio_url?: string | null
         }
         Relationships: [
           {
