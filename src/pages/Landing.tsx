@@ -205,7 +205,10 @@ const Landing = () => {
               <Button variant="ghost" onClick={() => navigate("/auth")} className="text-white hover:bg-white/10">
                 Anmelden
               </Button>
-              <Button onClick={() => navigate("/auth")} className="bg-white text-primary hover:bg-white/90">
+              <Button 
+                onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")} 
+                className="bg-white text-primary hover:bg-white/90"
+              >
                 Demo buchen
               </Button>
             </div>
@@ -245,17 +248,18 @@ const Landing = () => {
           <div className="flex gap-4 justify-center flex-wrap">
             <Button 
               size="lg" 
-              onClick={() => navigate("/auth")}
+              onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
               className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-8 h-14 text-lg"
             >
-              14 Tage kostenlos testen
+              Demo buchen
             </Button>
             <Button 
               size="lg" 
               variant="outline"
+              onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
               className="border-white/20 bg-white text-black hover:bg-white/90 px-8 h-14 text-lg"
             >
-              Video ansehen
+              Erstgespräch vereinbaren
             </Button>
           </div>
 
@@ -467,9 +471,9 @@ const Landing = () => {
                         : ""
                     }`}
                     variant={plan.popular ? "default" : "outline"}
-                    onClick={() => navigate("/auth")}
+                    onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
                   >
-                    Jetzt starten
+                    Demo buchen
                   </Button>
                 </CardContent>
               </Card>
@@ -517,10 +521,10 @@ const Landing = () => {
           <Button 
             size="lg" 
             variant="secondary"
-            onClick={() => navigate("/auth")}
+            onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
             className="bg-white text-primary hover:bg-gray-100 shadow-2xl px-10 h-14 text-lg font-bold"
           >
-            Jetzt kostenlos testen
+            Demo buchen
           </Button>
         </div>
       </section>

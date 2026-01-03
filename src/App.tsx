@@ -14,7 +14,6 @@ import Contacts from "./pages/Contacts";
 import KPI from "./pages/KPI";
 import ActivityLog from "./pages/ActivityLog";
 import PowerDialer from "./pages/PowerDialer";
-import Billing from "./pages/Billing";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import ImportLeads from "./pages/ImportLeads";
@@ -83,7 +82,6 @@ const App = () => (
           <Route path="/power-dialer" element={<ProtectedRoute><PowerDialer /></ProtectedRoute>} />
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
-          <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="*" element={<NotFound />} />
