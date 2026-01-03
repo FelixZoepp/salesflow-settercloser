@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail } from "lucide-react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
+import contentLeadsLogo from "@/assets/content-leads-logo-round.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -154,8 +155,11 @@ const Landing = () => {
       <nav className="fixed top-0 w-full z-50 bg-background/10 backdrop-blur-lg border-b border-white/10">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Hochpreis-Leads
+            <div className="flex items-center gap-3">
+              <img src={contentLeadsLogo} alt="Content-Leads Logo" className="h-10 w-10 rounded-full" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Content-Leads
+              </span>
             </div>
             <div className="hidden md:flex gap-8 text-sm text-white/80">
               <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -249,7 +253,7 @@ const Landing = () => {
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="ml-4 text-xs text-gray-500">hochpreis-leads.de/p/max-mustermann</span>
+                <span className="ml-4 text-xs text-gray-500">content-leads.de/p/max-mustermann</span>
               </div>
               <div className="p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1 space-y-4">
@@ -497,8 +501,11 @@ const Landing = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
-                Hochpreis-Leads
+              <div className="flex items-center gap-3 mb-4">
+                <img src={contentLeadsLogo} alt="Content-Leads Logo" className="h-10 w-10 rounded-full" />
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+                  Content-Leads
+                </span>
               </div>
               <p className="text-sm text-muted-foreground">
                 LinkedIn Outreach mit KI-generierten Landingpages und Echtzeit-Tracking.
@@ -529,7 +536,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-            <p>© 2025 Hochpreis-Leads. Alle Rechte vorbehalten.</p>
+            <p>© 2025 Content-Leads. Eine Marke der Zoepp Media UG. Alle Rechte vorbehalten.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-primary transition-colors">
                 <Linkedin className="h-5 w-5" />
