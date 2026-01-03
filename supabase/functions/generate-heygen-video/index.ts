@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,7 @@ serve(async (req) => {
 
   try {
     const HEYGEN_API_KEY = Deno.env.get('HEYGEN_API_KEY');
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -22,14 +24,14 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     
-    const { contactId, firstName, avatarId, voiceId, audioUrl, script } = await req.json();
+    const { contactId, firstName, avatarId, voiceId, audioUrl, script, useElevenLabs } = await req.json();
 
     if (!contactId || !firstName) {
       throw new Error('contactId and firstName are required');
     }
 
     console.log(`Generating HeyGen video for ${firstName} (${contactId})`);
-    console.log(`Using avatar: ${avatarId}, voice: ${voiceId || 'audio'}, audioUrl: ${audioUrl ? 'provided' : 'none'}`);
+    console.log(`Using avatar: ${avatarId}, voice: ${voiceId || 'default'}, audioUrl: ${audioUrl ? 'provided' : 'none'}, useElevenLabs: ${useElevenLabs}`);
 
     // Update contact status to generating
     await supabase
@@ -40,19 +42,95 @@ serve(async (req) => {
     // Default script template - personalized with first name
     const introScript = script || `Hey ${firstName}, ich habe dir dieses Video einfach mal kurz aufgenommen, weil ich auf dein LinkedIn Profil gestoßen bin und dir einfach mal zeigen wollte, wie wir mindestens mal 3-5 Kunden in den nächsten 90 Tagen nur über LinkedIn für dich gewinnen.`;
 
-    // Build voice configuration based on whether audio_url is provided
+    // Build voice configuration
     let voiceConfig: any;
+    let generatedAudioUrl: string | null = null;
     
-    if (audioUrl) {
-      // Use audio URL as voice source (user's own recorded voice from video)
-      console.log('Using audio_url as voice source');
+    // Option 1: Use ElevenLabs TTS to generate audio, then pass to HeyGen
+    if (useElevenLabs && voiceId && ELEVENLABS_API_KEY) {
+      console.log('Using ElevenLabs TTS with voice:', voiceId);
+      
+      try {
+        // Generate audio with ElevenLabs
+        const elevenLabsResponse = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+          {
+            method: 'POST',
+            headers: {
+              'xi-api-key': ELEVENLABS_API_KEY,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: introScript,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                style: 0.5,
+                use_speaker_boost: true,
+                speed: 1.0,
+              },
+            }),
+          }
+        );
+
+        if (!elevenLabsResponse.ok) {
+          const errorText = await elevenLabsResponse.text();
+          console.error('ElevenLabs API error:', errorText);
+          throw new Error(`ElevenLabs API error: ${elevenLabsResponse.status}`);
+        }
+
+        // Get audio as buffer
+        const audioBuffer = await elevenLabsResponse.arrayBuffer();
+        console.log('ElevenLabs audio generated, size:', audioBuffer.byteLength);
+
+        // Upload to Supabase Storage
+        const audioFileName = `intro-audio-${contactId}-${Date.now()}.mp3`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('personalized-videos')
+          .upload(audioFileName, audioBuffer, {
+            contentType: 'audio/mpeg',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw new Error('Failed to upload audio to storage');
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('personalized-videos')
+          .getPublicUrl(audioFileName);
+        
+        generatedAudioUrl = urlData.publicUrl;
+        console.log('Audio uploaded to:', generatedAudioUrl);
+
+        // Use audio URL with HeyGen
+        voiceConfig = {
+          type: 'audio',
+          audio_url: generatedAudioUrl,
+        };
+      } catch (elevenLabsError) {
+        console.error('ElevenLabs generation failed, falling back to HeyGen voice:', elevenLabsError);
+        // Fallback to HeyGen voice
+        voiceConfig = {
+          type: 'text',
+          input_text: introScript,
+          voice_id: '7addb1d6eaba435da3bbd4abcb26407a', // Klaus - Natural
+          speed: 1.0,
+        };
+      }
+    } else if (audioUrl) {
+      // Option 2: Use provided audio URL directly
+      console.log('Using provided audio_url as voice source');
       voiceConfig = {
         type: 'audio',
         audio_url: audioUrl,
       };
-    } else if (voiceId) {
-      // Use HeyGen voice clone or standard voice
-      console.log('Using voice_id:', voiceId);
+    } else if (voiceId && !useElevenLabs) {
+      // Option 3: Use HeyGen voice ID directly
+      console.log('Using HeyGen voice_id:', voiceId);
       voiceConfig = {
         type: 'text',
         input_text: introScript,
@@ -60,7 +138,7 @@ serve(async (req) => {
         speed: 1.0,
       };
     } else {
-      // Fallback to German standard voice - Klaus Natural
+      // Option 4: Fallback to German standard voice - Klaus Natural
       console.log('Using default German voice: Klaus - Natural');
       voiceConfig = {
         type: 'text',
@@ -88,11 +166,6 @@ serve(async (req) => {
       },
       aspect_ratio: '16:9',
     };
-
-    // If using audio_url, we need to include the script as well for lip-sync
-    if (audioUrl) {
-      requestBody.video_inputs[0].voice.input_text = introScript;
-    }
 
     console.log('HeyGen request:', JSON.stringify(requestBody, null, 2));
 
@@ -137,6 +210,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         videoId,
+        audioUrl: generatedAudioUrl,
         message: 'Video generation started' 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
