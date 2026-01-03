@@ -27,27 +27,17 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Validate API key
-    const { data: keyData, error: keyError } = await supabase
-      .from('api_keys')
-      .select('id, user_id, active')
-      .eq('token', apiKey)
-      .eq('active', true)
-      .maybeSingle();
+    // Validate API key using secure hash-based function
+    const { data: apiKeyData, error: keyError } = await supabase
+      .rpc('validate_api_key', { p_token: apiKey });
 
-    if (keyError || !keyData) {
+    if (keyError || !apiKeyData || apiKeyData.length === 0) {
       console.error('Invalid API key:', keyError);
       return new Response(JSON.stringify({ error: 'Invalid API key' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    // Update last_used_at
-    await supabase
-      .from('api_keys')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', keyData.id);
 
     const body = await req.json();
     const { contact_id, slug, email, video_url } = body;
