@@ -1,5 +1,8 @@
 project_id = "dxdknkeexankgtkpeuvt"
 
+[functions.download-from-drive]
+verify_jwt = false
+
 [functions.track-lead-event]
 verify_jwt = false
 
