@@ -16,7 +16,7 @@ import { format } from "date-fns";
 interface ApiKey {
   id: string;
   label: string;
-  token: string;
+  token_prefix: string | null;
   active: boolean;
   last_used_at: string | null;
   created_at: string;
@@ -38,7 +38,7 @@ export default function ApiKeys() {
     try {
       const { data, error } = await supabase
         .from('api_keys')
-        .select('*')
+        .select('id, label, token_prefix, active, last_used_at, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -55,15 +55,6 @@ export default function ApiKeys() {
     }
   };
 
-  const generateToken = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let token = '';
-    for (let i = 0; i < 64; i++) {
-      token += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return token;
-  };
-
   const createApiKey = async () => {
     if (!newKeyLabel.trim()) {
       toast({
@@ -76,23 +67,18 @@ export default function ApiKeys() {
 
     setCreating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      const token = generateToken();
+      // Call edge function to create API key with secure hashing
+      const response = await supabase.functions.invoke('create-api-key', {
+        body: { label: newKeyLabel },
+      });
 
-      const { error } = await supabase
-        .from('api_keys')
-        .insert({
-          user_id: user.id,
-          token,
-          label: newKeyLabel,
-          active: true,
-        });
+      if (response.error) throw response.error;
+      if (!response.data?.success) throw new Error(response.data?.error || 'Failed to create API key');
 
-      if (error) throw error;
-
-      setNewToken(token);
+      setNewToken(response.data.api_key.token);
       setNewKeyLabel("");
       await fetchApiKeys();
       
@@ -316,6 +302,7 @@ export default function ApiKeys() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Bezeichnung</TableHead>
+                    <TableHead>Token</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Erstellt</TableHead>
                     <TableHead>Zuletzt verwendet</TableHead>
@@ -330,6 +317,11 @@ export default function ApiKeys() {
                           <Key className="h-4 w-4 text-muted-foreground" />
                           {key.label}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          {key.token_prefix || '••••••••...'}
+                        </code>
                       </TableCell>
                       <TableCell>
                         <Badge variant={key.active ? "default" : "secondary"}>

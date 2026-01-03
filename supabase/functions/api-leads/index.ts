@@ -44,28 +44,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Validate API key and get user
+    // Validate API key using secure hash-based function
     const { data: apiKeyData, error: apiKeyError } = await supabase
-      .from('api_keys')
-      .select('user_id, active')
-      .eq('token', apiKey)
-      .eq('active', true)
-      .maybeSingle();
+      .rpc('validate_api_key', { p_token: apiKey });
 
-    if (apiKeyError || !apiKeyData) {
+    if (apiKeyError || !apiKeyData || apiKeyData.length === 0) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid API key' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = apiKeyData.user_id;
-
-    // Update last_used_at
-    await supabase
-      .from('api_keys')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('token', apiKey);
+    const userId = apiKeyData[0].user_id;
 
     console.log(`API request from user: ${userId}`);
 

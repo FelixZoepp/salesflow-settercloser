@@ -173,7 +173,9 @@ export type Database = {
           id: string
           label: string
           last_used_at: string | null
-          token: string
+          token: string | null
+          token_hash: string | null
+          token_prefix: string | null
           user_id: string
         }
         Insert: {
@@ -182,7 +184,9 @@ export type Database = {
           id?: string
           label: string
           last_used_at?: string | null
-          token: string
+          token?: string | null
+          token_hash?: string | null
+          token_prefix?: string | null
           user_id: string
         }
         Update: {
@@ -191,7 +195,9 @@ export type Database = {
           id?: string
           label?: string
           last_used_at?: string | null
-          token?: string
+          token?: string | null
+          token_hash?: string | null
+          token_prefix?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1139,6 +1145,13 @@ export type Database = {
       get_user_account_id: { Args: never; Returns: string }
       is_super_admin: { Args: never; Returns: boolean }
       refresh_contact_last_activity: { Args: never; Returns: undefined }
+      validate_api_key: {
+        Args: { p_token: string }
+        Returns: {
+          key_id: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       activity_outcome:
