@@ -17,6 +17,7 @@ interface ContactData {
   first_name: string;
   last_name: string;
   video_url: string | null;
+  pitch_video_url: string | null;
 }
 
 const VideoNote = () => {
@@ -25,6 +26,7 @@ const VideoNote = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState<'intro' | 'pitch'>('intro');
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
@@ -92,10 +94,26 @@ const VideoNote = () => {
 
   const handlePlayVideo = () => {
     setIsVideoPlaying(true);
+    setCurrentVideo('intro');
+  };
+
+  const handleVideoEnded = () => {
+    // When intro video ends, play the pitch video if available
+    if (currentVideo === 'intro' && contact?.pitch_video_url) {
+      setCurrentVideo('pitch');
+    }
   };
 
   const scrollToVideo = () => {
     document.getElementById('video-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Get the current video URL based on which video is playing
+  const getCurrentVideoUrl = () => {
+    if (currentVideo === 'pitch' && contact?.pitch_video_url) {
+      return contact.pitch_video_url;
+    }
+    return contact?.video_url;
   };
 
   if (loading) {
@@ -209,11 +227,13 @@ const VideoNote = () => {
                     ) : (
                       <video
                         ref={videoRef}
-                        src={contact.video_url}
+                        key={currentVideo}
+                        src={getCurrentVideoUrl() || ''}
                         controls
                         autoPlay
                         playsInline
                         className="w-full aspect-video"
+                        onEnded={handleVideoEnded}
                       />
                     )}
                   </>

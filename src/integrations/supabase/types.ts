@@ -1132,6 +1132,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          pitch_video_url: string
           video_url: string
         }[]
       }
