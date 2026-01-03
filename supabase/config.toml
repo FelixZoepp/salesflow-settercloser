@@ -56,3 +56,15 @@ verify_jwt = true
 
 [functions.merge-videos]
 verify_jwt = true
+
+[functions.save-heygen-key]
+verify_jwt = true
+
+[functions.check-heygen-key]
+verify_jwt = false
+
+[functions.test-heygen-connection]
+verify_jwt = true
+
+[functions.get-heygen-key]
+verify_jwt = true

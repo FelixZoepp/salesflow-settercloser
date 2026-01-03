@@ -25,6 +25,7 @@ import VideoNote from "./pages/VideoNote";
 import InboundLeads from "./pages/InboundLeads";
 import OutboundLeads from "./pages/OutboundLeads";
 import Campaigns from "./pages/Campaigns";
+import Integrations from "./pages/Integrations";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
           <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+          <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
