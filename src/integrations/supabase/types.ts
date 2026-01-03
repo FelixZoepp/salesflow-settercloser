@@ -447,7 +447,7 @@ export type Database = {
       }
       contacts: {
         Row: {
-          account_id: string | null
+          account_id: string
           campaign_id: string | null
           city: string | null
           company: string | null
@@ -501,7 +501,7 @@ export type Database = {
             | null
         }
         Insert: {
-          account_id?: string | null
+          account_id: string
           campaign_id?: string | null
           city?: string | null
           company?: string | null
@@ -557,7 +557,7 @@ export type Database = {
             | null
         }
         Update: {
-          account_id?: string | null
+          account_id?: string
           campaign_id?: string | null
           city?: string | null
           company?: string | null
