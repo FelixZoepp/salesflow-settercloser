@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -80,6 +80,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems: NavItem[] = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-blue-400" },
+    { path: "/onboarding", label: "Setup", icon: Rocket, color: "text-emerald-400" },
     { path: "/campaigns", label: "Kampagnen", icon: Megaphone, color: "text-purple-400" },
     { path: "/contacts", label: "Kontakte", icon: Users, color: "text-green-400" },
     { path: "/pipeline", label: "Vertrieb", icon: Briefcase, color: "text-amber-400" },
