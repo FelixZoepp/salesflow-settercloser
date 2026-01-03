@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart } from "lucide-react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import contentLeadsLogo from "@/assets/content-leads-logo-round.png";
@@ -306,6 +306,274 @@ const Landing = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Section - Normal Outreach vs Content-Leads */}
+      <section className="py-20 px-6 relative z-[1]">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <p className="text-primary text-sm font-medium mb-4">Der Unterschied</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
+              Normaler Outreach <span className="text-red-400">funktioniert nicht mehr</span>
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              LinkedIn hat sich verändert. Wer noch mit Copy-Paste-Nachrichten arbeitet, verbrennt Leads.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Normal Outreach - Bad */}
+            <div className="rounded-2xl border-2 border-red-500/30 bg-red-500/5 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <X className="h-6 w-6 text-red-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-red-400">Normaler Outreach</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { icon: AlertTriangle, text: "Generische Textnachrichten", desc: "Werden ignoriert oder als Spam markiert" },
+                  { icon: X, text: "Keine Kennzahlen", desc: "Du weißt nicht, wer interessiert ist" },
+                  { icon: Flame, text: "Leads werden verbrannt", desc: "Schlechter erster Eindruck = keine zweite Chance" },
+                  { icon: Clock, text: "Zeitverschwendung", desc: "Stunden für Nachrichten, die niemand liest" },
+                  { icon: TrendingUp, text: "Sinkende Antwortraten", desc: "LinkedIn-User sind abgestumpft von Cold Messages" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <item.icon className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-white font-medium">{item.text}</div>
+                      <div className="text-gray-400 text-sm">{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-400 mb-1">{"<"}3%</div>
+                  <div className="text-gray-400 text-sm">Durchschnittliche Antwortrate</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content-Leads - Good */}
+            <div className="rounded-2xl border-2 border-primary/50 bg-primary/5 p-8 relative overflow-hidden">
+              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium">
+                Empfohlen
+              </div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold text-primary">Content-Leads</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { icon: Video, text: "Personalisierte Video-Landingpages", desc: "Einzigartig für jeden Lead – mit Namen angesprochen" },
+                  { icon: BarChart3, text: "Echtzeit-Kennzahlen", desc: "Sieh live, wer deine Seite besucht und Videos schaut" },
+                  { icon: Target, text: "Hot Leads identifizieren", desc: "Kontaktiere nur die, die wirklich interessiert sind" },
+                  { icon: Zap, text: "Vollautomatisiert", desc: "KI erstellt alles – du fokussierst dich aufs Closen" },
+                  { icon: TrendingUp, text: "Höchste Öffnungsraten", desc: "Personalisierung die auffällt und konvertiert" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <item.icon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-white font-medium">{item.text}</div>
+                      <div className="text-gray-400 text-sm">{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-1">73%+</div>
+                  <div className="text-gray-400 text-sm">Durchschnittliche Öffnungsrate</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Software Screenshots / Features Showcase */}
+      <section className="py-20 px-6 relative z-[1]">
+        <div className="container mx-auto max-w-6xl fade-on-scroll">
+          <div className="text-center mb-16">
+            <p className="text-primary text-sm font-medium mb-4">Die Software</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
+              Alles was du brauchst,<br />
+              <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">in einem Dashboard</span>
+            </h2>
+          </div>
+          
+          <div className="space-y-12">
+            {/* Campaign Analytics Mockup */}
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-2">
+              <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="ml-4 text-xs text-gray-500">Kampagnen-Analyse</span>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h4 className="text-xl font-bold text-white">Kampagne: LinkedIn Q1 2025</h4>
+                      <p className="text-gray-400 text-sm">324 Leads • Aktiv seit 14 Tagen</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm font-medium">Aktiv</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: "Seiten-Aufrufe", value: "1.247", change: "+23%", icon: Eye },
+                      { label: "Video-Views", value: "892", change: "+18%", icon: Play },
+                      { label: "CTA-Klicks", value: "156", change: "+31%", icon: MousePointer },
+                      { label: "Hot Leads", value: "47", change: "+12%", icon: Flame },
+                    ].map((stat, idx) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/[0.03] border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <stat.icon className="h-5 w-5 text-primary" />
+                          <span className="text-green-400 text-xs font-medium">{stat.change}</span>
+                        </div>
+                        <div className="text-2xl font-bold text-white">{stat.value}</div>
+                        <div className="text-gray-400 text-xs">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Mini Chart Mockup */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-white font-medium">Engagement über Zeit</span>
+                        <PieChart className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="flex items-end gap-1 h-24">
+                        {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
+                          <div key={i} className="flex-1 bg-gradient-to-t from-primary to-primary/40 rounded-t" style={{ height: `${h}%` }}></div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-2 text-xs text-gray-500">
+                        <span>Woche 1</span>
+                        <span>Woche 2</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-white font-medium">Conversion Funnel</span>
+                        <BarChart3 className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="space-y-3">
+                        {[
+                          { label: "Nachrichten gesendet", value: 324, pct: 100 },
+                          { label: "Seite geöffnet", value: 247, pct: 76 },
+                          { label: "Video gestartet", value: 189, pct: 58 },
+                          { label: "CTA geklickt", value: 47, pct: 14 },
+                        ].map((item, idx) => (
+                          <div key={idx}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-400">{item.label}</span>
+                              <span className="text-white">{item.value} ({item.pct}%)</span>
+                            </div>
+                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full" style={{ width: `${item.pct}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Lead Table Mockup */}
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-2">
+              <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="ml-4 text-xs text-gray-500">Lead-Übersicht</span>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-bold text-white">Alle Leads der Kampagne</h4>
+                    <div className="flex gap-2">
+                      <span className="px-3 py-1 rounded bg-primary/20 text-primary text-xs">47 Hot</span>
+                      <span className="px-3 py-1 rounded bg-yellow-500/20 text-yellow-400 text-xs">89 Warm</span>
+                      <span className="px-3 py-1 rounded bg-gray-500/20 text-gray-400 text-xs">188 Kalt</span>
+                    </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-xs text-gray-400 border-b border-white/10">
+                          <th className="pb-3 font-medium">Lead</th>
+                          <th className="pb-3 font-medium">Status</th>
+                          <th className="pb-3 font-medium">Engagement</th>
+                          <th className="pb-3 font-medium">Letzte Aktivität</th>
+                          <th className="pb-3 font-medium">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {[
+                          { name: "Max Müller", company: "Müller Digital", status: "Hot", engagement: ["Seite", "Video 100%", "CTA"], time: "vor 5 Min", score: 92 },
+                          { name: "Lisa Schmidt", company: "Schmidt Consulting", status: "Hot", engagement: ["Seite", "Video 75%", "CTA"], time: "vor 12 Min", score: 85 },
+                          { name: "Thomas Weber", company: "Weber Solutions", status: "Warm", engagement: ["Seite", "Video 50%"], time: "vor 1 Std", score: 68 },
+                          { name: "Anna Fischer", company: "Fischer Agency", status: "Warm", engagement: ["Seite", "Video Start"], time: "vor 3 Std", score: 54 },
+                        ].map((lead, idx) => (
+                          <tr key={idx} className="border-b border-white/5">
+                            <td className="py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                                  {lead.name.split(" ").map(n => n[0]).join("")}
+                                </div>
+                                <div>
+                                  <div className="text-white font-medium">{lead.name}</div>
+                                  <div className="text-gray-500 text-xs">{lead.company}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                lead.status === "Hot" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                              }`}>
+                                {lead.status}
+                              </span>
+                            </td>
+                            <td className="py-3">
+                              <div className="flex gap-1 flex-wrap">
+                                {lead.engagement.map((e, i) => (
+                                  <span key={i} className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs">{e}</span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-3 text-gray-400">{lead.time}</td>
+                            <td className="py-3">
+                              <div className={`text-lg font-bold ${lead.score >= 80 ? 'text-green-400' : lead.score >= 60 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                {lead.score}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
