@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_integrations: {
+        Row: {
+          account_id: string
+          created_at: string
+          heygen_api_key_id: string | null
+          heygen_avatar_id: string | null
+          heygen_voice_id: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          heygen_api_key_id?: string | null
+          heygen_avatar_id?: string | null
+          heygen_voice_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          heygen_api_key_id?: string | null
+          heygen_avatar_id?: string | null
+          heygen_voice_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_integrations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           company_name: string | null
@@ -688,6 +726,41 @@ export type Database = {
             columns: ["setter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encrypted_api_keys: {
+        Row: {
+          account_id: string
+          created_at: string
+          encrypted_value: string
+          id: string
+          key_name: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          encrypted_value: string
+          id?: string
+          key_name: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          encrypted_value?: string
+          id?: string
+          key_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encrypted_api_keys_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
