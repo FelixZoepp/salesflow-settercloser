@@ -5,68 +5,58 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `Du bist ein Experte für Landing Page Design und Copywriting. Generiere professionelle Landing Page Inhalte basierend auf dem Prompt des Nutzers.
+const SYSTEM_PROMPT = `Du erstellst personalisierte Landing Pages für Leads mit dem Ziel, einen Termin zu vereinbaren. Die Seite enthält IMMER ein personalisiertes KI-Video und einen Terminbuchungs-CTA.
 
-Antworte IMMER mit einem validen JSON-Objekt mit folgender Struktur:
+WICHTIG: Verwende diese Variablen für die Personalisierung:
+- {{firstName}} - Vorname des Leads
+- {{lastName}} - Nachname des Leads  
+- {{company}} - Firmenname des Leads
+- {{position}} - Position/Rolle des Leads
+
+Die Landing Page hat IMMER diese feste Struktur:
+1. Hero-Bereich mit personalisierter Ansprache + KI-Video
+2. 3 konkrete Vorteile/Mehrwerte für den Lead
+3. Kurze Erklärung des Angebots
+4. Terminbuchungs-CTA
+
+Antworte IMMER mit einem validen JSON-Objekt:
 
 {
   "hero": {
-    "headline": "Hauptüberschrift (maximal 10 Wörter)",
-    "subheadline": "Unterüberschrift (1-2 Sätze)",
-    "ctaText": "Call-to-Action Button Text",
-    "ctaLink": "#kontakt"
+    "headline": "Persönliche Ansprache mit {{firstName}} (max 8 Wörter)",
+    "subheadline": "1-2 Sätze warum {{company}} profitieren wird",
+    "videoPlaceholder": true
   },
   "benefits": [
     {
       "icon": "CheckCircle",
-      "title": "Vorteil 1",
-      "description": "Beschreibung des Vorteils"
+      "title": "Konkreter Vorteil 1",
+      "description": "Kurze Beschreibung mit Bezug auf {{company}}"
     },
     {
       "icon": "Zap",
-      "title": "Vorteil 2", 
-      "description": "Beschreibung des Vorteils"
+      "title": "Konkreter Vorteil 2", 
+      "description": "Kurze Beschreibung"
     },
     {
-      "icon": "Shield",
-      "title": "Vorteil 3",
-      "description": "Beschreibung des Vorteils"
+      "icon": "TrendingUp",
+      "title": "Konkreter Vorteil 3",
+      "description": "Kurze Beschreibung"
     }
   ],
-  "features": [
-    {
-      "title": "Feature 1",
-      "description": "Detaillierte Beschreibung",
-      "bulletPoints": ["Punkt 1", "Punkt 2", "Punkt 3"]
-    },
-    {
-      "title": "Feature 2",
-      "description": "Detaillierte Beschreibung",
-      "bulletPoints": ["Punkt 1", "Punkt 2", "Punkt 3"]
-    }
-  ],
-  "testimonials": [
-    {
-      "quote": "Kundenzitat",
-      "author": "Name",
-      "company": "Firma",
-      "role": "Position"
-    }
-  ],
-  "faq": [
-    {
-      "question": "Häufige Frage?",
-      "answer": "Antwort auf die Frage"
-    }
-  ],
+  "offer": {
+    "title": "Was wir für {{company}} tun können",
+    "description": "2-3 Sätze zum Angebot",
+    "bulletPoints": ["Leistung 1", "Leistung 2", "Leistung 3"]
+  },
   "cta": {
-    "headline": "Abschluss-Überschrift",
-    "description": "Kurze Beschreibung",
-    "buttonText": "Jetzt starten",
-    "buttonLink": "#kontakt"
+    "headline": "Lassen Sie uns sprechen, {{firstName}}",
+    "description": "Kurzer Text zur Terminvereinbarung",
+    "buttonText": "Termin vereinbaren",
+    "buttonLink": "#kalender"
   },
   "footer": {
-    "companyName": "Firmenname",
+    "companyName": "Firmenname aus Prompt",
     "tagline": "Kurzer Slogan"
   },
   "suggestedColors": {
@@ -76,12 +66,12 @@ Antworte IMMER mit einem validen JSON-Objekt mit folgender Struktur:
     "background": "#FFFFFF",
     "text": "#1F2937"
   },
-  "suggestedName": "Seitenname"
+  "suggestedName": "landing-page-name"
 }
 
-Wähle passende Lucide Icons aus: CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, TrendingUp, Heart, Sparkles, Rocket, Globe, Lock, BarChart, Mail, Phone, MessageSquare
+Wähle passende Lucide Icons: CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, TrendingUp, Rocket, BarChart
 
-Passe alle Inhalte an das beschriebene Business/Produkt an. Sei kreativ, überzeugend und professionell.`;
+Der Prompt beschreibt den KONTEXT (Branche, Angebot, Zielgruppe). Passe die Inhalte entsprechend an, aber behalte IMMER die Struktur: Personalisierung + Video + Termin-CTA.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
