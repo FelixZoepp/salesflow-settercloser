@@ -825,6 +825,74 @@ export type Database = {
           },
         ]
       }
+      landing_pages: {
+        Row: {
+          account_id: string | null
+          content: Json
+          created_at: string
+          custom_domain: string | null
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          og_image_url: string | null
+          prompt: string | null
+          published_at: string | null
+          slug: string
+          status: string
+          styles: Json
+          updated_at: string
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          account_id?: string | null
+          content?: Json
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          og_image_url?: string | null
+          prompt?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          styles?: Json
+          updated_at?: string
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          account_id?: string | null
+          content?: Json
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          og_image_url?: string | null
+          prompt?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          styles?: Json
+          updated_at?: string
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_pages_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tracking_events: {
         Row: {
           account_id: string | null

@@ -26,6 +26,8 @@ import InboundLeads from "./pages/InboundLeads";
 import OutboundLeads from "./pages/OutboundLeads";
 import Campaigns from "./pages/Campaigns";
 import Integrations from "./pages/Integrations";
+import LandingPageBuilder from "./pages/LandingPageBuilder";
+import PublicLandingPage from "./pages/PublicLandingPage";
 
 const queryClient = new QueryClient();
 
@@ -83,7 +85,9 @@ const App = () => (
           <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
           <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+          <Route path="/landing-builder" element={<ProtectedRoute><LandingPageBuilder /></ProtectedRoute>} />
           <Route path="/p/:slug" element={<VideoNote />} />
+          <Route path="/lp/:slug" element={<PublicLandingPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
