@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Eye, Save, Globe, Wand2, Loader2, Plus, Trash2, ExternalLink, Copy } from "lucide-react";
+import { Sparkles, Eye, Save, Globe, Wand2, Loader2, Plus, Trash2, ExternalLink, Copy, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
@@ -84,6 +84,7 @@ interface LandingPage {
   view_count: number;
   created_at: string;
   updated_at: string;
+  calendar_url: string | null;
 }
 
 const defaultStyles: LandingPageStyles = {
@@ -107,10 +108,28 @@ const LandingPageBuilder = () => {
   const [styles, setStyles] = useState<LandingPageStyles>(defaultStyles);
   const [pageName, setPageName] = useState("");
   const [pageSlug, setPageSlug] = useState("");
+  const [calendarUrl, setCalendarUrl] = useState("");
+  const [userCalendarUrl, setUserCalendarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadPages();
+    loadUserCalendarUrl();
   }, []);
+
+  const loadUserCalendarUrl = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('calendar_url')
+      .eq('id', user.id)
+      .single();
+
+    if (data?.calendar_url) {
+      setUserCalendarUrl(data.calendar_url);
+    }
+  };
 
   const loadPages = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -216,6 +235,7 @@ const LandingPageBuilder = () => {
         meta_title: content.hero?.headline || pageName,
         meta_description: content.hero?.subheadline || '',
         published_at: publish ? new Date().toISOString() : null,
+        calendar_url: calendarUrl || null,
       };
 
       let result;
@@ -263,6 +283,7 @@ const LandingPageBuilder = () => {
     setPageName(page.name);
     setPageSlug(page.slug);
     setPrompt(page.prompt || "");
+    setCalendarUrl(page.calendar_url || "");
     setActiveTab("preview");
   };
 
@@ -273,7 +294,26 @@ const LandingPageBuilder = () => {
     setPageName("");
     setPageSlug("");
     setPrompt("");
+    setCalendarUrl("");
     setActiveTab("generator");
+  };
+
+  const handleSaveUserCalendarUrl = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ calendar_url: calendarUrl })
+      .eq('id', user.id);
+
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      return;
+    }
+
+    setUserCalendarUrl(calendarUrl);
+    toast.success("Kalender-URL gespeichert!");
   };
 
   const handleDeletePage = async (pageId: string) => {
@@ -441,67 +481,98 @@ const LandingPageBuilder = () => {
                 <div className="space-y-4">
                   {/* Save Actions */}
                   <Card className="glass-card border-white/10 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Input
-                          value={pageName}
-                          onChange={(e) => {
-                            setPageName(e.target.value);
-                            if (!selectedPage) {
-                              setPageSlug(generateSlug(e.target.value));
-                            }
-                          }}
-                          placeholder="Seitenname"
-                          className="w-48 bg-white/5 border-white/10"
-                        />
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>/lp/</span>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
                           <Input
-                            value={pageSlug}
-                            onChange={(e) => setPageSlug(generateSlug(e.target.value))}
-                            placeholder="slug"
-                            className="w-40 bg-white/5 border-white/10"
+                            value={pageName}
+                            onChange={(e) => {
+                              setPageName(e.target.value);
+                              if (!selectedPage) {
+                                setPageSlug(generateSlug(e.target.value));
+                              }
+                            }}
+                            placeholder="Seitenname"
+                            className="w-48 bg-white/5 border-white/10"
                           />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>/lp/</span>
+                            <Input
+                              value={pageSlug}
+                              onChange={(e) => setPageSlug(generateSlug(e.target.value))}
+                              placeholder="slug"
+                              className="w-40 bg-white/5 border-white/10"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedPage?.status === 'published' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => {
+                                const url = `${window.location.origin}/lp/${pageSlug}`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              Öffnen
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSave(false)}
+                            disabled={isSaving}
+                            className="gap-2"
+                          >
+                            <Save className="w-4 h-4" />
+                            Speichern
+                          </Button>
+                          <Button
+                            onClick={() => handleSave(true)}
+                            disabled={isSaving}
+                            className="gap-2"
+                          >
+                            <Globe className="w-4 h-4" />
+                            Veröffentlichen
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedPage?.status === 'published' && (
+                      
+                      {/* Calendar URL Input */}
+                      <div className="flex items-center gap-3 pt-3 border-t border-white/10">
+                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <Input
+                          value={calendarUrl}
+                          onChange={(e) => setCalendarUrl(e.target.value)}
+                          placeholder="Calendly/Cal.com Link (z.B. https://calendly.com/dein-name/termin)"
+                          className="flex-1 bg-white/5 border-white/10"
+                        />
+                        {!userCalendarUrl && calendarUrl && (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-2"
-                            onClick={() => {
-                              const url = `${window.location.origin}/lp/${pageSlug}`;
-                              window.open(url, '_blank');
-                            }}
+                            onClick={handleSaveUserCalendarUrl}
                           >
-                            <ExternalLink className="w-4 h-4" />
-                            Öffnen
+                            Als Standard speichern
                           </Button>
                         )}
-                        <Button
-                          variant="outline"
-                          onClick={() => handleSave(false)}
-                          disabled={isSaving}
-                          className="gap-2"
-                        >
-                          <Save className="w-4 h-4" />
-                          Speichern
-                        </Button>
-                        <Button
-                          onClick={() => handleSave(true)}
-                          disabled={isSaving}
-                          className="gap-2"
-                        >
-                          <Globe className="w-4 h-4" />
-                          Veröffentlichen
-                        </Button>
                       </div>
+                      {userCalendarUrl && !calendarUrl && (
+                        <p className="text-xs text-muted-foreground">
+                          Dein Standard-Kalender wird verwendet: {userCalendarUrl}
+                        </p>
+                      )}
                     </div>
                   </Card>
 
                   {/* Preview */}
-                  <LandingPagePreview content={content} styles={styles} />
+                  <LandingPagePreview 
+                    content={content} 
+                    styles={styles} 
+                    calendarUrl={calendarUrl || userCalendarUrl || undefined}
+                  />
                 </div>
               </TabsContent>
 

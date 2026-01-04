@@ -828,6 +828,7 @@ export type Database = {
       landing_pages: {
         Row: {
           account_id: string | null
+          calendar_url: string | null
           content: Json
           created_at: string
           custom_domain: string | null
@@ -847,6 +848,7 @@ export type Database = {
         }
         Insert: {
           account_id?: string | null
+          calendar_url?: string | null
           content?: Json
           created_at?: string
           custom_domain?: string | null
@@ -866,6 +868,7 @@ export type Database = {
         }
         Update: {
           account_id?: string | null
+          calendar_url?: string | null
           content?: Json
           created_at?: string
           custom_domain?: string | null
@@ -993,6 +996,7 @@ export type Database = {
       profiles: {
         Row: {
           account_id: string | null
+          calendar_url: string | null
           created_at: string
           email: string
           id: string
@@ -1006,6 +1010,7 @@ export type Database = {
         }
         Insert: {
           account_id?: string | null
+          calendar_url?: string | null
           created_at?: string
           email: string
           id: string
@@ -1019,6 +1024,7 @@ export type Database = {
         }
         Update: {
           account_id?: string | null
+          calendar_url?: string | null
           created_at?: string
           email?: string
           id?: string

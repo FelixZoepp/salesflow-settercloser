@@ -44,6 +44,7 @@ export interface LandingPageStyles {
 interface LandingPagePreviewProps {
   content: LandingPageContent;
   styles: LandingPageStyles;
+  calendarUrl?: string;
 }
 
 const iconMap: Record<string, any> = {
@@ -51,10 +52,49 @@ const iconMap: Record<string, any> = {
   TrendingUp, Rocket, BarChart
 };
 
-export const LandingPagePreview = ({ content, styles }: LandingPagePreviewProps) => {
+export const LandingPagePreview = ({ content, styles, calendarUrl }: LandingPagePreviewProps) => {
   const getIcon = (iconName: string) => {
     const Icon = iconMap[iconName] || CheckCircle;
     return <Icon className="w-6 h-6" />;
+  };
+
+  // Extract calendar embed type
+  const getCalendarEmbed = () => {
+    if (!calendarUrl) return null;
+    
+    // Calendly embed
+    if (calendarUrl.includes('calendly.com')) {
+      const cleanUrl = calendarUrl.replace(/\/$/, '');
+      return (
+        <div className="mt-6 rounded-xl overflow-hidden bg-white" style={{ minHeight: '630px' }}>
+          <iframe
+            src={`${cleanUrl}?hide_gdpr_banner=1&background_color=ffffff&text_color=1f2937&primary_color=${styles.primaryColor.replace('#', '')}`}
+            width="100%"
+            height="630"
+            frameBorder="0"
+            title="Termin buchen"
+          />
+        </div>
+      );
+    }
+    
+    // Cal.com embed
+    if (calendarUrl.includes('cal.com')) {
+      return (
+        <div className="mt-6 rounded-xl overflow-hidden bg-white" style={{ minHeight: '630px' }}>
+          <iframe
+            src={calendarUrl}
+            width="100%"
+            height="630"
+            frameBorder="0"
+            title="Termin buchen"
+          />
+        </div>
+      );
+    }
+
+    // Generic link (fallback button)
+    return null;
   };
 
   if (!content.hero) {
@@ -67,6 +107,8 @@ export const LandingPagePreview = ({ content, styles }: LandingPagePreviewProps)
       </Card>
     );
   }
+
+  const calendarEmbed = getCalendarEmbed();
 
   return (
     <Card className="overflow-hidden border-0 rounded-xl shadow-2xl">
@@ -194,15 +236,31 @@ export const LandingPagePreview = ({ content, styles }: LandingPagePreviewProps)
               <p className="text-base opacity-90 mb-6">
                 {content.cta.description}
               </p>
-              <button
-                className="px-8 py-3 rounded-xl font-semibold text-base transition-all hover:scale-105 hover:shadow-lg"
-                style={{ backgroundColor: styles.accentColor, color: '#fff' }}
-              >
-                <span className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  {content.cta.buttonText}
-                </span>
-              </button>
+              
+              {calendarEmbed ? (
+                calendarEmbed
+              ) : (
+                <>
+                  <a
+                    href={calendarUrl || content.cta.buttonLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-8 py-3 rounded-xl font-semibold text-base transition-all hover:scale-105 hover:shadow-lg"
+                    style={{ backgroundColor: styles.accentColor, color: '#fff' }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      {content.cta.buttonText}
+                    </span>
+                  </a>
+                  {!calendarUrl && (
+                    <p className="text-xs opacity-60 mt-4">
+                      Tipp: Hinterlege deinen Kalender-Link in den Einstellungen
+                    </p>
+                  )}
+                </>
+              )}
+              
               <p className="text-xs opacity-60 mt-4">
                 Unverbindlich & kostenlos
               </p>

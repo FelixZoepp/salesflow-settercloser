@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, 
   TrendingUp, Heart, Sparkles, Rocket, Globe, Lock, BarChart, 
-  Mail, Phone, MessageSquare, Loader2 
+  Mail, Phone, MessageSquare, Loader2, Play, Calendar
 } from "lucide-react";
 import { Helmet } from "react-helmet";
 
@@ -12,14 +12,20 @@ interface LandingPageContent {
   hero?: {
     headline: string;
     subheadline: string;
-    ctaText: string;
-    ctaLink: string;
+    ctaText?: string;
+    ctaLink?: string;
+    videoPlaceholder?: boolean;
   };
   benefits?: Array<{
     icon: string;
     title: string;
     description: string;
   }>;
+  offer?: {
+    title: string;
+    description: string;
+    bulletPoints: string[];
+  };
   features?: Array<{
     title: string;
     description: string;
@@ -64,6 +70,8 @@ interface LandingPageData {
   meta_title: string | null;
   meta_description: string | null;
   og_image_url: string | null;
+  calendar_url: string | null;
+  user_id: string;
 }
 
 const iconMap: Record<string, any> = {
@@ -75,6 +83,7 @@ const iconMap: Record<string, any> = {
 const PublicLandingPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState<LandingPageData | null>(null);
+  const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,6 +118,21 @@ const PublicLandingPage = () => {
         .update({ view_count: (data.view_count || 0) + 1 })
         .eq('id', data.id);
 
+      // Fetch user's calendar URL if page doesn't have one
+      let finalCalendarUrl = data.calendar_url;
+      if (!finalCalendarUrl && data.user_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('calendar_url')
+          .eq('id', data.user_id)
+          .single();
+        
+        if (profile?.calendar_url) {
+          finalCalendarUrl = profile.calendar_url;
+        }
+      }
+      setCalendarUrl(finalCalendarUrl);
+
       const defaultStyles: LandingPageStyles = {
         primaryColor: "#3B82F6",
         secondaryColor: "#1E40AF",
@@ -136,6 +160,8 @@ const PublicLandingPage = () => {
         meta_title: data.meta_title,
         meta_description: data.meta_description,
         og_image_url: data.og_image_url,
+        calendar_url: data.calendar_url,
+        user_id: data.user_id,
       });
     } catch (err) {
       console.error('Error loading page:', err);
@@ -148,6 +174,44 @@ const PublicLandingPage = () => {
   const getIcon = (iconName: string) => {
     const Icon = iconMap[iconName] || CheckCircle;
     return <Icon className="w-6 h-6" />;
+  };
+
+  // Get calendar embed
+  const getCalendarEmbed = (styles: LandingPageStyles) => {
+    if (!calendarUrl) return null;
+    
+    // Calendly embed
+    if (calendarUrl.includes('calendly.com')) {
+      const cleanUrl = calendarUrl.replace(/\/$/, '');
+      return (
+        <div className="mt-8 rounded-2xl overflow-hidden bg-white shadow-lg" style={{ minHeight: '700px' }}>
+          <iframe
+            src={`${cleanUrl}?hide_gdpr_banner=1&background_color=ffffff&text_color=1f2937&primary_color=${styles.primaryColor.replace('#', '')}`}
+            width="100%"
+            height="700"
+            frameBorder="0"
+            title="Termin buchen"
+          />
+        </div>
+      );
+    }
+    
+    // Cal.com embed
+    if (calendarUrl.includes('cal.com')) {
+      return (
+        <div className="mt-8 rounded-2xl overflow-hidden bg-white shadow-lg" style={{ minHeight: '700px' }}>
+          <iframe
+            src={calendarUrl}
+            width="100%"
+            height="700"
+            frameBorder="0"
+            title="Termin buchen"
+          />
+        </div>
+      );
+    }
+
+    return null;
   };
 
   if (loading) {
@@ -171,6 +235,7 @@ const PublicLandingPage = () => {
   }
 
   const { content, styles } = page;
+  const calendarEmbed = getCalendarEmbed(styles);
 
   return (
     <>
@@ -194,29 +259,49 @@ const PublicLandingPage = () => {
           fontFamily: styles.fontFamily
         }}
       >
-        {/* Hero Section */}
+        {/* Hero Section with Video */}
         {content.hero && (
           <section 
-            className="py-20 md:py-32 px-6 text-center"
+            className="py-16 md:py-24 px-6"
             style={{ 
               background: `linear-gradient(135deg, ${styles.primaryColor} 0%, ${styles.secondaryColor} 100%)`,
               color: '#fff'
             }}
           >
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                {content.hero.headline}
-              </h1>
-              <p className="text-xl md:text-2xl opacity-90 mb-10 max-w-2xl mx-auto">
-                {content.hero.subheadline}
-              </p>
-              <a
-                href={content.hero.ctaLink}
-                className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
-                style={{ backgroundColor: styles.accentColor, color: '#fff' }}
-              >
-                {content.hero.ctaText}
-              </a>
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                {/* Text Content */}
+                <div className="text-left">
+                  <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                    {content.hero.headline}
+                  </h1>
+                  <p className="text-lg md:text-xl opacity-90 mb-8">
+                    {content.hero.subheadline}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm opacity-75">
+                    <Calendar className="w-5 h-5" />
+                    <span>Persönliche Nachricht für Sie</span>
+                  </div>
+                </div>
+                
+                {/* Video Placeholder */}
+                <div className="relative">
+                  <div 
+                    className="aspect-video rounded-2xl bg-black/30 backdrop-blur-sm flex items-center justify-center border-2 border-white/20 shadow-2xl"
+                  >
+                    <div className="text-center">
+                      <div 
+                        className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center cursor-pointer transition-transform hover:scale-110"
+                        style={{ backgroundColor: styles.accentColor }}
+                      >
+                        <Play className="w-10 h-10 text-white ml-1" />
+                      </div>
+                      <p className="text-lg opacity-75">Ihr persönliches Video</p>
+                      <p className="text-sm opacity-50 mt-1">Schauen Sie sich diese Nachricht an!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -226,7 +311,7 @@ const PublicLandingPage = () => {
           <section className="py-16 md:py-24 px-6">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: styles.primaryColor }}>
-                Ihre Vorteile
+                Ihre Vorteile auf einen Blick
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {content.benefits.map((benefit, index) => (
@@ -250,7 +335,32 @@ const PublicLandingPage = () => {
           </section>
         )}
 
-        {/* Features Section */}
+        {/* Offer Section */}
+        {content.offer && (
+          <section className="py-16 md:py-24 px-6" style={{ backgroundColor: `${styles.primaryColor}05` }}>
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ color: styles.primaryColor }}>
+                {content.offer.title}
+              </h2>
+              <p className="text-lg mb-10 opacity-80">{content.offer.description}</p>
+              <div className="inline-block text-left bg-white rounded-2xl p-8 shadow-lg">
+                <ul className="space-y-4">
+                  {content.offer.bulletPoints.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-4">
+                      <CheckCircle 
+                        className="w-6 h-6 mt-0.5 shrink-0" 
+                        style={{ color: styles.accentColor }} 
+                      />
+                      <span className="text-lg">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Features Section (legacy support) */}
         {content.features && content.features.length > 0 && (
           <section className="py-16 md:py-24 px-6" style={{ backgroundColor: `${styles.primaryColor}05` }}>
             <div className="max-w-6xl mx-auto">
@@ -334,29 +444,44 @@ const PublicLandingPage = () => {
           </section>
         )}
 
-        {/* CTA Section */}
+        {/* CTA Section with Calendar */}
         {content.cta && (
           <section 
-            className="py-20 md:py-32 px-6 text-center"
+            className="py-16 md:py-24 px-6 text-center"
             style={{ 
               background: `linear-gradient(135deg, ${styles.primaryColor} 0%, ${styles.secondaryColor} 100%)`,
               color: '#fff'
             }}
           >
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            <div className="max-w-4xl mx-auto">
+              <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
                 {content.cta.headline}
               </h2>
-              <p className="text-xl opacity-90 mb-10">
+              <p className="text-lg md:text-xl opacity-90 mb-8">
                 {content.cta.description}
               </p>
-              <a
-                href={content.cta.buttonLink}
-                className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
-                style={{ backgroundColor: styles.accentColor, color: '#fff' }}
-              >
-                {content.cta.buttonText}
-              </a>
+              
+              {calendarEmbed ? (
+                calendarEmbed
+              ) : (
+                <a
+                  href={calendarUrl || content.cta.buttonLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-10 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
+                  style={{ backgroundColor: styles.accentColor, color: '#fff' }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    {content.cta.buttonText}
+                  </span>
+                </a>
+              )}
+              
+              <p className="text-sm opacity-60 mt-6">
+                Unverbindlich & kostenlos
+              </p>
             </div>
           </section>
         )}
