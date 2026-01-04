@@ -16,14 +16,17 @@ const Landing = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("animate-fade-in");
+            entry.target.classList.add("scroll-visible");
           }
         });
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1,
+        rootMargin: "0px 0px -80px 0px"
+      }
     );
 
-    document.querySelectorAll(".fade-on-scroll").forEach((el) => {
+    document.querySelectorAll(".scroll-animate").forEach((el) => {
       observerRef.current?.observe(el);
     });
 
@@ -285,7 +288,7 @@ const Landing = () => {
 
       {/* Challenge Section */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-12">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Herausforderungen im Alltag</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white">
@@ -312,7 +315,7 @@ const Landing = () => {
 
       {/* Comparison Section - Normal Outreach vs Content-Leads */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Der Unterschied</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
@@ -402,7 +405,7 @@ const Landing = () => {
 
       {/* Software Screenshots / Features Showcase */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-scale">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Die Software</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white px-2">
@@ -580,7 +583,7 @@ const Landing = () => {
 
       {/* Features Section */}
       <section id="features" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Was uns anders macht</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white px-2">
@@ -622,7 +625,7 @@ const Landing = () => {
 
       {/* Tracking Section */}
       <section id="tracking" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-16 items-center">
             <div>
               <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Echtzeit-Tracking</p>
@@ -684,7 +687,7 @@ const Landing = () => {
 
       {/* How It Works */}
       <section id="how-it-works" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">In 4 Schritten</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
@@ -715,7 +718,7 @@ const Landing = () => {
 
       {/* Testimonials Section */}
       <section id="testimonials" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-6xl fade-on-scroll">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Kundenstimmen</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
@@ -857,7 +860,7 @@ const Landing = () => {
 
       {/* CTA Section */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-4xl fade-on-scroll">
+        <div className="container mx-auto max-w-4xl scroll-animate scroll-scale">
           <div className="relative rounded-2xl md:rounded-3xl overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-blue-500 to-purple-500"></div>
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
@@ -884,7 +887,7 @@ const Landing = () => {
 
       {/* FAQ Section */}
       <section id="faq" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-4xl fade-on-scroll">
+        <div className="container mx-auto max-w-4xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">FAQ</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
