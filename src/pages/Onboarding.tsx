@@ -32,7 +32,8 @@ import {
   Rocket,
   Globe,
   Wand2,
-  Palette
+  Palette,
+  Calendar
 } from "lucide-react";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
 
@@ -138,6 +139,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   const [generatedContent, setGeneratedContent] = useState<LandingPageContent | null>(null);
   const [generatedStyles, setGeneratedStyles] = useState<LandingPageStyles | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [calendarUrl, setCalendarUrl] = useState("");
 
   useEffect(() => {
     if (!onboardingLoading) {
@@ -303,6 +305,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Nicht angemeldet");
 
+      // Save calendar URL to profile if provided
+      if (calendarUrl) {
+        await supabase
+          .from('profiles')
+          .update({ calendar_url: calendarUrl })
+          .eq('id', user.id);
+      }
+
       const slug = landingPageName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -321,6 +331,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           styles: (generatedStyles || defaultStyles) as unknown as Json,
           status: publish ? 'published' : 'draft',
           published_at: publish ? new Date().toISOString() : null,
+          calendar_url: calendarUrl || null,
         });
 
       if (error) throw error;
@@ -745,7 +756,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                     <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
                       <LandingPagePreview 
                         content={generatedContent} 
-                        styles={generatedStyles || defaultStyles} 
+                        styles={generatedStyles || defaultStyles}
+                        calendarUrl={calendarUrl || undefined}
                       />
                     </div>
 
@@ -757,6 +769,22 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                         value={landingPageName}
                         onChange={(e) => setLandingPageName(e.target.value)}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="calendarUrl" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Kalender-Link (Calendly / Cal.com)
+                      </Label>
+                      <Input
+                        id="calendarUrl"
+                        placeholder="https://calendly.com/dein-name/termin"
+                        value={calendarUrl}
+                        onChange={(e) => setCalendarUrl(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leads können direkt auf deiner Landing Page einen Termin buchen
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
