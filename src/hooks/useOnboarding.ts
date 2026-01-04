@@ -9,6 +9,7 @@ export interface OnboardingStatus {
     pitchVideo: boolean;
     leads: boolean;
     script: boolean;
+    landingPage: boolean;
   };
 }
 
@@ -21,6 +22,7 @@ export const useOnboarding = () => {
       pitchVideo: false,
       leads: false,
       script: false,
+      landingPage: false,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -76,14 +78,25 @@ export const useOnboarding = () => {
 
       const scriptComplete = scripts && scripts.length > 0;
 
+      // Check if there's a published landing page
+      const { data: landingPages } = await supabase
+        .from('landing_pages')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'published')
+        .limit(1);
+
+      const landingPageComplete = landingPages && landingPages.length > 0;
+
       // Calculate current step
       let currentStep = 0;
       if (heygenComplete) currentStep = 1;
       if (pitchVideoComplete) currentStep = 2;
       if (leadsComplete) currentStep = 3;
       if (scriptComplete) currentStep = 4;
+      if (landingPageComplete) currentStep = 5;
 
-      const isComplete = heygenComplete && pitchVideoComplete && leadsComplete && scriptComplete;
+      const isComplete = heygenComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
 
       setStatus({
         isComplete,
@@ -93,6 +106,7 @@ export const useOnboarding = () => {
           pitchVideo: pitchVideoComplete,
           leads: leadsComplete,
           script: scriptComplete,
+          landingPage: landingPageComplete,
         },
       });
 
@@ -100,7 +114,7 @@ export const useOnboarding = () => {
       if (isComplete && !profile.onboarding_completed) {
         await supabase
           .from('profiles')
-          .update({ onboarding_completed: true, onboarding_step: 4 })
+          .update({ onboarding_completed: true, onboarding_step: 5 })
           .eq('id', user.id);
       }
     } catch (error) {
