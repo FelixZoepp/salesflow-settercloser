@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug, Rocket, Globe } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug, Rocket, Globe, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -87,6 +87,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/power-dialer", label: "Calling", icon: Phone, color: "text-rose-400" },
     { path: "/landing-builder", label: "Landing Pages", icon: Globe, color: "text-sky-400" },
     { path: "/integrations", label: "Integrationen", icon: Plug, color: "text-cyan-400" },
+    { path: "/profile", label: "Profil", icon: UserCircle, color: "text-orange-400" },
     { path: "/api-keys", label: "Einstellungen", icon: Settings, color: "text-slate-400" },
   ];
 
