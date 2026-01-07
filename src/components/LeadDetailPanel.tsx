@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2 } from "lucide-react";
+import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -576,6 +577,18 @@ Stage: ${deal.stage}
                       ))}
                     </div>
                   </div>
+
+                  {/* Call Activity Logger */}
+                  <CallActivityLogger
+                    contactId={contact.id}
+                    dealId={deal.id}
+                    currentStage={deal.stage}
+                    onActivityLogged={fetchLeadData}
+                    onStageUpdate={(newStage) => {
+                      setDeal({ ...deal, stage: newStage });
+                      onUpdate?.();
+                    }}
+                  />
 
                   {/* Add Note */}
                   <div>
