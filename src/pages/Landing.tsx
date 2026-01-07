@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart } from "lucide-react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
-import pitchfirstLogo from "@/assets/pitchfirst-logo.png";
+import pitchfirstLogo from "@/assets/pitchfirst-logo-full.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -158,11 +158,8 @@ const Landing = () => {
       <nav className="fixed top-0 w-full z-50 bg-background/10 backdrop-blur-lg border-b border-white/10">
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
-              <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 w-8 md:h-10 md:w-10" />
-              <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                pitchfirst.io
-              </span>
+            <div className="flex items-center">
+              <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 md:h-10" />
             </div>
             <div className="hidden md:flex gap-8 text-sm text-white/80">
               <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -914,11 +911,8 @@ const Landing = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 w-8 md:h-10 md:w-10" />
-                <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                  pitchfirst.io
-                </span>
+              <div className="flex items-center mb-3 md:mb-4">
+                <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 md:h-10" />
               </div>
               <p className="text-xs md:text-sm text-muted-foreground">
                 LinkedIn Outreach mit KI-generierten Landingpages und Echtzeit-Tracking.
