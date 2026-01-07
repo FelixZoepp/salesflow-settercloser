@@ -23,8 +23,6 @@ import CallScript from "./pages/CallScript";
 import ObjectionLibrary from "./pages/ObjectionLibrary";
 import MasterAdmin from "./pages/MasterAdmin";
 import VideoNote from "./pages/VideoNote";
-import InboundLeads from "./pages/InboundLeads";
-import OutboundLeads from "./pages/OutboundLeads";
 import Campaigns from "./pages/Campaigns";
 import Integrations from "./pages/Integrations";
 import LandingPageBuilder from "./pages/LandingPageBuilder";
@@ -111,8 +109,6 @@ const App = () => (
           <Route path="/pipeline" element={<SubscriptionRoute><Pipeline /></SubscriptionRoute>} />
           <Route path="/today" element={<SubscriptionRoute><Today /></SubscriptionRoute>} />
           <Route path="/contacts" element={<SubscriptionRoute><Contacts /></SubscriptionRoute>} />
-          <Route path="/inbound" element={<SubscriptionRoute><InboundLeads /></SubscriptionRoute>} />
-          <Route path="/outbound" element={<SubscriptionRoute><OutboundLeads /></SubscriptionRoute>} />
           <Route path="/campaigns" element={<SubscriptionRoute><Campaigns /></SubscriptionRoute>} />
           <Route path="/import-leads" element={<SubscriptionRoute><ImportLeads /></SubscriptionRoute>} />
           <Route path="/api-keys" element={<SubscriptionRoute><ApiKeys /></SubscriptionRoute>} />

@@ -5,10 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Euro, TrendingUp, Phone } from "lucide-react";
+import { Calendar, Euro, TrendingUp, Phone } from "lucide-react";
 import { toast } from "sonner";
-import { PipelineType, getPipelineStages, getStageColor } from "@/lib/pipelineStages";
+import { getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
 import PhoneIntegration from "@/components/PhoneIntegration";
 import { buildDialHref } from "@/lib/dialerAdapter";
@@ -20,11 +19,11 @@ interface Deal {
   id: string;
   title: string;
   stage: string;
-  pipeline: PipelineType;
+  pipeline: string;
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
-  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null } | null;
+  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null; lead_score?: number } | null;
   setter: { name: string } | null;
   closer: { name: string } | null;
 }
@@ -33,13 +32,6 @@ const Pipeline = () => {
   const [searchParams] = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activePipeline, setActivePipeline] = useState<PipelineType>(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam === 'inbound' || tabParam === 'cold') {
-      return tabParam;
-    }
-    return 'cold';
-  });
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [showPhoneSetup, setShowPhoneSetup] = useState(false);
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -52,11 +44,12 @@ const Pipeline = () => {
     })
   );
 
-  const stages = getPipelineStages(activePipeline);
+  // Use only cold pipeline stages for outreach
+  const stages = getPipelineStages('cold');
 
   useEffect(() => {
     fetchDeals();
-  }, [activePipeline]);
+  }, []);
 
   const fetchDeals = async () => {
     try {
@@ -78,11 +71,11 @@ const Pipeline = () => {
         .from('deals')
         .select(`
           *,
-          contacts (first_name, last_name, phone, mobile),
+          contacts (first_name, last_name, phone, mobile, lead_score, campaign_id),
           setter:setter_id (name),
           closer:closer_id (name)
         `)
-        .eq('pipeline', activePipeline)
+        .eq('pipeline', 'cold')
         .order('created_at', { ascending: false });
 
       console.log('Deals query result:', { data, error });
@@ -120,16 +113,9 @@ const Pipeline = () => {
   const getPipelineStats = () => {
     const total = deals.length;
     const totalValue = deals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
-    
-    if (activePipeline === 'cold') {
-      const appointments = deals.filter(d => d.stage === 'Termin gelegt').length;
-      return { total, totalValue, appointments };
-    } else {
-      const won = deals.filter(d => d.stage === 'Abgeschlossen').length;
-      const lost = deals.filter(d => d.stage === 'Verloren').length;
-      const winRate = total > 0 ? ((won / (won + lost)) * 100).toFixed(1) : '0';
-      return { total, totalValue, won, lost, winRate };
-    }
+    const appointments = deals.filter(d => d.stage === 'Termin gelegt').length;
+    const hotLeads = deals.filter(d => (d.contacts as any)?.lead_score >= 70).length;
+    return { total, totalValue, appointments, hotLeads };
   };
 
   const stats = getPipelineStats();
@@ -186,15 +172,14 @@ const Pipeline = () => {
     <Layout>
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Pipeline</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Outreach Pipeline</h1>
+            <p className="text-muted-foreground text-sm mt-1">Leads aus Ihren Kampagnen</p>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowPhoneSetup(!showPhoneSetup)}>
               <Phone className="w-4 h-4 mr-2" />
               Telefon
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Neuer Deal
             </Button>
           </div>
         </div>
@@ -204,15 +189,6 @@ const Pipeline = () => {
             <PhoneIntegration />
           </div>
         )}
-
-        {/* Pipeline Tabs */}
-        <Tabs value={activePipeline} onValueChange={(v) => setActivePipeline(v as PipelineType)} className="mb-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="cold">Kaltakquise</TabsTrigger>
-            <TabsTrigger value="inbound">Inbound</TabsTrigger>
-            <TabsTrigger value="setting_closing">Setter/Closer</TabsTrigger>
-          </TabsList>
-        </Tabs>
 
         {/* KPI Badge Bar */}
         <div className="flex gap-4 mb-6 flex-wrap">
@@ -224,24 +200,12 @@ const Pipeline = () => {
             <Euro className="w-4 h-4 mr-2" />
             €{stats.totalValue.toLocaleString()}
           </Badge>
-          {activePipeline === 'cold' && 'appointments' in stats && (
-            <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
-              {stats.appointments} Termine gelegt
-            </Badge>
-          )}
-          {activePipeline === 'inbound' && 'won' in stats && (
-            <>
-              <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
-                {stats.won} Gewonnen
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]">
-                {stats.lost} Verloren
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm">
-                Win Rate: {stats.winRate}%
-              </Badge>
-            </>
-          )}
+          <Badge variant="secondary" className="px-4 py-2 text-sm bg-orange-500/20 text-orange-400 border border-orange-500/30">
+            🔥 {stats.hotLeads} Hot Leads
+          </Badge>
+          <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
+            {stats.appointments} Termine gelegt
+          </Badge>
         </div>
 
         <DndContext
