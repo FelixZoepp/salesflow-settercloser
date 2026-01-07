@@ -1,78 +1,69 @@
-export type PipelineType = 'cold' | 'inbound';
+export type PipelineType = 'cold';
 
-export const COLD_PIPELINE_STAGES = [
-  'Lead',
-  '1× nicht erreicht',
+// Simplified pipeline stages
+export const PIPELINE_STAGES = [
+  'Hat Seite geöffnet',
+  'Heißer Lead - Anrufen',
+  'Setting',
+  'Closing',
+  'Abgeschlossen',
+  'Verloren'
+] as const;
+
+// Call activity outcomes (used in PowerDialer, not as pipeline stages)
+export const CALL_OUTCOMES = [
+  'Nicht erreicht',
   '2× nicht erreicht',
   '3× nicht erreicht',
   'Entscheider nicht erreichbar',
   'Im Urlaub',
-  'Kein Interesse / Kein Bedarf',
-  'Termin gelegt'
-] as const;
-
-export const INBOUND_PIPELINE_STAGES = [
-  'Neuer Lead',
-  'Erstgespräch gelegt',
+  'Kein Interesse',
+  'Kein Bedarf',
   'Setting No Show',
   'Setting Follow Up',
-  'Closing gelegt',
   'Closing No Show',
   'Closing Follow Up',
-  'Verloren',
-  'Gewonnen'
+  'Rückruf vereinbart'
 ] as const;
 
-export type ColdStage = typeof COLD_PIPELINE_STAGES[number];
-export type InboundStage = typeof INBOUND_PIPELINE_STAGES[number];
+export type PipelineStage = typeof PIPELINE_STAGES[number];
+export type CallOutcome = typeof CALL_OUTCOMES[number];
 
 export const getStageColor = (stage: string): string => {
-  // Cold Pipeline - Grau (außer Termin gelegt)
-  if (COLD_PIPELINE_STAGES.includes(stage as ColdStage)) {
-    if (stage === 'Termin gelegt') {
+  switch (stage) {
+    case 'Hat Seite geöffnet':
+      return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
+    case 'Heißer Lead - Anrufen':
+      return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
+    case 'Setting':
+      return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
+    case 'Closing':
+      return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+    case 'Abgeschlossen':
       return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
-    }
-    return 'bg-muted text-muted-foreground';
+    case 'Verloren':
+      return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
+    default:
+      return 'bg-secondary text-secondary-foreground';
   }
-  
-  // Inbound Pipeline Stages
-  if (stage === 'Neuer Lead') {
-    return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
-  }
-  if (stage === 'Erstgespräch gelegt') {
-    return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
-  }
-  if (stage === 'Setting No Show' || stage === 'Closing No Show') {
-    return 'bg-red-500/20 text-red-400 border border-red-500/30';
-  }
-  if (stage === 'Setting Follow Up' || stage === 'Closing Follow Up') {
-    return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
-  }
-  if (stage === 'Closing gelegt') {
-    return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
-  }
-  if (stage === 'Gewonnen') {
-    return 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]';
-  }
-  if (stage === 'Verloren') {
-    return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
-  }
-  
-  // Legacy support for old stages
-  if (stage.includes('Setting')) {
-    return 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]';
-  }
-  if (stage.includes('Closing')) {
-    return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
-  }
-  if (stage === 'Kein Interesse / Kein Bedarf') {
-    return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
-  }
-  
-  return 'bg-secondary text-secondary-foreground';
 };
 
-export const getPipelineStages = (pipeline: PipelineType) => {
-  if (pipeline === 'cold') return COLD_PIPELINE_STAGES;
-  return INBOUND_PIPELINE_STAGES;
+export const getCallOutcomeColor = (outcome: string): string => {
+  if (outcome.includes('nicht erreicht') || outcome === 'Entscheider nicht erreichbar') {
+    return 'bg-muted text-muted-foreground';
+  }
+  if (outcome.includes('No Show')) {
+    return 'bg-red-500/20 text-red-400 border border-red-500/30';
+  }
+  if (outcome.includes('Follow Up') || outcome === 'Rückruf vereinbart' || outcome === 'Im Urlaub') {
+    return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+  }
+  if (outcome === 'Kein Interesse' || outcome === 'Kein Bedarf') {
+    return 'bg-[hsl(var(--danger))] text-[hsl(var(--danger-foreground))]';
+  }
+  return 'bg-muted text-muted-foreground';
+};
+
+export const getPipelineStages = (_pipeline?: PipelineType) => {
+  return PIPELINE_STAGES;
 };

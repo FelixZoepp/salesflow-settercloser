@@ -1267,6 +1267,10 @@ export type Database = {
         | "CC2 terminiert"
         | "Angebot versendet"
         | "Abgeschlossen"
+        | "Hat Seite geöffnet"
+        | "Heißer Lead - Anrufen"
+        | "Setting"
+        | "Closing"
       lead_type: "inbound" | "outbound"
       linkedin_workflow_status:
         | "neu"
@@ -1448,6 +1452,10 @@ export const Constants = {
         "CC2 terminiert",
         "Angebot versendet",
         "Abgeschlossen",
+        "Hat Seite geöffnet",
+        "Heißer Lead - Anrufen",
+        "Setting",
+        "Closing",
       ],
       lead_type: ["inbound", "outbound"],
       linkedin_workflow_status: [

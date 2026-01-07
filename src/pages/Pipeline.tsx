@@ -138,9 +138,11 @@ const Pipeline = () => {
   const getPipelineStats = () => {
     const total = deals.length;
     const totalValue = deals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
-    const appointments = deals.filter(d => d.stage === 'Termin gelegt').length;
-    const hotLeads = deals.filter(d => (d.contacts as any)?.lead_score >= 70).length;
-    return { total, totalValue, appointments, hotLeads };
+    const hotLeads = deals.filter(d => d.stage === 'Heißer Lead - Anrufen').length;
+    const settings = deals.filter(d => d.stage === 'Setting').length;
+    const closings = deals.filter(d => d.stage === 'Closing').length;
+    const won = deals.filter(d => d.stage === 'Abgeschlossen').length;
+    return { total, totalValue, hotLeads, settings, closings, won };
   };
 
   const stats = getPipelineStats();
@@ -247,8 +249,14 @@ const Pipeline = () => {
           <Badge variant="secondary" className="px-4 py-2 text-sm bg-orange-500/20 text-orange-400 border border-orange-500/30">
             🔥 {stats.hotLeads} Hot Leads
           </Badge>
+          <Badge variant="secondary" className="px-4 py-2 text-sm bg-purple-500/20 text-purple-400 border border-purple-500/30">
+            📅 {stats.settings} Settings
+          </Badge>
+          <Badge variant="secondary" className="px-4 py-2 text-sm bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            🎯 {stats.closings} Closings
+          </Badge>
           <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
-            {stats.appointments} Termine gelegt
+            ✅ {stats.won} Abgeschlossen
           </Badge>
         </div>
 
