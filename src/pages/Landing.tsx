@@ -211,10 +211,10 @@ const Landing = () => {
           <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
             <Button 
               size="lg" 
-              onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-4 md:px-8 h-12 md:h-14 text-sm md:text-lg"
             >
-              Jetzt Demo buchen
+              Zugang sichern
               <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
             </Button>
             <Button 
@@ -224,7 +224,7 @@ const Landing = () => {
               className="border-white/20 bg-white/5 text-white hover:bg-white/10 px-4 md:px-8 h-12 md:h-14 text-sm md:text-lg"
             >
               <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-              Video ansehen
+              Demo ansehen
             </Button>
           </div>
 
