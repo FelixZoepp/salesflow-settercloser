@@ -2,7 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check } from "lucide-react";
+import { useState } from "react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-full.png";
@@ -165,6 +166,7 @@ const Landing = () => {
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</a>
               <a href="#tracking" className="hover:text-white transition-colors">Tracking</a>
+              <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
             </div>
             <div className="flex gap-2 md:gap-4">
@@ -850,6 +852,109 @@ const Landing = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
+        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-8 md:mb-16">
+            <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Preise</p>
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
+              Einfache, transparente Preise
+            </h2>
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2">
+              Alles inklusive: Software, wöchentliches Live-Coaching & Videokurs.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+            {/* Monthly Plan */}
+            <div className="relative rounded-2xl border-2 border-white/10 bg-white/[0.02] p-6 md:p-8 hover:border-white/20 transition-all">
+              <div className="mb-6">
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Monatlich</h3>
+                <p className="text-gray-400 text-sm">Flexibel, monatlich kündbar</p>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl md:text-5xl font-bold text-white">149€</span>
+                  <span className="text-gray-400">/Monat</span>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Pitchfirst Software – alle Features",
+                  "1x/Woche Live-Gruppen-Coaching mit Felix Zoepp",
+                  "Outreach-Videokurs inklusive",
+                  "Unbegrenzte KI-Landingpages",
+                  "Echtzeit-Tracking & Lead-Scoring"
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button 
+                size="lg"
+                onClick={() => window.open("https://buy.stripe.com/8x2dR98JocjU1k316igMw0a", "_blank")}
+                className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 h-12 md:h-14"
+              >
+                Jetzt starten
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Yearly Plan */}
+            <div className="relative rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/10 to-transparent p-6 md:p-8">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
+                  2 MONATE GRATIS
+                </span>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Jährlich</h3>
+                <p className="text-gray-400 text-sm">Spare 298€ pro Jahr</p>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl md:text-5xl font-bold text-white">1.490€</span>
+                  <span className="text-gray-400">/Jahr</span>
+                </div>
+                <p className="text-primary text-sm mt-1">Entspricht 124€/Monat</p>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Pitchfirst Software – alle Features",
+                  "1x/Woche Live-Gruppen-Coaching mit Felix Zoepp",
+                  "Outreach-Videokurs inklusive",
+                  "Unbegrenzte KI-Landingpages",
+                  "Echtzeit-Tracking & Lead-Scoring",
+                  "2 Monate gratis (10 statt 12 Monate zahlen)"
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button 
+                size="lg"
+                onClick={() => window.open("https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09", "_blank")}
+                className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-lg shadow-primary/30 h-12 md:h-14"
+              >
+                Jährlich sparen
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
