@@ -54,18 +54,18 @@ export const useHotLeadNotifications = () => {
                 .maybeSingle();
 
               if (!existingDeal) {
-                // Create deal and set to "Lead" stage in cold pipeline
+                // Create deal and set to "Heißer Lead - Anrufen" stage
                 const { error } = await supabase
                   .from('deals')
                   .insert({
                     contact_id: newLead.id,
                     title: `${newLead.first_name} ${newLead.last_name} - ${newLead.company || 'Hot Lead'}`,
-                    stage: 'Lead',
+                    stage: 'Heißer Lead - Anrufen' as any,
                     pipeline: 'cold',
                     amount_eur: 0,
                     setter_id: user.id,
                     account_id: newLead.account_id,
-                    next_action: 'Anrufen - Hot Lead!'
+                    next_action: 'Sofort anrufen!'
                   });
 
                 if (error) {

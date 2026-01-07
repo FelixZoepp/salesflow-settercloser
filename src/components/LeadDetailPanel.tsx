@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { COLD_PIPELINE_STAGES } from "@/lib/pipelineStages";
+import { PIPELINE_STAGES, CALL_OUTCOMES, getCallOutcomeColor } from "@/lib/pipelineStages";
 import { WhisperGeminiHandler, ObjectionHandling } from "@/utils/whisperGeminiHandler";
 
 interface Contact {
@@ -557,9 +557,9 @@ Stage: ${deal.stage}
 
                   {/* Quick Stage Actions */}
                   <div>
-                    <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4 font-medium">Status ändern</h3>
+                    <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4 font-medium">Pipeline Status</h3>
                     <div className="grid grid-cols-3 gap-2">
-                      {COLD_PIPELINE_STAGES.slice(0, 6).map((stage) => (
+                      {PIPELINE_STAGES.map((stage) => (
                         <Button
                           key={stage}
                           variant={deal.stage === stage ? "default" : "outline"}
