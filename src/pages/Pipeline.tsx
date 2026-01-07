@@ -267,13 +267,13 @@ const Pipeline = () => {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className={`grid gap-4 overflow-x-auto`} style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(280px, 1fr))` }}>
+          <div className="grid gap-6 overflow-x-auto pb-4" style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(280px, 1fr))` }}>
             {stages.map(stage => {
             const stageDeals = getStageDeals(stage);
             const totalAmount = stageDeals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
 
             return (
-              <DroppableStage key={stage} stage={stage} stageColor={getStageColor(stage)} stageDeals={stageDeals} totalAmount={totalAmount}>
+              <DroppableStage key={stage} stage={stage} stageColor={getStageColor(stage)} stageDeals={stageDeals} totalAmount={totalAmount} isDragging={!!activeDealId}>
                 {stageDeals.map(deal => (
                   <DraggableDealCard
                     key={deal.id}
@@ -320,10 +320,11 @@ interface DroppableStageProps {
   stageColor: string;
   stageDeals: Deal[];
   totalAmount: number;
+  isDragging: boolean;
   children: React.ReactNode;
 }
 
-const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, children }: DroppableStageProps) => {
+const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, isDragging, children }: DroppableStageProps) => {
   const { setNodeRef, isOver } = useSortable({
     id: stage,
     data: { type: 'stage' }
@@ -332,18 +333,43 @@ const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, children }
   return (
     <div 
       ref={setNodeRef}
-      className={`min-w-[280px] transition-all ${isOver ? 'ring-2 ring-primary rounded-lg' : ''}`}
+      className={`
+        min-w-[280px] rounded-xl p-4 transition-all duration-200
+        bg-white/[0.02] border border-white/10
+        ${isOver ? 'ring-2 ring-primary bg-primary/10 border-primary/30 scale-[1.02]' : ''}
+        ${isDragging && !isOver ? 'border-dashed border-white/20' : ''}
+      `}
     >
-      <div className="mb-4">
+      {/* Stage Header */}
+      <div className="mb-4 pb-3 border-b border-white/10">
         <Badge className={`${stageColor} mb-2`}>{stage}</Badge>
         <div className="text-sm text-muted-foreground">
           {stageDeals.length} Deals • €{totalAmount.toLocaleString()}
         </div>
       </div>
 
+      {/* Drop Zone Indicator */}
+      {isDragging && (
+        <div className={`
+          mb-3 py-2 px-3 rounded-lg border-2 border-dashed text-center text-xs
+          transition-all duration-200
+          ${isOver 
+            ? 'border-primary bg-primary/20 text-primary' 
+            : 'border-white/20 text-muted-foreground'
+          }
+        `}>
+          {isOver ? '↓ Hier ablegen' : 'Hierher ziehen'}
+        </div>
+      )}
+
       <SortableContext items={stageDeals.map(d => d.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3 min-h-[100px]">
+        <div className="space-y-3 min-h-[80px]">
           {children}
+          {stageDeals.length === 0 && !isDragging && (
+            <div className="text-center py-6 text-muted-foreground/50 text-sm">
+              Keine Deals
+            </div>
+          )}
         </div>
       </SortableContext>
     </div>
@@ -391,7 +417,11 @@ const DraggableDealCard = ({ deal, onOpenDetail }: DraggableDealCardProps) => {
     <Card 
       ref={setNodeRef}
       style={style}
-      className={`hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${isDragging ? 'ring-2 ring-primary' : ''}`}
+      className={`
+        transition-all duration-200 cursor-grab active:cursor-grabbing
+        hover:shadow-lg hover:scale-[1.02] hover:border-primary/30
+        ${isDragging ? 'ring-2 ring-primary shadow-xl rotate-2' : ''}
+      `}
       {...attributes}
       {...listeners}
     >
