@@ -6,7 +6,7 @@ import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, M
 import { useState } from "react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
-import pitchfirstLogo from "@/assets/pitchfirst-logo-full.png";
+import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 
 const Landing = () => {
   const navigate = useNavigate();
