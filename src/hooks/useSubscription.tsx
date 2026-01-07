@@ -7,6 +7,8 @@ interface SubscriptionStatus {
   subscriptionEnd: string | null;
   loading: boolean;
   error: string | null;
+  isTrial: boolean;
+  trialEndsAt: string | null;
 }
 
 export const useSubscription = () => {
@@ -16,6 +18,8 @@ export const useSubscription = () => {
     subscriptionEnd: null,
     loading: true,
     error: null,
+    isTrial: false,
+    trialEndsAt: null,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -30,10 +34,39 @@ export const useSubscription = () => {
           subscriptionEnd: null,
           loading: false,
           error: null,
+          isTrial: false,
+          trialEndsAt: null,
         });
         return;
       }
 
+      // First check if user has an active trial
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('trial_ends_at, invited_via')
+        .eq('id', sessionData.session.user.id)
+        .single();
+
+      if (profile?.trial_ends_at) {
+        const trialEnd = new Date(profile.trial_ends_at);
+        const now = new Date();
+        
+        if (trialEnd > now) {
+          // User has active trial
+          setStatus({
+            subscribed: true,
+            productId: 'trial',
+            subscriptionEnd: null,
+            loading: false,
+            error: null,
+            isTrial: true,
+            trialEndsAt: profile.trial_ends_at,
+          });
+          return;
+        }
+      }
+
+      // No active trial, check Stripe subscription
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
@@ -52,6 +85,8 @@ export const useSubscription = () => {
         subscriptionEnd: data?.subscription_end ?? null,
         loading: false,
         error: null,
+        isTrial: false,
+        trialEndsAt: null,
       });
     } catch (err) {
       console.error('Subscription check failed:', err);
