@@ -74,3 +74,6 @@ verify_jwt = true
 
 [functions.get-heygen-key]
 verify_jwt = true
+
+[functions.list-invoices]
+verify_jwt = true
