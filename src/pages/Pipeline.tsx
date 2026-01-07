@@ -158,7 +158,20 @@ const Pipeline = () => {
     if (!over) return;
 
     const dealId = active.id as string;
-    const newStage = over.id as string;
+    const overId = over.id as string;
+    
+    // Determine the target stage - could be a stage name directly or a deal id
+    // If overId matches a stage name, use it; otherwise find the stage of the deal we're over
+    let newStage: string;
+    if (stages.includes(overId as any)) {
+      newStage = overId;
+    } else {
+      // We're over another deal, find its stage
+      const overDeal = deals.find(d => d.id === overId);
+      if (!overDeal) return;
+      newStage = overDeal.stage;
+    }
+    
     const deal = deals.find(d => d.id === dealId);
 
     if (!deal || deal.stage === newStage) return;
