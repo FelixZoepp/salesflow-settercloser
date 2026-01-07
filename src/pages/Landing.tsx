@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart } from "lucide-react";
 import { useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
-import contentLeadsLogo from "@/assets/content-leads-logo-round.png";
+import pitchfirstLogo from "@/assets/pitchfirst-logo.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -159,9 +159,9 @@ const Landing = () => {
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
-              <img src={contentLeadsLogo} alt="Content-Leads Logo" className="h-8 w-8 md:h-10 md:w-10 rounded-full" />
+              <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 w-8 md:h-10 md:w-10" />
               <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Content-Leads
+                pitchfirst.io
               </span>
             </div>
             <div className="hidden md:flex gap-8 text-sm text-white/80">
@@ -256,7 +256,7 @@ const Landing = () => {
                 <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-500"></div>
                 <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-yellow-500"></div>
                 <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500"></div>
-                <span className="ml-2 md:ml-4 text-[10px] md:text-xs text-gray-500 truncate">content-leads.de/p/max-mustermann</span>
+                <span className="ml-2 md:ml-4 text-[10px] md:text-xs text-gray-500 truncate">pitchfirst.io/p/max-mustermann</span>
               </div>
               <div className="p-4 md:p-8 lg:p-12 flex flex-col md:flex-row gap-4 md:gap-8 items-center">
                 <div className="flex-1 space-y-3 md:space-y-4">
@@ -371,7 +371,7 @@ const Landing = () => {
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center">
                   <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-primary">Content-Leads</h3>
+                <h3 className="text-xl md:text-2xl font-bold text-primary">pitchfirst.io</h3>
               </div>
               
               <div className="space-y-4">
@@ -915,9 +915,9 @@ const Landing = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                <img src={contentLeadsLogo} alt="Content-Leads Logo" className="h-8 w-8 md:h-10 md:w-10 rounded-full" />
+                <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 w-8 md:h-10 md:w-10" />
                 <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                  Content-Leads
+                  pitchfirst.io
                 </span>
               </div>
               <p className="text-xs md:text-sm text-muted-foreground">
@@ -942,14 +942,14 @@ const Landing = () => {
             <div>
               <h3 className="font-bold mb-2 md:mb-4 text-white text-sm md:text-base">Rechtliches</h3>
               <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
-                <li><a href="https://www.content-leads.de/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Datenschutz</a></li>
-                <li><a href="https://www.content-leads.de/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
+                <li><a href="https://www.pitchfirst.io/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Datenschutz</a></li>
+                <li><a href="https://www.pitchfirst.io/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">AGB</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center text-xs md:text-sm text-muted-foreground gap-4">
-            <p className="text-center md:text-left">© 2025 Content-Leads. Eine Marke der Zoepp Media UG.</p>
+            <p className="text-center md:text-left">© 2025 pitchfirst.io. Eine Marke der Zoepp Media UG.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-primary transition-colors">
                 <Linkedin className="h-4 w-4 md:h-5 md:w-5" />
