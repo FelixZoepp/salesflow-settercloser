@@ -912,7 +912,7 @@ const Landing = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center mb-3 md:mb-4">
-                <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 md:h-10" />
+                <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-12 md:h-14" />
               </div>
               <p className="text-xs md:text-sm text-muted-foreground">
                 LinkedIn Outreach mit KI-generierten Landingpages und Echtzeit-Tracking.
