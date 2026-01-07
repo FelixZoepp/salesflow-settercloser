@@ -30,7 +30,8 @@ import PublicLandingPage from "./pages/PublicLandingPage";
 import Profile from "./pages/Profile";
 import SubscriptionRequired from "./pages/SubscriptionRequired";
 import Billing from "./pages/Billing";
-
+import Invitations from "./pages/Invitations";
+import InviteRegister from "./pages/InviteRegister";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -122,6 +123,8 @@ const App = () => (
           <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
           <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
           <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
+          <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
+          <Route path="/invite/:token" element={<InviteRegister />} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="/lp/:slug" element={<PublicLandingPage />} />
           <Route path="*" element={<NotFound />} />

@@ -825,6 +825,53 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          email_hint: string | null
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          token: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          email_hint?: string | null
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          email_hint?: string | null
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_pages: {
         Row: {
           account_id: string | null
