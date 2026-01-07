@@ -902,7 +902,7 @@ const Landing = () => {
 
               <Button 
                 size="lg"
-                onClick={() => window.open("https://buy.stripe.com/8x2dR98JocjU1k316igMw0a", "_blank")}
+                onClick={() => window.open("https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09", "_blank")}
                 className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 h-12 md:h-14"
               >
                 Jetzt starten
@@ -949,7 +949,7 @@ const Landing = () => {
 
               <Button 
                 size="lg"
-                onClick={() => window.open("https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09", "_blank")}
+                onClick={() => window.open("https://buy.stripe.com/8x2dR98JocjU1k316igMw0a", "_blank")}
                 className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-lg shadow-primary/30 h-12 md:h-14"
               >
                 Jährlich sparen
