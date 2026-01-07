@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug, Rocket, Globe, UserCircle } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Briefcase, Phone, Settings, LogOut, Shield, Plug, Rocket, Globe, UserCircle, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import contentLeadsLogo from "@/assets/content-leads-logo.png";
 interface LayoutProps {
@@ -30,6 +31,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   // Enable hot lead notifications
   useHotLeadNotifications();
+  const { openCustomerPortal } = useSubscription();
   useEffect(() => {
     checkSuperAdmin();
     checkViewingAccount();
@@ -155,7 +157,27 @@ const Layout = ({ children }: LayoutProps) => {
             </nav>
           </ScrollArea>
 
-          <div className="p-3 border-t border-white/5 w-full flex justify-center">
+          <div className="p-3 border-t border-white/5 w-full flex flex-col items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-12 h-12 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  onClick={async () => {
+                    const { error } = await openCustomerPortal();
+                    if (error) {
+                      toast.error("Fehler beim Öffnen des Kundenportals");
+                    }
+                  }}
+                >
+                  <CreditCard className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="glass-card border-white/10">
+                <p>Abo verwalten</p>
+              </TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
