@@ -130,13 +130,19 @@ export default function InviteRegister() {
         throw new Error("Benutzer konnte nicht erstellt werden");
       }
 
-      // 2. Update profile with account_id and role
+      // 2. Calculate trial end date (7 days from now)
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
+      // 3. Update profile with account_id, role, and trial period
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           account_id: invitation.account_id,
           role: invitation.role as "setter" | "closer" | "admin",
           name,
+          trial_ends_at: trialEndsAt.toISOString(),
+          invited_via: invitation.id,
         })
         .eq("id", authData.user.id);
 
@@ -144,7 +150,7 @@ export default function InviteRegister() {
         console.error("Profile update error:", profileError);
       }
 
-      // 3. Mark invitation as used
+      // 4. Mark invitation as used
       const { error: inviteError } = await supabase
         .from("invitations")
         .update({

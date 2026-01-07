@@ -1047,12 +1047,14 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          invited_via: string | null
           is_super_admin: boolean
           name: string
           onboarding_completed: boolean | null
           onboarding_step: number | null
           phone_number: string | null
           role: Database["public"]["Enums"]["user_role"]
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1061,12 +1063,14 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          invited_via?: string | null
           is_super_admin?: boolean
           name: string
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1075,12 +1079,14 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invited_via?: string | null
           is_super_admin?: boolean
           name?: string
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1089,6 +1095,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_invited_via_fkey"
+            columns: ["invited_via"]
+            isOneToOne: false
+            referencedRelation: "invitations"
             referencedColumns: ["id"]
           },
         ]
