@@ -89,6 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/power-dialer", label: "Calling", icon: Phone, color: "text-rose-400" },
     { path: "/landing-builder", label: "Landing Pages", icon: Globe, color: "text-sky-400" },
     { path: "/integrations", label: "Integrationen", icon: Plug, color: "text-cyan-400" },
+    { path: "/billing", label: "Abrechnung", icon: CreditCard, color: "text-emerald-400" },
     { path: "/profile", label: "Profil", icon: UserCircle, color: "text-orange-400" },
     { path: "/api-keys", label: "Einstellungen", icon: Settings, color: "text-slate-400" },
   ];
@@ -157,27 +158,7 @@ const Layout = ({ children }: LayoutProps) => {
             </nav>
           </ScrollArea>
 
-          <div className="p-3 border-t border-white/5 w-full flex flex-col items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-12 h-12 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                  onClick={async () => {
-                    const { error } = await openCustomerPortal();
-                    if (error) {
-                      toast.error("Fehler beim Öffnen des Kundenportals");
-                    }
-                  }}
-                >
-                  <CreditCard className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="glass-card border-white/10">
-                <p>Abo verwalten</p>
-              </TooltipContent>
-            </Tooltip>
+          <div className="p-3 border-t border-white/5 w-full flex justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

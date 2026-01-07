@@ -31,6 +31,7 @@ import LandingPageBuilder from "./pages/LandingPageBuilder";
 import PublicLandingPage from "./pages/PublicLandingPage";
 import Profile from "./pages/Profile";
 import SubscriptionRequired from "./pages/SubscriptionRequired";
+import Billing from "./pages/Billing";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +125,7 @@ const App = () => (
           <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
           <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
           <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
+          <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="/lp/:slug" element={<PublicLandingPage />} />
           <Route path="*" element={<NotFound />} />
