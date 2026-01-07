@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Euro, TrendingUp, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Euro, TrendingUp, Phone, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
@@ -23,18 +24,29 @@ interface Deal {
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
-  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null; lead_score?: number } | null;
+  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null; lead_score?: number; campaign_id?: string } | null;
   setter: { name: string } | null;
   closer: { name: string } | null;
 }
 
+interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+}
+
 const Pipeline = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [allDeals, setAllDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [showPhoneSetup, setShowPhoneSetup] = useState(false);
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<string>(() => {
+    return searchParams.get('campaign') || 'all';
+  });
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -48,25 +60,39 @@ const Pipeline = () => {
   const stages = getPipelineStages('cold');
 
   useEffect(() => {
+    fetchCampaigns();
     fetchDeals();
   }, []);
 
+  // Filter deals when campaign selection changes
+  useEffect(() => {
+    if (selectedCampaign === 'all') {
+      setDeals(allDeals);
+    } else {
+      const filtered = allDeals.filter(deal => 
+        deal.contacts?.campaign_id === selectedCampaign
+      );
+      setDeals(filtered);
+    }
+    // Update URL
+    if (selectedCampaign === 'all') {
+      searchParams.delete('campaign');
+    } else {
+      searchParams.set('campaign', selectedCampaign);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [selectedCampaign, allDeals]);
+
+  const fetchCampaigns = async () => {
+    const { data } = await supabase
+      .from('campaigns')
+      .select('id, name, status')
+      .order('name');
+    setCampaigns(data || []);
+  };
+
   const fetchDeals = async () => {
     try {
-      // Debug: Check authentication
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user?.id, user?.email);
-      
-      // Debug: Check user profile
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('account_id, role')
-          .eq('id', user.id)
-          .single();
-        console.log('User profile:', profile);
-      }
-      
       const { data, error } = await supabase
         .from('deals')
         .select(`
@@ -78,14 +104,13 @@ const Pipeline = () => {
         .eq('pipeline', 'cold')
         .order('created_at', { ascending: false });
 
-      console.log('Deals query result:', { data, error });
-
       if (error) {
         console.error('Deals fetch error:', error);
         throw error;
       }
       
-      setDeals(data as any || []);
+      setAllDeals(data as any || []);
+      // Initial filter will happen in the useEffect
     } catch (error: any) {
       console.error('Error in fetchDeals:', error);
       toast.error(`Fehler beim Laden der Deals: ${error.message || 'Unbekannter Fehler'}`);
@@ -176,7 +201,26 @@ const Pipeline = () => {
             <h1 className="text-3xl font-bold">Outreach Pipeline</h1>
             <p className="text-muted-foreground text-sm mt-1">Leads aus Ihren Kampagnen</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3 items-center">
+            {/* Campaign Selector */}
+            <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+              <SelectTrigger className="w-[220px] glass-card border-white/10">
+                <Megaphone className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Kampagne wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle Kampagnen</SelectItem>
+                {campaigns.map((campaign) => (
+                  <SelectItem key={campaign.id} value={campaign.id}>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${campaign.status === 'active' ? 'bg-green-500' : 'bg-muted'}`} />
+                      {campaign.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
             <Button variant="outline" onClick={() => setShowPhoneSetup(!showPhoneSetup)}>
               <Phone className="w-4 h-4 mr-2" />
               Telefon
