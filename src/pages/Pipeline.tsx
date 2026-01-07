@@ -163,8 +163,9 @@ const Pipeline = () => {
 
     if (!deal || deal.stage === newStage) return;
 
-    // Optimistic update
+    // Optimistic update - update both filtered and all deals
     setDeals(deals.map(d => d.id === dealId ? { ...d, stage: newStage } : d));
+    setAllDeals(allDeals.map(d => d.id === dealId ? { ...d, stage: newStage } : d));
 
     try {
       const { error } = await supabase
@@ -174,7 +175,7 @@ const Pipeline = () => {
 
       if (error) throw error;
       
-      toast.success(`Deal in ${newStage} verschoben`);
+      toast.success(`Deal nach "${newStage}" verschoben`);
     } catch (error: any) {
       console.error('Error updating deal stage:', error);
       toast.error('Fehler beim Verschieben des Deals');
@@ -305,7 +306,8 @@ const Pipeline = () => {
         <LeadDetailPanel 
           dealId={selectedDealId || ""} 
           open={!!selectedDealId}
-          onClose={() => setSelectedDealId(null)} 
+          onClose={() => setSelectedDealId(null)}
+          onUpdate={fetchDeals}
         />
       </div>
     </Layout>

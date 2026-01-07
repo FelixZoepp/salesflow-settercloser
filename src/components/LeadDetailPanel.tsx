@@ -63,9 +63,10 @@ interface LeadDetailPanelProps {
   dealId: string;
   open: boolean;
   onClose: () => void;
+  onUpdate?: () => void;
 }
 
-export default function LeadDetailPanel({ dealId, open, onClose }: LeadDetailPanelProps) {
+export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: LeadDetailPanelProps) {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -218,6 +219,9 @@ export default function LeadDetailPanel({ dealId, open, onClose }: LeadDetailPan
 
       setDeal({ ...deal, stage: newStage });
       toast.success(`Status aktualisiert: ${newStage}`);
+      
+      // Notify parent to refresh pipeline
+      onUpdate?.();
     } catch (error) {
       console.error('Error updating stage:', error);
       toast.error("Fehler beim Aktualisieren");
