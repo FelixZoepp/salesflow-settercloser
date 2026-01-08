@@ -1034,7 +1034,7 @@ export type Database = {
       }
       invitations: {
         Row: {
-          account_id: string
+          account_id: string | null
           created_at: string
           created_by: string
           email_hint: string | null
@@ -1046,7 +1046,7 @@ export type Database = {
           used_by: string | null
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           created_at?: string
           created_by: string
           email_hint?: string | null
@@ -1058,7 +1058,7 @@ export type Database = {
           used_by?: string | null
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           created_at?: string
           created_by?: string
           email_hint?: string | null
