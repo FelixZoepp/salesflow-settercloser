@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Save } from "lucide-react";
+import { Info, Save, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 interface CallScript {
   id: string;
@@ -24,6 +25,7 @@ export default function CallScript() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { role } = useUserRole();
+  const { canUseLiveObjectionHandling } = useFeatureAccess();
 
   useEffect(() => {
     fetchScript();
@@ -177,31 +179,58 @@ export default function CallScript() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="system_context">KI System-Context für Einwandbehandlung</Label>
+              <div className="relative">
+                <Label htmlFor="system_context" className="flex items-center gap-2">
+                  KI System-Context für Einwandbehandlung
+                  {!canUseLiveObjectionHandling && (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Pro
+                    </span>
+                  )}
+                </Label>
                 <Textarea
                   id="system_context"
                   value={script.system_context || ''}
                   onChange={(e) => setScript({ ...script, system_context: e.target.value })}
                   rows={8}
-                  placeholder="Beschreiben Sie Ihr Produkt/Dienstleistung, häufige Einwände und allgemeine Behandlungsstrategien. Diese Informationen helfen der KI, während Live-Calls passende Einwandbehandlungen zu generieren.
+                  disabled={!canUseLiveObjectionHandling}
+                  placeholder={canUseLiveObjectionHandling 
+                    ? `Beschreiben Sie Ihr Produkt/Dienstleistung, häufige Einwände und allgemeine Behandlungsstrategien. Diese Informationen helfen der KI, während Live-Calls passende Einwandbehandlungen zu generieren.
 
 Beispiel:
 - Produkt: CRM-Software für KMUs
 - Hauptmerkmale: Pipeline-Management, Call-Tracking, Automatisierung
 - Preis: Ab 49€/Monat
 - USP: Deutsche Software mit DSGVO-Konformität
-- Häufige Einwände: Preis, Umstellung, Komplexität"
-                  className="font-mono text-sm"
+- Häufige Einwände: Preis, Umstellung, Komplexität`
+                    : "Upgrade auf Pro, um KI-Einwandbehandlung zu nutzen"}
+                  className={`font-mono text-sm ${!canUseLiveObjectionHandling ? 'opacity-50' : ''}`}
                 />
               </div>
 
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  Der System-Context wird von der KI verwendet, um während Live-Calls automatisch passende Einwandbehandlungen zu generieren. Je detaillierter die Informationen, desto besser die KI-Vorschläge.
-                </AlertDescription>
-              </Alert>
+              {canUseLiveObjectionHandling ? (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Der System-Context wird von der KI verwendet, um während Live-Calls automatisch passende Einwandbehandlungen zu generieren. Je detaillierter die Informationen, desto besser die KI-Vorschläge.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert className="border-primary/30 bg-primary/5">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>KI-Einwandbehandlung ist nur im Pro-Paket verfügbar.</span>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.open("https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b", "_blank")}
+                    >
+                      Upgrade auf Pro
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <Button onClick={handleSave} disabled={saving} className="w-full">
                 {saving ? (
