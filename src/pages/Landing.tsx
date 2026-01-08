@@ -2,10 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check } from "lucide-react";
-import { useState } from "react";
-import { useEffect, useRef } from "react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
+import { AIObjectionDemo } from "@/components/landing/AIObjectionDemo";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 
 const Landing = () => {
@@ -623,6 +623,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* AI Objection Handler Section */}
+      <AIObjectionDemo />
 
       {/* Tracking Section */}
       <section id="tracking" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
