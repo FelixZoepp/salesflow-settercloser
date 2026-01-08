@@ -7,6 +7,7 @@ import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircl
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlacetelClient, PlacetelConfig, PlacetelCallbacks } from "@/lib/placetelClient";
+import LiveObjectionPanel from "./LiveObjectionPanel";
 
 interface SoftphoneDialogProps {
   open: boolean;
@@ -53,6 +54,7 @@ export default function SoftphoneDialog({
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>('idle');
   const [callSummary, setCallSummary] = useState<CallSummary | null>(null);
   const [callSessionId, setCallSessionId] = useState<string | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   
   const clientRef = useRef<PlacetelClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -369,6 +371,7 @@ export default function SoftphoneDialog({
         },
         onRemoteAudio: (stream) => {
           console.log('Remote audio received');
+          setRemoteStream(stream);
           if (audioRef.current) {
             audioRef.current.srcObject = stream;
             audioRef.current.play().catch(console.error);
@@ -613,6 +616,12 @@ export default function SoftphoneDialog({
               </Button>
             </div>
           )}
+
+          {/* Live Objection Handling */}
+          <LiveObjectionPanel 
+            isCallActive={callStatus === 'connected'} 
+            remoteStream={remoteStream}
+          />
 
           {/* Processing Status */}
           {processingStatus !== 'idle' && processingStatus !== 'error' && (
