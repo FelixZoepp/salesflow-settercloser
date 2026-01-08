@@ -11,6 +11,7 @@ import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 const Landing = () => {
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -860,14 +861,41 @@ const Landing = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
         <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
-          <div className="text-center mb-8 md:mb-16">
+          <div className="text-center mb-8 md:mb-12">
             <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Preise</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
               Wähle dein Paket
             </h2>
-            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2">
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2 mb-6">
               Beide Pakete beinhalten wöchentliches Live-Coaching.
             </p>
+            
+            {/* Billing Toggle */}
+            <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full p-1">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-4 md:px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingPeriod === 'monthly' 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Monatlich
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-4 md:px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  billingPeriod === 'yearly' 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Jährlich
+                <span className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  -2 Monate
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
@@ -879,13 +907,23 @@ const Landing = () => {
               </div>
               
               <div className="mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl md:text-5xl font-bold text-white">149€</span>
-                  <span className="text-gray-400">/Monat</span>
-                </div>
+                {billingPeriod === 'monthly' ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl md:text-5xl font-bold text-white">149€</span>
+                    <span className="text-gray-400">/Monat</span>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl md:text-5xl font-bold text-white">1.490€</span>
+                      <span className="text-gray-400">/Jahr</span>
+                    </div>
+                    <p className="text-green-400 text-sm mt-1">Spare 298€ (2 Monate gratis)</p>
+                  </div>
+                )}
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-6">
                 {[
                   "Pitchfirst Software – Kampagnen & CRM",
                   "Unbegrenzte KI-Landingpages",
@@ -900,6 +938,24 @@ const Landing = () => {
                   </li>
                 ))}
               </ul>
+              
+              {/* What's NOT included */}
+              <div className="border-t border-white/10 pt-4 mb-6">
+                <p className="text-gray-500 text-xs mb-2">Nicht enthalten:</p>
+                <ul className="space-y-2">
+                  {[
+                    "KI-Telefonie aus dem Tool",
+                    "KI-Anrufzusammenfassungen",
+                    "KI Live-Einwandbehandlung",
+                    "E-Mail-Vorlagen & Mail-Outreach"
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-gray-500 text-sm">
+                      <X className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <Button 
                 size="lg"
@@ -925,19 +981,49 @@ const Landing = () => {
               </div>
               
               <div className="mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl md:text-5xl font-bold text-white">299€</span>
-                  <span className="text-gray-400">/Monat</span>
-                </div>
+                {billingPeriod === 'monthly' ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl md:text-5xl font-bold text-white">299€</span>
+                    <span className="text-gray-400">/Monat</span>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl md:text-5xl font-bold text-white">2.990€</span>
+                      <span className="text-gray-400">/Jahr</span>
+                    </div>
+                    <p className="text-green-400 text-sm mt-1">Spare 598€ (2 Monate gratis)</p>
+                  </div>
+                )}
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-3 text-gray-300 text-sm">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span>Alles aus Starter, plus:</span>
+                </li>
+              </ul>
+              
+              {/* Pro-exclusive features highlighted */}
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6">
+                <p className="text-primary text-xs font-semibold mb-3">🚀 Exklusive Pro-Features:</p>
+                <ul className="space-y-2">
+                  {[
+                    "KI-Telefonie direkt aus dem Tool",
+                    "KI-Anrufzusammenfassungen nach jedem Call",
+                    "KI Live-Einwandbehandlung Trainer",
+                    "E-Mail-Vorlagen & Mail-Outreach"
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-white text-sm font-medium">
+                      <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <ul className="space-y-3 mb-6">
                 {[
-                  "Alles aus Starter, plus:",
-                  "KI-Telefonie direkt aus dem Tool",
-                  "KI-Anrufzusammenfassungen",
-                  "KI Live-Einwandbehandlung Trainer",
-                  "E-Mail-Vorlagen & Mail-Outreach",
                   "1x/Woche Live-Gruppen-Coaching",
                   "Outreach-Videokurs inklusive"
                 ].map((feature, idx) => (
