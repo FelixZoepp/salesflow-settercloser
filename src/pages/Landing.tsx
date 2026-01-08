@@ -55,36 +55,37 @@ const Landing = () => {
 
   const features = [
     {
-      icon: Video,
-      title: "KI-generierte Video-Landingpages",
-      description: "Für jeden Lead wird automatisch eine personalisierte Landingpage mit Video erstellt – skalierbar für hunderte Kontakte.",
+      icon: Users,
+      title: "Integriertes CRM",
+      description: "Alle Leads, Deals und Aktivitäten in einem System. Kein Wechsel zwischen Tools, kein Excel-Chaos.",
+      highlight: true
+    },
+    {
+      icon: Sparkles,
+      title: "Live KI-Einwandbehandlung",
+      description: "Während du telefonierst, erkennt die KI Einwände und zeigt dir sofort die passende Antwort – in Echtzeit.",
       highlight: true
     },
     {
       icon: Eye,
       title: "Echtzeit-Tracking",
-      description: "Sieh live, wenn ein Lead deine Seite besucht, das Video schaut oder auf den CTA klickt. Reagiere sofort.",
+      description: "Sieh live, wenn ein Lead deine Seite besucht, das Video schaut oder auf den CTA klickt. 80% bessere Erreichbarkeit.",
       highlight: true
     },
     {
-      icon: Sparkles,
-      title: "KI-Avatar-Videos",
-      description: "Dein digitaler Zwilling spricht jeden Lead persönlich mit Namen an – vollautomatisch generiert."
-    },
-    {
       icon: BarChart3,
-      title: "Lead-Scoring in Echtzeit",
-      description: "Jede Aktion wird getrackt und bewertet. Du weißt genau, welche Leads heiß sind."
+      title: "Zahlen, Daten, Fakten",
+      description: "Endlich echte Outreach-KPIs: Anrufe, Termine, Öffnungsraten – übersichtlich statt in hässlichen Excel-Sheets."
     },
     {
-      icon: MousePointer,
-      title: "Engagement-Signale",
-      description: "Page Views, Video-Watch-Time, Button-Klicks – alles wird erfasst und ausgewertet."
+      icon: Video,
+      title: "KI-generierte Video-Landingpages",
+      description: "Für jeden Lead wird automatisch eine personalisierte Landingpage mit Video erstellt."
     },
     {
       icon: Zap,
-      title: "Automatische Follow-ups",
-      description: "Das System erkennt, wann FU1, FU2 oder FU3 fällig sind – basierend auf Engagement."
+      title: "Call-Funktion direkt im Tool",
+      description: "Rufe Leads direkt aus dem CRM an. Keine Telefon-App, keine Umwege – alles in einem System."
     }
   ];
 
@@ -197,16 +198,16 @@ const Landing = () => {
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 text-white leading-tight">
-            Personalisierte Videos.<br />
+            CRM + Live KI-Trainer.<br />
             <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent italic">
-              Echtzeit-Tracking.
+              80% bessere Erreichbarkeit.
             </span><br />
-            Mehr Termine.
+            Echte Zahlen statt Excel.
           </h1>
           
           <p className="text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
-            Die LinkedIn Outreach Software, die für jeden Lead eine personalisierte Landingpage erstellt – 
-            und dir in Echtzeit zeigt, wer interessiert ist.
+            Outreach mit Zahlen, Daten, Fakten – ohne hässliche Excel-Sheets. 
+            Mit integriertem CRM und KI-Einwandbehandlung in Echtzeit.
           </p>
           
           <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
@@ -232,16 +233,16 @@ const Landing = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto text-white px-2">
             <div>
-              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">73%</div>
-              <div className="text-xs md:text-sm text-gray-400">Höhere Antwortrate</div>
+              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">80%</div>
+              <div className="text-xs md:text-sm text-gray-400">Bessere Erreichbarkeit</div>
             </div>
             <div>
               <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">Live</div>
-              <div className="text-xs md:text-sm text-gray-400">Echtzeit-Tracking</div>
+              <div className="text-xs md:text-sm text-gray-400">KI-Einwandtrainer</div>
             </div>
             <div>
-              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">100%</div>
-              <div className="text-xs md:text-sm text-gray-400">Automatisiert</div>
+              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">CRM</div>
+              <div className="text-xs md:text-sm text-gray-400">Alles integriert</div>
             </div>
           </div>
         </div>
@@ -376,11 +377,11 @@ const Landing = () => {
               
               <div className="space-y-4">
                 {[
-                  { icon: Video, text: "Personalisierte Video-Landingpages", desc: "Einzigartig für jeden Lead – mit Namen angesprochen" },
-                  { icon: BarChart3, text: "Echtzeit-Kennzahlen", desc: "Sieh live, wer deine Seite besucht und Videos schaut" },
-                  { icon: Target, text: "Hot Leads identifizieren", desc: "Kontaktiere nur die, die wirklich interessiert sind" },
-                  { icon: Zap, text: "Vollautomatisiert", desc: "KI erstellt alles – du fokussierst dich aufs Closen" },
-                  { icon: TrendingUp, text: "Höchste Öffnungsraten", desc: "Personalisierung die auffällt und konvertiert" },
+                  { icon: Users, text: "CRM mit allem integriert", desc: "Leads, Deals, Aktivitäten – alles an einem Ort" },
+                  { icon: Sparkles, text: "Live KI-Einwandbehandlung", desc: "Erkennt Einwände und zeigt sofort passende Antworten" },
+                  { icon: Eye, text: "Echtzeit-Tracking", desc: "80% bessere Erreichbarkeit durch Live-Signale" },
+                  { icon: BarChart3, text: "Zahlen statt Excel", desc: "Echte KPIs, übersichtlich und ohne Chaos" },
+                  { icon: Zap, text: "Call-Funktion im Tool", desc: "Direkt aus dem CRM anrufen – keine Umwege" },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
                     <item.icon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -394,8 +395,8 @@ const Landing = () => {
               
               <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/30">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">73%+</div>
-                  <div className="text-gray-400 text-sm">Durchschnittliche Öffnungsrate</div>
+                  <div className="text-3xl font-bold text-primary mb-1">80%</div>
+                  <div className="text-gray-400 text-sm">Bessere Erreichbarkeit</div>
                 </div>
               </div>
             </div>
