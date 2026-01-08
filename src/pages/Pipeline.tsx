@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
 import PhoneIntegration from "@/components/PhoneIntegration";
-import { buildDialHref } from "@/lib/dialerAdapter";
+import SoftphoneDialog from "@/components/SoftphoneDialog";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -47,6 +47,32 @@ const Pipeline = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<string>(() => {
     return searchParams.get('campaign') || 'all';
   });
+  
+  // Softphone state
+  const [softphoneOpen, setSoftphoneOpen] = useState(false);
+  const [softphoneContact, setSoftphoneContact] = useState<{
+    phone: string;
+    name: string;
+    dealId: string;
+  } | null>(null);
+
+  const handleStartCall = (deal: Deal) => {
+    const contact = deal.contacts;
+    if (!contact) return;
+    
+    const phoneNumber = contact.phone || contact.mobile;
+    if (!phoneNumber) {
+      toast.error('Keine Telefonnummer vorhanden');
+      return;
+    }
+    
+    setSoftphoneContact({
+      phone: phoneNumber,
+      name: `${contact.first_name} ${contact.last_name}`,
+      dealId: deal.id
+    });
+    setSoftphoneOpen(true);
+  };
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -292,6 +318,7 @@ const Pipeline = () => {
                     key={deal.id}
                     deal={deal}
                     onOpenDetail={() => setSelectedDealId(deal.id)}
+                    onStartCall={() => handleStartCall(deal)}
                   />
                 ))}
               </DroppableStage>
@@ -321,6 +348,18 @@ const Pipeline = () => {
           open={!!selectedDealId}
           onClose={() => setSelectedDealId(null)}
           onUpdate={fetchDeals}
+        />
+
+        {/* Softphone Dialog */}
+        <SoftphoneDialog
+          open={softphoneOpen}
+          onClose={() => {
+            setSoftphoneOpen(false);
+            setSoftphoneContact(null);
+          }}
+          phoneNumber={softphoneContact?.phone || ""}
+          contactName={softphoneContact?.name || ""}
+          dealId={softphoneContact?.dealId}
         />
       </div>
     </Layout>
@@ -393,9 +432,10 @@ const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, isDragging
 interface DraggableDealCardProps {
   deal: Deal;
   onOpenDetail: () => void;
+  onStartCall: () => void;
 }
 
-const DraggableDealCard = ({ deal, onOpenDetail }: DraggableDealCardProps) => {
+const DraggableDealCard = ({ deal, onOpenDetail, onStartCall }: DraggableDealCardProps) => {
   const {
     attributes,
     listeners,
@@ -453,16 +493,7 @@ const DraggableDealCard = ({ deal, onOpenDetail }: DraggableDealCardProps) => {
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
-                const contact = deal.contacts;
-                if (contact) {
-                  const phoneNumber = contact.phone || contact.mobile;
-                  if (phoneNumber) {
-                    window.location.href = buildDialHref(phoneNumber);
-                    toast.info('Rufe Kontakt an...');
-                  } else {
-                    toast.error('Keine Telefonnummer vorhanden');
-                  }
-                }
+                onStartCall();
               }}
               disabled={!deal.contacts?.phone && !deal.contacts?.mobile}
             >
