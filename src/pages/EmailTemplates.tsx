@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Mail, Copy } from "lucide-react";
 import { useAccountFilter } from "@/hooks/useAccountFilter";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 interface EmailTemplate {
   id: string;
@@ -25,6 +27,7 @@ interface EmailTemplate {
 
 export default function EmailTemplates() {
   const { accountId } = useAccountFilter();
+  const { canUseEmailTemplates, loading: featureLoading } = useFeatureAccess();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
@@ -34,6 +37,32 @@ export default function EmailTemplates() {
     body_html: "",
     is_active: true,
   });
+
+  // Show upgrade prompt if no access
+  if (!featureLoading && !canUseEmailTemplates) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Mail className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">E-Mail Vorlagen</h1>
+              <p className="text-muted-foreground">
+                Erstelle und verwalte deine E-Mail-Vorlagen
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center py-12">
+            <UpgradePrompt 
+              featureName="E-Mail Vorlagen"
+              description="E-Mail-Vorlagen und Mail-Outreach sind nur im Pro-Paket verfügbar."
+              className="max-w-md"
+            />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["email-templates", accountId],

@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Edit, Info } from "lucide-react";
+import { Plus, Trash2, Edit, Info, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 interface Objection {
   id: string;
@@ -28,6 +30,7 @@ export default function ObjectionLibrary() {
   const [editingObjection, setEditingObjection] = useState<Objection | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { role } = useUserRole();
+  const { canUseLiveObjectionHandling, loading: featureLoading } = useFeatureAccess();
 
   const emptyObjection: Partial<Objection> = {
     title: "",
@@ -36,6 +39,32 @@ export default function ObjectionLibrary() {
     category: "",
     is_active: true,
   };
+
+  // Show upgrade prompt if no access to live objection handling
+  if (!featureLoading && !canUseLiveObjectionHandling) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Brain className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Einwand-Bibliothek</h1>
+              <p className="text-muted-foreground">
+                KI-gestützte Einwandbehandlung
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center py-12">
+            <UpgradePrompt 
+              featureName="KI Einwandbehandlung"
+              description="Die KI-gestützte Live-Einwandbehandlung ist nur im Pro-Paket verfügbar."
+              className="max-w-md"
+            />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   useEffect(() => {
     fetchObjections();
