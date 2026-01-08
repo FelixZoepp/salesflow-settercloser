@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,18 @@ import {
   LayoutDashboard,
   MousePointer,
   ExternalLink,
-  Clock
+  Clock,
+  Sparkles,
+  ArrowRight,
+  X,
+  Phone,
+  Brain,
+  Mail
 } from "lucide-react";
 import { formatDistanceToNow, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 interface LeadStats {
   totalCampaigns: number;
@@ -46,6 +54,9 @@ interface Campaign {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { isStarterPlan, isProPlan, loading: featureLoading } = useFeatureAccess();
+  const [showUpgradeBanner, setShowUpgradeBanner] = useState(true);
   const [leadStats, setLeadStats] = useState<LeadStats>({
     totalCampaigns: 0,
     activeCampaigns: 0,
@@ -266,6 +277,54 @@ const Dashboard = () => {
     <Layout>
       <div className="min-h-screen noise-bg dotted-grid">
         <div className="max-w-7xl mx-auto p-1">
+          {/* Pro Upgrade Banner for Starter Users */}
+          {isStarterPlan && showUpgradeBanner && !featureLoading && (
+            <div className="mb-6 relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-blue-500/10">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
+              <button 
+                onClick={() => setShowUpgradeBanner(false)}
+                className="absolute top-3 right-3 p-1 rounded-lg hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="relative p-5 flex items-center gap-6">
+                <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary md:hidden" />
+                    Upgrade auf Pro für alle KI-Features
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 text-primary" />
+                      Power Dialer
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Brain className="h-3.5 w-3.5 text-primary" />
+                      KI-Einwandbehandlung
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-primary" />
+                      E-Mail Outreach
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Button 
+                    onClick={() => navigate("/upgrade")}
+                    className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                  >
+                    Jetzt upgraden
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
