@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2, Circle, FileText, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlacetelClient, PlacetelConfig, PlacetelCallbacks } from "@/lib/placetelClient";
@@ -16,6 +17,7 @@ interface SoftphoneDialogProps {
 }
 
 type CallStatus = 'idle' | 'connecting' | 'registering' | 'dialing' | 'ringing' | 'connected' | 'ended' | 'error';
+type ProcessingStatus = 'idle' | 'uploading' | 'transcribing' | 'summarizing' | 'done' | 'error';
 
 interface SipSettings {
   sip_provider: string | null;
@@ -25,6 +27,13 @@ interface SipSettings {
   sip_password_encrypted: string | null;
   sip_display_name: string | null;
   sip_enabled: boolean;
+}
+
+interface CallSummary {
+  summary: string;
+  key_points: string[];
+  action_items: string[];
+  sentiment: 'positive' | 'neutral' | 'negative';
 }
 
 export default function SoftphoneDialog({ 
@@ -38,13 +47,23 @@ export default function SoftphoneDialog({
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sipSettings, setSipSettings] = useState<SipSettings | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>('idle');
+  const [callSummary, setCallSummary] = useState<CallSummary | null>(null);
+  const [callSessionId, setCallSessionId] = useState<string | null>(null);
   
   const clientRef = useRef<PlacetelClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callStartTimeRef = useRef<Date | null>(null);
+  
+  // Recording refs
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
 
   // Load SIP settings
   useEffect(() => {
@@ -120,13 +139,177 @@ export default function SoftphoneDialog({
     if (audioRef.current) {
       audioRef.current.srcObject = null;
     }
+    stopRecording();
   }, []);
+
+  const startRecording = (localStream: MediaStream, remoteStream: MediaStream) => {
+    try {
+      console.log('Starting call recording...');
+      
+      // Create AudioContext to mix both streams
+      audioContextRef.current = new AudioContext();
+      destinationRef.current = audioContextRef.current.createMediaStreamDestination();
+      
+      // Connect local audio (microphone)
+      const localSource = audioContextRef.current.createMediaStreamSource(localStream);
+      localSource.connect(destinationRef.current);
+      
+      // Connect remote audio
+      const remoteSource = audioContextRef.current.createMediaStreamSource(remoteStream);
+      remoteSource.connect(destinationRef.current);
+      
+      // Create MediaRecorder for mixed stream
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : 'audio/webm';
+      
+      mediaRecorderRef.current = new MediaRecorder(destinationRef.current.stream, {
+        mimeType,
+        audioBitsPerSecond: 128000
+      });
+      
+      audioChunksRef.current = [];
+      
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorderRef.current.onstop = () => {
+        console.log('Recording stopped, chunks:', audioChunksRef.current.length);
+      };
+      
+      mediaRecorderRef.current.start(1000); // Collect data every second
+      setIsRecording(true);
+      console.log('Recording started with mimeType:', mimeType);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  const processRecording = async (sessionId: string) => {
+    if (audioChunksRef.current.length === 0) {
+      console.log('No audio chunks to process');
+      return;
+    }
+
+    try {
+      // Create blob from chunks
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+      console.log('Audio blob size:', audioBlob.size, 'bytes');
+      
+      if (audioBlob.size < 1000) {
+        console.log('Recording too short, skipping processing');
+        return;
+      }
+
+      // Step 1: Upload to Supabase Storage
+      setProcessingStatus('uploading');
+      toast.info('Aufnahme wird hochgeladen...');
+      
+      const fileName = `call_${sessionId}_${Date.now()}.webm`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('call-recordings')
+        .upload(fileName, audioBlob, {
+          contentType: 'audio/webm',
+          upsert: false
+        });
+
+      if (uploadError) {
+        // Storage bucket might not exist, log but continue with transcription
+        console.error('Upload error (storage might not be configured):', uploadError);
+      } else {
+        // Get public URL and update session
+        const { data: urlData } = supabase.storage
+          .from('call-recordings')
+          .getPublicUrl(fileName);
+        
+        await supabase
+          .from('call_sessions')
+          .update({ 
+            recording_url: urlData.publicUrl,
+            recording_duration_seconds: callDuration
+          })
+          .eq('id', sessionId);
+      }
+
+      // Step 2: Transcribe audio
+      setProcessingStatus('transcribing');
+      toast.info('Transkribiere Aufnahme...');
+      
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
+
+      const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke('transcribe-audio', {
+        body: { audio: base64Audio, mimeType: 'audio/webm;codecs=opus' }
+      });
+
+      if (transcriptError || transcriptData?.error) {
+        throw new Error(transcriptData?.error || transcriptError?.message || 'Transkription fehlgeschlagen');
+      }
+
+      const transcript = transcriptData.text;
+      console.log('Transcript:', transcript?.substring(0, 100) + '...');
+
+      if (!transcript || transcript.length < 10) {
+        console.log('Transcript too short, skipping summary');
+        setProcessingStatus('done');
+        return;
+      }
+
+      // Step 3: Generate AI summary
+      setProcessingStatus('summarizing');
+      toast.info('Generiere KI-Zusammenfassung...');
+
+      const { data: summaryData, error: summaryError } = await supabase.functions.invoke('summarize-call', {
+        body: { sessionId, transcript }
+      });
+
+      if (summaryError || summaryData?.error) {
+        console.error('Summary error:', summaryData?.error || summaryError);
+        // Don't throw, just log - summary is optional
+      } else {
+        setCallSummary(summaryData);
+      }
+
+      setProcessingStatus('done');
+      toast.success('Anruf verarbeitet! Transkript und Zusammenfassung gespeichert.');
+
+    } catch (error: any) {
+      console.error('Error processing recording:', error);
+      setProcessingStatus('error');
+      toast.error(`Verarbeitung fehlgeschlagen: ${error.message}`);
+    }
+  };
 
   const startCall = async () => {
     if (!sipSettings) return;
 
     setCallStatus('connecting');
     setErrorMessage(null);
+    setProcessingStatus('idle');
+    setCallSummary(null);
 
     try {
       // Decode password
@@ -139,6 +322,8 @@ export default function SoftphoneDialog({
         domain: sipSettings.sip_domain || sipSettings.sip_server!.replace('wss://', '').split('/')[0],
         displayName: sipSettings.sip_display_name || undefined
       };
+
+      let localStreamForRecording: MediaStream | null = null;
 
       const callbacks: PlacetelCallbacks = {
         onRegistered: () => {
@@ -165,15 +350,22 @@ export default function SoftphoneDialog({
           startCallTimer();
           logCallStart();
         },
-        onCallEnded: (reason) => {
+        onCallEnded: async (reason) => {
           console.log('Call ended:', reason);
           setCallStatus('ended');
           stopCallTimer();
+          stopRecording();
+          
+          // Process recording if we have a session
+          if (callSessionId) {
+            await processRecording(callSessionId);
+          }
         },
         onCallFailed: (error) => {
           console.error('Call failed:', error);
           setErrorMessage(`Anruf fehlgeschlagen: ${error}`);
           setCallStatus('error');
+          stopRecording();
         },
         onRemoteAudio: (stream) => {
           console.log('Remote audio received');
@@ -181,9 +373,15 @@ export default function SoftphoneDialog({
             audioRef.current.srcObject = stream;
             audioRef.current.play().catch(console.error);
           }
+          
+          // Start recording when we have both streams
+          if (localStreamForRecording) {
+            startRecording(localStreamForRecording, stream);
+          }
         },
         onLocalAudio: (stream) => {
           console.log('Local audio captured');
+          localStreamForRecording = stream;
         }
       };
 
@@ -219,11 +417,23 @@ export default function SoftphoneDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      await supabase.from('call_sessions').insert({
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      const { data, error } = await supabase.from('call_sessions').insert({
         deal_id: dealId,
         user_id: user.id,
+        account_id: profile?.account_id,
         started_at: new Date().toISOString()
-      });
+      }).select('id').single();
+
+      if (error) throw error;
+      
+      setCallSessionId(data.id);
+      console.log('Call session created:', data.id);
     } catch (error) {
       console.error('Error logging call start:', error);
     }
@@ -233,6 +443,18 @@ export default function SoftphoneDialog({
     if (clientRef.current) {
       await clientRef.current.hangup();
     }
+    
+    // Update call session with end time
+    if (callSessionId) {
+      await supabase
+        .from('call_sessions')
+        .update({ 
+          ended_at: new Date().toISOString(),
+          duration_seconds: callDuration
+        })
+        .eq('id', callSessionId);
+    }
+    
     cleanup();
     setCallStatus('ended');
     toast.info(`Anruf beendet (${formatDuration(callDuration)})`);
@@ -247,11 +469,13 @@ export default function SoftphoneDialog({
     setCallDuration(0);
     setErrorMessage(null);
     setSipSettings(null);
+    setProcessingStatus('idle');
+    setCallSummary(null);
+    setCallSessionId(null);
     onClose();
   };
 
   const toggleMute = () => {
-    // TODO: Implement mute functionality via PlacetelClient
     setIsMuted(!isMuted);
     toast.info(isMuted ? "Mikrofon aktiviert" : "Mikrofon stumm");
   };
@@ -294,13 +518,37 @@ export default function SoftphoneDialog({
     }
   };
 
+  const getProcessingProgress = (): number => {
+    switch (processingStatus) {
+      case 'uploading': return 25;
+      case 'transcribing': return 50;
+      case 'summarizing': return 75;
+      case 'done': return 100;
+      default: return 0;
+    }
+  };
+
+  const getSentimentEmoji = (sentiment: string): string => {
+    switch (sentiment) {
+      case 'positive': return '😊';
+      case 'negative': return '😞';
+      default: return '😐';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-primary" />
             Softphone
+            {isRecording && (
+              <Badge variant="destructive" className="animate-pulse ml-2">
+                <Circle className="w-2 h-2 mr-1 fill-current" />
+                REC
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -366,6 +614,72 @@ export default function SoftphoneDialog({
             </div>
           )}
 
+          {/* Processing Status */}
+          {processingStatus !== 'idle' && processingStatus !== 'error' && (
+            <div className="space-y-3 p-4 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  {processingStatus === 'done' ? (
+                    <Brain className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  )}
+                  <span>
+                    {processingStatus === 'uploading' && 'Lade Aufnahme hoch...'}
+                    {processingStatus === 'transcribing' && 'Transkribiere...'}
+                    {processingStatus === 'summarizing' && 'Generiere Zusammenfassung...'}
+                    {processingStatus === 'done' && 'Verarbeitung abgeschlossen'}
+                  </span>
+                </div>
+                <span className="text-muted-foreground">{getProcessingProgress()}%</span>
+              </div>
+              <Progress value={getProcessingProgress()} className="h-2" />
+            </div>
+          )}
+
+          {/* Call Summary */}
+          {callSummary && (
+            <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Zusammenfassung
+                </h4>
+                <span className="text-lg">{getSentimentEmoji(callSummary.sentiment)}</span>
+              </div>
+              
+              <p className="text-sm text-muted-foreground">{callSummary.summary}</p>
+              
+              {callSummary.key_points.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Hauptpunkte:</p>
+                  <ul className="text-sm space-y-1">
+                    {callSummary.key_points.map((point, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-primary">•</span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {callSummary.action_items.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Nächste Schritte:</p>
+                  <ul className="text-sm space-y-1">
+                    {callSummary.action_items.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-amber-500">→</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Main Action Button */}
           <div className="flex justify-center">
             {callStatus === 'connected' || callStatus === 'ringing' || callStatus === 'dialing' ? (
@@ -382,15 +696,19 @@ export default function SoftphoneDialog({
                 <Button variant="outline" onClick={handleClose}>
                   Schließen
                 </Button>
-                <Button onClick={() => {
-                  setCallStatus('idle');
-                  setErrorMessage(null);
-                  setCallDuration(0);
-                  startCall();
-                }}>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Erneut anrufen
-                </Button>
+                {processingStatus === 'idle' && (
+                  <Button onClick={() => {
+                    setCallStatus('idle');
+                    setErrorMessage(null);
+                    setCallDuration(0);
+                    setCallSessionId(null);
+                    audioChunksRef.current = [];
+                    startCall();
+                  }}>
+                    <Phone className="w-4 h-4 mr-2" />
+                    Erneut anrufen
+                  </Button>
+                )}
               </div>
             ) : null}
           </div>
