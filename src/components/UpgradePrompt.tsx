@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ArrowRight, Lock } from "lucide-react";
@@ -9,8 +10,10 @@ interface UpgradePromptProps {
 }
 
 export const UpgradePrompt = ({ featureName, description, className = "" }: UpgradePromptProps) => {
+  const navigate = useNavigate();
+
   const handleUpgrade = () => {
-    window.open("https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b", "_blank");
+    navigate("/upgrade");
   };
 
   return (
