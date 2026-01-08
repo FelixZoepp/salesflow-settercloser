@@ -39,6 +39,7 @@ import { LandingPagePreview } from "@/components/landing-builder/LandingPagePrev
 
 const STEP_TITLES = [
   "HeyGen Integration",
+  "Custom Domain",
   "Pitch-Video hochladen",
   "Leads importieren",
   "Vertriebsskript erstellen",
@@ -115,7 +116,10 @@ const Onboarding = () => {
   const [voiceId, setVoiceId] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // Step 2: Pitch Video
+  // Step 2: Custom Domain
+  const [customDomain, setCustomDomain] = useState("");
+
+  // Step 3: Pitch Video
   const [campaignName, setCampaignName] = useState("Meine erste Kampagne");
   const [pitchVideoUrl, setPitchVideoUrl] = useState("");
 
@@ -145,11 +149,12 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     if (!onboardingLoading) {
       // Set active step to the first incomplete step
       if (!status.steps.heygen) setActiveStep(0);
-      else if (!status.steps.pitchVideo) setActiveStep(1);
-      else if (!status.steps.leads) setActiveStep(2);
-      else if (!status.steps.script) setActiveStep(3);
-      else if (!status.steps.landingPage) setActiveStep(4);
-      else setActiveStep(4);
+      else if (!status.steps.domain) setActiveStep(1);
+      else if (!status.steps.pitchVideo) setActiveStep(2);
+      else if (!status.steps.leads) setActiveStep(3);
+      else if (!status.steps.script) setActiveStep(4);
+      else if (!status.steps.landingPage) setActiveStep(5);
+      else setActiveStep(5);
     }
   }, [status, onboardingLoading]);
 
@@ -192,6 +197,40 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     }
   };
 
+  const handleSaveDomain = async () => {
+    if (!accountId) return;
+    
+    if (!customDomain) {
+      toast.error("Bitte Domain eingeben");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Clean domain input
+      const cleanDomain = customDomain
+        .replace(/^https?:\/\//, "")
+        .replace(/\/$/, "")
+        .trim();
+
+      const { error } = await supabase
+        .from('accounts')
+        .update({ custom_domain: cleanDomain })
+        .eq('id', accountId);
+
+      if (error) throw error;
+
+      toast.success("Domain gespeichert! Alle neuen Leads bekommen diese Domain.");
+      await refresh();
+      setActiveStep(2);
+    } catch (error) {
+      toast.error("Fehler beim Speichern");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveCampaign = async () => {
     if (!accountId) return;
     
@@ -215,7 +254,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success("Kampagne erstellt!");
       await refresh();
-      setActiveStep(2);
+      setActiveStep(3);
     } catch (error) {
       toast.error("Fehler beim Erstellen der Kampagne");
       console.error(error);
@@ -254,7 +293,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success("Vertriebsskript erstellt!");
       await refresh();
-      setActiveStep(4);
+      setActiveStep(5);
     } catch (error) {
       toast.error("Fehler beim Erstellen des Skripts");
       console.error(error);
@@ -347,7 +386,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const completedSteps = Object.values(status.steps).filter(Boolean).length;
-  const progressPercent = (completedSteps / 5) * 100;
+  const progressPercent = (completedSteps / 6) * 100;
 
   if (accountLoading || onboardingLoading) {
     return (
@@ -408,16 +447,16 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Fortschritt</span>
-              <span className="text-sm text-muted-foreground">{completedSteps} von 5 Schritten</span>
+              <span className="text-sm text-muted-foreground">{completedSteps} von 6 Schritten</span>
             </div>
             <Progress value={progressPercent} className="h-2" />
           </CardContent>
         </Card>
 
         {/* Steps */}
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-6 gap-2">
           {STEP_TITLES.map((title, index) => {
-            const stepKeys = ['heygen', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+            const stepKeys = ['heygen', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
             const isComplete = status.steps[stepKeys[index]];
             const isActive = activeStep === index;
             
@@ -452,22 +491,24 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           <CardHeader>
             <div className="flex items-center gap-3">
               {activeStep === 0 && <Key className="h-6 w-6 text-primary" />}
-              {activeStep === 1 && <Video className="h-6 w-6 text-primary" />}
-              {activeStep === 2 && <Users className="h-6 w-6 text-primary" />}
-              {activeStep === 3 && <FileText className="h-6 w-6 text-primary" />}
-              {activeStep === 4 && <Globe className="h-6 w-6 text-primary" />}
+              {activeStep === 1 && <Globe className="h-6 w-6 text-primary" />}
+              {activeStep === 2 && <Video className="h-6 w-6 text-primary" />}
+              {activeStep === 3 && <Users className="h-6 w-6 text-primary" />}
+              {activeStep === 4 && <FileText className="h-6 w-6 text-primary" />}
+              {activeStep === 5 && <Palette className="h-6 w-6 text-primary" />}
               <div>
                 <CardTitle>Schritt {activeStep + 1}: {STEP_TITLES[activeStep]}</CardTitle>
                 <CardDescription>
                   {activeStep === 0 && "Verbinde dein HeyGen-Konto für personalisierte Avatar-Videos"}
-                  {activeStep === 1 && "Lade dein 2-Minuten Pitch-Video hoch"}
-                  {activeStep === 2 && "Importiere deine Leads per CSV oder manuell"}
-                  {activeStep === 3 && "Erstelle ein Skript für deine Vertriebsanrufe"}
-                  {activeStep === 4 && "Erstelle eine KI-generierte Landing Page für deine Kampagne"}
+                  {activeStep === 1 && "Verbinde deine eigene Domain für personalisierte Lead-Seiten"}
+                  {activeStep === 2 && "Lade dein 2-Minuten Pitch-Video hoch"}
+                  {activeStep === 3 && "Importiere deine Leads per CSV oder manuell"}
+                  {activeStep === 4 && "Erstelle ein Skript für deine Vertriebsanrufe"}
+                  {activeStep === 5 && "Erstelle eine KI-generierte Landing Page für deine Kampagne"}
                 </CardDescription>
               </div>
               {(() => {
-                const stepKeys = ['heygen', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+                const stepKeys = ['heygen', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
                 return status.steps[stepKeys[activeStep]] && (
                   <Badge className="ml-auto bg-green-500/20 text-green-600">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> Abgeschlossen
@@ -554,8 +595,74 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 2: Pitch Video */}
+            {/* Step 2: Custom Domain */}
             {activeStep === 1 && (
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p className="text-sm">
+                    <strong>Wichtig:</strong> Du musst deine Domain zuerst in den{" "}
+                    <strong>Lovable Projekt-Einstellungen → Domains</strong> verbinden.{" "}
+                    <a
+                      href="https://docs.lovable.dev/features/custom-domain"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      Anleitung lesen
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Deine Custom Domain</Label>
+                  <div className="flex gap-2">
+                    <div className="flex items-center bg-muted px-3 rounded-l-md border border-r-0">
+                      <span className="text-muted-foreground text-sm">https://</span>
+                    </div>
+                    <Input
+                      placeholder="meine-domain.de"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      className="rounded-l-none"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Diese Domain wird für alle personalisierten Lead-Links verwendet.
+                  </p>
+                </div>
+
+                {customDomain && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Beispiel personalisierte URL:</p>
+                    <code className="text-sm text-primary">
+                      https://{customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mustermann-abc
+                    </code>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={handleSaveDomain} 
+                  disabled={saving || !customDomain}
+                  className="w-full"
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Domain speichern & weiter
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveStep(2)}
+                  className="w-full"
+                >
+                  Später einrichten
+                </Button>
+              </div>
+            )}
+
+            {/* Step 3: Pitch Video */}
+            {activeStep === 2 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="campaignName">Kampagnenname</Label>
@@ -596,8 +703,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 3: Leads */}
-            {activeStep === 2 && (
+            {/* Step 4: Leads */}
+            {activeStep === 3 && (
               <div className="space-y-4">
                 <p className="text-muted-foreground">
                   Importiere deine Lead-Liste per CSV-Datei oder lege Leads manuell an.
@@ -624,7 +731,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
                 {status.steps.leads && (
                   <Button 
-                    onClick={() => setActiveStep(3)}
+                    onClick={() => setActiveStep(4)}
                     className="w-full"
                   >
                     Weiter zum nächsten Schritt
@@ -634,8 +741,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </div>
             )}
 
-            {/* Step 4: Script */}
-            {activeStep === 3 && (
+            {/* Step 5: Script */}
+            {activeStep === 4 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="scriptName">Skript-Name</Label>
@@ -673,8 +780,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 5: Landing Page */}
-            {activeStep === 4 && (
+            {/* Step 6: Landing Page */}
+            {activeStep === 5 && (
               <div className="space-y-6">
                 {!generatedContent ? (
                   <>

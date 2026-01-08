@@ -74,6 +74,7 @@ export type Database = {
         Row: {
           company_name: string | null
           created_at: string
+          custom_domain: string | null
           email: string | null
           id: string
           is_active: boolean
@@ -85,6 +86,7 @@ export type Database = {
         Insert: {
           company_name?: string | null
           created_at?: string
+          custom_domain?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -96,6 +98,7 @@ export type Database = {
         Update: {
           company_name?: string | null
           created_at?: string
+          custom_domain?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
