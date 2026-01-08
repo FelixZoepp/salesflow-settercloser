@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2 } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,7 @@ interface Deal {
   title: string;
   stage: string;
   contact_id: string;
+  amount_eur: number | null;
 }
 
 interface Activity {
@@ -81,6 +82,9 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   // Video note state
   const [videoSlug, setVideoSlug] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  
+  // Deal amount state
+  const [dealAmount, setDealAmount] = useState<string>("");
   
   // Live call state
   const [isLiveCallActive, setIsLiveCallActive] = useState(false);
@@ -135,6 +139,7 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
       
       setDeal(dealData);
       setContact(dealData.contacts);
+      setDealAmount(dealData.amount_eur?.toString() || '0');
       
       // Set video note fields
       if (dealData.contacts) {
@@ -226,6 +231,28 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
     } catch (error) {
       console.error('Error updating stage:', error);
       toast.error("Fehler beim Aktualisieren");
+    }
+  };
+
+  const handleSaveDealAmount = async () => {
+    if (!deal) return;
+
+    try {
+      const amount = parseFloat(dealAmount.replace(/[^\d.-]/g, '')) || 0;
+      
+      const { error } = await supabase
+        .from('deals')
+        .update({ amount_eur: amount })
+        .eq('id', deal.id);
+
+      if (error) throw error;
+
+      setDeal({ ...deal, amount_eur: amount });
+      toast.success("Dealvolumen gespeichert");
+      onUpdate?.();
+    } catch (error) {
+      console.error('Error updating deal amount:', error);
+      toast.error("Fehler beim Speichern");
     }
   };
 
@@ -449,7 +476,34 @@ Stage: ${deal.stage}
                     </div>
                   </div>
 
-                  {/* Personalized URL Section */}
+                  {/* Deal Volume */}
+                  <div className="stat-card !p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Dealvolumen</p>
+                        <div className="flex items-center gap-2">
+                          <Euro className="w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            value={dealAmount}
+                            onChange={(e) => setDealAmount(e.target.value)}
+                            placeholder="0"
+                            className="w-32 h-8 text-lg font-semibold"
+                          />
+                          <span className="text-muted-foreground">EUR</span>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSaveDealAmount}
+                        className="ml-4"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Speichern
+                      </Button>
+                    </div>
+                  </div>
+
                   {contact.lead_type === 'outbound' && contact.slug && (
                     <div className="stat-card !p-4">
                       <div className="flex items-center justify-between">
