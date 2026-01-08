@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import SmtpSettings from "@/components/SmtpSettings";
+import DomainSettings from "@/components/DomainSettings";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
@@ -168,6 +169,9 @@ const Integrations = () => {
             Verbinde deine externen Dienste
           </p>
         </div>
+
+        {/* Custom Domain */}
+        <DomainSettings />
 
         {/* SMTP Email Integration */}
         <SmtpSettings />

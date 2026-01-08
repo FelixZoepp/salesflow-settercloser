@@ -6,6 +6,7 @@ export interface OnboardingStatus {
   currentStep: number;
   steps: {
     heygen: boolean;
+    domain: boolean;
     pitchVideo: boolean;
     leads: boolean;
     script: boolean;
@@ -19,6 +20,7 @@ export const useOnboarding = () => {
     currentStep: 0,
     steps: {
       heygen: false,
+      domain: false,
       pitchVideo: false,
       leads: false,
       script: false,
@@ -49,6 +51,15 @@ export const useOnboarding = () => {
         .maybeSingle();
 
       const heygenComplete = !!(integration?.heygen_api_key_id && integration?.heygen_avatar_id);
+
+      // Check custom domain
+      const { data: account } = await supabase
+        .from('accounts')
+        .select('custom_domain')
+        .eq('id', profile.account_id)
+        .single();
+
+      const domainComplete = !!(account?.custom_domain);
 
       // Check if there's a campaign with pitch video
       const { data: campaigns } = await supabase
@@ -91,18 +102,20 @@ export const useOnboarding = () => {
       // Calculate current step
       let currentStep = 0;
       if (heygenComplete) currentStep = 1;
-      if (pitchVideoComplete) currentStep = 2;
-      if (leadsComplete) currentStep = 3;
-      if (scriptComplete) currentStep = 4;
-      if (landingPageComplete) currentStep = 5;
+      if (domainComplete) currentStep = 2;
+      if (pitchVideoComplete) currentStep = 3;
+      if (leadsComplete) currentStep = 4;
+      if (scriptComplete) currentStep = 5;
+      if (landingPageComplete) currentStep = 6;
 
-      const isComplete = heygenComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
+      const isComplete = heygenComplete && domainComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
 
       setStatus({
         isComplete,
         currentStep,
         steps: {
           heygen: heygenComplete,
+          domain: domainComplete,
           pitchVideo: pitchVideoComplete,
           leads: leadsComplete,
           script: scriptComplete,
@@ -114,7 +127,7 @@ export const useOnboarding = () => {
       if (isComplete && !profile.onboarding_completed) {
         await supabase
           .from('profiles')
-          .update({ onboarding_completed: true, onboarding_step: 5 })
+          .update({ onboarding_completed: true, onboarding_step: 6 })
           .eq('id', user.id);
       }
     } catch (error) {
