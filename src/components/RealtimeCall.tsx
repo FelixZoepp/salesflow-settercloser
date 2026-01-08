@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, PhoneOff, Mic, MicOff, AlertTriangle } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, AlertTriangle, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { supabase } from '@/integrations/supabase/client';
 import AITrainerPanel from './AITrainerPanel';
 import { useAITrainer } from '@/hooks/useAITrainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
 interface RealtimeCallProps {
   contactName: string;
@@ -38,6 +39,7 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const chatRef = useRef<RealtimeChat | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+  const { canUseCallSummaries, canUseLiveObjectionHandling } = useFeatureAccess();
 
   // Check microphone availability on mount
   useEffect(() => {
@@ -233,6 +235,13 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   };
 
   const generateSummary = async (sessionId: string, transcript: string) => {
+    // Check if user has access to call summaries
+    if (!canUseCallSummaries) {
+      console.log('Call summary feature requires Pro plan');
+      toast.info('KI-Zusammenfassungen sind nur im Pro-Paket verfügbar');
+      return;
+    }
+
     try {
       console.log('Generating summary for session:', sessionId);
       toast.info('Generiere Call-Zusammenfassung...');
@@ -371,14 +380,35 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
         </CardContent>
       </Card>
 
-      {/* AI Trainer Panel */}
+      {/* AI Trainer Panel - Pro Feature */}
       <div className="w-80 min-h-[400px]">
-        <AITrainerPanel
-          isActive={aiTrainer.isActive}
-          status={aiTrainer.status}
-          objections={aiTrainer.objections}
-          error={aiTrainer.error}
-        />
+        {canUseLiveObjectionHandling ? (
+          <AITrainerPanel
+            isActive={aiTrainer.isActive}
+            status={aiTrainer.status}
+            objections={aiTrainer.objections}
+            error={aiTrainer.error}
+          />
+        ) : (
+          <Card className="h-full border-dashed border-muted-foreground/30">
+            <CardContent className="flex flex-col items-center justify-center h-full text-center p-6">
+              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-4">
+                <Lock className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-2">KI-Einwandbehandlung</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Live-Einwandbehandlung ist nur im Pro-Paket verfügbar.
+              </p>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => window.open("https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b", "_blank")}
+              >
+                Auf Pro upgraden
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
