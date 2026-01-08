@@ -121,6 +121,12 @@ export default function Upgrade() {
     },
   };
 
+  const handleCheckout = (link: string) => {
+    // Stripe Payment Links don't support dynamic success URLs,
+    // so we open in new tab and check status on focus
+    window.open(link, "_blank");
+  };
+
   const currentStarterPlan = plans.starter[billingPeriod];
   const currentProPlan = plans.pro[billingPeriod];
 
@@ -223,7 +229,7 @@ export default function Upgrade() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => window.open(currentStarterPlan.link, "_blank")}
+                onClick={() => handleCheckout(currentStarterPlan.link)}
                 disabled={isStarterPlan}
               >
                 {isStarterPlan ? "Aktueller Plan" : "Starter wählen"}
@@ -282,7 +288,7 @@ export default function Upgrade() {
 
               <Button 
                 className="w-full bg-primary hover:bg-primary/90"
-                onClick={() => window.open(currentProPlan.link, "_blank")}
+                onClick={() => handleCheckout(currentProPlan.link)}
                 disabled={isProPlan}
               >
                 {isProPlan ? "Aktueller Plan" : (
@@ -371,7 +377,7 @@ export default function Upgrade() {
                 </p>
                 <Button 
                   size="lg"
-                  onClick={() => window.open(currentProPlan.link, "_blank")}
+                  onClick={() => handleCheckout(currentProPlan.link)}
                   className="bg-primary hover:bg-primary/90"
                 >
                   <Crown className="mr-2 h-5 w-5" />
