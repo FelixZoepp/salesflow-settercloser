@@ -22,6 +22,13 @@ export type Database = {
           heygen_avatar_id: string | null
           heygen_voice_id: string | null
           id: string
+          sip_display_name: string | null
+          sip_domain: string | null
+          sip_enabled: boolean | null
+          sip_password_encrypted: string | null
+          sip_provider: string | null
+          sip_server: string | null
+          sip_username: string | null
           smtp_from_email: string | null
           smtp_from_name: string | null
           smtp_host: string | null
@@ -37,6 +44,13 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          sip_display_name?: string | null
+          sip_domain?: string | null
+          sip_enabled?: boolean | null
+          sip_password_encrypted?: string | null
+          sip_provider?: string | null
+          sip_server?: string | null
+          sip_username?: string | null
           smtp_from_email?: string | null
           smtp_from_name?: string | null
           smtp_host?: string | null
@@ -52,6 +66,13 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          sip_display_name?: string | null
+          sip_domain?: string | null
+          sip_enabled?: boolean | null
+          sip_password_encrypted?: string | null
+          sip_provider?: string | null
+          sip_server?: string | null
+          sip_username?: string | null
           smtp_from_email?: string | null
           smtp_from_name?: string | null
           smtp_host?: string | null
