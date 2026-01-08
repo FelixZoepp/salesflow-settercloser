@@ -40,22 +40,37 @@ export const useSubscription = () => {
         return;
       }
 
-      // First check if user has an active trial
+      // First check if user is super admin or has an active trial
       const { data: profile } = await supabase
         .from('profiles')
-        .select('trial_ends_at, invited_via')
+        .select('trial_ends_at, invited_via, is_super_admin')
         .eq('id', sessionData.session.user.id)
         .single();
 
+      // Super Admin gets full Pro access
+      if (profile?.is_super_admin) {
+        setStatus({
+          subscribed: true,
+          productId: 'prod_TkoJ98sfzflYyR', // Pro Monthly product ID
+          subscriptionEnd: null,
+          loading: false,
+          error: null,
+          isTrial: false,
+          trialEndsAt: null,
+        });
+        return;
+      }
+
+      // Check for active trial (invited users get Pro access)
       if (profile?.trial_ends_at) {
         const trialEnd = new Date(profile.trial_ends_at);
         const now = new Date();
         
         if (trialEnd > now) {
-          // User has active trial
+          // User has active trial - give Pro access
           setStatus({
             subscribed: true,
-            productId: 'trial',
+            productId: 'prod_TkoJ98sfzflYyR', // Pro Monthly product ID for trial users
             subscriptionEnd: null,
             loading: false,
             error: null,
