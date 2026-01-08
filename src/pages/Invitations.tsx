@@ -112,8 +112,10 @@ export default function Invitations() {
       setEmailHint("");
       await fetchInvitations();
 
-      // Auto-copy link (may fail due to browser permissions)
-      const link = `${window.location.origin}/invite/${data.token}`;
+      // Use production domain for invite links
+      const productionDomain = "https://pitchfirst.io";
+      const link = `${productionDomain}/invite/${data.token}`;
+      
       try {
         await navigator.clipboard.writeText(link);
         toast.success("Einladungslink erstellt und kopiert!");
@@ -129,9 +131,14 @@ export default function Invitations() {
   };
 
   const copyLink = async (token: string) => {
-    const link = `${window.location.origin}/invite/${token}`;
-    await navigator.clipboard.writeText(link);
-    toast.success("Link kopiert!");
+    const productionDomain = "https://pitchfirst.io";
+    const link = `${productionDomain}/invite/${token}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link kopiert!");
+    } catch {
+      toast.info("Link konnte nicht kopiert werden");
+    }
   };
 
   const deleteInvitation = async (id: string) => {
