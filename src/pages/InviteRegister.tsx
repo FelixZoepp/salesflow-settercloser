@@ -130,15 +130,30 @@ export default function InviteRegister() {
         throw new Error("Benutzer konnte nicht erstellt werden");
       }
 
-      // 2. Calculate trial end date (7 days from now)
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+      // 2. Create a new account for this user
+      const { data: newAccount, error: accountError } = await supabase
+        .from("accounts")
+        .insert({
+          name: name,
+          email: email,
+          subscription_status: 'trial',
+        })
+        .select()
+        .single();
 
-      // 3. Update profile with account_id, role, and trial period
+      if (accountError) {
+        console.error("Account creation error:", accountError);
+        throw new Error("Account konnte nicht erstellt werden");
+      }
+
+      // 3. Calculate trial end date based on invitation expiry (use invitation's gültigkeitsdauer)
+      const trialEndsAt = new Date(invitation.expires_at);
+
+      // 4. Update profile with new account_id, role, and trial period
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          account_id: invitation.account_id,
+          account_id: newAccount.id,
           role: invitation.role as "setter" | "closer" | "admin",
           name,
           trial_ends_at: trialEndsAt.toISOString(),
@@ -240,11 +255,12 @@ export default function InviteRegister() {
           </div>
           <CardTitle>Testzugang erstellen</CardTitle>
           <CardDescription>
-            Du wurdest eingeladen, einen Testzugang für{" "}
-            <span className="font-medium text-foreground">
-              {invitation?.accounts?.name || "dieses Unternehmen"}
-            </span>{" "}
-            zu erstellen.
+            Erstelle deinen kostenlosen Testzugang für pitchfirst.io
+            {invitation?.role && (
+              <span className="block mt-1 text-primary font-medium">
+                Plan: {invitation.role === 'setter' ? 'Starter' : invitation.role === 'closer' ? 'Pro' : 'Admin (Pro)'}
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

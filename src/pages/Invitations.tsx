@@ -17,30 +17,22 @@ import { de } from "date-fns/locale";
 interface Invitation {
   id: string;
   token: string;
-  account_id: string;
+  account_id: string | null;
   email_hint: string | null;
   role: string;
   expires_at: string;
   used_at: string | null;
   created_at: string;
-  accounts?: { name: string };
-}
-
-interface Account {
-  id: string;
-  name: string;
 }
 
 export default function Invitations() {
   const navigate = useNavigate();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [creating, setCreating] = useState(false);
   
   // Form state
-  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [emailHint, setEmailHint] = useState("");
   const [role, setRole] = useState<string>("setter");
   const [expiresInDays, setExpiresInDays] = useState("7");
@@ -71,19 +63,6 @@ export default function Invitations() {
 
       setIsSuperAdmin(true);
 
-      // Fetch accounts
-      const { data: accountsData } = await supabase
-        .from("accounts")
-        .select("id, name")
-        .order("name");
-
-      if (accountsData) {
-        setAccounts(accountsData);
-        if (accountsData.length > 0 && !selectedAccountId) {
-          setSelectedAccountId(accountsData[0].id);
-        }
-      }
-
       // Fetch invitations
       await fetchInvitations();
     } catch (error) {
@@ -97,10 +76,7 @@ export default function Invitations() {
   const fetchInvitations = async () => {
     const { data, error } = await supabase
       .from("invitations")
-      .select(`
-        *,
-        accounts:account_id (name)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -112,11 +88,6 @@ export default function Invitations() {
   };
 
   const createInvitation = async () => {
-    if (!selectedAccountId) {
-      toast.error("Bitte Account auswählen");
-      return;
-    }
-
     setCreating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -128,7 +99,6 @@ export default function Invitations() {
       const { data, error } = await supabase
         .from("invitations")
         .insert({
-          account_id: selectedAccountId,
           created_by: user.id,
           email_hint: emailHint || null,
           role: role as "setter" | "closer" | "admin",
@@ -226,22 +196,7 @@ export default function Invitations() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-5">
-              <div className="space-y-2">
-                <Label>Account</Label>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Account wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map(account => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-4 md:grid-cols-4">
 
               <div className="space-y-2">
                 <Label>E-Mail (optional)</Label>
@@ -307,9 +262,8 @@ export default function Invitations() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Status</TableHead>
-                    <TableHead>Account</TableHead>
                     <TableHead>E-Mail</TableHead>
-                    <TableHead>Rolle</TableHead>
+                    <TableHead>Plan</TableHead>
                     <TableHead>Gültig bis</TableHead>
                     <TableHead>Erstellt</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
@@ -319,10 +273,14 @@ export default function Invitations() {
                   {invitations.map((invitation) => (
                     <TableRow key={invitation.id}>
                       <TableCell>{getStatusBadge(invitation)}</TableCell>
-                      <TableCell className="font-medium">
-                        {invitation.accounts?.name || "—"}
-                      </TableCell>
                       <TableCell>{invitation.email_hint || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {invitation.role === 'setter' ? 'Starter' : 
+                           invitation.role === 'closer' ? 'Pro' : 
+                           invitation.role === 'admin' ? 'Admin (Pro)' : invitation.role}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">
                           {invitation.role === 'setter' ? 'Starter' : 
