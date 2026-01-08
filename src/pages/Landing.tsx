@@ -198,16 +198,16 @@ const Landing = () => {
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 text-white leading-tight">
-            CRM + Live KI-Trainer.<br />
+            Personalisierte Videos.<br />
             <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent italic">
-              80% bessere Erreichbarkeit.
+              Echtzeit-Tracking.
             </span><br />
-            Echte Zahlen statt Excel.
+            Mehr Termine.
           </h1>
           
           <p className="text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
-            Outreach mit Zahlen, Daten, Fakten – ohne hässliche Excel-Sheets. 
-            Mit integriertem CRM und KI-Einwandbehandlung in Echtzeit.
+            Die LinkedIn Outreach Software, die es dir ermöglicht mit der ersten Nachricht bereits Termine zu legen in deiner Zielgruppe. 
+            Mit integriertem CRM, Echtzeit-Benachrichtigung und KI Einwandbehandlung im Call.
           </p>
           
           <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
