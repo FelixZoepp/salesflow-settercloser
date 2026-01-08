@@ -34,6 +34,7 @@ import Invitations from "./pages/Invitations";
 import InviteRegister from "./pages/InviteRegister";
 import EmailTemplates from "./pages/EmailTemplates";
 import DealAnalytics from "./pages/DealAnalytics";
+import Upgrade from "./pages/Upgrade";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -128,6 +129,7 @@ const App = () => (
           <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
           <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
           <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
+          <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
           <Route path="/invite/:token" element={<InviteRegister />} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="/lp/:slug" element={<PublicLandingPage />} />
