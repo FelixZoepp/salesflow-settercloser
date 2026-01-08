@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import SmtpSettings from "@/components/SmtpSettings";
 import DomainSettings from "@/components/DomainSettings";
+import SipProviderSettings from "@/components/SipProviderSettings";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
@@ -175,6 +176,9 @@ const Integrations = () => {
 
         {/* SMTP Email Integration */}
         <SmtpSettings />
+
+        {/* SIP Provider (BYOC) */}
+        <SipProviderSettings />
 
         {/* HeyGen Integration */}
         <Card>
