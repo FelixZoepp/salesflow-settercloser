@@ -17,6 +17,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   const checkOnboardingAndRedirect = async (userId: string) => {
@@ -78,17 +79,31 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Erfolgreich eingeloggt!");
       } else if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
+        if (!phoneNumber.trim()) {
+          toast.error("Bitte geben Sie eine Telefonnummer ein");
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               name: name,
+              phone_number: phoneNumber,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
         if (error) throw error;
+        
+        // Update profile with phone number after signup
+        if (data.user) {
+          await supabase
+            .from('profiles')
+            .update({ phone_number: phoneNumber })
+            .eq('id', data.user.id);
+        }
+        
         toast.success("Account erstellt! Sie können sich jetzt einloggen.");
         setMode("login");
       } else if (mode === "forgot-password") {
@@ -180,16 +195,29 @@ const Auth = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "register" && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Telefonnummer *</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="+49 123 456789"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
             )}
             
             {mode !== "reset-password" && (
