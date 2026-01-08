@@ -10,21 +10,28 @@ const SYSTEM_PROMPT = `Du erstellst personalisierte Landing Pages für Leads mit
 WICHTIG: Verwende diese Variablen für die Personalisierung:
 - {{firstName}} - Vorname des Leads
 - {{lastName}} - Nachname des Leads  
-- {{company}} - Firmenname des Leads
+- {{company}} - Firmenname des Leads (Zielunternehmen)
 - {{position}} - Position/Rolle des Leads
+- {{senderCompany}} - Name des ABSENDER-Unternehmens (dein Kunde/Nutzer der Software)
+
+KRITISCH: Der Absender-Firmenname {{senderCompany}} MUSS prominent auf der Seite erscheinen:
+- Im Footer als companyName
+- Im Offer-Bereich als Absender ("Was wir bei {{senderCompany}} für Sie tun können")
+- Optional in der Subheadline
 
 Die Landing Page hat IMMER diese feste Struktur:
 1. Hero-Bereich mit personalisierter Ansprache + KI-Video
 2. 3 konkrete Vorteile/Mehrwerte für den Lead
-3. Kurze Erklärung des Angebots
+3. Kurze Erklärung des Angebots (MIT Absender-Firmenname!)
 4. Terminbuchungs-CTA
+5. Footer MIT Absender-Firmenname
 
 Antworte IMMER mit einem validen JSON-Objekt:
 
 {
   "hero": {
     "headline": "Persönliche Ansprache mit {{firstName}} (max 8 Wörter)",
-    "subheadline": "1-2 Sätze warum {{company}} profitieren wird",
+    "subheadline": "1-2 Sätze warum {{company}} profitieren wird - optional mit Verweis auf {{senderCompany}}",
     "videoPlaceholder": true
   },
   "benefits": [
@@ -45,19 +52,19 @@ Antworte IMMER mit einem validen JSON-Objekt:
     }
   ],
   "offer": {
-    "title": "Was wir für {{company}} tun können",
-    "description": "2-3 Sätze zum Angebot",
+    "title": "Was wir bei {{senderCompany}} für {{company}} tun können",
+    "description": "2-3 Sätze zum Angebot von {{senderCompany}}",
     "bulletPoints": ["Leistung 1", "Leistung 2", "Leistung 3"]
   },
   "cta": {
     "headline": "Lassen Sie uns sprechen, {{firstName}}",
-    "description": "Kurzer Text zur Terminvereinbarung",
+    "description": "Kurzer Text zur Terminvereinbarung mit {{senderCompany}}",
     "buttonText": "Termin vereinbaren",
     "buttonLink": "#kalender"
   },
   "footer": {
-    "companyName": "Firmenname aus Prompt",
-    "tagline": "Kurzer Slogan"
+    "companyName": "{{senderCompany}}",
+    "tagline": "Kurzer Slogan passend zum Angebot"
   },
   "suggestedColors": {
     "primary": "#3B82F6",
@@ -71,7 +78,7 @@ Antworte IMMER mit einem validen JSON-Objekt:
 
 Wähle passende Lucide Icons: CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, TrendingUp, Rocket, BarChart
 
-Der Prompt beschreibt den KONTEXT (Branche, Angebot, Zielgruppe). Passe die Inhalte entsprechend an, aber behalte IMMER die Struktur: Personalisierung + Video + Termin-CTA.`;
+Der Prompt beschreibt den KONTEXT (Branche, Angebot, Zielgruppe, ABSENDER-FIRMENNAME). Passe die Inhalte entsprechend an, aber behalte IMMER die Struktur: Personalisierung + Video + Termin-CTA + ABSENDER-FIRMENNAME im Footer und Offer.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

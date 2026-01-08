@@ -109,6 +109,7 @@ const LandingPageBuilder = () => {
   const [pageName, setPageName] = useState("");
   const [pageSlug, setPageSlug] = useState("");
   const [calendarUrl, setCalendarUrl] = useState("");
+  const [senderCompany, setSenderCompany] = useState("");
   const [userCalendarUrl, setUserCalendarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -128,6 +129,17 @@ const LandingPageBuilder = () => {
 
     if (data?.calendar_url) {
       setUserCalendarUrl(data.calendar_url);
+    }
+
+    // Also load account company name
+    const { data: accountData } = await supabase
+      .from('accounts')
+      .select('company_name, name')
+      .limit(1)
+      .single();
+
+    if (accountData) {
+      setSenderCompany(accountData.company_name || accountData.name || "");
     }
   };
 
@@ -170,10 +182,18 @@ const LandingPageBuilder = () => {
       return;
     }
 
+    if (!senderCompany.trim()) {
+      toast.error("Bitte gib deinen Firmennamen ein");
+      return;
+    }
+
     setIsGenerating(true);
     try {
+      // Include sender company name in the prompt for the AI
+      const enrichedPrompt = `${prompt}\n\nWICHTIG - Absender-Firmenname: ${senderCompany}`;
+      
       const { data, error } = await supabase.functions.invoke('generate-landing-page', {
-        body: { prompt }
+        body: { prompt: enrichedPrompt }
       });
 
       if (error) throw error;
@@ -404,6 +424,22 @@ const LandingPageBuilder = () => {
                         className="min-h-[150px] bg-white/5 border-white/10"
                       />
                     </div>
+
+                    {/* Sender Company Name - Important for personalization */}
+                    <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                      <label className="text-sm font-medium text-primary mb-2 block">
+                        Dein Firmenname (erscheint auf der Landing Page)
+                      </label>
+                      <Input
+                        value={senderCompany}
+                        onChange={(e) => setSenderCompany(e.target.value)}
+                        placeholder="z.B. Mustermann GmbH"
+                        className="bg-white/5 border-white/10"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Dieser Name erscheint im Footer und Angebotsbereich der Landing Page
+                      </p>
+                    </div>
                     
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
@@ -435,7 +471,7 @@ const LandingPageBuilder = () => {
 
                     <Button
                       onClick={handleGenerate}
-                      disabled={isGenerating || !prompt.trim()}
+                      disabled={isGenerating || !prompt.trim() || !senderCompany.trim()}
                       className="w-full gap-2"
                       size="lg"
                     >
