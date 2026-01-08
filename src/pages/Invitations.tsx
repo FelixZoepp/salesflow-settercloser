@@ -109,14 +109,17 @@ export default function Invitations() {
 
       if (error) throw error;
 
-      toast.success("Einladungslink erstellt!");
       setEmailHint("");
       await fetchInvitations();
 
-      // Auto-copy link
+      // Auto-copy link (may fail due to browser permissions)
       const link = `${window.location.origin}/invite/${data.token}`;
-      await navigator.clipboard.writeText(link);
-      toast.success("Link in Zwischenablage kopiert!");
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Einladungslink erstellt und kopiert!");
+      } catch {
+        toast.success("Einladungslink erstellt! Klicke auf das Kopier-Icon um den Link zu kopieren.");
+      }
     } catch (error: any) {
       console.error("Error creating invitation:", error);
       toast.error("Fehler: " + error.message);
