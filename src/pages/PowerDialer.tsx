@@ -1,8 +1,12 @@
 import Layout from "@/components/Layout";
 import PowerDialerPanel from "@/components/PowerDialerPanel";
 import { Phone } from "lucide-react";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { FeatureGate } from "@/components/UpgradePrompt";
 
 export default function PowerDialer() {
+  const { canUsePowerDialer, loading } = useFeatureAccess();
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -16,7 +20,20 @@ export default function PowerDialer() {
           </div>
         </div>
 
-        <PowerDialerPanel />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <FeatureGate 
+            feature="power_dialer" 
+            hasAccess={canUsePowerDialer}
+            featureName="Power Dialer"
+            description="KI-Telefonie mit automatischem Lead-Wechsel ist nur im Pro-Paket verfügbar."
+          >
+            <PowerDialerPanel />
+          </FeatureGate>
+        )}
       </div>
     </Layout>
   );
