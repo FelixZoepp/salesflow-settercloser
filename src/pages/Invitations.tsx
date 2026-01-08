@@ -254,15 +254,15 @@ export default function Invitations() {
               </div>
 
               <div className="space-y-2">
-                <Label>Rolle</Label>
+                <Label>Plan & Rolle</Label>
                 <Select value={role} onValueChange={setRole}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="setter">Setter</SelectItem>
-                    <SelectItem value="closer">Closer</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="setter">Starter</SelectItem>
+                    <SelectItem value="closer">Pro</SelectItem>
+                    <SelectItem value="admin">Admin (Pro)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -324,7 +324,11 @@ export default function Invitations() {
                       </TableCell>
                       <TableCell>{invitation.email_hint || "—"}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{invitation.role}</Badge>
+                        <Badge variant="outline">
+                          {invitation.role === 'setter' ? 'Starter' : 
+                           invitation.role === 'closer' ? 'Pro' : 
+                           invitation.role === 'admin' ? 'Admin (Pro)' : invitation.role}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {format(new Date(invitation.expires_at), "dd.MM.yyyy", { locale: de })}
