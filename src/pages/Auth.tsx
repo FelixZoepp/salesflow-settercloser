@@ -92,8 +92,13 @@ const Auth = () => {
         toast.success("Account erstellt! Sie können sich jetzt einloggen.");
         setMode("login");
       } else if (mode === "forgot-password") {
+        // Use production domain for password reset
+        const resetRedirectUrl = window.location.hostname.includes('lovable') 
+          ? `${window.location.origin}/auth#type=recovery`
+          : `https://pitchfirst.io/auth#type=recovery`;
+        
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth#type=recovery`,
+          redirectTo: resetRedirectUrl,
         });
         if (error) throw error;
         toast.success("E-Mail zum Zurücksetzen des Passworts wurde gesendet!");
