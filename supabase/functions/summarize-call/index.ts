@@ -126,6 +126,30 @@ Sentiment-Kriterien:
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // First, get the session to find deal_id, user_id, and contact_id
+    const { data: session, error: sessionError } = await supabase
+      .from('call_sessions')
+      .select('deal_id, user_id, account_id, duration_seconds')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError) {
+      console.error('Error fetching session:', sessionError);
+      throw sessionError;
+    }
+
+    // Get contact_id from the deal
+    let contactId = null;
+    if (session.deal_id) {
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('contact_id')
+        .eq('id', session.deal_id)
+        .single();
+      contactId = deal?.contact_id;
+    }
+
+    // Update call_sessions with summary
     const { error: updateError } = await supabase
       .from('call_sessions')
       .update({
@@ -141,6 +165,45 @@ Sentiment-Kriterien:
     if (updateError) {
       console.error('Error updating session:', updateError);
       throw updateError;
+    }
+
+    // Create an activity entry for the timeline
+    if (contactId && session.user_id) {
+      // Build note with summary, key points and action items
+      const noteLines = [
+        `📝 **KI-Zusammenfassung:**\n${result.summary}`,
+      ];
+      
+      if (result.key_points && result.key_points.length > 0) {
+        noteLines.push(`\n📌 **Hauptpunkte:**\n${result.key_points.map((p: string) => `• ${p}`).join('\n')}`);
+      }
+      
+      if (result.action_items && result.action_items.length > 0) {
+        noteLines.push(`\n✅ **Nächste Schritte:**\n${result.action_items.map((a: string) => `• ${a}`).join('\n')}`);
+      }
+      
+      const sentimentEmoji = result.sentiment === 'positive' ? '😊' : result.sentiment === 'negative' ? '😞' : '😐';
+      noteLines.push(`\n${sentimentEmoji} Stimmung: ${result.sentiment === 'positive' ? 'Positiv' : result.sentiment === 'negative' ? 'Negativ' : 'Neutral'}`);
+
+      const { error: activityError } = await supabase
+        .from('activities')
+        .insert({
+          contact_id: contactId,
+          deal_id: session.deal_id,
+          user_id: session.user_id,
+          account_id: session.account_id,
+          type: 'call',
+          outcome: result.sentiment === 'positive' ? 'interested' : result.sentiment === 'negative' ? 'not_interested' : 'reached',
+          duration_min: session.duration_seconds ? Math.ceil(session.duration_seconds / 60) : null,
+          note: noteLines.join('')
+        });
+
+      if (activityError) {
+        console.error('Error creating activity:', activityError);
+        // Don't throw - activity is secondary to the main summary
+      } else {
+        console.log('Activity created for contact:', contactId);
+      }
     }
 
     console.log('Summary saved successfully');
