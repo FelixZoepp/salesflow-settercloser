@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle, Trash2 } from "lucide-react";
+import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle, Trash2, Phone, Mail, MessageSquare, Users } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -15,21 +15,39 @@ interface TrackingEvent {
   page_url: string | null;
 }
 
+interface Activity {
+  id: string;
+  type: string;
+  outcome: string | null;
+  note: string | null;
+  duration_min: number | null;
+  created_at: string;
+}
+
+interface TimelineItem {
+  id: string;
+  source: 'tracking' | 'activity';
+  event_type: string;
+  data: any;
+  created_at: string;
+  note?: string | null;
+}
+
 interface JourneyTimelineProps {
   contactId: string;
 }
 
 const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
-  const [events, setEvents] = useState<TrackingEvent[]>([]);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (contactId) {
-      fetchEvents();
+      fetchAllEvents();
 
-      // Subscribe to new events for this contact in real-time
-      const channel = supabase
-        .channel(`journey-realtime-${contactId}`)
+      // Subscribe to new tracking events
+      const trackingChannel = supabase
+        .channel(`journey-tracking-${contactId}`)
         .on(
           "postgres_changes",
           {
@@ -39,31 +57,97 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
             filter: `contact_id=eq.${contactId}`,
           },
           (payload) => {
-            console.log("New tracking event received:", payload.new);
-            setEvents((prev) => [payload.new as TrackingEvent, ...prev]);
+            const newEvent = payload.new as TrackingEvent;
+            const newItem: TimelineItem = {
+              id: newEvent.id,
+              source: 'tracking',
+              event_type: newEvent.event_type,
+              data: newEvent.event_data,
+              created_at: newEvent.created_at,
+            };
+            setTimelineItems((prev) => [newItem, ...prev].sort((a, b) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            ));
           }
         )
-        .subscribe((status) => {
-          console.log("Realtime subscription status:", status);
-        });
+        .subscribe();
+
+      // Subscribe to new activities (calls, emails, etc.)
+      const activityChannel = supabase
+        .channel(`journey-activities-${contactId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "activities",
+            filter: `contact_id=eq.${contactId}`,
+          },
+          (payload) => {
+            const newActivity = payload.new as Activity;
+            const newItem: TimelineItem = {
+              id: newActivity.id,
+              source: 'activity',
+              event_type: `activity_${newActivity.type}`,
+              data: { outcome: newActivity.outcome, duration_min: newActivity.duration_min },
+              created_at: newActivity.created_at,
+              note: newActivity.note,
+            };
+            setTimelineItems((prev) => [newItem, ...prev].sort((a, b) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            ));
+          }
+        )
+        .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(trackingChannel);
+        supabase.removeChannel(activityChannel);
       };
     }
   }, [contactId]);
 
-  const fetchEvents = async () => {
+  const fetchAllEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from("lead_tracking_events")
-        .select("id, event_type, event_data, created_at, page_url")
-        .eq("contact_id", contactId)
-        .order("created_at", { ascending: false })
-        .limit(50);
+      // Fetch tracking events and activities in parallel
+      const [trackingResult, activitiesResult] = await Promise.all([
+        supabase
+          .from("lead_tracking_events")
+          .select("id, event_type, event_data, created_at, page_url")
+          .eq("contact_id", contactId)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("activities")
+          .select("id, type, outcome, note, duration_min, created_at")
+          .eq("contact_id", contactId)
+          .order("created_at", { ascending: false })
+          .limit(50)
+      ]);
 
-      if (error) throw error;
-      setEvents(data || []);
+      const trackingItems: TimelineItem[] = (trackingResult.data || []).map((e) => ({
+        id: e.id,
+        source: 'tracking' as const,
+        event_type: e.event_type,
+        data: e.event_data,
+        created_at: e.created_at,
+      }));
+
+      const activityItems: TimelineItem[] = (activitiesResult.data || []).map((a) => ({
+        id: a.id,
+        source: 'activity' as const,
+        event_type: `activity_${a.type}`,
+        data: { outcome: a.outcome, duration_min: a.duration_min },
+        created_at: a.created_at,
+        note: a.note,
+      }));
+
+      // Combine and sort by date
+      const allItems = [...trackingItems, ...activityItems].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setTimelineItems(allItems);
     } catch (error) {
       console.error("Error fetching journey events:", error);
     } finally {
@@ -71,43 +155,56 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
     }
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
+  const handleDeleteItem = async (item: TimelineItem) => {
     try {
-      const { error } = await supabase
-        .from("lead_tracking_events")
-        .delete()
-        .eq("id", eventId);
+      if (item.source === 'tracking') {
+        const { error } = await supabase
+          .from("lead_tracking_events")
+          .delete()
+          .eq("id", item.id);
 
-      if (error) throw error;
-      
-      // Update local state
-      const remainingEvents = events.filter((e) => e.id !== eventId);
-      setEvents(remainingEvents);
-      
-      // Recalculate lead score using the database function
-      const { data: scoreData } = await supabase.rpc('calculate_lead_score', {
-        p_contact_id: contactId
-      });
-      
-      // Count remaining page_views for view_count
-      const pageViewCount = remainingEvents.filter(e => e.event_type === 'page_view').length;
-      const hasViewed = pageViewCount > 0;
-      
-      // Update contact with recalculated values
-      await supabase
-        .from("contacts")
-        .update({
-          lead_score: scoreData || 0,
-          view_count: pageViewCount,
-          viewed: hasViewed,
-          viewed_at: hasViewed ? undefined : null,
-          workflow_status: hasViewed ? undefined : 'neu'
-        })
-        .eq("id", contactId);
-      
-      toast.success("Event gelöscht, Lead Score aktualisiert");
+        if (error) throw error;
+        
+        // Update local state
+        const remainingItems = timelineItems.filter((e) => e.id !== item.id);
+        setTimelineItems(remainingItems);
+        
+        // Recalculate lead score using the database function
+        const { data: scoreData } = await supabase.rpc('calculate_lead_score', {
+          p_contact_id: contactId
+        });
+        
+        // Count remaining page_views for view_count
+        const pageViewCount = remainingItems.filter(e => e.event_type === 'page_view').length;
+        const hasViewed = pageViewCount > 0;
+        
+        // Update contact with recalculated values
+        await supabase
+          .from("contacts")
+          .update({
+            lead_score: scoreData || 0,
+            view_count: pageViewCount,
+            viewed: hasViewed,
+            viewed_at: hasViewed ? undefined : null,
+            workflow_status: hasViewed ? undefined : 'neu'
+          })
+          .eq("id", contactId);
+        
+        toast.success("Event gelöscht, Lead Score aktualisiert");
+      } else {
+        // Delete activity
+        const { error } = await supabase
+          .from("activities")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) throw error;
+        
+        setTimelineItems((prev) => prev.filter((e) => e.id !== item.id));
+        toast.success("Aktivität gelöscht");
+      }
     } catch (error) {
-      console.error("Error deleting event:", error);
+      console.error("Error deleting item:", error);
       toast.error("Fehler beim Löschen");
     }
   };
@@ -131,6 +228,17 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return <Clock className="w-4 h-4" />;
       case "form_submit":
         return <FormInput className="w-4 h-4" />;
+      // Activity types
+      case "activity_call":
+        return <Phone className="w-4 h-4" />;
+      case "activity_email":
+        return <Mail className="w-4 h-4" />;
+      case "activity_dm":
+        return <MessageSquare className="w-4 h-4" />;
+      case "activity_meeting":
+        return <Users className="w-4 h-4" />;
+      case "activity_note":
+        return <ScrollText className="w-4 h-4" />;
       default:
         return <CheckCircle className="w-4 h-4" />;
     }
@@ -156,14 +264,25 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return "bg-cyan-500";
       case "form_submit":
         return "bg-pink-500";
+      // Activity types
+      case "activity_call":
+        return "bg-green-600";
+      case "activity_email":
+        return "bg-blue-600";
+      case "activity_dm":
+        return "bg-violet-500";
+      case "activity_meeting":
+        return "bg-orange-500";
+      case "activity_note":
+        return "bg-slate-500";
       default:
         return "bg-muted-foreground";
     }
   };
 
-  const getEventTitle = (event: TrackingEvent) => {
-    const data = event.event_data || {};
-    switch (event.event_type) {
+  const getEventTitle = (item: TimelineItem) => {
+    const data = item.data || {};
+    switch (item.event_type) {
       case "page_view":
         return "Landing Page besucht";
       case "video_play":
@@ -186,20 +305,48 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return `${minutes}:${seconds.toString().padStart(2, "0")} Min. auf Seite verbracht`;
       case "form_submit":
         return "Formular abgeschickt";
+      // Activity types
+      case "activity_call":
+        const duration = data.duration_min ? ` (${data.duration_min} Min.)` : '';
+        const outcome = data.outcome === 'interested' ? ' - Interessiert' : 
+                       data.outcome === 'not_interested' ? ' - Kein Interesse' :
+                       data.outcome === 'reached' ? ' - Erreicht' :
+                       data.outcome === 'no_answer' ? ' - Nicht erreicht' : '';
+        return `Anruf${duration}${outcome}`;
+      case "activity_email":
+        return "E-Mail gesendet";
+      case "activity_dm":
+        return "Direktnachricht gesendet";
+      case "activity_meeting":
+        return "Meeting durchgeführt";
+      case "activity_note":
+        return "Notiz hinzugefügt";
       default:
-        return event.event_type;
+        return item.event_type;
     }
   };
 
-  const getEventBadge = (eventType: string) => {
+  const getEventBadge = (eventType: string, data?: any) => {
     const isHighValue = ["video_complete", "booking_click", "cta_click", "form_submit"].includes(eventType);
-    if (isHighValue) {
+    const isInterested = eventType === 'activity_call' && data?.outcome === 'interested';
+    
+    if (isHighValue || isInterested) {
       return (
         <Badge variant="default" className="text-xs bg-green-500/20 text-green-400 border-green-500/30">
           Hot
         </Badge>
       );
     }
+    
+    // Badge for AI summary
+    if (eventType === 'activity_call') {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          KI-Zusammenfassung
+        </Badge>
+      );
+    }
+    
     return null;
   };
 
@@ -219,7 +366,7 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
     );
   }
 
-  if (events.length === 0) {
+  if (timelineItems.length === 0) {
     return (
       <div className="text-center py-6 text-muted-foreground">
         <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -236,44 +383,52 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
         Journey Timeline
         <Badge variant="secondary" className="text-xs">
-          {events.length} Events
+          {timelineItems.length} Events
         </Badge>
       </h3>
       
       <div className="space-y-4">
-        {events.map((event, index) => (
-          <div key={event.id} className="relative flex gap-3">
+        {timelineItems.map((item, index) => (
+          <div key={item.id} className="relative flex gap-3">
             {/* Timeline line */}
-            {index < events.length - 1 && (
+            {index < timelineItems.length - 1 && (
               <div className="absolute left-[5px] top-6 w-0.5 h-full bg-border" />
             )}
             
             {/* Icon */}
             <div
-              className={`w-3 h-3 rounded-full ${getEventColor(event.event_type)} flex items-center justify-center flex-shrink-0 mt-1 ring-2 ring-background`}
+              className={`w-3 h-3 rounded-full ${getEventColor(item.event_type)} flex items-center justify-center flex-shrink-0 mt-1 ring-2 ring-background`}
             />
             
             {/* Content */}
             <div className="flex-1 min-w-0 pb-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-muted-foreground">
-                    {getEventIcon(event.event_type)}
+                    {getEventIcon(item.event_type)}
                   </span>
-                  <span className="text-sm font-medium">{getEventTitle(event)}</span>
-                  {getEventBadge(event.event_type)}
+                  <span className="text-sm font-medium">{getEventTitle(item)}</span>
+                  {getEventBadge(item.event_type, item.data)}
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  onClick={() => handleDeleteEvent(event.id)}
+                  className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                  onClick={() => handleDeleteItem(item)}
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
+              
+              {/* Show note for activities (especially call summaries) */}
+              {item.note && (
+                <div className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-md p-2 whitespace-pre-wrap">
+                  {item.note}
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-1">
-                {format(new Date(event.created_at), "dd.MM.yyyy, HH:mm", { locale: de })} Uhr
+                {format(new Date(item.created_at), "dd.MM.yyyy, HH:mm", { locale: de })} Uhr
               </p>
             </div>
           </div>
