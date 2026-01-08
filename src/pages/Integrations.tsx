@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import SmtpSettings from "@/components/SmtpSettings";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
@@ -164,9 +165,12 @@ const Integrations = () => {
         <div>
           <h1 className="text-2xl font-bold">Integrationen</h1>
           <p className="text-muted-foreground">
-            Verbinde deine externen Dienste für personalisierte Videos
+            Verbinde deine externen Dienste
           </p>
         </div>
+
+        {/* SMTP Email Integration */}
+        <SmtpSettings />
 
         {/* HeyGen Integration */}
         <Card>
