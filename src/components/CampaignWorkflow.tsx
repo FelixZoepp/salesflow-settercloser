@@ -692,53 +692,172 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         </div>
       </div>
 
-      {/* Daily Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Vernetzungen prüfen</span>
+      {/* Daily Dashboard with Progress Bars */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            Tages-Dashboard
+            <Badge variant="outline" className="ml-auto">
+              {format(new Date(), 'EEEE, d. MMMM', { locale: de })}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Progress Section */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Vernetzungen Progress */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <UserPlus className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Vernetzungsanfragen</p>
+                    <p className="text-xs text-muted-foreground">Max. 15 neue pro Tag empfohlen</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{MAX_PENDING_CONNECTIONS - slotsAvailable}</p>
+                  <p className="text-xs text-muted-foreground">von {MAX_PENDING_CONNECTIONS}</p>
+                </div>
+              </div>
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(((MAX_PENDING_CONNECTIONS - slotsAvailable) / MAX_PENDING_CONNECTIONS) * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {slotsAvailable > 0 ? (
+                    <span className="text-green-600 font-medium">✓ {slotsAvailable} Slots frei</span>
+                  ) : (
+                    <span className="text-amber-600 font-medium">⚠ Tageslimit erreicht</span>
+                  )}
+                </span>
+                <span className="text-muted-foreground">{readyForConnection.length} Leads bereit</span>
+              </div>
             </div>
-            <p className="text-2xl font-bold">{pendingConnections.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Neue Vernetzungen</span>
+
+            {/* Erstnachrichten Progress */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Erstnachrichten</p>
+                    <p className="text-xs text-muted-foreground">Max. 10 pro Tag empfohlen</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{todayMessageCount}</p>
+                  <p className="text-xs text-muted-foreground">von {MAX_DAILY_MESSAGES}</p>
+                </div>
+              </div>
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min((todayMessageCount / MAX_DAILY_MESSAGES) * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {messagesRemaining > 0 ? (
+                    <span className="text-green-600 font-medium">✓ {messagesRemaining} Nachrichten übrig</span>
+                  ) : (
+                    <span className="text-amber-600 font-medium">⚠ Tageslimit erreicht</span>
+                  )}
+                </span>
+                <span className="text-muted-foreground">{acceptedConnections.length} Leads bereit</span>
+              </div>
             </div>
-            <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{slotsAvailable > 0 ? slotsAvailable : 0}</span>
-              {' / '}
-              <span>{MAX_PENDING_CONNECTIONS}</span>
+          </div>
+
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{pendingConnections.length}</p>
+                <p className="text-xs text-muted-foreground">zu prüfen</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <RefreshCw className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{fu1Due.length + fu2Due.length + fu3Due.length}</p>
+                <p className="text-xs text-muted-foreground">Follow-ups fällig</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <Flame className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{warmLeads.length}</p>
+                <p className="text-xs text-muted-foreground">warme Leads</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{contacts.filter(c => c.workflow_status === 'abgeschlossen').length}</p>
+                <p className="text-xs text-muted-foreground">abgeschlossen</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Today's Recommendations */}
+          <div className="pt-4 border-t">
+            <p className="text-sm font-medium mb-3 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              Heutige Empfehlungen
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Erstnachrichten heute</span>
+            <div className="grid md:grid-cols-3 gap-3">
+              <div className="p-3 rounded-lg border bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <UserPlus className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-900 dark:text-blue-100">Vernetzungen</span>
+                </div>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  {Math.min(slotsAvailable > 0 ? slotsAvailable : 0, readyForConnection.length)}
+                </p>
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Leads heute vernetzen</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-green-50/50 dark:bg-green-950/20 border-green-200/50 dark:border-green-800/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <MessageSquare className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-green-900 dark:text-green-100">Erstnachrichten</span>
+                </div>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  {Math.min(messagesRemaining > 0 ? messagesRemaining : 0, acceptedConnections.length)}
+                </p>
+                <p className="text-xs text-green-600/70 dark:text-green-400/70">Nachrichten senden</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-purple-50/50 dark:bg-purple-950/20 border-purple-200/50 dark:border-purple-800/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <RefreshCw className="h-4 w-4 text-purple-600" />
+                  <span className="font-medium text-purple-900 dark:text-purple-100">Follow-ups</span>
+                </div>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  {fu1Due.length + fu2Due.length + fu3Due.length}
+                </p>
+                <p className="text-xs text-purple-600/70 dark:text-purple-400/70">Leads nachfassen</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{messagesRemaining > 0 ? messagesRemaining : 0}</span>
-              {' / '}
-              <span>{MAX_DAILY_MESSAGES}</span>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Follow-ups offen</span>
-            </div>
-            <p className="text-2xl font-bold">{fu1Due.length + fu2Due.length + fu3Due.length}</p>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Warm Leads Alert */}
       {warmLeads.length > 0 && (
