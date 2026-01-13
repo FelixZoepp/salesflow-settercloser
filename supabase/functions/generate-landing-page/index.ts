@@ -10,47 +10,40 @@ const SYSTEM_PROMPT = `Du erstellst personalisierte Landing Pages für Leads mit
 WICHTIG: Verwende diese Variablen für die Personalisierung:
 - {{firstName}} - Vorname des Leads
 - {{lastName}} - Nachname des Leads  
-- {{company}} - Firmenname des Leads (Zielunternehmen, z.B. "Roland Negotiation Consulting")
+- {{company}} - Firmenname des Leads (Zielunternehmen)
 - {{position}} - Position/Rolle des Leads
 - {{senderCompany}} - Name des ABSENDER-Unternehmens (dein Kunde/Nutzer der Software)
 
-KRITISCH - PERSONALISIERUNG MIT LEAD-FIRMENNAMEN:
-- NIEMALS generische Formulierungen wie "Ihr Unternehmen", "eurem Unternehmen", "Ihre Firma" verwenden!
-- IMMER {{company}} als Variable nutzen, damit der echte Firmenname des Leads angezeigt wird
-- Beispiel RICHTIG: "Wie {{company}} 30% mehr Umsatz generieren kann"
-- Beispiel FALSCH: "Wie Ihr Unternehmen 30% mehr Umsatz generieren kann"
-
-KRITISCH - ABSENDER-FIRMENNAME:
-- Der Absender-Firmenname {{senderCompany}} MUSS prominent auf der Seite erscheinen:
+KRITISCH: Der Absender-Firmenname {{senderCompany}} MUSS prominent auf der Seite erscheinen:
 - Im Footer als companyName
-- Im Offer-Bereich als Absender ("Was wir bei {{senderCompany}} für {{company}} tun können")
+- Im Offer-Bereich als Absender ("Was wir bei {{senderCompany}} für Sie tun können")
 - Optional in der Subheadline
 
 Die Landing Page hat IMMER diese feste Struktur:
-1. Hero-Bereich mit personalisierter Ansprache + KI-Video (MIT {{company}} und {{firstName}})
-2. 3 konkrete Vorteile/Mehrwerte für {{company}} (nicht "Ihr Unternehmen"!)
-3. Kurze Erklärung des Angebots von {{senderCompany}} für {{company}}
+1. Hero-Bereich mit personalisierter Ansprache + KI-Video
+2. 3 konkrete Vorteile/Mehrwerte für den Lead
+3. Kurze Erklärung des Angebots (MIT Absender-Firmenname!)
 4. Terminbuchungs-CTA
-5. Footer MIT Absender-Firmenname {{senderCompany}}
+5. Footer MIT Absender-Firmenname
 
 Antworte IMMER mit einem validen JSON-Objekt:
 
 {
   "hero": {
     "headline": "Persönliche Ansprache mit {{firstName}} (max 8 Wörter)",
-    "subheadline": "1-2 Sätze warum {{company}} profitieren wird - NUTZE {{company}} nicht 'Ihr Unternehmen'!",
+    "subheadline": "1-2 Sätze warum {{company}} profitieren wird - optional mit Verweis auf {{senderCompany}}",
     "videoPlaceholder": true
   },
   "benefits": [
     {
       "icon": "CheckCircle",
-      "title": "Konkreter Vorteil für {{company}}",
-      "description": "Kurze Beschreibung - NUTZE {{company}} statt 'Ihr Unternehmen'"
+      "title": "Konkreter Vorteil 1",
+      "description": "Kurze Beschreibung mit Bezug auf {{company}}"
     },
     {
       "icon": "Zap",
       "title": "Konkreter Vorteil 2", 
-      "description": "Kurze Beschreibung mit {{company}}"
+      "description": "Kurze Beschreibung"
     },
     {
       "icon": "TrendingUp",
@@ -60,12 +53,12 @@ Antworte IMMER mit einem validen JSON-Objekt:
   ],
   "offer": {
     "title": "Was wir bei {{senderCompany}} für {{company}} tun können",
-    "description": "2-3 Sätze - NUTZE {{company}} nicht 'Ihr Unternehmen'!",
-    "bulletPoints": ["Leistung 1 für {{company}}", "Leistung 2", "Leistung 3"]
+    "description": "2-3 Sätze zum Angebot von {{senderCompany}}",
+    "bulletPoints": ["Leistung 1", "Leistung 2", "Leistung 3"]
   },
   "cta": {
     "headline": "Lassen Sie uns sprechen, {{firstName}}",
-    "description": "Kurzer Text - wie {{senderCompany}} {{company}} unterstützen kann",
+    "description": "Kurzer Text zur Terminvereinbarung mit {{senderCompany}}",
     "buttonText": "Termin vereinbaren",
     "buttonLink": "#kalender"
   },
@@ -83,11 +76,9 @@ Antworte IMMER mit einem validen JSON-Objekt:
   "suggestedName": "landing-page-name"
 }
 
-WICHTIGE REGELN:
-1. Wähle passende Lucide Icons: CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, TrendingUp, Rocket, BarChart
-2. NIEMALS "Ihr Unternehmen", "eurem Unternehmen", "Ihre Firma" - IMMER {{company}} nutzen!
-3. {{senderCompany}} im Footer und Offer-Bereich verwenden
-4. Der Prompt beschreibt den KONTEXT (Branche, Angebot, Zielgruppe). Passe die Inhalte entsprechend an.`;
+Wähle passende Lucide Icons: CheckCircle, Zap, Shield, Star, Clock, Users, Award, Target, TrendingUp, Rocket, BarChart
+
+Der Prompt beschreibt den KONTEXT (Branche, Angebot, Zielgruppe, ABSENDER-FIRMENNAME). Passe die Inhalte entsprechend an, aber behalte IMMER die Struktur: Personalisierung + Video + Termin-CTA + ABSENDER-FIRMENNAME im Footer und Offer.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
