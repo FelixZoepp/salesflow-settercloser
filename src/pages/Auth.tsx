@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,16 @@ import { ArrowLeft } from "lucide-react";
 
 type AuthMode = "login" | "register" | "forgot-password" | "reset-password";
 
+const getUrlAuthType = () => {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const searchParams = new URLSearchParams(window.location.search);
+  return hashParams.get("type") ?? searchParams.get("type");
+};
+
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(() => (getUrlAuthType() === "recovery" ? "reset-password" : "login"));
+  const isRecoveryRef = useRef(getUrlAuthType() === "recovery");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +27,7 @@ const Auth = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const checkOnboardingAndRedirect = async (userId: string) => {
+  const checkOnboardingAndRedirect = useCallback(async (userId: string) => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -36,35 +43,46 @@ const Auth = () => {
     } catch (error) {
       navigate("/onboarding");
     }
-  };
+  }, [navigate]);
+
+  // Keep mode in sync when a recovery link is opened (type=recovery)
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const isRecovery = getUrlAuthType() === "recovery";
+      isRecoveryRef.current = isRecovery;
+      if (isRecovery) setMode("reset-password");
+    };
+
+    syncFromUrl();
+    window.addEventListener("hashchange", syncFromUrl);
+    return () => window.removeEventListener("hashchange", syncFromUrl);
+  }, []);
 
   useEffect(() => {
-    // Check if this is a password reset callback
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    
-    if (type === 'recovery') {
-      setMode("reset-password");
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && mode !== "reset-password") {
-        checkOnboardingAndRedirect(session.user.id);
-      }
-    });
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
+        isRecoveryRef.current = true;
         setMode("reset-password");
-      } else if (session && mode !== "reset-password") {
+        return;
+      }
+
+      if (session && !isRecoveryRef.current) {
         setTimeout(() => {
           checkOnboardingAndRedirect(session.user.id);
         }, 0);
       }
     });
 
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && !isRecoveryRef.current) {
+        checkOnboardingAndRedirect(session.user.id);
+      }
+    });
+
     return () => subscription.unsubscribe();
-  }, [navigate, mode]);
+  }, [checkOnboardingAndRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +150,7 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Passwort erfolgreich geändert!");
+        isRecoveryRef.current = false;
         navigate("/");
       }
     } catch (error: any) {
