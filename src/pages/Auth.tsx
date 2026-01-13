@@ -29,7 +29,7 @@ const Auth = () => {
         .single();
 
       if (profile?.onboarding_completed) {
-        navigate("/dashboard");
+        navigate("/");
       } else {
         navigate("/onboarding");
       }
