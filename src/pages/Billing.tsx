@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { 
   CreditCard, 
   Download, 
@@ -49,7 +49,7 @@ interface Subscription {
 
 const Billing = () => {
   const navigate = useNavigate();
-  const { subscribed, productId, subscriptionEnd, isTrial, trialEndsAt, openCustomerPortal, refresh: refreshSubscription } = useSubscription();
+  const { subscribed, productId, subscriptionEnd, isTrial, trialEndsAt, openCustomerPortal, refresh: refreshSubscription } = useSubscriptionContext();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { Lock, ArrowRight, CreditCard, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SubscriptionRequired = () => {
   const navigate = useNavigate();
-  const { subscribed, loading, refresh, openCustomerPortal } = useSubscription();
+  const { subscribed, loading, refresh, openCustomerPortal } = useSubscriptionContext();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
 
   // Redirect if already subscribed

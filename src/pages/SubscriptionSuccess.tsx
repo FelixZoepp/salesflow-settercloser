@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Sparkles, ArrowRight, Loader2 } from "lucide-react";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 export default function SubscriptionSuccess() {
   const navigate = useNavigate();
-  const { refresh, subscribed, loading } = useSubscription();
+  const { refresh, subscribed, loading } = useSubscriptionContext();
   const { isProPlan, isStarterPlan } = useFeatureAccess();
   const [checkCount, setCheckCount] = useState(0);
   const [verified, setVerified] = useState(false);
