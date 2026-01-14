@@ -37,11 +37,17 @@ export type Feature = ProFeature | StarterFeature;
 export const useFeatureAccess = () => {
   const { subscribed, productId, loading, isTrial } = useSubscription();
 
+  // Check for Pro plan - includes Stripe product IDs AND internal Pro subscriptions
   const isProPlan = productId === SUBSCRIPTION_TIERS.PRO_MONTHLY || 
-                    productId === SUBSCRIPTION_TIERS.PRO_YEARLY;
+                    productId === SUBSCRIPTION_TIERS.PRO_YEARLY ||
+                    productId === 'internal_Pro' ||
+                    productId?.toLowerCase() === 'pro';
 
+  // Check for Starter plan - includes Stripe product IDs AND internal Starter subscriptions
   const isStarterPlan = productId === SUBSCRIPTION_TIERS.STARTER_MONTHLY || 
-                        productId === SUBSCRIPTION_TIERS.STARTER_YEARLY;
+                        productId === SUBSCRIPTION_TIERS.STARTER_YEARLY ||
+                        productId === 'internal_Starter' ||
+                        productId?.toLowerCase() === 'starter';
 
   const hasFeature = (feature: Feature): boolean => {
     // If loading, assume no access
