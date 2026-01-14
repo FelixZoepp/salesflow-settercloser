@@ -504,15 +504,15 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           </div>
         </CardHeader>
         <CardContent>
-          <div 
-            className="rounded-lg overflow-hidden border border-slate-700" 
+          <ScrollArea 
+            className="rounded-lg border border-slate-700" 
             style={{ 
-              maxHeight: "500px", 
-              overflowY: "auto",
+              height: "600px",
               backgroundColor: template.background_color,
               color: template.text_color 
             }}
           >
+            <div className="p-0">
             {/* Header Preview */}
             <header className="border-b border-slate-800 px-4 py-3">
               <div className="flex items-center justify-between">
@@ -657,7 +657,8 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                 © 2024 {template.footer_company_name}. {template.footer_tagline}
               </p>
             </footer>
-          </div>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 
