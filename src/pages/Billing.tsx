@@ -171,7 +171,7 @@ const Billing = () => {
               </Button>
               <Button onClick={handleManageSubscription}>
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Abo verwalten
+                {dbSubscription && !productId?.startsWith('prod_') ? 'Abo kaufen/upgraden' : 'Abo verwalten'}
               </Button>
             </div>
           </div>
@@ -247,8 +247,13 @@ const Billing = () => {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Quelle</p>
                   <p className="text-foreground">
-                    {dbSubscription ? 'Intern' : productId?.startsWith('prod_') ? 'Stripe' : isTrial ? 'Trial' : '–'}
+                    {productId?.startsWith('prod_') ? 'Stripe' : dbSubscription ? 'Manuell vergeben' : isTrial ? 'Trial' : '–'}
                   </p>
+                  {dbSubscription && !productId?.startsWith('prod_') && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Kundenportal erstellt ggf. einen Stripe-Account
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
