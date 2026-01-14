@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlacetelClient, PlacetelConfig, PlacetelCallbacks } from "@/lib/placetelClient";
 import LiveObjectionPanel from "./LiveObjectionPanel";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 interface SoftphoneDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ export default function SoftphoneDialog({
   contactName,
   dealId 
 }: SoftphoneDialogProps) {
+  const { canUseCallSummaries } = useFeatureAccess();
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -280,19 +282,24 @@ export default function SoftphoneDialog({
         return;
       }
 
-      // Step 3: Generate AI summary
-      setProcessingStatus('summarizing');
-      toast.info('Generiere KI-Zusammenfassung...');
+      // Step 3: Generate AI summary (only for Pro users)
+      if (canUseCallSummaries) {
+        setProcessingStatus('summarizing');
+        toast.info('Generiere KI-Zusammenfassung...');
 
-      const { data: summaryData, error: summaryError } = await supabase.functions.invoke('summarize-call', {
-        body: { sessionId, transcript }
-      });
+        const { data: summaryData, error: summaryError } = await supabase.functions.invoke('summarize-call', {
+          body: { sessionId, transcript }
+        });
 
-      if (summaryError || summaryData?.error) {
-        console.error('Summary error:', summaryData?.error || summaryError);
-        // Don't throw, just log - summary is optional
+        if (summaryError || summaryData?.error) {
+          console.error('Summary error:', summaryData?.error || summaryError);
+          // Don't throw, just log - summary is optional
+        } else {
+          setCallSummary(summaryData);
+        }
       } else {
-        setCallSummary(summaryData);
+        console.log('Call summary feature requires Pro plan');
+        toast.info('KI-Zusammenfassungen sind nur im Pro-Paket verfügbar');
       }
 
       setProcessingStatus('done');
