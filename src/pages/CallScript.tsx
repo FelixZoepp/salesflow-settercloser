@@ -84,19 +84,7 @@ export default function CallScript() {
     );
   }
 
-  if (role !== 'admin') {
-    return (
-      <Layout>
-        <div className="p-8">
-          <Alert variant="destructive">
-            <AlertDescription>
-              Nur Administratoren können Call-Scripts bearbeiten.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </Layout>
-    );
-  }
+  // All authenticated users can access Call Scripts - no role restriction
 
   return (
     <Layout>
