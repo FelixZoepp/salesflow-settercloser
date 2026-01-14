@@ -41,6 +41,10 @@ interface WorkflowStats {
   fu3_gesendet: number;
   reagiert_warm: number;
   abgeschlossen: number;
+  // New metrics based on deals
+  hotLeads: number;
+  leadsWithAppointment: number;
+  closedDeals: number;
 }
 
 const CHART_COLORS = [
@@ -60,9 +64,11 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch contacts with workflow status
+      const { data: contacts, error } = await supabase
         .from('contacts')
-        .select('workflow_status')
+        .select('id, workflow_status, lead_score')
         .eq('campaign_id', campaignId)
         .eq('lead_type', 'outbound');
 
@@ -72,11 +78,51 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
         return;
       }
 
-      const contacts = data || [];
-      const total = contacts.length;
+      const contactList = contacts || [];
+      const total = contactList.length;
+      const contactIds = contactList.map(c => c.id);
+
+      // Fetch deals for these contacts to determine appointment and conversion rates
+      let dealsData: { contact_id: string; stage: string }[] = [];
+      if (contactIds.length > 0) {
+        const { data: deals } = await supabase
+          .from('deals')
+          .select('contact_id, stage')
+          .in('contact_id', contactIds);
+        dealsData = deals || [];
+      }
 
       const countStatus = (status: string) => 
-        contacts.filter(c => c.workflow_status === status).length;
+        contactList.filter(c => c.workflow_status === status).length;
+
+      // Hot leads: lead_score >= 70 OR workflow_status = reagiert_warm
+      const hotLeads = contactList.filter(c => 
+        (c.lead_score || 0) >= 70 || c.workflow_status === 'reagiert_warm'
+      ).length;
+
+      // Stages that indicate an appointment was set (Setting or beyond)
+      const appointmentStages = [
+        'Setting terminiert', 'Setting No Show', 'Setting Follow Up', 'Setting',
+        'Closing terminiert', 'Closing No Show', 'Closing Follow Up', 'Closing',
+        'CC2 terminiert', 'Angebot versendet', 'Abgeschlossen', 'Gewonnen'
+      ];
+      
+      // Contacts that have/had an appointment
+      const contactsWithAppointment = new Set(
+        dealsData
+          .filter(d => appointmentStages.includes(d.stage))
+          .map(d => d.contact_id)
+      );
+      const leadsWithAppointment = contactsWithAppointment.size;
+
+      // Closed deals (conversion)
+      const closedStages = ['Abgeschlossen', 'Gewonnen'];
+      const closedContactIds = new Set(
+        dealsData
+          .filter(d => closedStages.includes(d.stage))
+          .map(d => d.contact_id)
+      );
+      const closedDeals = closedContactIds.size;
 
       setStats({
         total,
@@ -90,6 +136,9 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
         fu3_gesendet: countStatus('fu3_gesendet'),
         reagiert_warm: countStatus('reagiert_warm'),
         abgeschlossen: countStatus('abgeschlossen'),
+        hotLeads,
+        leadsWithAppointment,
+        closedDeals,
       });
       setLoading(false);
     };
@@ -114,7 +163,12 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
     );
   }
 
-  // Calculate rates
+  // Calculate the NEW rates
+  const hotLeadRate = stats.total > 0 ? (stats.hotLeads / stats.total) * 100 : 0;
+  const appointmentRate = stats.total > 0 ? (stats.leadsWithAppointment / stats.total) * 100 : 0;
+  const conversionRate = stats.total > 0 ? (stats.closedDeals / stats.total) * 100 : 0;
+
+  // Legacy rates for funnel
   const connectionsSent = stats.vernetzung_ausstehend + stats.vernetzung_angenommen + 
     stats.erstnachricht_gesendet + stats.fu1_gesendet + stats.fu2_gesendet + 
     stats.fu3_gesendet + stats.reagiert_warm + stats.abgeschlossen;
@@ -125,12 +179,8 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
   
   const messagesSent = stats.erstnachricht_gesendet + stats.fu1_gesendet + 
     stats.fu2_gesendet + stats.fu3_gesendet + stats.reagiert_warm + stats.abgeschlossen;
-  
-  const warmLeads = stats.reagiert_warm + stats.abgeschlossen;
 
   const acceptanceRate = connectionsSent > 0 ? (connectionsAccepted / connectionsSent) * 100 : 0;
-  const responseRate = messagesSent > 0 ? (warmLeads / messagesSent) * 100 : 0;
-  const conversionRate = stats.total > 0 ? (warmLeads / stats.total) * 100 : 0;
 
   // Funnel data for bar chart
   const funnelData = [
@@ -138,7 +188,9 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
     { name: 'Vernetzung gesendet', value: connectionsSent, fill: 'hsl(var(--primary))' },
     { name: 'Angenommen', value: connectionsAccepted, fill: 'hsl(var(--chart-2))' },
     { name: 'Nachricht gesendet', value: messagesSent, fill: 'hsl(var(--chart-3))' },
-    { name: 'Warm/Reagiert', value: warmLeads, fill: 'hsl(var(--destructive))' },
+    { name: 'Heiße Leads', value: stats.hotLeads, fill: 'hsl(var(--chart-4))' },
+    { name: 'Termine', value: stats.leadsWithAppointment, fill: 'hsl(var(--chart-5))' },
+    { name: 'Abgeschlossen', value: stats.closedDeals, fill: 'hsl(var(--destructive))' },
   ];
 
   // Status distribution for pie chart with vibrant colors
@@ -155,8 +207,8 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI Cards - 5 Cards now */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
@@ -176,7 +228,7 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
             <p className="text-3xl font-bold">{acceptanceRate.toFixed(1)}%</p>
             <Progress value={acceptanceRate} className="mt-2 h-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {connectionsAccepted} von {connectionsSent} angenommen
+              {connectionsAccepted} von {connectionsSent}
             </p>
           </CardContent>
         </Card>
@@ -184,13 +236,13 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
-              <MessageSquare className="h-4 w-4 text-blue-500" />
-              <span className="text-sm text-muted-foreground">Antwort-Rate</span>
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="text-sm text-muted-foreground">Heiße Lead Rate</span>
             </div>
-            <p className="text-3xl font-bold">{responseRate.toFixed(1)}%</p>
-            <Progress value={responseRate} className="mt-2 h-2" />
+            <p className="text-3xl font-bold">{hotLeadRate.toFixed(1)}%</p>
+            <Progress value={hotLeadRate} className="mt-2 h-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {warmLeads} von {messagesSent} reagiert
+              {stats.hotLeads} von {stats.total} heiß
             </p>
           </CardContent>
         </Card>
@@ -198,13 +250,27 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Flame className="h-4 w-4 text-destructive" />
-              <span className="text-sm text-muted-foreground">Conversion-Rate</span>
+              <Target className="h-4 w-4 text-blue-500" />
+              <span className="text-sm text-muted-foreground">Termin Rate</span>
+            </div>
+            <p className="text-3xl font-bold">{appointmentRate.toFixed(1)}%</p>
+            <Progress value={appointmentRate} className="mt-2 h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.leadsWithAppointment} von {stats.total} Termine
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-muted-foreground">Conversion Rate</span>
             </div>
             <p className="text-3xl font-bold">{conversionRate.toFixed(1)}%</p>
             <Progress value={conversionRate} className="mt-2 h-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {warmLeads} von {stats.total} warm
+              {stats.closedDeals} von {stats.total} abgeschlossen
             </p>
           </CardContent>
         </Card>
