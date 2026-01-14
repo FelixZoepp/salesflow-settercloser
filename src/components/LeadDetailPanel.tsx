@@ -446,7 +446,14 @@ Stage: ${deal.stage}
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 glass-card flex flex-col">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] p-0 gap-0 glass-card flex flex-col"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Lead-Details</DialogTitle>
+        </DialogHeader>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground">Lädt...</p>
