@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mic, MicOff, Lightbulb, AlertTriangle, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+import { Mic, MicOff, Lightbulb, AlertTriangle, Volume2, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 interface Objection {
   id: string;
@@ -26,6 +28,7 @@ interface LiveObjectionPanelProps {
 }
 
 export default function LiveObjectionPanel({ isCallActive, remoteStream }: LiveObjectionPanelProps) {
+  const { canUseLiveObjectionHandling, loading: featureLoading } = useFeatureAccess();
   const [objections, setObjections] = useState<Objection[]>([]);
   const [detectedObjections, setDetectedObjections] = useState<DetectedObjection[]>([]);
   const [isListening, setIsListening] = useState(false);
@@ -186,6 +189,30 @@ export default function LiveObjectionPanel({ isCallActive, remoteStream }: LiveO
 
   if (!isCallActive) {
     return null;
+  }
+
+  // Pro-Plan Check
+  if (!featureLoading && !canUseLiveObjectionHandling) {
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Lock className="w-4 h-4 text-muted-foreground" />
+            Live-Einwandbehandlung
+            <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">
+              Pro
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UpgradePrompt 
+            featureName="Live-Einwandbehandlung" 
+            description="KI-gestützte Live-Einwandbehandlung ist nur im Pro-Paket verfügbar."
+            className="border-0 bg-transparent p-0"
+          />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
