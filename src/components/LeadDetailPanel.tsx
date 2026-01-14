@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
+import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -725,6 +726,28 @@ Stage: ${deal.stage}
                       onUpdate?.();
                     }}
                   />
+
+                  {/* Task Creation */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Aufgabe erstellen
+                      </span>
+                    </div>
+                    <CreateTaskDialog
+                      contactId={contact.id}
+                      dealId={deal.id}
+                      contactName={`${contact.first_name} ${contact.last_name}`}
+                      onTaskCreated={fetchLeadData}
+                      trigger={
+                        <Button variant="outline" className="w-full">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Neue Aufgabe für diesen Lead
+                        </Button>
+                      }
+                    />
+                  </div>
 
                   {/* Add Note */}
                   <div>

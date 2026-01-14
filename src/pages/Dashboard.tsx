@@ -25,6 +25,9 @@ import { formatDistanceToNow, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import TasksOverview from "@/components/TasksOverview";
+import NeglectedLeadsPanel from "@/components/NeglectedLeadsPanel";
+import LeadDetailPanel from "@/components/LeadDetailPanel";
 
 interface LeadStats {
   totalCampaigns: number;
@@ -70,6 +73,8 @@ const Dashboard = () => {
   const [dateRange, setDateRange] = useState<"7" | "30">("30");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [showLeadPanel, setShowLeadPanel] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -452,8 +457,28 @@ const Dashboard = () => {
             </div>
 
             {/* Right Side - Engagement Feed */}
-            <div className="lg:col-span-3">
-              <div className="glass-card p-6 h-full">
+            <div className="lg:col-span-3 space-y-6">
+              {/* Tasks and Neglected Leads Row */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <TasksOverview 
+                  onTaskClick={(taskId, relatedType, relatedId) => {
+                    // Navigate to related entity if available
+                    if (relatedType === 'deal' && relatedId) {
+                      setSelectedDealId(relatedId);
+                      setShowLeadPanel(true);
+                    }
+                  }} 
+                />
+                <NeglectedLeadsPanel 
+                  onLeadClick={(dealId) => {
+                    setSelectedDealId(dealId);
+                    setShowLeadPanel(true);
+                  }} 
+                />
+              </div>
+
+              {/* Engagement Feed */}
+              <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-lg font-semibold text-foreground">Engagement Feed</h2>
@@ -510,6 +535,18 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Lead Detail Panel */}
+      {selectedDealId && (
+        <LeadDetailPanel
+          dealId={selectedDealId}
+          open={showLeadPanel}
+          onClose={() => {
+            setShowLeadPanel(false);
+            setSelectedDealId(null);
+          }}
+        />
+      )}
     </Layout>
   );
 };
