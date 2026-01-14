@@ -222,6 +222,21 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
 
         if (sessionError) throw sessionError;
         
+        // Create activity log entry for the call
+        if (contactId) {
+          await supabase
+            .from('activities')
+            .insert({
+              contact_id: contactId,
+              deal_id: dealId,
+              user_id: user.id,
+              type: 'call',
+              outcome: 'reached',
+              duration_min: Math.ceil(callDuration / 60),
+              note: `WebRTC Call - ${Math.floor(callDuration / 60)}:${(callDuration % 60).toString().padStart(2, '0')} Min.`
+            });
+        }
+        
         toast.success('Call-Recording gespeichert');
         return sessionData?.id || null;
       }

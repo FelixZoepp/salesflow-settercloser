@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock, Play, Pause, Download } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
+import CallHistory from "@/components/CallHistory";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -882,13 +883,16 @@ Stage: ${deal.stage}
                     </div>
                   </div>
 
-                  {/* Call History */}
+                  {/* Call Recordings */}
+                  <CallHistory dealId={deal.id} />
+
+                  {/* Activity Log */}
                   <div className="stat-card !p-0 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-white/5">
                       <div>
                         <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Call-Historie
+                          <Activity className="w-4 h-4" />
+                          Aktivitäten-Log
                         </h4>
                       </div>
                     </div>
