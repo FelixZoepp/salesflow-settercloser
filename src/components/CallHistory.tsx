@@ -54,7 +54,29 @@ const CallHistory: React.FC<CallHistoryProps> = ({ contactId, dealId }) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setSessions(data || []);
+      
+      // Generate signed URLs for private bucket
+      const sessionsWithSignedUrls = await Promise.all(
+        (data || []).map(async (session) => {
+          if (session.recording_url) {
+            // Extract path from URL - format: userId/dealId_timestamp.webm
+            const urlParts = session.recording_url.split('/call-recordings/');
+            if (urlParts[1]) {
+              const path = urlParts[1];
+              const { data: signedData } = await supabase.storage
+                .from('call-recordings')
+                .createSignedUrl(path, 3600); // 1 hour expiry
+              
+              if (signedData?.signedUrl) {
+                return { ...session, recording_url: signedData.signedUrl };
+              }
+            }
+          }
+          return session;
+        })
+      );
+      
+      setSessions(sessionsWithSignedUrls);
     } catch (error) {
       console.error('Error fetching call history:', error);
       toast.error('Fehler beim Laden der Call-History');
