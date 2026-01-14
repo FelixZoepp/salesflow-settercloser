@@ -154,8 +154,13 @@ export default function TasksOverview({ onTaskClick }: TasksOverviewProps) {
   const formatDueDate = (dueDate: string | null) => {
     if (!dueDate) return "Kein Datum";
     
+    // Parse the UTC date from database
     const date = new Date(dueDate);
-    const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+    
+    // Check if the time is midnight UTC (no specific time was set)
+    const utcHours = date.getUTCHours();
+    const utcMinutes = date.getUTCMinutes();
+    const hasTime = !(utcHours === 0 && utcMinutes === 0);
     
     if (isToday(date)) {
       return hasTime ? format(date, "'Heute' HH:mm", { locale: de }) : "Heute";
