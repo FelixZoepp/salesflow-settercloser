@@ -6,6 +6,7 @@ export interface OnboardingStatus {
   currentStep: number;
   steps: {
     heygen: boolean;
+    telephony: boolean;
     domain: boolean;
     pitchVideo: boolean;
     leads: boolean;
@@ -20,6 +21,7 @@ export const useOnboarding = () => {
     currentStep: 0,
     steps: {
       heygen: false,
+      telephony: false,
       domain: false,
       pitchVideo: false,
       leads: false,
@@ -43,14 +45,17 @@ export const useOnboarding = () => {
 
       if (!profile?.account_id) return;
 
-      // Check HeyGen integration
+      // Check HeyGen integration and SIP settings
       const { data: integration } = await supabase
         .from('account_integrations')
-        .select('heygen_api_key_id, heygen_avatar_id')
+        .select('heygen_api_key_id, heygen_avatar_id, sip_enabled, sip_server, sip_username')
         .eq('account_id', profile.account_id)
         .maybeSingle();
 
       const heygenComplete = !!(integration?.heygen_api_key_id && integration?.heygen_avatar_id);
+
+      // Check SIP telephony
+      const telephonyComplete = !!(integration?.sip_enabled && integration?.sip_server && integration?.sip_username);
 
       // Check custom domain
       const { data: account } = await supabase
@@ -99,22 +104,24 @@ export const useOnboarding = () => {
 
       const landingPageComplete = landingPages && landingPages.length > 0;
 
-      // Calculate current step
+      // Calculate current step (now 7 steps total)
       let currentStep = 0;
       if (heygenComplete) currentStep = 1;
-      if (domainComplete) currentStep = 2;
-      if (pitchVideoComplete) currentStep = 3;
-      if (leadsComplete) currentStep = 4;
-      if (scriptComplete) currentStep = 5;
-      if (landingPageComplete) currentStep = 6;
+      if (telephonyComplete) currentStep = 2;
+      if (domainComplete) currentStep = 3;
+      if (pitchVideoComplete) currentStep = 4;
+      if (leadsComplete) currentStep = 5;
+      if (scriptComplete) currentStep = 6;
+      if (landingPageComplete) currentStep = 7;
 
-      const isComplete = heygenComplete && domainComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
+      const isComplete = heygenComplete && telephonyComplete && domainComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
 
       setStatus({
         isComplete,
         currentStep,
         steps: {
           heygen: heygenComplete,
+          telephony: telephonyComplete,
           domain: domainComplete,
           pitchVideo: pitchVideoComplete,
           leads: leadsComplete,
@@ -127,7 +134,7 @@ export const useOnboarding = () => {
       if (isComplete && !profile.onboarding_completed) {
         await supabase
           .from('profiles')
-          .update({ onboarding_completed: true, onboarding_step: 6 })
+          .update({ onboarding_completed: true, onboarding_step: 7 })
           .eq('id', user.id);
       }
     } catch (error) {
