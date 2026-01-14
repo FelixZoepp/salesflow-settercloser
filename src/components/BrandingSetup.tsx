@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,10 @@ import {
   Plus, 
   X, 
   Sparkles,
-  Loader2
+  Loader2,
+  Upload,
+  ImageIcon,
+  Trash2
 } from "lucide-react";
 
 interface CaseStudy {
@@ -45,7 +48,8 @@ export const BrandingSetup = ({ onSave, showCard = true }: BrandingSetupProps) =
   const { accountId, loading: accountLoading } = useAccountFilter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+  const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [branding, setBranding] = useState<BrandingData>({
     logo_url: "",
     primary_brand_color: "#06b6d4",
@@ -134,6 +138,75 @@ export const BrandingSetup = ({ onSave, showCard = true }: BrandingSetupProps) =
     }
   };
 
+  const handleLogoUpload = async (file: File) => {
+    if (!accountId) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error("Bitte nur Bilddateien hochladen");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Maximale Dateigröße: 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${accountId}/logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('account-logos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('account-logos')
+        .getPublicUrl(fileName);
+
+      setBranding(prev => ({ ...prev, logo_url: publicUrl }));
+      toast.success("Logo hochgeladen!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Fehler beim Hochladen");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleLogoUpload(file);
+    }
+  }, [accountId]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleLogoUpload(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setBranding(prev => ({ ...prev, logo_url: "" }));
+  };
+
   const addUsp = () => {
     if (newUsp.trim()) {
       setBranding(prev => ({
@@ -185,31 +258,81 @@ export const BrandingSetup = ({ onSave, showCard = true }: BrandingSetupProps) =
           <span>Grundlegende Informationen</span>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="logo_url">Logo URL</Label>
-            <div className="flex gap-2">
-              <Input
-                id="logo_url"
-                value={branding.logo_url}
-                onChange={(e) => setBranding(prev => ({ ...prev, logo_url: e.target.value }))}
-                placeholder="https://example.com/logo.png"
+        {/* Logo Upload Section */}
+        <div className="space-y-2">
+          <Label>Logo</Label>
+          {branding.logo_url ? (
+            <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
+              <div className="h-16 w-16 rounded-lg border bg-background flex items-center justify-center overflow-hidden">
+                <img 
+                  src={branding.logo_url} 
+                  alt="Logo" 
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '';
+                    (e.target as HTMLImageElement).alt = 'Fehler beim Laden';
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Logo hochgeladen</p>
+                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  {branding.logo_url.split('/').pop()}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={removeLogo}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`
+                relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+                ${isDragging 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30'
+                }
+              `}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              {branding.logo_url && (
-                <div className="h-10 w-10 rounded border flex items-center justify-center bg-muted">
-                  <img 
-                    src={branding.logo_url} 
-                    alt="Logo preview" 
-                    className="h-8 w-8 object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+              {uploading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Wird hochgeladen...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      Logo hierher ziehen oder <span className="text-primary">klicken</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG, SVG bis 5MB
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          )}
+        </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="tagline">Tagline / Slogan</Label>
             <Input
@@ -217,6 +340,16 @@ export const BrandingSetup = ({ onSave, showCard = true }: BrandingSetupProps) =
               value={branding.tagline}
               onChange={(e) => setBranding(prev => ({ ...prev, tagline: e.target.value }))}
               placeholder="z.B. 'Mehr Termine. Weniger Aufwand.'"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="target_audience">Zielgruppe</Label>
+            <Input
+              id="target_audience"
+              value={branding.target_audience}
+              onChange={(e) => setBranding(prev => ({ ...prev, target_audience: e.target.value }))}
+              placeholder="z.B. 'B2B SaaS-Unternehmen mit 10-100 Mitarbeitern'"
             />
           </div>
         </div>
@@ -229,16 +362,6 @@ export const BrandingSetup = ({ onSave, showCard = true }: BrandingSetupProps) =
             onChange={(e) => setBranding(prev => ({ ...prev, service_description: e.target.value }))}
             placeholder="Beschreibe kurz, was du anbietest. Dies wird auf den Lead-Seiten verwendet."
             rows={3}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="target_audience">Zielgruppe</Label>
-          <Input
-            id="target_audience"
-            value={branding.target_audience}
-            onChange={(e) => setBranding(prev => ({ ...prev, target_audience: e.target.value }))}
-            placeholder="z.B. 'B2B SaaS-Unternehmen mit 10-100 Mitarbeitern'"
           />
         </div>
       </div>
