@@ -49,14 +49,38 @@ interface Subscription {
 
 const Billing = () => {
   const navigate = useNavigate();
-  const { openCustomerPortal } = useSubscription();
+  const { subscribed, productId, subscriptionEnd, isTrial, trialEndsAt, openCustomerPortal, refresh: refreshSubscription } = useSubscription();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dbSubscription, setDbSubscription] = useState<{plan_name: string; status: string; current_period_end: string | null} | null>(null);
 
   useEffect(() => {
     fetchBillingData();
+    fetchDbSubscription();
   }, []);
+
+  const fetchDbSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('plan_name, status, current_period_end')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setDbSubscription(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch DB subscription:', err);
+    }
+  };
 
   const fetchBillingData = async () => {
     try {
@@ -152,14 +176,92 @@ const Billing = () => {
             </div>
           </div>
 
-          {/* Current Subscription */}
-          {subscription && (
+          {/* Subscription Status Card - always show */}
+          <Card className="mb-8 glass-card border-white/10">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Dein Abo-Status</CardTitle>
+                  <CardDescription>Aktueller Abonnement-Status</CardDescription>
+                </div>
+                {subscribed ? (
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    {isTrial ? 'Trial aktiv' : 'Aktiv'}
+                  </Badge>
+                ) : (
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    Inaktiv
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Tarif</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {dbSubscription?.plan_name 
+                      ? dbSubscription.plan_name.charAt(0).toUpperCase() + dbSubscription.plan_name.slice(1)
+                      : isTrial 
+                        ? 'Trial' 
+                        : productId 
+                          ? 'Stripe Abo' 
+                          : 'Kein Abo'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {dbSubscription?.status === 'active' ? 'Aktiv' : 
+                     dbSubscription?.status === 'trialing' ? 'Trial' :
+                     isTrial ? 'Testphase' : 
+                     subscribed ? 'Aktiv' : 'Nicht abonniert'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Verlängerung</p>
+                  {dbSubscription?.current_period_end ? (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <p className="text-foreground">
+                        {format(new Date(dbSubscription.current_period_end), 'dd. MMMM yyyy', { locale: de })}
+                      </p>
+                    </div>
+                  ) : subscriptionEnd ? (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <p className="text-foreground">
+                        {format(new Date(subscriptionEnd), 'dd. MMMM yyyy', { locale: de })}
+                      </p>
+                    </div>
+                  ) : isTrial && trialEndsAt ? (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-yellow-400" />
+                      <p className="text-foreground">
+                        Trial endet: {format(new Date(trialEndsAt), 'dd. MMMM yyyy', { locale: de })}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">–</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Quelle</p>
+                  <p className="text-foreground">
+                    {dbSubscription ? 'Intern' : productId?.startsWith('prod_') ? 'Stripe' : isTrial ? 'Trial' : '–'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Subscription from Stripe (only show if different from DB subscription) */}
+          {subscription && !dbSubscription && (
             <Card className="mb-8 glass-card border-white/10">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Aktuelles Abonnement</CardTitle>
-                    <CardDescription>Dein aktiver Tarif</CardDescription>
+                    <CardTitle className="text-lg">Stripe Abonnement</CardTitle>
+                    <CardDescription>Details aus Stripe</CardDescription>
                   </div>
                   <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                     <CheckCircle className="w-3 h-3 mr-1" />
