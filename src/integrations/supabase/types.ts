@@ -93,39 +93,63 @@ export type Database = {
       }
       accounts: {
         Row: {
+          case_studies: Json | null
           company_name: string | null
           created_at: string
           custom_domain: string | null
           email: string | null
           id: string
           is_active: boolean
+          logo_url: string | null
           name: string
           phone: string | null
+          primary_brand_color: string | null
+          secondary_brand_color: string | null
+          service_description: string | null
           subscription_status: string | null
+          tagline: string | null
+          target_audience: string | null
+          unique_selling_points: string[] | null
           updated_at: string
         }
         Insert: {
+          case_studies?: Json | null
           company_name?: string | null
           created_at?: string
           custom_domain?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name: string
           phone?: string | null
+          primary_brand_color?: string | null
+          secondary_brand_color?: string | null
+          service_description?: string | null
           subscription_status?: string | null
+          tagline?: string | null
+          target_audience?: string | null
+          unique_selling_points?: string[] | null
           updated_at?: string
         }
         Update: {
+          case_studies?: Json | null
           company_name?: string | null
           created_at?: string
           custom_domain?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name?: string
           phone?: string | null
+          primary_brand_color?: string | null
+          secondary_brand_color?: string | null
+          service_description?: string | null
           subscription_status?: string | null
+          tagline?: string | null
+          target_audience?: string | null
+          unique_selling_points?: string[] | null
           updated_at?: string
         }
         Relationships: []
