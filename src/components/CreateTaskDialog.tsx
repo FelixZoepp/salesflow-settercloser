@@ -15,6 +15,7 @@ interface CreateTaskDialogProps {
   contactName?: string;
   onTaskCreated?: () => void;
   trigger?: React.ReactNode;
+  portalContainer?: HTMLElement | null;
 }
 
 export default function CreateTaskDialog({ 
@@ -22,7 +23,8 @@ export default function CreateTaskDialog({
   dealId, 
   contactName,
   onTaskCreated,
-  trigger 
+  trigger,
+  portalContainer
 }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -132,7 +134,7 @@ export default function CreateTaskDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" container={portalContainer ?? undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-primary" />
