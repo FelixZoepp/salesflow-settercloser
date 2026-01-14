@@ -27,7 +27,12 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
@@ -59,6 +64,56 @@ serve(async (req) => {
       });
     }
 
+    // First: check internal subscriptions table (supports manual grants / synced billing)
+    logStep("Checking internal subscriptions table");
+
+    const { data: internalSubs, error: internalSubError } = await supabaseClient
+      .from("subscriptions")
+      .select("plan_name, status, current_period_end")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing"])
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const internalSub = internalSubs?.[0] ?? null;
+
+    if (internalSubError) {
+      logStep("Internal subscription query error", { message: internalSubError.message });
+    }
+
+    if (internalSub) {
+      const endOk =
+        !internalSub.current_period_end ||
+        new Date(internalSub.current_period_end) > new Date();
+
+      if (endOk) {
+        logStep("Internal subscription active", {
+          plan_name: internalSub.plan_name,
+          status: internalSub.status,
+          current_period_end: internalSub.current_period_end,
+        });
+
+        return new Response(
+          JSON.stringify({
+            subscribed: true,
+            product_id: `db_${internalSub.plan_name}`,
+            subscription_end: internalSub.current_period_end ?? null,
+            source: "db",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+
+      logStep("Internal subscription expired", {
+        plan_name: internalSub.plan_name,
+        current_period_end: internalSub.current_period_end,
+      });
+    }
+
+    // Fallback: check Stripe subscription
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
