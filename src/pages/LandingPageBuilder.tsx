@@ -7,12 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Eye, Save, Globe, Wand2, Loader2, Plus, Trash2, ExternalLink, Copy, Calendar } from "lucide-react";
+import { Sparkles, Eye, Save, Globe, Wand2, Loader2, Plus, Trash2, ExternalLink, Copy, Calendar, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
 import { LandingPageEditor } from "@/components/landing-builder/LandingPageEditor";
 import { LandingPageList } from "@/components/landing-builder/LandingPageList";
+import { LeadPageTemplatePreview } from "@/components/landing-builder/LeadPageTemplatePreview";
 import type { Json } from "@/integrations/supabase/types";
 
 interface LandingPageContent {
@@ -101,7 +102,7 @@ const LandingPageBuilder = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("generator");
+  const [activeTab, setActiveTab] = useState("lead-pages");
   const [selectedPage, setSelectedPage] = useState<LandingPage | null>(null);
   const [pages, setPages] = useState<LandingPage[]>([]);
   const [content, setContent] = useState<LandingPageContent>({});
@@ -389,6 +390,10 @@ const LandingPageBuilder = () => {
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-4 glass-button">
+                <TabsTrigger value="lead-pages" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Lead-Seiten
+                </TabsTrigger>
                 <TabsTrigger value="generator" className="gap-2">
                   <Wand2 className="w-4 h-4" />
                   Generator
@@ -402,6 +407,11 @@ const LandingPageBuilder = () => {
                   Editor
                 </TabsTrigger>
               </TabsList>
+
+              {/* Lead Pages Template Tab */}
+              <TabsContent value="lead-pages">
+                <LeadPageTemplatePreview calendarUrl={userCalendarUrl || undefined} />
+              </TabsContent>
 
               {/* Generator Tab */}
               <TabsContent value="generator">
