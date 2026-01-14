@@ -1,4 +1,4 @@
-import { useSubscription } from './useSubscription';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 
 // Stripe Product IDs
 export const SUBSCRIPTION_TIERS = {
@@ -35,7 +35,7 @@ export type StarterFeature = typeof STARTER_FEATURES[number];
 export type Feature = ProFeature | StarterFeature;
 
 export const useFeatureAccess = () => {
-  const { subscribed, productId, loading, isTrial } = useSubscription();
+  const { subscribed, productId, loading, isTrial } = useSubscriptionContext();
 
   // Check for Pro plan - includes Stripe product IDs AND internal Pro subscriptions
   const isProPlan = productId === SUBSCRIPTION_TIERS.PRO_MONTHLY || 

@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import {
   HoverCard,
   HoverCardContent,
@@ -46,8 +46,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [viewingAccount, setViewingAccount] = useState<string | null>(null);
 
   useHotLeadNotifications();
-  const { openCustomerPortal } = useSubscription();
-  
+  const { openCustomerPortal } = useSubscriptionContext();
   useEffect(() => {
     checkSuperAdmin();
     checkViewingAccount();

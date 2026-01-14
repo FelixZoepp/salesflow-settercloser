@@ -3,9 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useSubscription } from "@/hooks/useSubscription";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SubscriptionProvider, useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -36,24 +35,11 @@ import EmailTemplates from "./pages/EmailTemplates";
 import DealAnalytics from "./pages/DealAnalytics";
 import Upgrade from "./pages/Upgrade";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { session, loading } = useAuth();
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Lädt...</div>;
@@ -67,22 +53,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const SubscriptionRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const { subscribed, loading: subLoading } = useSubscription();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setAuthLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { session, loading: authLoading } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscriptionContext();
 
   if (authLoading || subLoading) {
     return <div className="flex items-center justify-center min-h-screen">Lädt...</div>;
@@ -99,45 +71,53 @@ const SubscriptionRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<Landing />} />
+    <Route path="/auth" element={<Auth />} />
+    <Route path="/subscription-required" element={<ProtectedRoute><SubscriptionRequired /></ProtectedRoute>} />
+    <Route path="/onboarding" element={<SubscriptionRoute><Onboarding /></SubscriptionRoute>} />
+    <Route path="/dashboard" element={<SubscriptionRoute><Dashboard /></SubscriptionRoute>} />
+    <Route path="/pipeline" element={<SubscriptionRoute><Pipeline /></SubscriptionRoute>} />
+    <Route path="/today" element={<SubscriptionRoute><Today /></SubscriptionRoute>} />
+    <Route path="/contacts" element={<SubscriptionRoute><Contacts /></SubscriptionRoute>} />
+    <Route path="/campaigns" element={<SubscriptionRoute><Campaigns /></SubscriptionRoute>} />
+    <Route path="/import-leads" element={<SubscriptionRoute><ImportLeads /></SubscriptionRoute>} />
+    <Route path="/api-keys" element={<SubscriptionRoute><ApiKeys /></SubscriptionRoute>} />
+    <Route path="/call-script" element={<SubscriptionRoute><CallScript /></SubscriptionRoute>} />
+    <Route path="/objections" element={<SubscriptionRoute><ObjectionLibrary /></SubscriptionRoute>} />
+    <Route path="/master-admin" element={<SubscriptionRoute><MasterAdmin /></SubscriptionRoute>} />
+    <Route path="/power-dialer" element={<SubscriptionRoute><PowerDialer /></SubscriptionRoute>} />
+    <Route path="/activity-log" element={<SubscriptionRoute><ActivityLog /></SubscriptionRoute>} />
+    <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
+    <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
+    <Route path="/landing-pages" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
+    <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
+    <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
+    <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
+    <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
+    <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
+    <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
+    <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
+    <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
+    <Route path="/invite/:token" element={<InviteRegister />} />
+    <Route path="/p/:slug" element={<VideoNote />} />
+    <Route path="/lp/:slug" element={<PublicLandingPage />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/subscription-required" element={<ProtectedRoute><SubscriptionRequired /></ProtectedRoute>} />
-          <Route path="/onboarding" element={<SubscriptionRoute><Onboarding /></SubscriptionRoute>} />
-          <Route path="/dashboard" element={<SubscriptionRoute><Dashboard /></SubscriptionRoute>} />
-          <Route path="/pipeline" element={<SubscriptionRoute><Pipeline /></SubscriptionRoute>} />
-          <Route path="/today" element={<SubscriptionRoute><Today /></SubscriptionRoute>} />
-          <Route path="/contacts" element={<SubscriptionRoute><Contacts /></SubscriptionRoute>} />
-          <Route path="/campaigns" element={<SubscriptionRoute><Campaigns /></SubscriptionRoute>} />
-          <Route path="/import-leads" element={<SubscriptionRoute><ImportLeads /></SubscriptionRoute>} />
-          <Route path="/api-keys" element={<SubscriptionRoute><ApiKeys /></SubscriptionRoute>} />
-          <Route path="/call-script" element={<SubscriptionRoute><CallScript /></SubscriptionRoute>} />
-          <Route path="/objections" element={<SubscriptionRoute><ObjectionLibrary /></SubscriptionRoute>} />
-          <Route path="/master-admin" element={<SubscriptionRoute><MasterAdmin /></SubscriptionRoute>} />
-          <Route path="/power-dialer" element={<SubscriptionRoute><PowerDialer /></SubscriptionRoute>} />
-          <Route path="/activity-log" element={<SubscriptionRoute><ActivityLog /></SubscriptionRoute>} />
-          <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
-          <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
-          <Route path="/landing-pages" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
-          <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
-          <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
-          <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
-          <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
-          <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
-          <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
-          <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
-          <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
-          <Route path="/invite/:token" element={<InviteRegister />} />
-          <Route path="/p/:slug" element={<VideoNote />} />
-          <Route path="/lp/:slug" element={<PublicLandingPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <AppRoutes />
+          </SubscriptionProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
