@@ -124,6 +124,7 @@ const App = () => (
           <Route path="/activity-log" element={<SubscriptionRoute><ActivityLog /></SubscriptionRoute>} />
           <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
           <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
+          <Route path="/landing-pages" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
           <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
           <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
           <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
