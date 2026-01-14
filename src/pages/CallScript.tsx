@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Save, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 interface CallScript {
@@ -24,7 +23,6 @@ export default function CallScript() {
   const [script, setScript] = useState<CallScript | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { role } = useUserRole();
   const { canUseLiveObjectionHandling } = useFeatureAccess();
 
   useEffect(() => {
