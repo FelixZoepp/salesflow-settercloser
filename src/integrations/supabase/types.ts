@@ -1150,6 +1150,149 @@ export type Database = {
           },
         ]
       }
+      lead_page_templates: {
+        Row: {
+          accent_color: string | null
+          account_id: string | null
+          background_color: string | null
+          calendar_url: string | null
+          coaching_badge: string | null
+          coaching_headline: string | null
+          coaching_subheadline: string | null
+          combined_headline: string | null
+          combined_text: string | null
+          comparison_badge: string | null
+          comparison_headline: string | null
+          comparison_subheadline: string | null
+          created_at: string
+          footer_company_name: string | null
+          footer_tagline: string | null
+          header_cta_text: string | null
+          header_logo_accent: string | null
+          header_logo_text: string | null
+          header_nav_items: Json | null
+          hero_cta_text: string | null
+          hero_headline: string | null
+          hero_subheadline: string | null
+          hero_video_caption: string | null
+          id: string
+          is_active: boolean
+          name: string
+          others_items: Json | null
+          others_title: string | null
+          pillar1_description: string | null
+          pillar1_items: Json | null
+          pillar1_subtitle: string | null
+          pillar1_title: string | null
+          pillar2_description: string | null
+          pillar2_items: Json | null
+          pillar2_subtitle: string | null
+          pillar2_title: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          text_color: string | null
+          updated_at: string
+          us_items: Json | null
+          us_title: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          account_id?: string | null
+          background_color?: string | null
+          calendar_url?: string | null
+          coaching_badge?: string | null
+          coaching_headline?: string | null
+          coaching_subheadline?: string | null
+          combined_headline?: string | null
+          combined_text?: string | null
+          comparison_badge?: string | null
+          comparison_headline?: string | null
+          comparison_subheadline?: string | null
+          created_at?: string
+          footer_company_name?: string | null
+          footer_tagline?: string | null
+          header_cta_text?: string | null
+          header_logo_accent?: string | null
+          header_logo_text?: string | null
+          header_nav_items?: Json | null
+          hero_cta_text?: string | null
+          hero_headline?: string | null
+          hero_subheadline?: string | null
+          hero_video_caption?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          others_items?: Json | null
+          others_title?: string | null
+          pillar1_description?: string | null
+          pillar1_items?: Json | null
+          pillar1_subtitle?: string | null
+          pillar1_title?: string | null
+          pillar2_description?: string | null
+          pillar2_items?: Json | null
+          pillar2_subtitle?: string | null
+          pillar2_title?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+          us_items?: Json | null
+          us_title?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          account_id?: string | null
+          background_color?: string | null
+          calendar_url?: string | null
+          coaching_badge?: string | null
+          coaching_headline?: string | null
+          coaching_subheadline?: string | null
+          combined_headline?: string | null
+          combined_text?: string | null
+          comparison_badge?: string | null
+          comparison_headline?: string | null
+          comparison_subheadline?: string | null
+          created_at?: string
+          footer_company_name?: string | null
+          footer_tagline?: string | null
+          header_cta_text?: string | null
+          header_logo_accent?: string | null
+          header_logo_text?: string | null
+          header_nav_items?: Json | null
+          hero_cta_text?: string | null
+          hero_headline?: string | null
+          hero_subheadline?: string | null
+          hero_video_caption?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          others_items?: Json | null
+          others_title?: string | null
+          pillar1_description?: string | null
+          pillar1_items?: Json | null
+          pillar1_subtitle?: string | null
+          pillar1_title?: string | null
+          pillar2_description?: string | null
+          pillar2_items?: Json | null
+          pillar2_subtitle?: string | null
+          pillar2_title?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+          us_items?: Json | null
+          us_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_page_templates_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tracking_events: {
         Row: {
           account_id: string | null
