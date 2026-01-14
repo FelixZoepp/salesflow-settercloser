@@ -33,12 +33,14 @@ import {
   Globe,
   Wand2,
   Palette,
-  Calendar
+  Calendar,
+  Phone
 } from "lucide-react";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
 
 const STEP_TITLES = [
   "HeyGen Integration",
+  "SIP-Telefonie",
   "Custom Domain",
   "Pitch-Video hochladen",
   "Leads importieren",
@@ -119,6 +121,14 @@ const Onboarding = () => {
   // Step 2: Custom Domain
   const [customDomain, setCustomDomain] = useState("");
 
+  // Step 2: SIP Telephony
+  const [sipProvider, setSipProvider] = useState("placetel");
+  const [sipServer, setSipServer] = useState("");
+  const [sipUsername, setSipUsername] = useState("");
+  const [sipPassword, setSipPassword] = useState("");
+  const [sipDisplayName, setSipDisplayName] = useState("");
+  const [showSipPassword, setShowSipPassword] = useState(false);
+
   // Step 3: Pitch Video
   const [campaignName, setCampaignName] = useState("Meine erste Kampagne");
   const [pitchVideoUrl, setPitchVideoUrl] = useState("");
@@ -149,12 +159,13 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     if (!onboardingLoading) {
       // Set active step to the first incomplete step
       if (!status.steps.heygen) setActiveStep(0);
-      else if (!status.steps.domain) setActiveStep(1);
-      else if (!status.steps.pitchVideo) setActiveStep(2);
-      else if (!status.steps.leads) setActiveStep(3);
-      else if (!status.steps.script) setActiveStep(4);
-      else if (!status.steps.landingPage) setActiveStep(5);
-      else setActiveStep(5);
+      else if (!status.steps.telephony) setActiveStep(1);
+      else if (!status.steps.domain) setActiveStep(2);
+      else if (!status.steps.pitchVideo) setActiveStep(3);
+      else if (!status.steps.leads) setActiveStep(4);
+      else if (!status.steps.script) setActiveStep(5);
+      else if (!status.steps.landingPage) setActiveStep(6);
+      else setActiveStep(6);
     }
   }, [status, onboardingLoading]);
 
@@ -197,6 +208,49 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     }
   };
 
+  const handleSaveSip = async () => {
+    if (!accountId) return;
+    
+    if (!sipServer || !sipUsername || !sipPassword) {
+      toast.error("Bitte alle SIP-Zugangsdaten eingeben");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Clean and format server URL
+      let serverUrl = sipServer.trim();
+      if (!serverUrl.startsWith('wss://')) {
+        serverUrl = 'wss://' + serverUrl.replace(/^https?:\/\//, '');
+      }
+
+      const { error } = await supabase
+        .from('account_integrations')
+        .upsert({
+          account_id: accountId,
+          sip_provider: sipProvider,
+          sip_server: serverUrl,
+          sip_username: sipUsername,
+          sip_password_encrypted: btoa(sipPassword),
+          sip_display_name: sipDisplayName || null,
+          sip_domain: serverUrl.replace('wss://', '').split('/')[0],
+          sip_enabled: true,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'account_id' });
+
+      if (error) throw error;
+
+      toast.success("SIP-Telefonie gespeichert!");
+      await refresh();
+      setActiveStep(2);
+    } catch (error) {
+      toast.error("Fehler beim Speichern");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveDomain = async () => {
     if (!accountId) return;
     
@@ -222,7 +276,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success("Domain gespeichert! Alle neuen Leads bekommen diese Domain.");
       await refresh();
-      setActiveStep(2);
+      setActiveStep(3);
     } catch (error) {
       toast.error("Fehler beim Speichern");
       console.error(error);
@@ -254,7 +308,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success("Kampagne erstellt!");
       await refresh();
-      setActiveStep(3);
+      setActiveStep(4);
     } catch (error) {
       toast.error("Fehler beim Erstellen der Kampagne");
       console.error(error);
@@ -293,7 +347,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success("Vertriebsskript erstellt!");
       await refresh();
-      setActiveStep(5);
+      setActiveStep(6);
     } catch (error) {
       toast.error("Fehler beim Erstellen des Skripts");
       console.error(error);
@@ -386,7 +440,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const completedSteps = Object.values(status.steps).filter(Boolean).length;
-  const progressPercent = (completedSteps / 6) * 100;
+  const progressPercent = (completedSteps / 7) * 100;
 
   if (accountLoading || onboardingLoading) {
     return (
@@ -447,16 +501,16 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Fortschritt</span>
-              <span className="text-sm text-muted-foreground">{completedSteps} von 6 Schritten</span>
+              <span className="text-sm text-muted-foreground">{completedSteps} von 7 Schritten</span>
             </div>
             <Progress value={progressPercent} className="h-2" />
           </CardContent>
         </Card>
 
         {/* Steps */}
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-7 gap-2">
           {STEP_TITLES.map((title, index) => {
-            const stepKeys = ['heygen', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+            const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
             const isComplete = status.steps[stepKeys[index]];
             const isActive = activeStep === index;
             
@@ -491,24 +545,26 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           <CardHeader>
             <div className="flex items-center gap-3">
               {activeStep === 0 && <Key className="h-6 w-6 text-primary" />}
-              {activeStep === 1 && <Globe className="h-6 w-6 text-primary" />}
-              {activeStep === 2 && <Video className="h-6 w-6 text-primary" />}
-              {activeStep === 3 && <Users className="h-6 w-6 text-primary" />}
-              {activeStep === 4 && <FileText className="h-6 w-6 text-primary" />}
-              {activeStep === 5 && <Palette className="h-6 w-6 text-primary" />}
+              {activeStep === 1 && <Phone className="h-6 w-6 text-primary" />}
+              {activeStep === 2 && <Globe className="h-6 w-6 text-primary" />}
+              {activeStep === 3 && <Video className="h-6 w-6 text-primary" />}
+              {activeStep === 4 && <Users className="h-6 w-6 text-primary" />}
+              {activeStep === 5 && <FileText className="h-6 w-6 text-primary" />}
+              {activeStep === 6 && <Palette className="h-6 w-6 text-primary" />}
               <div>
                 <CardTitle>Schritt {activeStep + 1}: {STEP_TITLES[activeStep]}</CardTitle>
                 <CardDescription>
                   {activeStep === 0 && "Verbinde dein HeyGen-Konto für personalisierte Avatar-Videos"}
-                  {activeStep === 1 && "Verbinde deine eigene Domain für personalisierte Lead-Seiten"}
-                  {activeStep === 2 && "Lade dein 2-Minuten Pitch-Video hoch"}
-                  {activeStep === 3 && "Importiere deine Leads per CSV oder manuell"}
-                  {activeStep === 4 && "Erstelle ein Skript für deine Vertriebsanrufe"}
-                  {activeStep === 5 && "Erstelle eine KI-generierte Landing Page für deine Kampagne"}
+                  {activeStep === 1 && "Verbinde deinen SIP-Anbieter für Telefonie (Placetel, sipgate, etc.)"}
+                  {activeStep === 2 && "Verbinde deine eigene Domain für personalisierte Lead-Seiten"}
+                  {activeStep === 3 && "Lade dein 2-Minuten Pitch-Video hoch"}
+                  {activeStep === 4 && "Importiere deine Leads per CSV oder manuell"}
+                  {activeStep === 5 && "Erstelle ein Skript für deine Vertriebsanrufe"}
+                  {activeStep === 6 && "Erstelle eine KI-generierte Landing Page für deine Kampagne"}
                 </CardDescription>
               </div>
               {(() => {
-                const stepKeys = ['heygen', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+                const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
                 return status.steps[stepKeys[activeStep]] && (
                   <Badge className="ml-auto bg-green-500/20 text-green-600">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> Abgeschlossen
@@ -595,8 +651,111 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 2: Custom Domain */}
+            {/* Step 2: SIP Telephony */}
             {activeStep === 1 && (
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-sm">
+                    <strong>SIP-Telefonie</strong> ermöglicht dir, direkt aus der App zu telefonieren und 
+                    Anrufe aufzuzeichnen. Unterstützte Anbieter: Placetel, sipgate, etc.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>SIP-Anbieter</Label>
+                  <select
+                    value={sipProvider}
+                    onChange={(e) => setSipProvider(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="placetel">Placetel</option>
+                    <option value="sipgate">sipgate</option>
+                    <option value="other">Anderer Anbieter</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sipServer">WebSocket Server URL</Label>
+                  <Input
+                    id="sipServer"
+                    placeholder={sipProvider === 'placetel' ? 'wss://webrtc.2.placetel.de' : 'wss://...'}
+                    value={sipServer}
+                    onChange={(e) => setSipServer(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {sipProvider === 'placetel' && 'Für Placetel: wss://webrtc.2.placetel.de'}
+                    {sipProvider === 'sipgate' && 'Für sipgate: wss://api.sipgate.com/ws'}
+                    {sipProvider === 'other' && 'WebSocket-URL deines SIP-Anbieters'}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sipUsername">SIP-Benutzername</Label>
+                  <Input
+                    id="sipUsername"
+                    placeholder="z.B. 123456 oder user@domain.de"
+                    value={sipUsername}
+                    onChange={(e) => setSipUsername(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sipPassword">SIP-Passwort</Label>
+                  <div className="relative">
+                    <Input
+                      id="sipPassword"
+                      type={showSipPassword ? "text" : "password"}
+                      placeholder="Dein SIP-Passwort"
+                      value={sipPassword}
+                      onChange={(e) => setSipPassword(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowSipPassword(!showSipPassword)}
+                    >
+                      {showSipPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sipDisplayName">Anzeigename (optional)</Label>
+                  <Input
+                    id="sipDisplayName"
+                    placeholder="z.B. Max Mustermann"
+                    value={sipDisplayName}
+                    onChange={(e) => setSipDisplayName(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Wird dem Angerufenen angezeigt
+                  </p>
+                </div>
+
+                <Button 
+                  onClick={handleSaveSip} 
+                  disabled={saving || !sipServer || !sipUsername || !sipPassword}
+                  className="w-full"
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  SIP-Telefonie speichern & weiter
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveStep(2)}
+                  className="w-full"
+                >
+                  Später einrichten
+                </Button>
+              </div>
+            )}
+
+            {/* Step 3: Custom Domain */}
+            {activeStep === 2 && (
               <div className="space-y-4">
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-sm">
@@ -653,7 +812,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
                 <Button 
                   variant="ghost" 
-                  onClick={() => setActiveStep(2)}
+                  onClick={() => setActiveStep(3)}
                   className="w-full"
                 >
                   Später einrichten
@@ -661,8 +820,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </div>
             )}
 
-            {/* Step 3: Pitch Video */}
-            {activeStep === 2 && (
+            {/* Step 4: Pitch Video */}
+            {activeStep === 3 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="campaignName">Kampagnenname</Label>
@@ -703,8 +862,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 4: Leads */}
-            {activeStep === 3 && (
+            {/* Step 5: Leads */}
+            {activeStep === 4 && (
               <div className="space-y-4">
                 <p className="text-muted-foreground">
                   Importiere deine Lead-Liste per CSV-Datei oder lege Leads manuell an.
@@ -731,7 +890,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
                 {status.steps.leads && (
                   <Button 
-                    onClick={() => setActiveStep(4)}
+                    onClick={() => setActiveStep(5)}
                     className="w-full"
                   >
                     Weiter zum nächsten Schritt
@@ -741,8 +900,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </div>
             )}
 
-            {/* Step 5: Script */}
-            {activeStep === 4 && (
+            {/* Step 6: Script */}
+            {activeStep === 5 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="scriptName">Skript-Name</Label>
@@ -780,8 +939,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 6: Landing Page */}
-            {activeStep === 5 && (
+            {/* Step 7: Landing Page */}
+            {activeStep === 6 && (
               <div className="space-y-6">
                 {!generatedContent ? (
                   <>
