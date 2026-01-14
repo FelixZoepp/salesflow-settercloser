@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock, Play, Pause, Download } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
@@ -98,6 +98,10 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   const [deal, setDeal] = useState<Deal | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [leadDialogContainer, setLeadDialogContainer] = useState<HTMLDivElement | null>(null);
+  const leadDialogContentRef = useCallback((node: HTMLDivElement | null) => {
+    setLeadDialogContainer(node);
+  }, []);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [callScript, setCallScript] = useState<string>("");
@@ -447,6 +451,7 @@ Stage: ${deal.stage}
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
+        ref={leadDialogContentRef}
         className="max-w-4xl max-h-[90vh] p-0 gap-0 glass-card flex flex-col"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -748,6 +753,7 @@ Stage: ${deal.stage}
                       dealId={deal.id}
                       contactName={`${contact.first_name} ${contact.last_name}`}
                       onTaskCreated={fetchLeadData}
+                      portalContainer={leadDialogContainer}
                       trigger={
                         <Button variant="outline" className="w-full">
                           <Plus className="w-4 h-4 mr-2" />
