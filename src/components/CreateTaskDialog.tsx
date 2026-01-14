@@ -33,6 +33,8 @@ export default function CreateTaskDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    console.log("[CreateTaskDialog] Form submitted, prevented default");
     
     if (!title.trim()) {
       toast.error("Bitte gib einen Titel ein");
@@ -151,9 +153,18 @@ export default function CreateTaskDialog({
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                console.log("[CreateTaskDialog] Title input changed:", e.target.value);
+                setTitle(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                console.log("[CreateTaskDialog] Key pressed:", e.key);
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
               placeholder="z.B. Follow-up Anruf"
-              required
             />
           </div>
 
