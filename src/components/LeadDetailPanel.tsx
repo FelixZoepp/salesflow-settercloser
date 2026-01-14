@@ -72,6 +72,18 @@ interface Activity {
   duration_min: number | null;
 }
 
+interface EmailLog {
+  id: string;
+  subject: string;
+  to_email: string;
+  from_email: string;
+  status: string | null;
+  created_at: string;
+  opened_at: string | null;
+  open_count: number | null;
+  click_count: number | null;
+}
+
 interface LeadDetailPanelProps {
   dealId: string;
   open: boolean;
@@ -85,6 +97,7 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   const [contact, setContact] = useState<Contact | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [callScript, setCallScript] = useState<string>("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
@@ -226,6 +239,16 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
         .limit(10);
 
       if (activitiesData) setActivities(activitiesData);
+
+      // Get email logs
+      const { data: emailLogsData } = await supabase
+        .from('email_logs')
+        .select('id, subject, to_email, from_email, status, created_at, opened_at, open_count, click_count')
+        .eq('contact_id', dealData.contact_id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (emailLogsData) setEmailLogs(emailLogsData);
 
       // Get active call script
       const { data: scriptData } = await supabase
@@ -873,6 +896,70 @@ Stage: ${deal.stage}
                               </div>
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
                                 {new Date(activity.timestamp).toLocaleDateString('de-DE')}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email History */}
+                  <div className="stat-card !p-0 overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          E-Mail-Historie
+                        </h4>
+                        <p className="text-xs text-muted-foreground">{emailLogs.length} E-Mails gesendet</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      {emailLogs.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">Noch keine E-Mails gesendet</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {emailLogs.map((email) => (
+                            <div key={email.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                <Mail className="w-3.5 h-3.5 text-blue-400" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                                    {email.subject}
+                                  </span>
+                                  {email.status && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-[10px] ${
+                                        email.status === 'sent' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                        email.status === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                                        'bg-muted text-muted-foreground'
+                                      }`}
+                                    >
+                                      {email.status === 'sent' ? 'Gesendet' : email.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                  {email.opened_at && (
+                                    <span className="flex items-center gap-1 text-green-400">
+                                      <Eye className="w-3 h-3" />
+                                      Geöffnet ({email.open_count || 1}x)
+                                    </span>
+                                  )}
+                                  {(email.click_count || 0) > 0 && (
+                                    <span className="flex items-center gap-1 text-primary">
+                                      <MousePointer className="w-3 h-3" />
+                                      {email.click_count} Klicks
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(email.created_at).toLocaleDateString('de-DE')}
                               </span>
                             </div>
                           ))}
