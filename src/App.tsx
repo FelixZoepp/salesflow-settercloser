@@ -35,7 +35,7 @@ import EmailTemplates from "./pages/EmailTemplates";
 import DealAnalytics from "./pages/DealAnalytics";
 import Upgrade from "./pages/Upgrade";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
-import BrandingSetupPage from "./pages/BrandingSetup";
+
 
 const queryClient = new QueryClient();
 
@@ -99,7 +99,7 @@ const AppRoutes = () => (
     <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
-    <Route path="/branding" element={<SubscriptionRoute><BrandingSetupPage /></SubscriptionRoute>} />
+    
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
     <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
     <Route path="/invite/:token" element={<InviteRegister />} />
