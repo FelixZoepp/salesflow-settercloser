@@ -36,7 +36,7 @@ const Auth = () => {
         .single();
 
       if (profile?.onboarding_completed) {
-        navigate("/");
+        navigate("/dashboard");
       } else {
         navigate("/onboarding");
       }
@@ -151,7 +151,7 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Passwort erfolgreich geändert!");
         isRecoveryRef.current = false;
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       if (error.message.includes("Invalid login credentials")) {
