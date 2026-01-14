@@ -504,7 +504,24 @@ Stage: ${deal.stage}
         });
       }
 
-      toast.success("Aufgabe erstellt!");
+      // Format confirmation message with date/time
+      let confirmationMsg = "Aufgabe erstellt!";
+      if (taskDueDate) {
+        const timeStr = taskDueTime || '09:00';
+        const localDate = new Date(`${taskDueDate}T${timeStr}:00`);
+        const dateFormatted = localDate.toLocaleDateString('de-DE', { 
+          weekday: 'short', 
+          day: '2-digit', 
+          month: '2-digit' 
+        });
+        const timeFormatted = localDate.toLocaleTimeString('de-DE', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        confirmationMsg = `Aufgabe erstellt für ${dateFormatted} um ${timeFormatted} Uhr`;
+      }
+
+      toast.success(confirmationMsg);
       setTaskTitle("");
       setTaskDueDate("");
       setTaskDueTime("");
