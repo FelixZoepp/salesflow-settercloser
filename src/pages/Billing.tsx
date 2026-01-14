@@ -255,22 +255,24 @@ const Billing = () => {
                         <div className="flex gap-2">
                           {invoice.invoice_pdf && (
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="outline"
+                              size="sm"
                               onClick={() => window.open(invoice.invoice_pdf!, '_blank')}
-                              className="text-muted-foreground hover:text-foreground"
+                              className="border-white/10 bg-white/5 hover:bg-white/10"
                             >
-                              <Download className="w-4 h-4" />
+                              <Download className="w-4 h-4 mr-1" />
+                              PDF
                             </Button>
                           )}
                           {invoice.hosted_invoice_url && (
                             <Button
                               variant="ghost"
-                              size="icon"
+                              size="sm"
                               onClick={() => window.open(invoice.hosted_invoice_url!, '_blank')}
                               className="text-muted-foreground hover:text-foreground"
                             >
-                              <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Online
                             </Button>
                           )}
                         </div>
