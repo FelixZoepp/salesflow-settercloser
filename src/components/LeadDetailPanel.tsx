@@ -470,9 +470,10 @@ Stage: ${deal.stage}
 
       let dueDatetime: string | null = null;
       if (taskDueDate) {
-        dueDatetime = taskDueTime 
-          ? `${taskDueDate}T${taskDueTime}:00`
-          : `${taskDueDate}T09:00:00`;
+        // Create a local date object and convert to ISO string (which includes timezone offset)
+        const timeStr = taskDueTime || '09:00';
+        const localDate = new Date(`${taskDueDate}T${timeStr}:00`);
+        dueDatetime = localDate.toISOString();
       }
 
       const taskData: any = {
