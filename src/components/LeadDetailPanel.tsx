@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,21 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PIPELINE_STAGES, CALL_OUTCOMES, getCallOutcomeColor } from "@/lib/pipelineStages";
 import { WhisperGeminiHandler, ObjectionHandling } from "@/utils/whisperGeminiHandler";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { useQuery, useMutation } from "@tanstack/react-query";
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body_html: string;
+}
 
 interface Contact {
   id: string;
@@ -69,6 +80,7 @@ interface LeadDetailPanelProps {
 }
 
 export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: LeadDetailPanelProps) {
+  const { canUseLiveObjectionHandling, canUseEmailOutreach, loading: featureLoading } = useFeatureAccess();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -91,6 +103,53 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   const [callStatus, setCallStatus] = useState<string>('disconnected');
   const [objectionHandlings, setObjectionHandlings] = useState<ObjectionHandling[]>([]);
   const handlerRef = useRef<WhisperGeminiHandler | null>(null);
+  
+  // Email state
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+
+  // Fetch email templates
+  const { data: emailTemplates = [] } = useQuery({
+    queryKey: ['email-templates-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('id, name, subject, body_html')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data as EmailTemplate[];
+    },
+    enabled: open && canUseEmailOutreach,
+  });
+
+  // Send email mutation
+  const sendEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!contact?.id) throw new Error("Kein Kontakt ausgewählt");
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          contactId: contact.id,
+          templateId: selectedTemplateId || null,
+          subject: emailSubject,
+          bodyHtml: emailBody,
+        }
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("E-Mail erfolgreich gesendet");
+      setEmailSubject("");
+      setEmailBody("");
+      setSelectedTemplateId("");
+      fetchLeadData();
+    },
+    onError: (error: any) => {
+      console.error('Email send error:', error);
+      toast.error("Fehler beim Senden der E-Mail");
+    }
+  });
 
   useEffect(() => {
     if (dealId && open) {
@@ -660,6 +719,107 @@ Stage: ${deal.stage}
                       Notiz speichern
                     </Button>
                   </div>
+
+                  {/* Email Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5" />
+                        E-Mail senden
+                        {!canUseEmailOutreach && (
+                          <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">
+                            Pro
+                          </Badge>
+                        )}
+                      </span>
+                    </div>
+                    
+                    {!canUseEmailOutreach ? (
+                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                        <UpgradePrompt 
+                          featureName="E-Mail Outreach" 
+                          description="E-Mail-Versand aus dem CRM ist nur im Pro-Paket verfügbar."
+                          className="border-0 bg-transparent p-0"
+                        />
+                      </div>
+                    ) : !contact.email ? (
+                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          Keine E-Mail-Adresse hinterlegt
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Template Selection */}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Vorlage auswählen</Label>
+                          <Select
+                            value={selectedTemplateId}
+                            onValueChange={(value) => {
+                              setSelectedTemplateId(value);
+                              const template = emailTemplates.find(t => t.id === value);
+                              if (template) {
+                                // Replace placeholders
+                                let subject = template.subject
+                                  .replace(/\{\{first_name\}\}/g, contact.first_name || '')
+                                  .replace(/\{\{last_name\}\}/g, contact.last_name || '')
+                                  .replace(/\{\{company\}\}/g, contact.company || '');
+                                let body = template.body_html
+                                  .replace(/\{\{first_name\}\}/g, contact.first_name || '')
+                                  .replace(/\{\{last_name\}\}/g, contact.last_name || '')
+                                  .replace(/\{\{company\}\}/g, contact.company || '');
+                                setEmailSubject(subject);
+                                setEmailBody(body);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="bg-white/[0.02] border-white/5">
+                              <SelectValue placeholder="Vorlage wählen (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {emailTemplates.map(template => (
+                                <SelectItem key={template.id} value={template.id}>
+                                  {template.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Subject */}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Betreff</Label>
+                          <Input
+                            value={emailSubject}
+                            onChange={(e) => setEmailSubject(e.target.value)}
+                            placeholder="E-Mail Betreff..."
+                            className="bg-white/[0.02] border-white/5"
+                          />
+                        </div>
+
+                        {/* Body */}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Nachricht</Label>
+                          <Textarea
+                            value={emailBody}
+                            onChange={(e) => setEmailBody(e.target.value)}
+                            placeholder="E-Mail Text..."
+                            rows={4}
+                            className="bg-white/[0.02] border-white/5"
+                          />
+                        </div>
+
+                        <Button 
+                          onClick={() => sendEmailMutation.mutate()} 
+                          className="w-full"
+                          disabled={sendEmailMutation.isPending || !emailSubject.trim() || !emailBody.trim()}
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          {sendEmailMutation.isPending ? "Wird gesendet..." : "E-Mail senden"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="activities" className="p-6 space-y-6 mt-0">
@@ -724,7 +884,22 @@ Stage: ${deal.stage}
 
                 <TabsContent value="call" className="p-6 space-y-6 mt-0">
                   {/* Live Call Section */}
-                  {isLiveCallActive ? (
+                  {!canUseLiveObjectionHandling ? (
+                    <div className="stat-card !p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Live-Call mit KI-Support</span>
+                        <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">
+                          Pro
+                        </Badge>
+                      </div>
+                      <UpgradePrompt 
+                        featureName="KI-Einwandbehandlung" 
+                        description="Live-Call mit KI-gestützter Einwandbehandlung ist nur im Pro-Paket verfügbar."
+                        className="border-0 bg-transparent p-0"
+                      />
+                    </div>
+                  ) : isLiveCallActive ? (
                     <Card className="border-primary/30 bg-primary/5">
                       <CardHeader>
                         <CardTitle className="text-base flex items-center gap-2">
