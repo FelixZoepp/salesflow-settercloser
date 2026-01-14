@@ -12,7 +12,7 @@ import { getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
 import PhoneIntegration from "@/components/PhoneIntegration";
 import SoftphoneDialog from "@/components/SoftphoneDialog";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -377,7 +377,7 @@ interface DroppableStageProps {
 }
 
 const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, isDragging, children }: DroppableStageProps) => {
-  const { setNodeRef, isOver } = useSortable({
+  const { setNodeRef, isOver } = useDroppable({
     id: stage,
     data: { type: 'stage' }
   });
