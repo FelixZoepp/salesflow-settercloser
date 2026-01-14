@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Trash2, Edit, Info, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 
@@ -29,7 +28,6 @@ export default function ObjectionLibrary() {
   const [loading, setLoading] = useState(true);
   const [editingObjection, setEditingObjection] = useState<Objection | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { role } = useUserRole();
   const { canUseLiveObjectionHandling, loading: featureLoading } = useFeatureAccess();
 
   const emptyObjection: Partial<Objection> = {
@@ -167,19 +165,6 @@ export default function ObjectionLibrary() {
     );
   }
 
-  if (role !== 'admin') {
-    return (
-      <Layout>
-        <div className="p-8">
-          <Alert variant="destructive">
-            <AlertDescription>
-              Nur Administratoren können Einwände verwalten.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </Layout>
-    );
-  }
 
   // Group by category
   const groupedObjections = objections.reduce((acc, obj) => {
