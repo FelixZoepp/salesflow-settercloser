@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock, Play, Pause, Download } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
-import CreateTaskDialog from "@/components/CreateTaskDialog";
 import CallHistory from "@/components/CallHistory";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,6 +126,13 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
+  
+  // Inline task creation state
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskDueTime, setTaskDueTime] = useState("");
+  const [taskNote, setTaskNote] = useState("");
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Fetch email templates
   const { data: emailTemplates = [] } = useQuery({
@@ -441,6 +447,83 @@ Stage: ${deal.stage}
     setCallStatus('disconnected');
   };
 
+  // Inline task creation handler
+  const handleCreateTask = async () => {
+    if (!taskTitle.trim()) {
+      toast.error("Bitte gib einen Titel ein");
+      return;
+    }
+
+    setIsCreatingTask(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Nicht angemeldet");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      let dueDatetime: string | null = null;
+      if (taskDueDate) {
+        dueDatetime = taskDueTime 
+          ? `${taskDueDate}T${taskDueTime}:00`
+          : `${taskDueDate}T09:00:00`;
+      }
+
+      const taskData: any = {
+        title: taskTitle.trim(),
+        assignee_id: user.id,
+        status: 'open',
+        due_date: dueDatetime,
+        account_id: profile?.account_id,
+        related_type: 'contact',
+        related_id: contact?.id,
+      };
+
+      if (deal?.id) {
+        taskData.related_type = 'deal';
+        taskData.related_id = deal.id;
+      }
+
+      const { error } = await supabase.from('tasks').insert(taskData);
+      if (error) throw error;
+
+      if (taskNote.trim() && contact?.id) {
+        await supabase.from('activities').insert({
+          contact_id: contact.id,
+          user_id: user.id,
+          type: 'note',
+          note: `[Aufgabe: ${taskTitle}] ${taskNote}`,
+          account_id: profile?.account_id,
+        });
+      }
+
+      toast.success("Aufgabe erstellt!");
+      setTaskTitle("");
+      setTaskDueDate("");
+      setTaskDueTime("");
+      setTaskNote("");
+      fetchLeadData();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error("Fehler beim Erstellen der Aufgabe");
+    } finally {
+      setIsCreatingTask(false);
+    }
+  };
+
+  const setQuickDate = (days: number, time: string) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    setTaskDueDate(date.toISOString().split('T')[0]);
+    setTaskDueTime(time);
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} kopiert`);
@@ -740,27 +823,90 @@ Stage: ${deal.stage}
                     }}
                   />
 
-                  {/* Task Creation */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
+                  {/* Inline Task Creation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Aufgabe erstellen
                       </span>
                     </div>
-                    <CreateTaskDialog
-                      contactId={contact.id}
-                      dealId={deal.id}
-                      contactName={`${contact.first_name} ${contact.last_name}`}
-                      onTaskCreated={fetchLeadData}
-                      portalContainer={leadDialogContainer}
-                      trigger={
-                        <Button variant="outline" className="w-full">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Neue Aufgabe für diesen Lead
-                        </Button>
-                      }
+                    
+                    <Input
+                      value={taskTitle}
+                      onChange={(e) => setTaskTitle(e.target.value)}
+                      placeholder="Aufgaben-Titel, z.B. Follow-up Anruf"
+                      className="bg-white/[0.02] border-white/10"
                     />
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant={taskDueDate === new Date().toISOString().split('T')[0] && taskDueTime === "14:00" ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickDate(0, "14:00")}
+                      >
+                        Heute 14:00
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={taskDueDate === new Date(Date.now() + 86400000).toISOString().split('T')[0] && taskDueTime === "09:00" ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickDate(1, "09:00")}
+                      >
+                        Morgen 09:00
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={taskDueDate === new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0] && taskDueTime === "09:00" ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickDate(7, "09:00")}
+                      >
+                        In 1 Woche
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="date"
+                        value={taskDueDate}
+                        onChange={(e) => setTaskDueDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="bg-white/[0.02] border-white/10 text-sm"
+                      />
+                      <Input
+                        type="time"
+                        value={taskDueTime}
+                        onChange={(e) => setTaskDueTime(e.target.value)}
+                        className="bg-white/[0.02] border-white/10 text-sm"
+                      />
+                    </div>
+                    
+                    <Textarea
+                      value={taskNote}
+                      onChange={(e) => setTaskNote(e.target.value)}
+                      placeholder="Optionale Notiz zur Aufgabe..."
+                      rows={2}
+                      className="bg-white/[0.02] border-white/10"
+                    />
+                    
+                    <Button 
+                      onClick={handleCreateTask} 
+                      className="w-full" 
+                      disabled={!taskTitle.trim() || isCreatingTask}
+                    >
+                      {isCreatingTask ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          Wird erstellt...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Aufgabe erstellen
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   {/* Add Note */}
