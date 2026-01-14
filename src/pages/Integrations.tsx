@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccountFilter } from "@/hooks/useAccountFilter";
-import { useUserRole } from "@/hooks/useUserRole";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import SipProviderSettings from "@/components/SipProviderSettings";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
-  const { isAdmin, loading: roleLoading } = useUserRole();
   const queryClient = useQueryClient();
 
   const [apiKey, setApiKey] = useState("");
@@ -135,27 +133,11 @@ const Integrations = () => {
     },
   });
 
-  if (accountLoading || roleLoading || isLoading) {
+  if (accountLoading || isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <Layout>
-        <div className="p-6">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">
-                Nur Administratoren können die Integrationseinstellungen bearbeiten.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </Layout>
     );
