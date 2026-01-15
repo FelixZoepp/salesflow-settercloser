@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
-  UserPlus, ChevronRight, FolderOpen, CalendarDays, MessageSquare
+  UserPlus, ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
+import UserAccountHeader from "@/components/UserAccountHeader";
 
 interface LayoutProps {
   children: ReactNode;
@@ -96,6 +97,12 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   const navItems: NavItem[] = [
+    { 
+      path: "/startseite", 
+      label: "Startseite", 
+      icon: Home, 
+      color: "text-emerald-400"
+    },
     { 
       path: "/dashboard", 
       label: "Dashboard", 
@@ -187,8 +194,11 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen bg-background relative">
       <div className="ambient-glow" />
       
-      <aside className="w-20 glass-sidebar flex flex-col relative z-50 items-center">
-        <div className="p-3 border-b border-white/5 w-full flex justify-center">
+      <aside className="w-20 lg:w-64 glass-sidebar flex flex-col relative z-50">
+        {/* Account Header */}
+        <UserAccountHeader />
+        
+        <div className="p-3 border-b border-white/5 w-full flex justify-center lg:hidden">
           <img 
             src={pitchfirstLogo} 
             alt="pitchfirst.io" 
