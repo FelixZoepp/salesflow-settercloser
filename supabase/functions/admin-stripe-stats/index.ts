@@ -165,6 +165,49 @@ serve(async (req) => {
     // Sort active subscriptions by creation date (newest first)
     activeSubscriptions.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
+    // Calculate MRR history for the last 6 months
+    logStep("Calculating MRR history");
+    const mrrHistory: { month: string; mrr: number; subscriptions: number }[] = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      
+      let monthMrr = 0;
+      let monthSubs = 0;
+
+      for (const sub of allSubscriptions) {
+        const createdAt = new Date(sub.created * 1000);
+        const canceledAt = sub.canceled_at ? new Date(sub.canceled_at * 1000) : null;
+        
+        // Check if subscription was active during this month
+        const wasCreatedBefore = createdAt <= monthEnd;
+        const wasActiveInMonth = !canceledAt || canceledAt > monthDate;
+        
+        if (wasCreatedBefore && wasActiveInMonth) {
+          const price = sub.items.data[0]?.price;
+          const priceId = price?.id || '';
+          const planInfo = PRICE_TO_PLAN[priceId] || { name: 'Unknown', monthlyAmount: 0 };
+          
+          // Only count if status was not incomplete at that time
+          if (sub.status !== 'incomplete') {
+            monthMrr += planInfo.monthlyAmount;
+            monthSubs++;
+          }
+        }
+      }
+
+      const monthName = monthDate.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
+      mrrHistory.push({
+        month: monthName,
+        mrr: monthMrr / 100, // Convert to EUR
+        subscriptions: monthSubs,
+      });
+    }
+
+    logStep("MRR history calculated", { months: mrrHistory.length });
+
     return new Response(JSON.stringify({
       mrr: mrrEur,
       arr: arrEur,
@@ -173,6 +216,7 @@ serve(async (req) => {
       subscriptionsByPlan,
       activeSubscriptions,
       canceledSubscriptions,
+      mrrHistory,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
