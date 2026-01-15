@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronRight, Camera, Loader2, User, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { prepareAvatarUpload } from "@/lib/avatarImage";
 
 interface UserProfile {
   id: string;
@@ -26,19 +26,21 @@ export default function UserAccountHeader() {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, email, avatar_url')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("id, name, email, avatar_url")
+        .eq("id", user.id)
         .single();
 
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
     }
@@ -50,38 +52,49 @@ export default function UserAccountHeader() {
 
     setUploading(true);
     try {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Bitte wähle eine Bilddatei aus");
+        return;
+      }
+
+      const processedFile = await prepareAvatarUpload(file);
+
       // Create a unique filename with user id as folder
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.webp`;
       const filePath = `${profile.id}/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Upload to Storage
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .from("avatars")
+        .upload(filePath, processedFile, {
+          upsert: true,
+          contentType: processedFile.type,
+          cacheControl: "3600",
+        });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
+        .eq("id", profile.id);
 
       if (updateError) throw updateError;
 
       setProfile({ ...profile, avatar_url: publicUrl });
       toast.success("Profilbild aktualisiert!");
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error);
       toast.error("Fehler beim Hochladen des Bildes");
     } finally {
       setUploading(false);
+      event.target.value = "";
     }
   };
 
