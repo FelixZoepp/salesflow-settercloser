@@ -3,52 +3,63 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Phone, Calendar, TrendingUp, Target, Euro, Users, PhoneOff, CheckCircle, XCircle } from "lucide-react";
+import { Phone, Calendar, TrendingUp, Target, Euro, PhoneOff, CheckCircle, XCircle, Eye, Flame } from "lucide-react";
 import { toast } from "sonner";
 
-type TimeFilter = 'today' | 'week' | 'month';
+type TimeFilter = "today" | "week" | "month";
 
-interface ColdKPIData {
+interface PipelineKPIs {
+  // Lead generation
+  totalLeads: number;
+  pageViews: number;
+  hotLeads: number;
+  conversionToHot: number;
+
+  // Calling / Setting
   callsTotal: number;
   callsReached: number;
   reachRate: number;
-  decisionMakers: number;
-  appointments: number;
-  appointmentRate: number;
-  rejectionRate: number;
-}
+  settingsScheduled: number;
+  settingNoShows: number;
+  settingNoShowRate: number;
 
-interface SetterCloserKPIData {
-  appointments: number;
-  noShowRate: number;
-  followUpRate: number;
-  closingRate: number;
-  revenue: number;
+  // Closing
+  closingsScheduled: number;
+  closingNoShows: number;
+  closingNoShowRate: number;
   dealsWon: number;
+  dealsLost: number;
+  closingRate: number;
+
+  // Revenue
+  totalRevenue: number;
+  avgDealSize: number;
 }
 
 const KPI = () => {
-  const [coldKPIs, setColdKPIs] = useState<ColdKPIData>({
+  const [kpis, setKpis] = useState<PipelineKPIs>({
+    totalLeads: 0,
+    pageViews: 0,
+    hotLeads: 0,
+    conversionToHot: 0,
     callsTotal: 0,
     callsReached: 0,
     reachRate: 0,
-    decisionMakers: 0,
-    appointments: 0,
-    appointmentRate: 0,
-    rejectionRate: 0,
-  });
-  
-  const [setterCloserKPIs, setSetterCloserKPIs] = useState<SetterCloserKPIData>({
-    appointments: 0,
-    noShowRate: 0,
-    followUpRate: 0,
-    closingRate: 0,
-    revenue: 0,
+    settingsScheduled: 0,
+    settingNoShows: 0,
+    settingNoShowRate: 0,
+    closingsScheduled: 0,
+    closingNoShows: 0,
+    closingNoShowRate: 0,
     dealsWon: 0,
+    dealsLost: 0,
+    closingRate: 0,
+    totalRevenue: 0,
+    avgDealSize: 0,
   });
-  
+
   const [loading, setLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
 
   useEffect(() => {
     fetchKPIs();
@@ -57,91 +68,103 @@ const KPI = () => {
   const getDateRange = () => {
     const now = new Date();
     let startDate: Date;
-    
-    if (timeFilter === 'today') {
-      startDate = new Date(now.setHours(0, 0, 0, 0));
-    } else if (timeFilter === 'week') {
-      startDate = new Date(now.setDate(now.getDate() - 7));
+
+    if (timeFilter === "today") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (timeFilter === "week") {
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     } else {
-      startDate = new Date(now.setDate(now.getDate() - 30));
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
-    
+
     return startDate.toISOString();
   };
 
   const fetchKPIs = async () => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const startDate = getDateRange();
 
-      // Cold Pipeline KPIs
-      const { data: coldActivities } = await supabase
-        .from('activities')
-        .select('*, deal_id(pipeline)')
-        .eq('type', 'call')
-        .gte('timestamp', startDate);
+      // Fetch all deals in the time range
+      const { data: deals } = await supabase
+        .from("deals")
+        .select("*")
+        .gte("created_at", startDate);
 
-      const coldCalls = coldActivities?.filter((a: any) => a.deal_id?.pipeline === 'cold') || [];
-      const callsTotal = coldCalls.length;
-      const callsReached = coldCalls.filter((a: any) => 
-        ['reached', 'decision_maker', 'interested', 'callback'].includes(a.outcome)
+      // Fetch all call activities in the time range
+      const { data: activities } = await supabase
+        .from("activities")
+        .select("*")
+        .eq("type", "call")
+        .gte("timestamp", startDate);
+
+      const allDeals = deals || [];
+      const allCalls = activities || [];
+
+      // Lead generation KPIs based on actual stages
+      const pageViews = allDeals.filter((d) => d.stage === "Hat Seite geöffnet").length;
+      const hotLeads = allDeals.filter((d) => d.stage === "Heißer Lead - Anrufen").length;
+      const totalLeads = pageViews + hotLeads;
+
+      // Setting KPIs
+      const settingsScheduled = allDeals.filter((d) => d.stage === "Setting").length;
+      const settingNoShows = allDeals.filter((d) => 
+        d.next_action?.toLowerCase().includes("no show") && 
+        d.stage === "Setting"
       ).length;
-      const decisionMakers = coldCalls.filter((a: any) => a.outcome === 'decision_maker').length;
 
-      const { count: appointments } = await supabase
-        .from('deals')
-        .select('*', { count: 'exact', head: true })
-        .eq('pipeline', 'cold')
-        .eq('stage', 'Termin gelegt' as any)
-        .gte('created_at', startDate);
+      // Closing KPIs
+      const closingsScheduled = allDeals.filter((d) => d.stage === "Closing").length;
+      const closingNoShows = allDeals.filter((d) => 
+        d.next_action?.toLowerCase().includes("no show") && 
+        d.stage === "Closing"
+      ).length;
 
-      const { count: rejections } = await supabase
-        .from('deals')
-        .select('*', { count: 'exact', head: true })
-        .eq('pipeline', 'cold')
-        .eq('stage', 'Kein Interesse / Kein Bedarf' as any)
-        .gte('created_at', startDate);
+      // Won/Lost deals
+      const wonDeals = allDeals.filter((d) => d.stage === "Abgeschlossen");
+      const lostDeals = allDeals.filter((d) => d.stage === "Verloren");
+      const dealsWon = wonDeals.length;
+      const dealsLost = lostDeals.length;
 
-      setColdKPIs({
+      // Revenue
+      const totalRevenue = wonDeals.reduce((sum, d) => sum + (Number(d.amount_eur) || 0), 0);
+      const avgDealSize = dealsWon > 0 ? totalRevenue / dealsWon : 0;
+
+      // Call KPIs
+      const callsTotal = allCalls.length;
+      const callsReached = allCalls.filter((a) =>
+        ["reached", "interested", "not_interested"].includes(a.outcome || "")
+      ).length;
+
+      // Calculate rates
+      const closingBase = settingsScheduled + closingsScheduled;
+      const closingRate = closingBase > 0 ? (dealsWon / closingBase) * 100 : 0;
+
+      setKpis({
+        totalLeads,
+        pageViews,
+        hotLeads,
+        conversionToHot: totalLeads > 0 ? (hotLeads / totalLeads) * 100 : 0,
         callsTotal,
         callsReached,
         reachRate: callsTotal > 0 ? (callsReached / callsTotal) * 100 : 0,
-        decisionMakers,
-        appointments: appointments || 0,
-        appointmentRate: callsTotal > 0 ? ((appointments || 0) / callsTotal) * 100 : 0,
-        rejectionRate: callsTotal > 0 ? ((rejections || 0) / callsTotal) * 100 : 0,
-      });
-
-      // Setter/Closer Pipeline KPIs
-      const { data: setterCloserDeals } = await supabase
-        .from('deals')
-        .select('*')
-        .eq('pipeline', 'setting_closing')
-        .gte('created_at', startDate);
-
-      const totalAppointments = setterCloserDeals?.length || 0;
-      const noShows = setterCloserDeals?.filter((d: any) => 
-        d.stage === 'Setting No Show' || d.stage === 'Closing No Show'
-      ).length || 0;
-      const followUps = setterCloserDeals?.filter((d: any) => 
-        d.stage === 'Setting Follow Up' || d.stage === 'Closing Follow Up'
-      ).length || 0;
-      const won = setterCloserDeals?.filter((d: any) => d.stage === 'Abgeschlossen').length || 0;
-      const totalRevenue = setterCloserDeals
-        ?.filter((d: any) => d.stage === 'Abgeschlossen')
-        .reduce((sum, d) => sum + Number(d.amount_eur), 0) || 0;
-
-      setSetterCloserKPIs({
-        appointments: totalAppointments,
-        noShowRate: totalAppointments > 0 ? (noShows / totalAppointments) * 100 : 0,
-        followUpRate: totalAppointments > 0 ? (followUps / totalAppointments) * 100 : 0,
-        closingRate: totalAppointments > 0 ? (won / totalAppointments) * 100 : 0,
-        revenue: totalRevenue,
-        dealsWon: won,
+        settingsScheduled,
+        settingNoShows,
+        settingNoShowRate: settingsScheduled > 0 ? (settingNoShows / settingsScheduled) * 100 : 0,
+        closingsScheduled,
+        closingNoShows,
+        closingNoShowRate: closingsScheduled > 0 ? (closingNoShows / closingsScheduled) * 100 : 0,
+        dealsWon,
+        dealsLost,
+        closingRate,
+        totalRevenue,
+        avgDealSize,
       });
     } catch (error: any) {
+      console.error("Error fetching KPIs:", error);
       toast.error("Fehler beim Laden der KPIs");
     } finally {
       setLoading(false);
@@ -172,127 +195,193 @@ const KPI = () => {
           </Tabs>
         </div>
 
+        {/* Lead Generation */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Kaltakquise</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Eye className="w-5 h-5 text-blue-400" />
+            Lead-Generierung
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Anwahlen</CardTitle>
+                <CardTitle className="text-sm font-medium">Seite geöffnet</CardTitle>
+                <Eye className="w-4 h-4 text-blue-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{kpis.pageViews}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Neue Leads aus Outreach
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Heiße Leads</CardTitle>
+                <Flame className="w-4 h-4 text-orange-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-orange-400">{kpis.hotLeads}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Bereit zum Anrufen
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Hot-Lead-Rate</CardTitle>
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-emerald-400">
+                  {kpis.conversionToHot.toFixed(1)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Konversion zu heißen Leads
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Anrufe</CardTitle>
                 <Phone className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{coldKPIs.callsTotal}</div>
+                <div className="text-3xl font-bold">{kpis.callsTotal}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {coldKPIs.callsReached} erreicht
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Erreichbarkeit</CardTitle>
-                <CheckCircle className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{coldKPIs.reachRate.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {coldKPIs.decisionMakers} Entscheider
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Terminquote</CardTitle>
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{coldKPIs.appointmentRate.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {coldKPIs.appointments} Termine
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ablehnungsquote</CardTitle>
-                <XCircle className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{coldKPIs.rejectionRate.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Kein Interesse
+                  {kpis.callsReached} erreicht ({kpis.reachRate.toFixed(0)}%)
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Setter/Closer</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+        {/* Setting & Closing */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-purple-400" />
+            Setting & Closing
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Termine</CardTitle>
-                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Settings geplant</CardTitle>
+                <Calendar className="w-4 h-4 text-purple-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{setterCloserKPIs.appointments}</div>
+                <div className="text-3xl font-bold">{kpis.settingsScheduled}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Gesamt
+                  Termine in Setting-Phase
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Closings geplant</CardTitle>
+                <Target className="w-4 h-4 text-amber-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{kpis.closingsScheduled}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Termine in Closing-Phase
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">No-Show-Rate</CardTitle>
-                <PhoneOff className="w-4 h-4 text-muted-foreground" />
+                <PhoneOff className="w-4 h-4 text-red-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{setterCloserKPIs.noShowRate.toFixed(1)}%</div>
+                <div className="text-3xl font-bold text-red-400">
+                  {((kpis.settingNoShowRate + kpis.closingNoShowRate) / 2).toFixed(1)}%
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Nicht erschienen
+                  {kpis.settingNoShows + kpis.closingNoShows} nicht erschienen
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Follow-Up-Quote</CardTitle>
+                <CardTitle className="text-sm font-medium">Closing-Rate</CardTitle>
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-emerald-400">
+                  {kpis.closingRate.toFixed(1)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Von Termin zu Abschluss
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Euro className="w-5 h-5 text-emerald-400" />
+            Ergebnisse
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="glass-card border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Gewonnen</CardTitle>
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-emerald-400">{kpis.dealsWon}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Abgeschlossene Deals
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Verloren</CardTitle>
+                <XCircle className="w-4 h-4 text-red-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-400">{kpis.dealsLost}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Verlorene Deals
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Umsatz</CardTitle>
+                <Euro className="w-4 h-4 text-amber-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-amber-400">
+                  {kpis.totalRevenue.toLocaleString("de-DE")} €
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Gesamtumsatz im Zeitraum
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Ø Deal-Größe</CardTitle>
                 <TrendingUp className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{setterCloserKPIs.followUpRate.toFixed(1)}%</div>
+                <div className="text-3xl font-bold">
+                  {kpis.avgDealSize.toLocaleString("de-DE", { maximumFractionDigits: 0 })} €
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Nachverfolgung
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Closing-Rate</CardTitle>
-                <Target className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{setterCloserKPIs.closingRate.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {setterCloserKPIs.dealsWon} abgeschlossen
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Umsatz</CardTitle>
-                <Euro className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">€{setterCloserKPIs.revenue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Gewonnene Deals
+                  Pro abgeschlossenem Deal
                 </p>
               </CardContent>
             </Card>
