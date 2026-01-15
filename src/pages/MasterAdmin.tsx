@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2, Euro, RefreshCw, CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, Loader2, BarChart3 } from "lucide-react";
+import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2, Euro, RefreshCw, CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, Loader2, BarChart3, TrendingDown, DollarSign, UserMinus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +79,11 @@ interface StripeStats {
   activeSubscriptions: StripeSubscription[];
   canceledSubscriptions: StripeSubscription[];
   mrrHistory: MrrHistoryItem[];
+  churnRate: number;
+  avgLifetimeMonths: number;
+  arpu: number;
+  clv: number;
+  canceledLast30Days: number;
 }
 
 interface StripeSubscription {
@@ -381,12 +386,101 @@ export default function MasterAdmin() {
             </CardContent>
           </Card>
 
+          <Card className="glass-card border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-transparent">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-cyan-400/80 mb-1">CLV</p>
+                  <p className="text-2xl font-bold text-cyan-400">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${(stripeStats?.clv || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Customer Lifetime Value</p>
+                </div>
+                <div className="p-2 rounded-xl bg-cyan-500/20">
+                  <DollarSign className="h-5 w-5 text-cyan-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-rose-500/30 bg-gradient-to-br from-rose-500/10 to-transparent">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-rose-400/80 mb-1">Churn Rate</p>
+                  <p className="text-2xl font-bold text-rose-400">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${stripeStats?.churnRate || 0}%`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {stripeStats?.canceledLast30Days || 0} in 30 Tagen
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-rose-500/20">
+                  <TrendingDown className="h-5 w-5 text-rose-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Secondary Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="glass-card">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">ARPU</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${(stripeStats?.arpu || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Ø Umsatz/Kunde</p>
+                </div>
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Euro className="h-4 w-4 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Ø Lifetime</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${stripeStats?.avgLifetimeMonths || 0} Mon.`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Durchschn. Kundendauer</p>
+                </div>
+                <div className="p-2 rounded-xl bg-blue-500/10">
+                  <Clock className="h-4 w-4 text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="glass-card">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Aktive Abos</p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl font-bold text-foreground">
                     {stripeLoading ? (
                       <span className="animate-pulse">...</span>
                     ) : (
@@ -398,7 +492,7 @@ export default function MasterAdmin() {
                   </p>
                 </div>
                 <div className="p-2 rounded-xl bg-green-500/10">
-                  <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
                 </div>
               </div>
             </CardContent>
@@ -409,7 +503,7 @@ export default function MasterAdmin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Gekündigt</p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl font-bold text-foreground">
                     {stripeLoading ? (
                       <span className="animate-pulse">...</span>
                     ) : (
@@ -419,7 +513,7 @@ export default function MasterAdmin() {
                   <p className="text-[10px] text-muted-foreground">insgesamt</p>
                 </div>
                 <div className="p-2 rounded-xl bg-red-500/10">
-                  <XCircle className="h-5 w-5 text-red-400" />
+                  <UserMinus className="h-4 w-4 text-red-400" />
                 </div>
               </div>
             </CardContent>
