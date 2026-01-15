@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2, Euro, RefreshCw, CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2, Euro, RefreshCw, CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, Loader2, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Account {
   id: string;
@@ -56,6 +57,12 @@ interface UserProfile {
   accounts?: { name: string } | null;
 }
 
+interface MrrHistoryItem {
+  month: string;
+  mrr: number;
+  subscriptions: number;
+}
+
 interface StripeStats {
   mrr: number;
   arr: number;
@@ -71,6 +78,7 @@ interface StripeStats {
   subscriptionsByPlan: Record<string, number>;
   activeSubscriptions: StripeSubscription[];
   canceledSubscriptions: StripeSubscription[];
+  mrrHistory: MrrHistoryItem[];
 }
 
 interface StripeSubscription {
@@ -417,6 +425,84 @@ export default function MasterAdmin() {
             </CardContent>
           </Card>
         </div>
+
+        {/* MRR History Chart */}
+        {stripeStats?.mrrHistory && stripeStats.mrrHistory.length > 0 && (
+          <Card className="glass-card mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-amber-400" />
+                MRR-Verlauf (Letzte 6 Monate)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stripeLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={stripeStats.mrrHistory}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="mrrGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `${value.toLocaleString('de-DE')}€`}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        formatter={(value: number, name: string) => {
+                          if (name === 'mrr') return [`${value.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, 'MRR'];
+                          if (name === 'subscriptions') return [value, 'Abos'];
+                          return [value, name];
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="mrr"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#mrrGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Monatlicher Umsatz (MRR)</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* User & Account Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
