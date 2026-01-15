@@ -3,11 +3,12 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2 } from "lucide-react";
+import { Building2, Users, Briefcase, Activity, TrendingUp, UserX, Eye, Trash2, Euro, RefreshCw, CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,35 @@ interface UserProfile {
   accounts?: { name: string } | null;
 }
 
+interface StripeStats {
+  mrr: number;
+  arr: number;
+  totalSubscriptions: number;
+  statusCounts: {
+    active: number;
+    canceled: number;
+    past_due: number;
+    trialing: number;
+    incomplete: number;
+    other: number;
+  };
+  subscriptionsByPlan: Record<string, number>;
+  activeSubscriptions: StripeSubscription[];
+  canceledSubscriptions: StripeSubscription[];
+}
+
+interface StripeSubscription {
+  id: string;
+  status: string;
+  planName: string;
+  monthlyAmount: number;
+  customerEmail: string;
+  customerName: string;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  created: string;
+}
+
 const PLAN_DISPLAY: Record<string, { name: string; color: string }> = {
   "prod_Tka87AKXNmsZUv": { name: "Starter", color: "bg-blue-500" },
   "prod_TkaAeLeq8rEn90": { name: "Starter (Jahr)", color: "bg-blue-500" },
@@ -62,10 +92,20 @@ const PLAN_DISPLAY: Record<string, { name: string; color: string }> = {
   "prod_TkoJ8E0e8l4vwV": { name: "Pro (Jahr)", color: "bg-purple-500" },
 };
 
+const PLAN_COLORS: Record<string, string> = {
+  "Starter": "bg-blue-500",
+  "Starter (Jahr)": "bg-blue-600",
+  "Pro": "bg-purple-500",
+  "Pro (Jahr)": "bg-purple-600",
+  "Unknown": "bg-slate-500",
+};
+
 export default function MasterAdmin() {
   const [accountsWithStats, setAccountsWithStats] = useState<AccountWithStats[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [stripeStats, setStripeStats] = useState<StripeStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stripeLoading, setStripeLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [userToRemoveAccess, setUserToRemoveAccess] = useState<UserProfile | null>(null);
@@ -74,6 +114,20 @@ export default function MasterAdmin() {
   useEffect(() => {
     checkSuperAdminAndFetchData();
   }, []);
+
+  const fetchStripeStats = async () => {
+    setStripeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-stripe-stats');
+      if (error) throw error;
+      setStripeStats(data);
+    } catch (error) {
+      console.error('Error fetching Stripe stats:', error);
+      toast.error("Fehler beim Laden der Stripe-Daten");
+    } finally {
+      setStripeLoading(false);
+    }
+  };
 
   const checkSuperAdminAndFetchData = async () => {
     try {
@@ -97,8 +151,9 @@ export default function MasterAdmin() {
       }
 
       setIsSuperAdmin(true);
-
-      // Fetch all accounts
+      
+      // Fetch Stripe stats
+      fetchStripeStats();
       const { data: accounts, error } = await supabase
         .from('accounts')
         .select('*')
@@ -250,16 +305,120 @@ export default function MasterAdmin() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Master Admin</h1>
+              <h1 className="text-2xl font-bold">Master Admin Dashboard</h1>
               <p className="text-sm text-muted-foreground">
-                Alle Kunden-Accounts und Nutzer verwalten
+                Übersicht aller Kennzahlen
               </p>
             </div>
-            <Badge variant="destructive">Super Admin</Badge>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchStripeStats}
+                disabled={stripeLoading}
+              >
+                {stripeLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Aktualisieren
+              </Button>
+              <Badge variant="destructive">Super Admin</Badge>
+            </div>
           </div>
         </div>
 
-        {/* Overview Stats */}
+        {/* Revenue Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="glass-card border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-amber-400/80 mb-1">+ MRR</p>
+                  <p className="text-2xl font-bold text-amber-400">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${(stripeStats?.mrr || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Monatl. Umsatz</p>
+                </div>
+                <div className="p-2 rounded-xl bg-amber-500/20">
+                  <Euro className="h-5 w-5 text-amber-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-emerald-400/80 mb-1">ARR</p>
+                  <p className="text-2xl font-bold text-emerald-400">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      `${(stripeStats?.arr || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Jährl. Umsatz</p>
+                </div>
+                <div className="p-2 rounded-xl bg-emerald-500/20">
+                  <TrendingUp className="h-5 w-5 text-emerald-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Aktive Abos</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      stripeStats?.statusCounts?.active || 0
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    +{stripeStats?.statusCounts?.trialing || 0} Trial
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-green-500/10">
+                  <CheckCircle2 className="h-5 w-5 text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Gekündigt</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stripeLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      stripeStats?.statusCounts?.canceled || 0
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">insgesamt</p>
+                </div>
+                <div className="p-2 rounded-xl bg-red-500/10">
+                  <XCircle className="h-5 w-5 text-red-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* User & Account Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <Card className="glass-card">
             <CardContent className="pt-4 pb-4">
@@ -328,12 +487,156 @@ export default function MasterAdmin() {
           </Card>
         </div>
 
+        {/* Plan Distribution */}
+        {stripeStats?.subscriptionsByPlan && Object.keys(stripeStats.subscriptionsByPlan).length > 0 && (
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  Abos nach Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(stripeStats.subscriptionsByPlan).map(([plan, count]) => (
+                    <div key={plan} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${PLAN_COLORS[plan] || 'bg-slate-500'} text-white text-xs`}>
+                          {plan}
+                        </Badge>
+                      </div>
+                      <span className="font-medium">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-primary" />
+                  Status-Verteilung
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10">
+                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    <div>
+                      <p className="text-sm font-medium">{stripeStats.statusCounts.active}</p>
+                      <p className="text-xs text-muted-foreground">Aktiv</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10">
+                    <Clock className="w-4 h-4 text-blue-400" />
+                    <div>
+                      <p className="text-sm font-medium">{stripeStats.statusCounts.trialing}</p>
+                      <p className="text-xs text-muted-foreground">Trial</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/10">
+                    <XCircle className="w-4 h-4 text-red-400" />
+                    <div>
+                      <p className="text-sm font-medium">{stripeStats.statusCounts.canceled}</p>
+                      <p className="text-xs text-muted-foreground">Gekündigt</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10">
+                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                    <div>
+                      <p className="text-sm font-medium">{stripeStats.statusCounts.past_due}</p>
+                      <p className="text-xs text-muted-foreground">Überfällig</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Tabs */}
-        <Tabs defaultValue="accounts" className="space-y-4">
+        <Tabs defaultValue="subscriptions" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="subscriptions">Abonnements ({stripeStats?.activeSubscriptions?.length || 0})</TabsTrigger>
             <TabsTrigger value="accounts">Accounts ({totalAccounts})</TabsTrigger>
             <TabsTrigger value="users">Nutzer ({totalUsers})</TabsTrigger>
           </TabsList>
+
+          {/* Subscriptions Tab */}
+          <TabsContent value="subscriptions">
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Aktive Abonnements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stripeLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : stripeStats?.activeSubscriptions?.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">Keine aktiven Abonnements</p>
+                ) : (
+                  <ScrollArea className="h-[400px]">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Kunde</th>
+                            <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Plan</th>
+                            <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Monatl.</th>
+                            <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Status</th>
+                            <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Verlängert am</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stripeStats?.activeSubscriptions?.map((sub) => (
+                            <tr key={sub.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                              <td className="py-3 px-2">
+                                <div>
+                                  <p className="font-medium text-sm">{sub.customerName}</p>
+                                  <p className="text-xs text-muted-foreground">{sub.customerEmail}</p>
+                                </div>
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <Badge className={`${PLAN_COLORS[sub.planName] || 'bg-slate-500'} text-white text-[10px]`}>
+                                  {sub.planName}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <span className="text-sm font-medium">{sub.monthlyAmount.toFixed(2)} €</span>
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <Badge variant="outline" className={`text-[10px] ${
+                                  sub.status === 'active' ? 'text-green-400 border-green-500/30' :
+                                  sub.status === 'trialing' ? 'text-blue-400 border-blue-500/30' :
+                                  'text-muted-foreground'
+                                }`}>
+                                  {sub.status === 'active' ? 'Aktiv' : sub.status === 'trialing' ? 'Trial' : sub.status}
+                                </Badge>
+                                {sub.cancelAtPeriodEnd && (
+                                  <Badge variant="destructive" className="text-[10px] ml-1">Kündigt</Badge>
+                                )}
+                              </td>
+                              <td className="py-3 px-2 text-right">
+                                <span className="text-xs text-muted-foreground">
+                                  {sub.currentPeriodEnd 
+                                    ? format(new Date(sub.currentPeriodEnd), "dd.MM.yyyy", { locale: de })
+                                    : '–'
+                                  }
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Accounts Tab */}
           <TabsContent value="accounts">
