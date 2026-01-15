@@ -6,23 +6,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { User, Calendar, Phone, Mail, Save, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus } from "lucide-react";
 
 interface ProfileData {
+  id: string;
   name: string;
   email: string;
   phone_number: string | null;
   calendar_url: string | null;
+  avatar_url: string | null;
 }
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
+    id: "",
     name: "",
     email: "",
     phone_number: null,
     calendar_url: null,
+    avatar_url: null,
   });
 
   useEffect(() => {
@@ -36,23 +42,66 @@ const Profile = () => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("name, email, phone_number, calendar_url")
+        .select("id, name, email, phone_number, calendar_url, avatar_url")
         .eq("id", user.id)
         .single();
 
       if (error) throw error;
 
       setProfile({
+        id: data?.id || user.id,
         name: data?.name || "",
         email: data?.email || user.email || "",
         phone_number: data?.phone_number || null,
         calendar_url: data?.calendar_url || null,
+        avatar_url: data?.avatar_url || null,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Fehler beim Laden des Profils");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile.id) return;
+
+    setUploading(true);
+    try {
+      // Create a unique filename with user id as folder
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      setProfile({ ...profile, avatar_url: publicUrl });
+      toast.success("Profilbild aktualisiert!");
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error("Fehler beim Hochladen des Bildes");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -94,6 +143,15 @@ const Profile = () => {
     return null;
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -113,6 +171,52 @@ const Profile = () => {
             Verwalte deine persönlichen Daten und Integrationen
           </p>
         </div>
+
+        {/* Profile Picture Section */}
+        <Card className="glass-card border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImagePlus className="w-5 h-5 text-primary" />
+              Profilbild
+            </CardTitle>
+            <CardDescription>
+              Lade ein Profilbild hoch, das in der Sidebar und auf deinen Seiten angezeigt wird
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <Avatar className="h-24 w-24 border-4 border-white/10">
+                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.name} />
+                  <AvatarFallback className="bg-primary/20 text-primary text-2xl font-semibold">
+                    {getInitials(profile.name || 'U')}
+                  </AvatarFallback>
+                </Avatar>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  {uploading ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-white" />
+                  )}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground">{profile.name || 'Dein Name'}</p>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Klicke auf das Bild um ein neues hochzuladen
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Personal Info */}
         <Card className="glass-card border-white/10">
