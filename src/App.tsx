@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import React from "react";
 import { SubscriptionProvider, useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -73,6 +75,56 @@ const SubscriptionRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading: authLoading } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscriptionContext();
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = React.useState(true);
+
+  React.useEffect(() => {
+    const checkSuperAdmin = async () => {
+      if (!session?.user?.id) {
+        setIsSuperAdmin(false);
+        setCheckingAdmin(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_super_admin')
+        .eq('id', session.user.id)
+        .single();
+
+      setIsSuperAdmin(profile?.is_super_admin || false);
+      setCheckingAdmin(false);
+    };
+
+    if (!authLoading && session) {
+      checkSuperAdmin();
+    } else if (!authLoading) {
+      setCheckingAdmin(false);
+    }
+  }, [session, authLoading]);
+
+  if (authLoading || subLoading || checkingAdmin) {
+    return <div className="flex items-center justify-center min-h-screen">Lädt...</div>;
+  }
+
+  if (!session) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!subscribed) {
+    return <Navigate to="/subscription-required" replace />;
+  }
+
+  if (!isSuperAdmin) {
+    return <Navigate to="/startseite" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Landing />} />
@@ -89,7 +141,7 @@ const AppRoutes = () => (
     <Route path="/api-keys" element={<SubscriptionRoute><ApiKeys /></SubscriptionRoute>} />
     <Route path="/call-script" element={<SubscriptionRoute><CallScript /></SubscriptionRoute>} />
     <Route path="/objections" element={<SubscriptionRoute><ObjectionLibrary /></SubscriptionRoute>} />
-    <Route path="/master-admin" element={<SubscriptionRoute><MasterAdmin /></SubscriptionRoute>} />
+    <Route path="/master-admin" element={<SuperAdminRoute><MasterAdmin /></SuperAdminRoute>} />
     <Route path="/power-dialer" element={<SubscriptionRoute><PowerDialer /></SubscriptionRoute>} />
     <Route path="/activity-log" element={<SubscriptionRoute><ActivityLog /></SubscriptionRoute>} />
     <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
