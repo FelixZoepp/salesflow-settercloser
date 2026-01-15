@@ -921,8 +921,7 @@ export default function MasterAdmin() {
                       <tr className="border-b border-white/10">
                         <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Nutzer</th>
                         <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Account</th>
-                        <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Rolle</th>
-                        <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Zugang</th>
+                        <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Plan</th>
                         <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Trial endet</th>
                         <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Erstellt</th>
                         <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Aktionen</th>
@@ -931,6 +930,19 @@ export default function MasterAdmin() {
                     <tbody>
                       {allUsers.map((user) => {
                         const hasActiveTrial = user.trial_ends_at && new Date(user.trial_ends_at) > new Date();
+                        
+                        // Determine display plan: Master Admin > Pro (admin role or subscription) > Standard
+                        const getPlanDisplay = () => {
+                          if (user.is_super_admin) {
+                            return { label: "Master Admin", color: "bg-gradient-to-r from-amber-500 to-orange-500" };
+                          }
+                          if (user.role === 'admin' || hasActiveTrial) {
+                            return { label: "Pro", color: "bg-purple-500" };
+                          }
+                          return { label: "Standard", color: "bg-slate-500" };
+                        };
+                        
+                        const planDisplay = getPlanDisplay();
                         
                         return (
                           <tr 
@@ -944,27 +956,15 @@ export default function MasterAdmin() {
                                   <p className="font-medium text-sm">{user.name}</p>
                                   <p className="text-xs text-muted-foreground">{user.email}</p>
                                 </div>
-                                {user.is_super_admin && (
-                                  <Badge variant="destructive" className="text-[10px] ml-2">Super Admin</Badge>
-                                )}
                               </div>
                             </td>
                             <td className="py-3 px-2">
                               <span className="text-sm">{user.accounts?.name || "–"}</span>
                             </td>
                             <td className="py-3 px-2 text-center">
-                              <Badge variant="outline" className="text-[10px]">
-                                {user.role}
+                              <Badge className={`${planDisplay.color} text-white text-[10px]`}>
+                                {planDisplay.label}
                               </Badge>
-                            </td>
-                            <td className="py-3 px-2 text-center">
-                              {user.is_super_admin ? (
-                                <Badge className="bg-purple-500 text-white text-[10px]">Pro (Admin)</Badge>
-                              ) : hasActiveTrial ? (
-                                <Badge className="bg-green-500 text-white text-[10px]">Pro (Trial)</Badge>
-                              ) : (
-                                <Badge variant="secondary" className="text-[10px]">Kein Zugang</Badge>
-                              )}
                             </td>
                             <td className="py-3 px-2 text-center">
                               {user.trial_ends_at ? (
