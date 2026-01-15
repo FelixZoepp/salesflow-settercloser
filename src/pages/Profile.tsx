@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { prepareAvatarUpload } from "@/lib/avatarImage";
 import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus } from "lucide-react";
 
 interface ProfileData {
@@ -37,7 +38,9 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -70,38 +73,51 @@ const Profile = () => {
 
     setUploading(true);
     try {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Bitte wähle eine Bilddatei aus");
+        return;
+      }
+
+      // Reduce size aggressively to avoid backend upload limits (413 Payload too large)
+      const processedFile = await prepareAvatarUpload(file);
+
       // Create a unique filename with user id as folder
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.webp`;
       const filePath = `${profile.id}/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Upload to Storage
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .from("avatars")
+        .upload(filePath, processedFile, {
+          upsert: true,
+          contentType: processedFile.type,
+          cacheControl: "3600",
+        });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
+        .eq("id", profile.id);
 
       if (updateError) throw updateError;
 
       setProfile({ ...profile, avatar_url: publicUrl });
       toast.success("Profilbild aktualisiert!");
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error);
       toast.error("Fehler beim Hochladen des Bildes");
     } finally {
       setUploading(false);
+      // allow re-uploading the same file
+      event.target.value = "";
     }
   };
 
