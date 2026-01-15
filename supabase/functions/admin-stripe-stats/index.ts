@@ -208,6 +208,73 @@ serve(async (req) => {
 
     logStep("MRR history calculated", { months: mrrHistory.length });
 
+    // Calculate Churn Rate and CLV
+    logStep("Calculating Churn Rate and CLV");
+    
+    // Churn Rate: Canceled in last 30 days / Active at start of period
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    let canceledLast30Days = 0;
+    let totalLifetimeMonths = 0;
+    let customersWithLifetime = 0;
+
+    for (const sub of allSubscriptions) {
+      const createdAt = new Date(sub.created * 1000);
+      const canceledAt = sub.canceled_at ? new Date(sub.canceled_at * 1000) : null;
+      
+      // Count cancellations in last 30 days
+      if (canceledAt && canceledAt >= thirtyDaysAgo) {
+        canceledLast30Days++;
+      }
+      
+      // Calculate customer lifetime for churned customers
+      if (canceledAt) {
+        const lifetimeMs = canceledAt.getTime() - createdAt.getTime();
+        const lifetimeMonths = lifetimeMs / (1000 * 60 * 60 * 24 * 30);
+        totalLifetimeMonths += lifetimeMonths;
+        customersWithLifetime++;
+      }
+    }
+
+    // Also calculate lifetime for active customers (from creation to now)
+    for (const sub of allSubscriptions) {
+      if (sub.status === 'active' || sub.status === 'trialing') {
+        const createdAt = new Date(sub.created * 1000);
+        const lifetimeMs = now.getTime() - createdAt.getTime();
+        const lifetimeMonths = lifetimeMs / (1000 * 60 * 60 * 24 * 30);
+        totalLifetimeMonths += lifetimeMonths;
+        customersWithLifetime++;
+      }
+    }
+
+    // Churn Rate = (Canceled in period / Total at start) * 100
+    const activeAtStart = statusCounts.active + statusCounts.trialing + canceledLast30Days;
+    const churnRate = activeAtStart > 0 
+      ? (canceledLast30Days / activeAtStart) * 100 
+      : 0;
+
+    // Average Customer Lifetime in months
+    const avgLifetimeMonths = customersWithLifetime > 0 
+      ? totalLifetimeMonths / customersWithLifetime 
+      : 0;
+
+    // ARPU (Average Revenue Per User per month)
+    const activeCustomers = statusCounts.active + statusCounts.trialing;
+    const arpu = activeCustomers > 0 ? mrrEur / activeCustomers : 0;
+
+    // CLV = ARPU * Average Lifetime (in months)
+    // Alternative: CLV = ARPU / Monthly Churn Rate
+    const monthlyChurnRate = churnRate / 100;
+    const clv = monthlyChurnRate > 0 
+      ? arpu / monthlyChurnRate 
+      : arpu * avgLifetimeMonths; // Fallback if no churn
+
+    logStep("Churn and CLV calculated", { 
+      churnRate: churnRate.toFixed(2), 
+      avgLifetimeMonths: avgLifetimeMonths.toFixed(1),
+      arpu: arpu.toFixed(2),
+      clv: clv.toFixed(2)
+    });
+
     return new Response(JSON.stringify({
       mrr: mrrEur,
       arr: arrEur,
@@ -217,6 +284,11 @@ serve(async (req) => {
       activeSubscriptions,
       canceledSubscriptions,
       mrrHistory,
+      churnRate: Math.round(churnRate * 10) / 10,
+      avgLifetimeMonths: Math.round(avgLifetimeMonths * 10) / 10,
+      arpu: Math.round(arpu * 100) / 100,
+      clv: Math.round(clv * 100) / 100,
+      canceledLast30Days,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
