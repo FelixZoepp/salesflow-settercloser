@@ -8,6 +8,7 @@ import { SubscriptionProvider, useSubscriptionContext } from "@/contexts/Subscri
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import Startseite from "./pages/Startseite";
 import Pipeline from "./pages/Pipeline";
 import Today from "./pages/Today";
 import Contacts from "./pages/Contacts";
@@ -78,6 +79,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<Auth />} />
     <Route path="/subscription-required" element={<ProtectedRoute><SubscriptionRequired /></ProtectedRoute>} />
     <Route path="/onboarding" element={<SubscriptionRoute><Onboarding /></SubscriptionRoute>} />
+    <Route path="/startseite" element={<SubscriptionRoute><Startseite /></SubscriptionRoute>} />
     <Route path="/dashboard" element={<SubscriptionRoute><Dashboard /></SubscriptionRoute>} />
     <Route path="/pipeline" element={<SubscriptionRoute><Pipeline /></SubscriptionRoute>} />
     <Route path="/today" element={<SubscriptionRoute><Today /></SubscriptionRoute>} />
