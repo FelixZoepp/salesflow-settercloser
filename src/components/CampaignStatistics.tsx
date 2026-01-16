@@ -182,15 +182,15 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
 
   const acceptanceRate = connectionsSent > 0 ? (connectionsAccepted / connectionsSent) * 100 : 0;
 
-  // Funnel data for bar chart
+  // Funnel data for bar chart - vibrant colors
   const funnelData = [
-    { name: 'Gesamt', value: stats.total, fill: 'hsl(var(--muted-foreground))' },
-    { name: 'Vernetzung gesendet', value: connectionsSent, fill: 'hsl(var(--primary))' },
-    { name: 'Angenommen', value: connectionsAccepted, fill: 'hsl(var(--chart-2))' },
-    { name: 'Nachricht gesendet', value: messagesSent, fill: 'hsl(var(--chart-3))' },
-    { name: 'Heiße Leads', value: stats.hotLeads, fill: 'hsl(var(--chart-4))' },
-    { name: 'Termine', value: stats.leadsWithAppointment, fill: 'hsl(var(--chart-5))' },
-    { name: 'Abgeschlossen', value: stats.closedDeals, fill: 'hsl(var(--destructive))' },
+    { name: 'Gesamt', value: stats.total, fill: '#6366f1' }, // Indigo
+    { name: 'Vernetzung gesendet', value: connectionsSent, fill: '#8b5cf6' }, // Violet
+    { name: 'Angenommen', value: connectionsAccepted, fill: '#10b981' }, // Emerald
+    { name: 'Nachricht gesendet', value: messagesSent, fill: '#3b82f6' }, // Blue
+    { name: 'Heiße Leads', value: stats.hotLeads, fill: '#f59e0b' }, // Amber
+    { name: 'Termine', value: stats.leadsWithAppointment, fill: '#ec4899' }, // Pink
+    { name: 'Abgeschlossen', value: stats.closedDeals, fill: '#22c55e' }, // Green
   ];
 
   // Status distribution for pie chart with vibrant colors
