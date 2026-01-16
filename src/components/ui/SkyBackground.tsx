@@ -6,12 +6,27 @@ type Props = {
   enableParallax?: boolean;
 };
 
+function clamp(n: number, a: number, b: number) { 
+  return Math.max(a, Math.min(b, n)); 
+}
+
+function randomBetween(a: number, b: number) { 
+  return Math.floor(Math.random() * (b - a + 1)) + a; 
+}
+
+function perfNow() { 
+  return (typeof performance !== "undefined" ? performance.now() : Date.now()) / 1000; 
+}
+
 export default function SkyBackground({
   starCount = 200,
   shootingEveryMs = [3000, 8000],
   enableParallax = true,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const shootingMin = shootingEveryMs[0];
+  const shootingMax = shootingEveryMs[1];
+  
   const reduced = useMemo(
     () => typeof window !== "undefined" &&
           window.matchMedia &&
@@ -20,13 +35,17 @@ export default function SkyBackground({
   );
 
   useEffect(() => {
-    const canvas = canvasRef.current!;
+    const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
     let raf = 0;
     let running = true;
-    let w = 0, h = 0, dpr = Math.min(2, window.devicePixelRatio || 1);
+    let shootingTimeout: ReturnType<typeof setTimeout> | null = null;
+    let w = 0, h = 0;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
 
     const stars = Array.from({ length: starCount }).map(() => ({
       x: Math.random(),
@@ -38,7 +57,7 @@ export default function SkyBackground({
 
     type Shoot = { x: number; y: number; vx: number; vy: number; life: number; max: number };
     let shooting: Shoot[] = [];
-    let parallax = { x: 0, y: 0 };
+    const parallax = { x: 0, y: 0 };
 
     function resize() {
       w = window.innerWidth; 
@@ -53,8 +72,8 @@ export default function SkyBackground({
     window.addEventListener("resize", resize);
 
     function spawnShooting() {
-      if (reduced) return;
-      const delay = randomBetween(shootingEveryMs[0], shootingEveryMs[1]);
+      if (reduced || !running) return;
+      const delay = randomBetween(shootingMin, shootingMax);
       const startAtRight = Math.random() > 0.5;
       const x = startAtRight ? w + 50 : -50;
       const y = Math.random() * (h * 0.4);
@@ -63,9 +82,9 @@ export default function SkyBackground({
       const vx = Math.cos(angle) * (speed / 60);
       const vy = Math.sin(angle) * (speed / 60);
       shooting.push({ x, y, vx, vy, life: 0, max: 60 + Math.random() * 25 });
-      setTimeout(spawnShooting, delay);
+      shootingTimeout = setTimeout(spawnShooting, delay);
     }
-    setTimeout(spawnShooting, randomBetween(shootingEveryMs[0], shootingEveryMs[1]));
+    shootingTimeout = setTimeout(spawnShooting, randomBetween(shootingMin, shootingMax));
 
     function draw() {
       if (!running) return;
@@ -126,11 +145,14 @@ export default function SkyBackground({
     return () => {
       running = false;
       cancelAnimationFrame(raf);
+      if (shootingTimeout) {
+        clearTimeout(shootingTimeout);
+      }
       window.removeEventListener("resize", resize);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [starCount, enableParallax, shootingEveryMs, reduced]);
+  }, [starCount, enableParallax, shootingMin, shootingMax, reduced]);
 
   return (
     <>
@@ -138,16 +160,4 @@ export default function SkyBackground({
       <canvas ref={canvasRef} className="hero-stars-layer" aria-hidden />
     </>
   );
-}
-
-function clamp(n: number, a: number, b: number) { 
-  return Math.max(a, Math.min(b, n)); 
-}
-
-function randomBetween(a: number, b: number) { 
-  return Math.floor(Math.random() * (b - a + 1)) + a; 
-}
-
-function perfNow() { 
-  return (typeof performance !== "undefined" ? performance.now() : Date.now()) / 1000; 
 }
