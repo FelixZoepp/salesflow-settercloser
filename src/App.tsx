@@ -38,6 +38,7 @@ import EmailTemplates from "./pages/EmailTemplates";
 import DealAnalytics from "./pages/DealAnalytics";
 import Upgrade from "./pages/Upgrade";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import PartnerDashboard from "./pages/PartnerDashboard";
 
 
 const queryClient = new QueryClient();
@@ -156,6 +157,7 @@ const AppRoutes = () => (
     
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
     <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
+    <Route path="/partner" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
     <Route path="/invite/:token" element={<InviteRegister />} />
     <Route path="/p/:slug" element={<VideoNote />} />
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
