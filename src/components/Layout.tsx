@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
-  UserPlus, ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home
+  UserPlus, ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -169,6 +169,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: "/api-keys", label: "API-Schlüssel", icon: Key },
         { path: "/billing", label: "Abrechnung", icon: CreditCard },
         { path: "/invitations", label: "Team einladen", icon: UserPlus },
+        { path: "/partner", label: "Partner-Programm", icon: Gift },
       ]
     },
   ];

@@ -140,18 +140,18 @@ export default function PartnerDashboard() {
               </div>
               <CardTitle className="text-2xl">Partner werden</CardTitle>
               <CardDescription className="text-base">
-                Verdiene 20% wiederkehrende Provision für jeden Kunden, den du zu PitchFirst bringst.
+                Verdiene <span className="font-bold text-primary">30% lebenslange Provision</span> für jeden Kunden, den du zu PitchFirst bringst.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-2xl font-bold text-primary">20%</p>
+                  <p className="text-2xl font-bold text-primary">30%</p>
                   <p className="text-sm text-muted-foreground">Provision</p>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-2xl font-bold text-primary">12 Mo.</p>
-                  <p className="text-sm text-muted-foreground">Cookie-Dauer</p>
+                  <p className="text-2xl font-bold text-primary">Lifetime</p>
+                  <p className="text-sm text-muted-foreground">Auszahlung</p>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-2xl font-bold text-primary">∞</p>
@@ -199,7 +199,7 @@ export default function PartnerDashboard() {
               Dein Affiliate-Link
             </CardTitle>
             <CardDescription>
-              Teile diesen Link um 20% wiederkehrende Provision zu verdienen
+              Teile diesen Link um 30% lebenslange Provision zu verdienen
             </CardDescription>
           </CardHeader>
           <CardContent>
