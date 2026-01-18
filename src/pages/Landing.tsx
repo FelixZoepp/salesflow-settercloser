@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Gift } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import { AIObjectionDemo } from "@/components/landing/AIObjectionDemo";
@@ -1090,6 +1090,89 @@ const Landing = () => {
                 <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partner Program Section */}
+      <section id="partner" className="py-12 md:py-20 px-4 md:px-6 relative z-[1] bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent">
+        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-8 md:mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs md:text-sm font-medium mb-4">
+              <Gift className="h-4 w-4" />
+              Partner-Programm
+            </div>
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white">
+              Verdiene mit uns <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">30% Lifetime</span>
+            </h2>
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
+              Werde Partner und erhalte 30% wiederkehrende Provision – für immer. Für jeden Kunden, den du zu PitchFirst bringst.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">30%</div>
+              <div className="text-white font-medium mb-1">Provision</div>
+              <div className="text-gray-400 text-sm">Auf jeden vermittelten Kunden</div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">∞</div>
+              <div className="text-white font-medium mb-1">Lifetime</div>
+              <div className="text-gray-400 text-sm">Solange der Kunde zahlt</div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">€0</div>
+              <div className="text-white font-medium mb-1">Kosten</div>
+              <div className="text-gray-400 text-sm">Komplett kostenlos starten</div>
+            </div>
+          </div>
+          
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 mb-8">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-4 text-center">So einfach funktioniert's</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                  <span className="text-primary font-bold">1</span>
+                </div>
+                <div className="text-white font-medium mb-1">Registrieren</div>
+                <div className="text-gray-400 text-sm">Erstelle deinen Partner-Account kostenlos</div>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                  <span className="text-primary font-bold">2</span>
+                </div>
+                <div className="text-white font-medium mb-1">Link teilen</div>
+                <div className="text-gray-400 text-sm">Teile deinen persönlichen Affiliate-Link</div>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                  <span className="text-primary font-bold">3</span>
+                </div>
+                <div className="text-white font-medium mb-1">Geld verdienen</div>
+                <div className="text-gray-400 text-sm">30% für jeden zahlenden Kunden – lebenslang</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Button 
+              size="lg" 
+              onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
+              variant="outline"
+              className="border-white/20 bg-white/5 text-white hover:bg-white/10 px-6 md:px-8"
+            >
+              <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+              Demo ansehen
+            </Button>
+            <Button 
+              size="lg" 
+              onClick={() => navigate("/auth")}
+              className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-8"
+            >
+              <Gift className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+              Zugang sichern & Partner werden
+            </Button>
           </div>
         </div>
       </section>
