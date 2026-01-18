@@ -42,7 +42,8 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { action } = await req.json();
+    const body = await req.json();
+    const { action, firstName, lastName } = body;
     logStep("Action requested", { action });
 
     const authString = btoa(`${rewardfulSecret}:`);
@@ -113,7 +114,28 @@ serve(async (req) => {
     }
 
     if (action === "create-affiliate") {
-      const { firstName, lastName } = await req.json().catch(() => ({}));
+      // Check if affiliate already exists first
+      const searchResponse = await fetch(
+        `https://api.getrewardful.com/v1/affiliates?email=${encodeURIComponent(user.email)}`,
+        { headers }
+      );
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json();
+        if (searchData.data && searchData.data.length > 0) {
+          const existingAffiliate = searchData.data[0];
+          logStep("Affiliate already exists", { id: existingAffiliate.id, link: existingAffiliate.link });
+          return new Response(JSON.stringify({ 
+            affiliate: existingAffiliate,
+            referrals: [],
+            commissions: [],
+            exists: true 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
       
       const createResponse = await fetch("https://api.getrewardful.com/v1/affiliates", {
         method: "POST",
@@ -132,9 +154,9 @@ serve(async (req) => {
       }
 
       const affiliate = await createResponse.json();
-      logStep("Created new affiliate", { id: affiliate.id });
+      logStep("Created new affiliate", { id: affiliate.id, link: affiliate.link });
 
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         affiliate,
         referrals: [],
         commissions: [],
