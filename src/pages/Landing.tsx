@@ -1106,7 +1106,7 @@ const Landing = () => {
               Verdiene mit uns <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">30% Lifetime</span>
             </h2>
             <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
-              Werde Partner und erhalte 30% wiederkehrende Provision – für immer. Für jeden Kunden, den du zu PitchFirst bringst.
+              Werde Kunde, überzeuge dich selbst – und verdiene dann 30% für jeden Kunden, den du bringst. Für immer.
             </p>
           </div>
           
@@ -1122,28 +1122,28 @@ const Landing = () => {
               <div className="text-gray-400 text-sm">Solange der Kunde zahlt</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">€0</div>
-              <div className="text-white font-medium mb-1">Kosten</div>
-              <div className="text-gray-400 text-sm">Komplett kostenlos starten</div>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">✓</div>
+              <div className="text-white font-medium mb-1">Für Kunden</div>
+              <div className="text-gray-400 text-sm">Exklusiv für aktive Nutzer</div>
             </div>
           </div>
           
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 mb-8">
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-4 text-center">So einfach funktioniert's</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-4 text-center">So wirst du Partner</h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
                   <span className="text-primary font-bold">1</span>
                 </div>
-                <div className="text-white font-medium mb-1">Registrieren</div>
-                <div className="text-gray-400 text-sm">Erstelle deinen Partner-Account kostenlos</div>
+                <div className="text-white font-medium mb-1">Kunde werden</div>
+                <div className="text-gray-400 text-sm">Starte mit PitchFirst und überzeuge dich selbst</div>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
                   <span className="text-primary font-bold">2</span>
                 </div>
-                <div className="text-white font-medium mb-1">Link teilen</div>
-                <div className="text-gray-400 text-sm">Teile deinen persönlichen Affiliate-Link</div>
+                <div className="text-white font-medium mb-1">Link generieren</div>
+                <div className="text-gray-400 text-sm">Hol dir deinen persönlichen Affiliate-Link im Dashboard</div>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
@@ -1153,6 +1153,13 @@ const Landing = () => {
                 <div className="text-gray-400 text-sm">30% für jeden zahlenden Kunden – lebenslang</div>
               </div>
             </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-primary/20 to-purple-500/20 border border-primary/30 rounded-xl p-4 md:p-6 mb-8 text-center">
+            <p className="text-white text-sm md:text-base">
+              <span className="font-semibold">Warum Kunde zuerst?</span> Weil du nur empfehlen kannst, wovon du selbst überzeugt bist. 
+              Nutze PitchFirst, erlebe die Ergebnisse – und teile dann authentisch mit anderen.
+            </p>
           </div>
           
           <div className="flex gap-4 justify-center flex-wrap">
