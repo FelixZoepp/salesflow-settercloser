@@ -159,6 +159,15 @@ const Layout = ({ children }: LayoutProps) => {
       ]
     },
     { 
+      path: "/training", 
+      label: "Training", 
+      icon: BookOpen, 
+      color: "text-cyan-400",
+      subItems: [
+        { path: "/training", label: "Videokurs & Live Call", icon: Video },
+      ]
+    },
+    { 
       path: "/profile", 
       label: "Einstellungen", 
       icon: Settings, 
