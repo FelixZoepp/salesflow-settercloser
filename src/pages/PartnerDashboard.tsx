@@ -107,26 +107,45 @@ export default function PartnerDashboard() {
     }
   };
 
+  const getPartnerCode = () => {
+    return affiliate?.partner_code || affiliate?.links?.[0]?.token || null;
+  };
+
+  const buildAffiliateLink = (rawUrl: string, code: string | null) => {
+    if (!code) return rawUrl;
+
+    try {
+      const url = new URL(rawUrl);
+      // Always enforce the user's own code in the URL
+      url.searchParams.set("via", code);
+      return url.toString();
+    } catch {
+      // Fallback for non-standard URLs
+      const sep = rawUrl.includes("?") ? "&" : "?";
+      const cleaned = rawUrl.replace(/[?&]via=[^&]*/i, "");
+      return `${cleaned}${sep}via=${encodeURIComponent(code)}`;
+    }
+  };
+
+  const getAffiliateLink = () => {
+    const raw = affiliate?.link || affiliate?.links?.[0]?.url || null;
+    if (!raw) return null;
+    return buildAffiliateLink(raw, getPartnerCode());
+  };
+
   const copyLink = () => {
-    const affiliateLink = affiliate?.link || affiliate?.links?.[0]?.url;
-    const code = affiliate?.partner_code || affiliate?.links?.[0]?.token;
+    const affiliateLink = getAffiliateLink();
     if (affiliateLink) {
       navigator.clipboard.writeText(affiliateLink);
       toast.success(
         <div className="flex flex-col gap-1">
           <span className="font-medium">Affiliate-Link kopiert!</span>
-          <span className="text-xs text-muted-foreground font-mono truncate max-w-[260px]">{affiliateLink}</span>
+          <span className="text-xs text-muted-foreground font-mono truncate max-w-[260px]">
+            {affiliateLink}
+          </span>
         </div>
       );
     }
-  };
-
-  const getAffiliateLink = () => {
-    return affiliate?.link || affiliate?.links?.[0]?.url || null;
-  };
-
-  const getPartnerCode = () => {
-    return affiliate?.partner_code || affiliate?.links?.[0]?.token || null;
   };
 
   const totalCommissions = commissions.reduce((sum, c) => sum + (c.amount || 0), 0) / 100;
