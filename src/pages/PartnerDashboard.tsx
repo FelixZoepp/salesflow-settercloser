@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Copy, Users, Euro, TrendingUp, Link as LinkIcon, Loader2, UserPlus } from "lucide-react";
+import { Copy, Users, Euro, TrendingUp, Link as LinkIcon, Loader2, UserPlus, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -16,7 +17,8 @@ interface Affiliate {
   email: string;
   first_name: string;
   last_name: string;
-  link: string;
+  link?: string;
+  links?: { url: string; id: string }[];
   visitors: number;
   leads: number;
   conversions: number;
@@ -105,10 +107,15 @@ export default function PartnerDashboard() {
   };
 
   const copyLink = () => {
-    if (affiliate?.link) {
-      navigator.clipboard.writeText(affiliate.link);
+    const affiliateLink = affiliate?.link || affiliate?.links?.[0]?.url;
+    if (affiliateLink) {
+      navigator.clipboard.writeText(affiliateLink);
       toast.success("Affiliate-Link kopiert!");
     }
+  };
+
+  const getAffiliateLink = () => {
+    return affiliate?.link || affiliate?.links?.[0]?.url || null;
   };
 
   const totalCommissions = commissions.reduce((sum, c) => sum + (c.amount || 0), 0) / 100;
@@ -202,14 +209,21 @@ export default function PartnerDashboard() {
               Teile diesen Link um 30% lebenslange Provision zu verdienen
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex gap-2">
               <div className="flex-1 p-3 bg-background rounded-lg border font-mono text-sm overflow-x-auto">
-                {affiliate.link}
+                {getAffiliateLink() || "Link wird generiert..."}
               </div>
-              <Button onClick={copyLink} variant="outline">
+              <Button onClick={copyLink} variant="outline" disabled={!getAffiliateLink()}>
                 <Copy className="h-4 w-4" />
               </Button>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ExternalLink className="h-4 w-4" />
+              <span>Teile dein Programm:</span>
+              <Link to="/partner" className="text-primary hover:underline" target="_blank">
+                Öffentliche Partner-Seite öffnen →
+              </Link>
             </div>
           </CardContent>
         </Card>
