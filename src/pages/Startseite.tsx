@@ -25,6 +25,7 @@ import {
 import { formatDistanceToNow, isToday, isTomorrow, isPast, format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import { DashboardLiveCallWidget } from "@/components/DashboardLiveCallWidget";
 
 interface UserProfile {
   name: string;
@@ -306,6 +307,9 @@ const Startseite = () => {
     <Layout>
       <div className="min-h-screen noise-bg">
         <div className="max-w-7xl mx-auto p-1">
+          {/* Live Call Widget */}
+          <DashboardLiveCallWidget className="mb-6" />
+
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
