@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import { AIObjectionDemo } from "@/components/landing/AIObjectionDemo";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
-import felixHostImage from "@/assets/felix-host.png";
+import felixLiveCallImage from "@/assets/felix-live-call.jpg";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -549,13 +549,13 @@ const Landing = () => {
                   <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
                     {/* Host image - full video area */}
                     <img 
-                      src={felixHostImage} 
+                      src={felixLiveCallImage} 
                       alt="Felix Zoepp - Live Call Host" 
-                      className="w-full h-full object-cover object-top"
+                      className="w-full h-full object-cover object-center"
                     />
                     
-                    {/* Speaking indicator overlay */}
-                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/60 border border-green-500/50 backdrop-blur-sm">
+                    {/* Speaking indicator overlay - top right corner */}
+                    <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-black/70 border border-green-500/50 backdrop-blur-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-white font-medium">Felix spricht</span>
                         <div className="flex items-center gap-1">
