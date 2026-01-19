@@ -519,6 +519,21 @@ const Landing = () => {
             
             {/* Right side - Animated Call Mockup */}
             <div className="relative scroll-animate scroll-scale">
+              {/* Question bubble - above the screen */}
+              <div className="mb-4 animate-[fade-in_1s_ease-out_0.5s_both]">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 md:p-4">
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="h-3 w-3 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Teilnehmer fragt:</p>
+                      <p className="text-sm text-white font-medium">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-2">
                 <div className="rounded-xl bg-[#0d1117] overflow-hidden">
                   {/* Video call header */}
@@ -547,21 +562,6 @@ const Landing = () => {
                           <div className="w-1.5 h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
                           <div className="w-1.5 h-5 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
                           <div className="w-1.5 h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Animated question bubble */}
-                    <div className="absolute top-4 left-4 right-4 animate-[fade-in_1s_ease-out_0.5s_both]">
-                      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 md:p-4 max-w-xs">
-                        <div className="flex items-start gap-2">
-                          <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                            <MessageSquare className="h-3 w-3 text-blue-400" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400 mb-1">Teilnehmer fragt:</p>
-                            <p className="text-sm text-white font-medium">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
-                          </div>
                         </div>
                       </div>
                     </div>
