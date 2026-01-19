@@ -178,7 +178,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: "/api-keys", label: "API-Schlüssel", icon: Key },
         { path: "/billing", label: "Abrechnung", icon: CreditCard },
         { path: "/invitations", label: "Team einladen", icon: UserPlus },
-        { path: "/partner", label: "Partner-Programm", icon: Gift },
+        { path: "/partner-dashboard", label: "Partner-Programm", icon: Gift },
       ]
     },
   ];
