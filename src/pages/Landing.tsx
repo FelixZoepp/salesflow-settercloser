@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import SkyBackground from "@/components/ui/SkyBackground";
 import { AIObjectionDemo } from "@/components/landing/AIObjectionDemo";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
+import felixHostImage from "@/assets/felix-host.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -530,17 +531,21 @@ const Landing = () => {
                   </div>
                   
                   {/* Video area */}
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-                    {/* Host avatar */}
-                    <div className="relative">
-                      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center animate-pulse">
-                        <Mic className="h-10 w-10 md:h-12 md:w-12 text-white" />
-                      </div>
-                      {/* Speaking indicator */}
-                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50">
+                  <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
+                    {/* Host image - full video area */}
+                    <img 
+                      src={felixHostImage} 
+                      alt="Felix Zoepp - Live Call Host" 
+                      className="w-full h-full object-cover object-top"
+                    />
+                    
+                    {/* Speaking indicator overlay */}
+                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/60 border border-green-500/50 backdrop-blur-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-white font-medium">Felix spricht</span>
                         <div className="flex items-center gap-1">
                           <div className="w-1.5 h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
-                          <div className="w-1.5 h-4 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
+                          <div className="w-1.5 h-5 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
                           <div className="w-1.5 h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
                         </div>
                       </div>
