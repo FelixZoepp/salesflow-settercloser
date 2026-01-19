@@ -70,7 +70,7 @@ serve(async (req) => {
 
       if (searchData.data && searchData.data.length > 0) {
         const affiliate = searchData.data[0];
-        logStep("Found existing affiliate", { id: affiliate.id });
+        logStep("Found existing affiliate", { id: affiliate.id, link: affiliate.link, links: affiliate.links });
         
         // Get referrals for this affiliate
         const referralsResponse = await fetch(
