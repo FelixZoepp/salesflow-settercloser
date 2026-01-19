@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Play, Video, Users, Calendar, Clock, CheckCircle, Lock } from "lucide-react";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
+import { LiveCallCountdown } from "@/components/LiveCallCountdown";
 
 const Training = () => {
   const { subscribed, loading } = useSubscriptionContext();
@@ -147,21 +148,24 @@ const Training = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Countdown */}
+              <LiveCallCountdown />
+
               <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <Calendar className="h-4 w-4 text-green-500" />
+                  <Calendar className="h-4 w-4 text-primary" />
                   <span className="text-foreground font-medium">Jeden Mittwoch</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Clock className="h-4 w-4 text-green-500" />
+                  <Clock className="h-4 w-4 text-primary" />
                   <span className="text-foreground font-medium">17:00 Uhr</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Users className="h-4 w-4 text-green-500" />
+                  <Users className="h-4 w-4 text-primary" />
                   <span className="text-foreground">Exklusiv für Kunden</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Video className="h-4 w-4 text-green-500" />
+                  <Video className="h-4 w-4 text-primary" />
                   <span className="text-foreground">Live Q&A via Zoom</span>
                 </div>
               </div>
