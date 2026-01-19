@@ -484,6 +484,123 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Weekly Live Call Section */}
+      <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1] overflow-hidden">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Left side - Text */}
+            <div className="scroll-animate scroll-fade-up">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs md:text-sm font-medium mb-4">
+                <Video className="h-4 w-4" />
+                Exklusiv für Kunden
+              </div>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-white">
+                Jede Woche <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Live Gruppen-Call</span>
+              </h2>
+              <p className="text-gray-300 text-sm md:text-lg mb-6">
+                Jeden Mittwoch treffen wir uns live. Du stellst deine Fragen zu Outreach, Profil-Optimierung, 
+                Messaging oder Strategie – und bekommst sofort Antworten direkt von mir.
+              </p>
+              <ul className="space-y-3 mb-6">
+                {[
+                  "Live Q&A zu deinem LinkedIn-Profil",
+                  "Feedback zu deinen Nachrichten & Kampagnen",
+                  "Neue Strategien und Best Practices",
+                  "Networking mit anderen Nutzern"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-gray-300 text-sm md:text-base">
+                    <Check className="h-5 w-5 text-purple-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* Right side - Animated Call Mockup */}
+            <div className="relative scroll-animate scroll-scale">
+              <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-2">
+                <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+                  {/* Video call header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#161b22]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                      <span className="text-xs text-gray-400">LIVE</span>
+                    </div>
+                    <span className="text-xs text-gray-500">Mittwoch 11:00 Uhr</span>
+                  </div>
+                  
+                  {/* Video area */}
+                  <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+                    {/* Host avatar */}
+                    <div className="relative">
+                      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center animate-pulse">
+                        <Mic className="h-10 w-10 md:h-12 md:w-12 text-white" />
+                      </div>
+                      {/* Speaking indicator */}
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50">
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
+                          <div className="w-1.5 h-4 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
+                          <div className="w-1.5 h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Animated question bubble */}
+                    <div className="absolute top-4 left-4 right-4 animate-[fade-in_1s_ease-out_0.5s_both]">
+                      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 md:p-4 max-w-xs">
+                        <div className="flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                            <MessageSquare className="h-3 w-3 text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 mb-1">Teilnehmer fragt:</p>
+                            <p className="text-sm text-white font-medium">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Answer bubble - appears with delay */}
+                    <div className="absolute bottom-4 right-4 animate-[fade-in_1s_ease-out_2s_both]">
+                      <div className="bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-xl p-3 max-w-[200px]">
+                        <div className="flex items-start gap-2">
+                          <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-white">Live-Antwort mit konkreten Tipps...</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Participant count */}
+                    <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 border border-white/10">
+                      <Users className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-300">24 Teilnehmer</span>
+                    </div>
+                  </div>
+                  
+                  {/* Call controls */}
+                  <div className="flex items-center justify-center gap-4 py-4 bg-[#161b22]">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Mic className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Video className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
+                      <Phone className="h-4 w-4 text-white rotate-[135deg]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-primary/20 rounded-full blur-2xl"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Software Screenshots / Features Showcase */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl scroll-animate scroll-scale">
