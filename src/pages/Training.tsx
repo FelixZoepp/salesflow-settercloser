@@ -6,6 +6,7 @@ import { ExternalLink, Play, Video, Users, Calendar, Clock, CheckCircle, Lock } 
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
 import { LiveCallCountdown } from "@/components/LiveCallCountdown";
+import { CoachingCalendar } from "@/components/CoachingCalendar";
 
 const Training = () => {
   const { subscribed, loading } = useSubscriptionContext();
@@ -205,8 +206,11 @@ const Training = () => {
           </Card>
         </div>
 
+        {/* Coaching Calendar */}
+        <CoachingCalendar />
+
         {/* Info Banner */}
-        <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
           <CardContent className="py-6">
             <div className="flex items-center gap-4">
               <div className="bg-primary/20 rounded-full p-3">
