@@ -204,28 +204,28 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen bg-background relative">
       <div className="ambient-glow" />
       
-      <aside className="w-20 lg:w-64 glass-sidebar flex flex-col relative z-50">
+      <aside className="w-16 glass-sidebar flex flex-col relative z-50">
         {/* Account Header */}
         <UserAccountHeader />
         
-        <div className="p-3 border-b border-white/5 w-full flex justify-center lg:hidden">
+        <div className="p-2 border-b border-white/5 w-full flex justify-center">
           <img 
             src={pitchfirstLogo} 
             alt="pitchfirst.io" 
-            className="h-10 object-contain"
+            className="h-8 object-contain"
           />
         </div>
         
         {viewingAccount && (
-          <div className="p-2 text-center">
-            <Badge variant="secondary" className="text-[10px] glass-button">
-              {viewingAccount.slice(0, 8)}...
+          <div className="p-1.5 text-center">
+            <Badge variant="secondary" className="text-[8px] glass-button px-1.5 py-0.5">
+              {viewingAccount.slice(0, 6)}...
             </Badge>
             <Button
               variant="link"
               size="sm"
               onClick={clearAccountView}
-              className="text-[10px] p-0 h-auto mt-1 text-primary"
+              className="text-[8px] p-0 h-auto mt-0.5 text-primary"
             >
               ← Zurück
             </Button>
@@ -233,7 +233,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}
         
         <ScrollArea className="flex-1 w-full">
-          <nav className="p-2 flex flex-col items-center gap-1">
+          <nav className="p-1.5 flex flex-col items-center gap-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActiveItem(item);
@@ -243,23 +243,23 @@ const Layout = ({ children }: LayoutProps) => {
                   <HoverCard key={item.path} openDelay={0} closeDelay={100}>
                     <HoverCardTrigger asChild>
                       <button
-                        className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
+                        className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
                           isActive
                             ? "bg-white/10 border border-white/20 shadow-glow-sm"
                             : "hover:bg-white/5"
                         }`}
                       >
-                        <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                        <Icon className={`w-4 h-4 ${isActive ? item.color : 'text-muted-foreground'}`} />
                       </button>
                     </HoverCardTrigger>
                     <HoverCardContent 
                       side="right" 
                       align="start"
-                      sideOffset={8}
-                      className="w-56 p-2 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
+                      sideOffset={6}
+                      className="w-52 p-1.5 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
                     >
-                      <div className="space-y-1">
-                        <div className={`text-xs font-semibold px-3 py-2 ${item.color}`}>
+                      <div className="space-y-0.5">
+                        <div className={`text-xs font-semibold px-2.5 py-1.5 ${item.color}`}>
                           {item.label}
                         </div>
                         {item.subItems.map((subItem) => {
@@ -269,15 +269,15 @@ const Layout = ({ children }: LayoutProps) => {
                             <Link
                               key={subItem.path}
                               to={subItem.path}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
                                 isSubActive
                                   ? "bg-white/10 text-foreground"
                                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                               }`}
                             >
-                              <SubIcon className="w-4 h-4" />
+                              <SubIcon className="w-3.5 h-3.5" />
                               <span>{subItem.label}</span>
-                              <ChevronRight className="w-3 h-3 ml-auto opacity-50" />
+                              <ChevronRight className="w-2.5 h-2.5 ml-auto opacity-50" />
                             </Link>
                           );
                         })}
@@ -292,22 +292,22 @@ const Layout = ({ children }: LayoutProps) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={item.path}
-                      className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
+                      className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
                         isActive
                           ? "bg-white/10 border border-white/20 shadow-glow-sm"
                           : "hover:bg-white/5"
                       }`}
                     >
-                      <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                      <Icon className={`w-4 h-4 ${isActive ? item.color : 'text-muted-foreground'}`} />
                     </Link>
                   </HoverCardTrigger>
                   <HoverCardContent 
                     side="right" 
                     align="start"
-                    sideOffset={8}
-                    className="w-auto px-3 py-2 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
+                    sideOffset={6}
+                    className="w-auto px-2.5 py-1.5 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
                   >
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-xs font-medium">{item.label}</span>
                   </HoverCardContent>
                 </HoverCard>
               );
@@ -315,25 +315,25 @@ const Layout = ({ children }: LayoutProps) => {
           </nav>
         </ScrollArea>
 
-        <div className="p-3 border-t border-white/5 w-full flex justify-center">
+        <div className="p-2 border-t border-white/5 w-full flex justify-center">
           <HoverCard openDelay={0} closeDelay={100}>
             <HoverCardTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-12 h-12 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                className="w-10 h-10 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
                 onClick={handleLogout}
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
               </Button>
             </HoverCardTrigger>
             <HoverCardContent 
               side="right" 
               align="start"
-              sideOffset={8}
-              className="w-auto px-3 py-2 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
+              sideOffset={6}
+              className="w-auto px-2.5 py-1.5 bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl z-[100]"
             >
-              <span className="text-sm font-medium">Abmelden</span>
+              <span className="text-xs font-medium">Abmelden</span>
             </HoverCardContent>
           </HoverCard>
         </div>
