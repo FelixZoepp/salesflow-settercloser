@@ -534,10 +534,11 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-2">
-                <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+              {/* Apple Liquid Glass style monitor */}
+              <div className="rounded-[2rem] overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 to-white/[0.02] p-3 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
+                <div className="rounded-[1.5rem] bg-[#0d1117] overflow-hidden">
                   {/* Video call header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#161b22]">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#161b22] rounded-t-[1.25rem]">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
                       <span className="text-xs text-gray-400">LIVE</span>
@@ -547,11 +548,11 @@ const Landing = () => {
                   
                   {/* Video area */}
                   <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
-                    {/* Host image - full video area */}
+                    {/* Host image - positioned lower to show face */}
                     <img 
                       src={felixLiveCallImage} 
                       alt="Felix Zoepp - Live Call Host" 
-                      className="w-full h-full object-cover object-center"
+                      className="w-full h-full object-cover object-[center_35%]"
                     />
                     
                     {/* Speaking indicator overlay - top right corner */}
