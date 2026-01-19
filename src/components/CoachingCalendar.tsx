@@ -1,127 +1,174 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, TrendingUp, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, Users, TrendingUp, MessageSquare, Sparkles, ExternalLink } from "lucide-react";
 
 interface CoachingCall {
-  day: string;
+  day: number; // 0 = Monday, 1 = Tuesday, etc.
+  dayName: string;
   time: string;
+  hour: number;
   title: string;
+  shortTitle: string;
   description: string;
   icon: React.ReactNode;
-  color: string;
+  gradient: string;
+  zoomLink?: string;
 }
 
 const coachingCalls: CoachingCall[] = [
   {
-    day: "Montag",
-    time: "17:00 Uhr",
+    day: 0,
+    dayName: "Montag",
+    time: "17:00",
+    hour: 17,
     title: "Leadgenerierungs-Call",
-    description: "Strategien zur Kundengewinnung & LinkedIn-Outreach",
-    icon: <Users className="h-5 w-5" />,
-    color: "bg-blue-500",
+    shortTitle: "Leads",
+    description: "Strategien zur Kundengewinnung",
+    icon: <Users className="h-4 w-4" />,
+    gradient: "from-blue-500 to-cyan-400",
   },
   {
-    day: "Mittwoch",
-    time: "17:00 Uhr",
+    day: 2,
+    dayName: "Mittwoch",
+    time: "17:00",
+    hour: 17,
     title: "Weekly Outreach Call",
-    description: "Q&A, Best Practices & Community-Austausch",
-    icon: <MessageSquare className="h-5 w-5" />,
-    color: "bg-primary",
+    shortTitle: "Outreach",
+    description: "Q&A & Best Practices",
+    icon: <MessageSquare className="h-4 w-4" />,
+    gradient: "from-violet-500 to-purple-400",
+    zoomLink: "https://us06web.zoom.us/j/84439071732?pwd=b1gqdFZ9eZuk5zmJIrLIpyWAxJGKux.1",
   },
   {
-    day: "Donnerstag",
-    time: "09:00 Uhr",
+    day: 3,
+    dayName: "Donnerstag",
+    time: "09:00",
+    hour: 9,
     title: "Vertriebscall",
-    description: "Sales-Training & Abschluss-Techniken",
-    icon: <TrendingUp className="h-5 w-5" />,
-    color: "bg-amber-500",
+    shortTitle: "Sales",
+    description: "Abschluss-Techniken",
+    icon: <TrendingUp className="h-4 w-4" />,
+    gradient: "from-amber-500 to-orange-400",
   },
 ];
 
+const weekDays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+const fullWeekDays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+
 export function CoachingCalendar() {
+  const getCallForDay = (dayIndex: number) => {
+    return coachingCalls.find(call => call.day === dayIndex);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <CardTitle>Dein Coaching-Kalender</CardTitle>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Wöchentliche Live-Calls exklusiv für Coaching-Kunden
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
-          {coachingCalls.map((call) => (
-            <div
-              key={call.day}
-              className="relative overflow-hidden rounded-xl border bg-card p-4 transition-all hover:shadow-md hover:border-primary/50"
-            >
-              {/* Color accent bar */}
-              <div className={`absolute top-0 left-0 right-0 h-1 ${call.color}`} />
-              
-              <div className="flex items-start gap-3 mt-2">
-                <div className={`rounded-lg p-2 ${call.color} text-white`}>
-                  {call.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-xs">
-                      {call.day}
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-foreground truncate">
-                    {call.title}
-                  </h4>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{call.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                    {call.description}
-                  </p>
-                </div>
-              </div>
+    <Card className="overflow-hidden border-2">
+      <CardHeader className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-amber-500/10 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-purple-500 text-white">
+              <Calendar className="h-5 w-5" />
             </div>
-          ))}
+            <div>
+              <CardTitle className="text-xl">Coaching-Kalender</CardTitle>
+              <p className="text-sm text-muted-foreground">Deine wöchentlichen Live-Sessions</p>
+            </div>
+          </div>
+          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+            <Sparkles className="h-3 w-3 mr-1" />
+            Starter Masterclass
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-0">
+        {/* Week Grid Header */}
+        <div className="grid grid-cols-7 border-b bg-muted/30">
+          {weekDays.map((day, index) => {
+            const call = getCallForDay(index);
+            return (
+              <div
+                key={day}
+                className={`py-3 text-center border-r last:border-r-0 ${
+                  call ? "font-semibold text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <span className="hidden sm:inline">{fullWeekDays[index]}</span>
+                <span className="sm:hidden">{day}</span>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Weekly rhythm visualization */}
-        <div className="mt-6 p-4 bg-muted/50 rounded-xl">
-          <h5 className="text-sm font-medium text-foreground mb-3">Wochenrhythmus</h5>
-          <div className="flex gap-1 justify-between">
-            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((day, index) => {
-              const hasCall = index === 0 || index === 2 || index === 3;
-              const callColors = {
-                0: "bg-blue-500",
-                2: "bg-primary",
-                3: "bg-amber-500",
-              };
-              return (
-                <div key={day} className="flex-1 text-center">
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 min-h-[200px]">
+          {weekDays.map((_, index) => {
+            const call = getCallForDay(index);
+            return (
+              <div
+                key={index}
+                className={`border-r last:border-r-0 p-2 ${
+                  call ? "bg-gradient-to-b from-muted/20 to-transparent" : ""
+                }`}
+              >
+                {call && (
                   <div
-                    className={`h-8 rounded-md flex items-center justify-center text-xs font-medium transition-all ${
-                      hasCall
-                        ? `${callColors[index as keyof typeof callColors]} text-white`
-                        : "bg-muted text-muted-foreground"
-                    }`}
+                    className={`h-full rounded-xl bg-gradient-to-br ${call.gradient} p-3 text-white shadow-lg transform transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer group`}
+                    onClick={() => call.zoomLink && window.open(call.zoomLink, '_blank')}
                   >
-                    {day}
+                    <div className="flex flex-col h-full">
+                      {/* Time Badge */}
+                      <div className="flex items-center gap-1 text-white/90 text-xs font-medium mb-2">
+                        <Clock className="h-3 w-3" />
+                        <span>{call.time} Uhr</span>
+                      </div>
+                      
+                      {/* Icon */}
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 w-fit mb-2">
+                        {call.icon}
+                      </div>
+                      
+                      {/* Title */}
+                      <h4 className="font-bold text-sm leading-tight mb-1">
+                        <span className="hidden lg:inline">{call.title}</span>
+                        <span className="lg:hidden">{call.shortTitle}</span>
+                      </h4>
+                      
+                      {/* Description - hidden on mobile */}
+                      <p className="text-xs text-white/80 hidden md:block flex-1">
+                        {call.description}
+                      </p>
+
+                      {/* Join indicator */}
+                      {call.zoomLink && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-white/90 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ExternalLink className="h-3 w-3" />
+                          <span>Beitreten</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Legend / Info Section */}
+        <div className="border-t bg-muted/20 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-3">
+              {coachingCalls.map((call) => (
+                <div key={call.day} className="flex items-center gap-2 text-sm">
+                  <div className={`h-3 w-3 rounded-full bg-gradient-to-r ${call.gradient}`} />
+                  <span className="text-muted-foreground">{call.shortTitle}</span>
+                  <span className="text-xs text-muted-foreground/70">({call.time})</span>
                 </div>
-              );
-            })}
-          </div>
-          <div className="flex gap-4 mt-3 text-xs text-muted-foreground justify-center flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-blue-500" /> Leads
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-primary" /> Outreach
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-500" /> Vertrieb
-            </span>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              3 Live-Calls pro Woche • Exklusiv für Starter Masterclass
+            </p>
           </div>
         </div>
       </CardContent>
