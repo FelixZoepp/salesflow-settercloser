@@ -68,32 +68,106 @@ serve(async (req) => {
       return filtered.length > 0 ? filtered : links;
     };
 
+    const normalizeToken = (input: string) => {
+      return input
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    };
+
+    const buildPreferredTokenBase = () => {
+      const emailBase = user.email?.split("@")[0] ?? "partner";
+      const nameBase = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : "";
+      const base = normalizeToken(nameBase) || normalizeToken(emailBase) || "partner";
+      // Keep it readable as a Kürzel, but leave room for the suffix
+      return base.slice(0, 18);
+    };
+
+    const randomSuffix = (len = 6) => {
+      const bytes = crypto.getRandomValues(new Uint8Array(8));
+      const hex = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      return hex.slice(0, len);
+    };
+
     const ensurePrimaryAffiliateLink = async (affiliateId: string) => {
       let links = await listAffiliateLinks(affiliateId);
 
-      // If none exists, try to create the default link (usually available even if additional links are restricted)
       if (links.length === 0) {
-        const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
-          method: "POST",
-          headers: {
-            Authorization: headers.Authorization,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({ affiliate_id: affiliateId }).toString(),
-        });
+        const base = buildPreferredTokenBase();
+        let createdLink: any | null = null;
 
-        if (createRes.ok) {
-          const created = await createRes.json();
-          links = [created];
-          logStep("Created affiliate link", { affiliateId, url: created?.url });
-        } else {
+        // Create link with a unique token (never duplicate)
+        for (let attempt = 0; attempt < 8; attempt++) {
+          const tokenCandidate = `${base}-${randomSuffix(6)}`;
+
+          const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
+            method: "POST",
+            headers: {
+              Authorization: headers.Authorization,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              affiliate_id: affiliateId,
+              token: tokenCandidate,
+            }).toString(),
+          });
+
+          if (createRes.ok) {
+            const createdJson = await createRes.json();
+            createdLink = createdJson?.data ?? createdJson;
+            logStep("Created affiliate link", {
+              affiliateId,
+              url: createdLink?.url,
+              token: createdLink?.token,
+            });
+            break;
+          }
+
           const errorText = await createRes.text();
-          logStep("Failed to create affiliate link", { status: createRes.status, error: errorText });
+          if (createRes.status === 422 && errorText.toLowerCase().includes("token is already in use")) {
+            continue;
+          }
+
+          logStep("Failed to create affiliate link (with token)", { status: createRes.status, error: errorText });
+          break;
+        }
+
+        // Fallback: create without token (Rewardful will still generate a unique token)
+        if (!createdLink) {
+          const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
+            method: "POST",
+            headers: {
+              Authorization: headers.Authorization,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ affiliate_id: affiliateId }).toString(),
+          });
+
+          if (createRes.ok) {
+            const createdJson = await createRes.json();
+            createdLink = createdJson?.data ?? createdJson;
+            logStep("Created affiliate link (fallback)", {
+              affiliateId,
+              url: createdLink?.url,
+              token: createdLink?.token,
+            });
+          } else {
+            const errorText = await createRes.text();
+            logStep("Failed to create affiliate link (fallback)", { status: createRes.status, error: errorText });
+          }
+        }
+
+        if (createdLink) {
+          links = [createdLink];
         }
       }
 
       const primaryUrl = links?.[0]?.url ?? null;
-      return { primaryUrl, links };
+      const primaryToken = links?.[0]?.token ?? null;
+      return { primaryUrl, primaryToken, links };
     };
 
     if (action === "get-affiliate") {
@@ -115,10 +189,11 @@ serve(async (req) => {
       if (searchData.data && searchData.data.length > 0) {
         const affiliate = searchData.data[0];
 
-        const { primaryUrl, links } = await ensurePrimaryAffiliateLink(affiliate.id);
+        const { primaryUrl, primaryToken, links } = await ensurePrimaryAffiliateLink(affiliate.id);
         const affiliateWithLink = {
           ...affiliate,
           link: affiliate.link ?? primaryUrl,
+          partner_code: primaryToken,
           links,
         };
 
@@ -184,10 +259,11 @@ serve(async (req) => {
         if (searchData.data && searchData.data.length > 0) {
           const existingAffiliate = searchData.data[0];
 
-          const { primaryUrl, links } = await ensurePrimaryAffiliateLink(existingAffiliate.id);
+          const { primaryUrl, primaryToken, links } = await ensurePrimaryAffiliateLink(existingAffiliate.id);
           const affiliateWithLink = {
             ...existingAffiliate,
             link: existingAffiliate.link ?? primaryUrl,
+            partner_code: primaryToken,
             links,
           };
 
@@ -231,10 +307,11 @@ serve(async (req) => {
       const createdJson = await createResponse.json();
       const affiliate = createdJson?.data ?? createdJson;
 
-      const { primaryUrl, links } = await ensurePrimaryAffiliateLink(affiliate.id);
+      const { primaryUrl, primaryToken, links } = await ensurePrimaryAffiliateLink(affiliate.id);
       const affiliateWithLink = {
         ...affiliate,
         link: affiliate.link ?? primaryUrl,
+        partner_code: primaryToken,
         links,
       };
 
