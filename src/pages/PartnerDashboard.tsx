@@ -109,9 +109,15 @@ export default function PartnerDashboard() {
 
   const copyLink = () => {
     const affiliateLink = affiliate?.link || affiliate?.links?.[0]?.url;
+    const code = affiliate?.partner_code || affiliate?.links?.[0]?.token;
     if (affiliateLink) {
       navigator.clipboard.writeText(affiliateLink);
-      toast.success("Affiliate-Link kopiert!");
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">Affiliate-Link kopiert!</span>
+          <span className="text-xs text-muted-foreground font-mono truncate max-w-[260px]">{affiliateLink}</span>
+        </div>
+      );
     }
   };
 
