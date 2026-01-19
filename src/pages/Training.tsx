@@ -13,8 +13,8 @@ const Training = () => {
   // Memberspot course URL - can be configured
   const memberSpotUrl = "https://pitchfirst.memberspot.de";
   
-  // Live Call URL - weekly call link
-  const liveCallUrl = "https://calendly.com/pitchfirst/live-call";
+  // Live Call URL - Zoom link for weekly Wednesday 17:00 call
+  const liveCallUrl = "https://us06web.zoom.us/j/84439071732?pwd=b1gqdFZ9eZuk5zmJIrLIpyWAxJGKux.1";
 
   if (loading) {
     return (
@@ -150,7 +150,11 @@ const Training = () => {
               <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="h-4 w-4 text-green-500" />
-                  <span className="text-foreground">1x pro Woche</span>
+                  <span className="text-foreground font-medium">Jeden Mittwoch</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock className="h-4 w-4 text-green-500" />
+                  <span className="text-foreground font-medium">17:00 Uhr</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Users className="h-4 w-4 text-green-500" />
@@ -158,7 +162,7 @@ const Training = () => {
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Video className="h-4 w-4 text-green-500" />
-                  <span className="text-foreground">Live Q&A Session</span>
+                  <span className="text-foreground">Live Q&A via Zoom</span>
                 </div>
               </div>
 
@@ -190,7 +194,7 @@ const Training = () => {
                 onClick={() => window.open(liveCallUrl, '_blank')}
               >
                 <Video className="h-4 w-4 mr-2" />
-                Zum Live Call anmelden
+                Zoom-Call beitreten
                 <ExternalLink className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>
