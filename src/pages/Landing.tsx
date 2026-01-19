@@ -291,82 +291,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Quick Start Section - 10 Minuten */}
-      <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
-          <div className="text-center mb-8 md:mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-xs md:text-sm font-medium mb-4">
-              <Clock className="h-4 w-4" />
-              Schnellstart
-            </div>
-            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white">
-              Outreach in <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">10 Minuten</span> startbereit
-            </h2>
-            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
-              Von der ersten Idee bis zur laufenden Kampagne – so einfach war LinkedIn-Outreach noch nie.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-4 gap-4 md:gap-6">
-            {[
-              {
-                step: "1",
-                icon: Users,
-                title: "Leads suchen",
-                description: "Finde deine Zielgruppe im Sales Navigator"
-              },
-              {
-                step: "2",
-                icon: ArrowRight,
-                title: "Importieren",
-                description: "CSV-Upload bei PitchFirst.io"
-              },
-              {
-                step: "3",
-                icon: Sparkles,
-                title: "KI anpassen",
-                description: "Lead-Seiten mit KI personalisieren"
-              },
-              {
-                step: "4",
-                icon: Target,
-                title: "Starten",
-                description: "Kampagne mit Tracking aktivieren"
-              }
-            ].map((item, idx) => (
-              <div key={idx} className="relative">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 text-center h-full">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold">{item.step}</span>
-                  </div>
-                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-3">
-                    <item.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.description}</p>
-                </div>
-                {idx < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-                    <ArrowRight className="h-5 w-5 text-primary/50" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 text-center">
-            <Button 
-              size="lg" 
-              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white shadow-2xl shadow-green-500/30 px-6 md:px-8 h-12 md:h-14"
-            >
-              Jetzt in 10 Minuten starten
-              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Challenge Section */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
         <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
@@ -480,6 +404,82 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Start Section - 10 Minuten */}
+      <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
+        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-8 md:mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-xs md:text-sm font-medium mb-4">
+              <Clock className="h-4 w-4" />
+              Schnellstart
+            </div>
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white">
+              Outreach in <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">10 Minuten</span> startbereit
+            </h2>
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
+              Von der ersten Idee bis zur laufenden Kampagne – so einfach war LinkedIn-Outreach noch nie.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              {
+                step: "1",
+                icon: Users,
+                title: "Leads suchen",
+                description: "Finde deine Zielgruppe im Sales Navigator"
+              },
+              {
+                step: "2",
+                icon: ArrowRight,
+                title: "Importieren",
+                description: "CSV-Upload bei PitchFirst.io"
+              },
+              {
+                step: "3",
+                icon: Sparkles,
+                title: "KI anpassen",
+                description: "Lead-Seiten mit KI personalisieren"
+              },
+              {
+                step: "4",
+                icon: Target,
+                title: "Starten",
+                description: "Kampagne mit Tracking aktivieren"
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="relative">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 text-center h-full">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold">{item.step}</span>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+                  <p className="text-gray-400 text-sm">{item.description}</p>
+                </div>
+                {idx < 3 && (
+                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
+                    <ArrowRight className="h-5 w-5 text-primary/50" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Button 
+              size="lg" 
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white shadow-2xl shadow-green-500/30 px-6 md:px-8 h-12 md:h-14"
+            >
+              Jetzt in 10 Minuten starten
+              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+            </Button>
           </div>
         </div>
       </section>
