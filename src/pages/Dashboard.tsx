@@ -28,6 +28,7 @@ import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import TasksOverview from "@/components/TasksOverview";
 import NeglectedLeadsPanel from "@/components/NeglectedLeadsPanel";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
+import { DashboardLiveCallWidget } from "@/components/DashboardLiveCallWidget";
 
 interface LeadStats {
   totalCampaigns: number;
@@ -282,6 +283,8 @@ const Dashboard = () => {
     <Layout>
       <div className="min-h-screen noise-bg dotted-grid">
         <div className="max-w-7xl mx-auto p-1">
+          {/* Live Call Widget */}
+          <DashboardLiveCallWidget className="mb-6" />
           {/* Pro Upgrade Banner for Starter Users */}
           {isStarterPlan && showUpgradeBanner && !featureLoading && (
             <div className="mb-6 relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-blue-500/10">
