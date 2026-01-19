@@ -129,6 +129,10 @@ const Landing = () => {
 
   const faqs = [
     {
+      question: "Führt die Software zu LinkedIn-Banns?",
+      answer: "Nein. PitchFirst ist nicht mit LinkedIn verbunden – es gibt keine Automatisierung, die dein Profil gefährdet. Die Software dient nur zur Steuerung und ist perfekt auf die Grenzen deines Profils abgestimmt. Sie gibt dir vor, was du manuell tun sollst – du behältst die volle Kontrolle."
+    },
+    {
       question: "Wie funktioniert die KI-Video-Generierung?",
       answer: "Du lädst einmalig ein Pitch-Video hoch. Unsere KI erstellt daraus für jeden Lead ein personalisiertes Intro, in dem dein Avatar den Namen des Leads ausspricht. Das Ganze passiert vollautomatisch."
     },
