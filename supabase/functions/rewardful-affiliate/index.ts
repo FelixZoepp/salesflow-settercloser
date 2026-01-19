@@ -52,6 +52,50 @@ serve(async (req) => {
       "Content-Type": "application/json",
     };
 
+    const listAffiliateLinks = async (affiliateId: string): Promise<any[]> => {
+      const url = `https://api.getrewardful.com/v1/affiliate_links?affiliate_id=${encodeURIComponent(affiliateId)}`;
+      const res = await fetch(url, { headers });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        logStep("Error fetching affiliate links", { status: res.status, error: errorText });
+        return [];
+      }
+
+      const json = await res.json();
+      const links = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+      const filtered = links.filter((l: any) => l?.affiliate_id === affiliateId);
+      return filtered.length > 0 ? filtered : links;
+    };
+
+    const ensurePrimaryAffiliateLink = async (affiliateId: string) => {
+      let links = await listAffiliateLinks(affiliateId);
+
+      // If none exists, try to create the default link (usually available even if additional links are restricted)
+      if (links.length === 0) {
+        const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
+          method: "POST",
+          headers: {
+            Authorization: headers.Authorization,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ affiliate_id: affiliateId }).toString(),
+        });
+
+        if (createRes.ok) {
+          const created = await createRes.json();
+          links = [created];
+          logStep("Created affiliate link", { affiliateId, url: created?.url });
+        } else {
+          const errorText = await createRes.text();
+          logStep("Failed to create affiliate link", { status: createRes.status, error: errorText });
+        }
+      }
+
+      const primaryUrl = links?.[0]?.url ?? null;
+      return { primaryUrl, links };
+    };
+
     if (action === "get-affiliate") {
       // Try to find existing affiliate by email
       const searchResponse = await fetch(
@@ -70,41 +114,56 @@ serve(async (req) => {
 
       if (searchData.data && searchData.data.length > 0) {
         const affiliate = searchData.data[0];
-        logStep("Found existing affiliate", { id: affiliate.id, link: affiliate.link, links: affiliate.links });
-        
+
+        const { primaryUrl, links } = await ensurePrimaryAffiliateLink(affiliate.id);
+        const affiliateWithLink = {
+          ...affiliate,
+          link: affiliate.link ?? primaryUrl,
+          links,
+        };
+
+        logStep("Found existing affiliate", {
+          id: affiliate.id,
+          hasLink: Boolean(affiliateWithLink.link),
+          linksCount: links?.length ?? 0,
+        });
+
         // Get referrals for this affiliate
         const referralsResponse = await fetch(
           `https://api.getrewardful.com/v1/referrals?affiliate_id=${affiliate.id}`,
           { headers }
         );
-        
+
         let referrals = [];
         if (referralsResponse.ok) {
           const referralsData = await referralsResponse.json();
           referrals = referralsData.data || [];
         }
-        
+
         // Get commissions for this affiliate
         const commissionsResponse = await fetch(
           `https://api.getrewardful.com/v1/commissions?affiliate_id=${affiliate.id}`,
           { headers }
         );
-        
+
         let commissions = [];
         if (commissionsResponse.ok) {
           const commissionsData = await commissionsResponse.json();
           commissions = commissionsData.data || [];
         }
 
-        return new Response(JSON.stringify({ 
-          affiliate,
-          referrals,
-          commissions,
-          exists: true 
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        return new Response(
+          JSON.stringify({
+            affiliate: affiliateWithLink,
+            referrals,
+            commissions,
+            exists: true,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
       }
 
       return new Response(JSON.stringify({ exists: false }), {
@@ -124,16 +183,32 @@ serve(async (req) => {
         const searchData = await searchResponse.json();
         if (searchData.data && searchData.data.length > 0) {
           const existingAffiliate = searchData.data[0];
-          logStep("Affiliate already exists", { id: existingAffiliate.id, link: existingAffiliate.link });
-          return new Response(JSON.stringify({ 
-            affiliate: existingAffiliate,
-            referrals: [],
-            commissions: [],
-            exists: true 
-          }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
+
+          const { primaryUrl, links } = await ensurePrimaryAffiliateLink(existingAffiliate.id);
+          const affiliateWithLink = {
+            ...existingAffiliate,
+            link: existingAffiliate.link ?? primaryUrl,
+            links,
+          };
+
+          logStep("Affiliate already exists", {
+            id: existingAffiliate.id,
+            hasLink: Boolean(affiliateWithLink.link),
+            linksCount: links?.length ?? 0,
           });
+
+          return new Response(
+            JSON.stringify({
+              affiliate: affiliateWithLink,
+              referrals: [],
+              commissions: [],
+              exists: true,
+            }),
+            {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            }
+          );
         }
       }
       
@@ -153,19 +228,35 @@ serve(async (req) => {
         throw new Error(`Failed to create affiliate: ${createResponse.status}`);
       }
 
-      const affiliate = await createResponse.json();
-      logStep("Created new affiliate", { id: affiliate.id, link: affiliate.link });
+      const createdJson = await createResponse.json();
+      const affiliate = createdJson?.data ?? createdJson;
 
-      return new Response(JSON.stringify({
-        affiliate,
-        referrals: [],
-        commissions: [],
-        exists: true,
-        justCreated: true 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+      const { primaryUrl, links } = await ensurePrimaryAffiliateLink(affiliate.id);
+      const affiliateWithLink = {
+        ...affiliate,
+        link: affiliate.link ?? primaryUrl,
+        links,
+      };
+
+      logStep("Created new affiliate", {
+        id: affiliate.id,
+        hasLink: Boolean(affiliateWithLink.link),
+        linksCount: links?.length ?? 0,
       });
+
+      return new Response(
+        JSON.stringify({
+          affiliate: affiliateWithLink,
+          referrals: [],
+          commissions: [],
+          exists: true,
+          justCreated: true,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     throw new Error("Invalid action");
