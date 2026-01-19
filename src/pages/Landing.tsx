@@ -156,10 +156,10 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] relative">
-      {/* Blurred Ellipse Background */}
+    <div className="min-h-screen bg-[#0a0e27] relative overflow-x-hidden">
+      {/* Blurred Ellipse Background - smaller on mobile */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/20 rounded-full blur-[120px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] md:w-[800px] h-[300px] md:h-[600px] bg-primary/20 rounded-full blur-[80px] md:blur-[120px]"></div>
       </div>
       
       {/* Navigation */}
@@ -335,52 +335,52 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 gap-4 md:gap-8">
             {/* Normal Outreach - Bad */}
             <div className="rounded-xl md:rounded-2xl border-2 border-red-500/30 bg-red-500/5 p-4 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <X className="h-6 w-6 text-red-400" />
+              <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                  <X className="h-5 w-5 md:h-6 md:w-6 text-red-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-red-400">Normaler Outreach</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-red-400">Normaler Outreach</h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-2 md:space-y-4">
                 {[
                   { icon: AlertTriangle, text: "Generische Textnachrichten", desc: "Werden ignoriert oder als Spam markiert" },
                   { icon: X, text: "Keine Kennzahlen", desc: "Du weißt nicht, wer interessiert ist" },
                   { icon: Flame, text: "Leads werden verbrannt", desc: "Schlechter erster Eindruck = keine zweite Chance" },
                   { icon: Clock, text: "Zeitverschwendung", desc: "Stunden für Nachrichten, die niemand liest" },
-                  { icon: TrendingUp, text: "Sinkende Antwortraten", desc: "LinkedIn-User sind abgestumpft von Cold Messages" },
+                  { icon: TrendingUp, text: "Sinkende Antwortraten", desc: "LinkedIn-User sind abgestumpft" },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <item.icon className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <div className="text-white font-medium">{item.text}</div>
-                      <div className="text-gray-400 text-sm">{item.desc}</div>
+                  <div key={idx} className="flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <item.icon className="h-4 w-4 md:h-5 md:w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-white font-medium text-xs md:text-base">{item.text}</div>
+                      <div className="text-gray-400 text-[10px] md:text-sm leading-tight">{item.desc}</div>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className="mt-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+              <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg bg-red-500/10 border border-red-500/30">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-red-400 mb-1">{"<"}3%</div>
-                  <div className="text-gray-400 text-sm">Durchschnittliche Antwortrate</div>
+                  <div className="text-2xl md:text-3xl font-bold text-red-400 mb-0.5 md:mb-1">{"<"}3%</div>
+                  <div className="text-gray-400 text-[10px] md:text-sm">Durchschnittliche Antwortrate</div>
                 </div>
               </div>
             </div>
             
             {/* Content-Leads - Good */}
             <div className="rounded-xl md:rounded-2xl border-2 border-primary/50 bg-primary/5 p-4 md:p-8 relative overflow-hidden">
-              <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary/20 text-primary text-[10px] md:text-xs font-medium">
+              <div className="absolute top-2 right-2 md:top-4 md:right-4 px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary/20 text-primary text-[9px] md:text-xs font-medium">
                 Empfohlen
               </div>
               <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                   <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-primary">pitchfirst.io</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-primary">pitchfirst.io</h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-2 md:space-y-4">
                 {[
                   { icon: Users, text: "CRM mit allem integriert", desc: "Leads, Deals, Aktivitäten – alles an einem Ort" },
                   { icon: Sparkles, text: "Live KI-Einwandbehandlung", desc: "Erkennt Einwände und zeigt sofort passende Antworten" },
@@ -388,20 +388,20 @@ const Landing = () => {
                   { icon: BarChart3, text: "Zahlen statt Excel", desc: "Echte KPIs, übersichtlich und ohne Chaos" },
                   { icon: Zap, text: "Call-Funktion im Tool", desc: "Direkt aus dem CRM anrufen – keine Umwege" },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <item.icon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <div className="text-white font-medium">{item.text}</div>
-                      <div className="text-gray-400 text-sm">{item.desc}</div>
+                  <div key={idx} className="flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <item.icon className="h-4 w-4 md:h-5 md:w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-white font-medium text-xs md:text-base">{item.text}</div>
+                      <div className="text-gray-400 text-[10px] md:text-sm leading-tight">{item.desc}</div>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/30">
+              <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg bg-primary/10 border border-primary/30">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">80%</div>
-                  <div className="text-gray-400 text-sm">Bessere Erreichbarkeit</div>
+                  <div className="text-2xl md:text-3xl font-bold text-primary mb-0.5 md:mb-1">80%</div>
+                  <div className="text-gray-400 text-[10px] md:text-sm">Bessere Erreichbarkeit</div>
                 </div>
               </div>
             </div>
@@ -488,29 +488,29 @@ const Landing = () => {
       {/* Weekly Live Call Section */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1] overflow-hidden">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
             {/* Left side - Text */}
-            <div className="scroll-animate scroll-fade-up">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs md:text-sm font-medium mb-4">
-                <Video className="h-4 w-4" />
+            <div className="scroll-animate scroll-fade-up order-2 md:order-1">
+              <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-[10px] md:text-sm font-medium mb-3 md:mb-4">
+                <Video className="h-3 w-3 md:h-4 md:w-4" />
                 Exklusiv für Kunden
               </div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-white">
+              <h2 className="text-xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 text-white">
                 Jede Woche <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Live Gruppen-Call</span>
               </h2>
-              <p className="text-gray-300 text-sm md:text-lg mb-6">
+              <p className="text-gray-300 text-xs md:text-lg mb-4 md:mb-6 leading-relaxed">
                 Jeden Mittwoch treffen wir uns live. Du stellst deine Fragen zu Outreach, Profil-Optimierung, 
                 Messaging oder Strategie – und bekommst sofort Antworten direkt von mir.
               </p>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                 {[
                   "Live Q&A zu deinem LinkedIn-Profil",
                   "Feedback zu deinen Nachrichten & Kampagnen",
                   "Neue Strategien und Best Practices",
                   "Networking mit anderen Nutzern"
                 ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-gray-300 text-sm md:text-base">
-                    <Check className="h-5 w-5 text-purple-400 flex-shrink-0" />
+                  <li key={idx} className="flex items-center gap-2 md:gap-3 text-gray-300 text-xs md:text-base">
+                    <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-400 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -520,88 +520,88 @@ const Landing = () => {
             {/* Right side - Animated Call Mockup */}
             <div className="relative scroll-animate scroll-scale">
               {/* Question bubble - above the screen */}
-              <div className="mb-4 animate-[fade-in_1s_ease-out_0.5s_both]">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 md:p-4">
+              <div className="mb-3 md:mb-4 animate-[fade-in_1s_ease-out_0.5s_both]">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg md:rounded-xl p-2.5 md:p-4">
                   <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="h-3 w-3 text-blue-400" />
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="h-2.5 w-2.5 md:h-3 md:w-3 text-blue-400" />
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Teilnehmer fragt:</p>
-                      <p className="text-sm text-white font-medium">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
+                    <div className="min-w-0">
+                      <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Teilnehmer fragt:</p>
+                      <p className="text-xs md:text-sm text-white font-medium leading-tight">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
                     </div>
                   </div>
                 </div>
               </div>
               
               {/* Apple Liquid Glass style monitor */}
-              <div className="rounded-[2rem] overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 to-white/[0.02] p-3 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
-                <div className="rounded-[1.5rem] bg-[#0d1117] overflow-hidden">
+              <div className="rounded-[1.25rem] md:rounded-[2rem] overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 to-white/[0.02] p-2 md:p-3 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
+                <div className="rounded-[1rem] md:rounded-[1.5rem] bg-[#0d1117] overflow-hidden">
                   {/* Video call header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#161b22] rounded-t-[1.25rem]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                      <span className="text-xs text-gray-400">LIVE</span>
+                  <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-3 border-b border-white/10 bg-[#161b22] rounded-t-[0.875rem] md:rounded-t-[1.25rem]">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-500 animate-pulse"></div>
+                      <span className="text-[10px] md:text-xs text-gray-400">LIVE</span>
                     </div>
-                    <span className="text-xs text-gray-500">Mittwoch 11:00 Uhr</span>
+                    <span className="text-[10px] md:text-xs text-gray-500">Mittwoch 11:00</span>
                   </div>
                   
                   {/* Video area */}
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
+                  <div className="relative aspect-[4/3] md:aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
                     {/* Host image - positioned lower to show face */}
                     <img 
                       src={felixLiveCallImage} 
                       alt="Felix Zoepp - Live Call Host" 
-                      className="w-full h-full object-cover object-[center_35%]"
+                      className="w-full h-full object-cover object-[center_30%] md:object-[center_35%]"
                     />
                     
                     {/* Speaking indicator overlay - top right corner */}
-                    <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-black/70 border border-green-500/50 backdrop-blur-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-white font-medium">Felix spricht</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
-                          <div className="w-1.5 h-5 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
-                          <div className="w-1.5 h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
+                    <div className="absolute top-2 right-2 md:top-3 md:right-3 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-black/70 border border-green-500/50 backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <span className="text-[9px] md:text-xs text-white font-medium">Felix spricht</span>
+                        <div className="flex items-center gap-0.5 md:gap-1">
+                          <div className="w-1 h-2 md:w-1.5 md:h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
+                          <div className="w-1 h-3 md:w-1.5 md:h-5 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
+                          <div className="w-1 h-1.5 md:w-1.5 md:h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Answer bubble - appears with delay */}
-                    <div className="absolute bottom-4 right-4 animate-[fade-in_1s_ease-out_2s_both]">
-                      <div className="bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-xl p-3 max-w-[200px]">
-                        <div className="flex items-start gap-2">
-                          <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                          <p className="text-xs text-white">Live-Antwort mit konkreten Tipps...</p>
+                    {/* Answer bubble - appears with delay - hidden on small mobile */}
+                    <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 animate-[fade-in_1s_ease-out_2s_both] hidden sm:block">
+                      <div className="bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-lg md:rounded-xl p-2 md:p-3 max-w-[140px] md:max-w-[200px]">
+                        <div className="flex items-start gap-1.5 md:gap-2">
+                          <Lightbulb className="h-3 w-3 md:h-4 md:w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <p className="text-[10px] md:text-xs text-white leading-tight">Live-Antwort mit konkreten Tipps...</p>
                         </div>
                       </div>
                     </div>
                     
                     {/* Participant count */}
-                    <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 border border-white/10">
-                      <Users className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs text-gray-300">24 Teilnehmer</span>
+                    <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-black/50 border border-white/10">
+                      <Users className="h-2.5 w-2.5 md:h-3 md:w-3 text-gray-400" />
+                      <span className="text-[9px] md:text-xs text-gray-300">24 Teilnehmer</span>
                     </div>
                   </div>
                   
                   {/* Call controls */}
-                  <div className="flex items-center justify-center gap-4 py-4 bg-[#161b22]">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Mic className="h-4 w-4 text-white" />
+                  <div className="flex items-center justify-center gap-3 md:gap-4 py-2.5 md:py-4 bg-[#161b22]">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Mic className="h-3 w-3 md:h-4 md:w-4 text-white" />
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Video className="h-4 w-4 text-white" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Video className="h-3 w-3 md:h-4 md:w-4 text-white" />
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
-                      <Phone className="h-4 w-4 text-white rotate-[135deg]" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500 flex items-center justify-center">
+                      <Phone className="h-3 w-3 md:h-4 md:w-4 text-white rotate-[135deg]" />
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Decorative elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-primary/20 rounded-full blur-2xl"></div>
+              {/* Decorative elements - smaller on mobile */}
+              <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 w-16 h-16 md:w-24 md:h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
+              <div className="absolute -bottom-2 -left-2 md:-bottom-4 md:-left-4 w-20 h-20 md:w-32 md:h-32 bg-primary/20 rounded-full blur-2xl"></div>
             </div>
           </div>
         </div>
