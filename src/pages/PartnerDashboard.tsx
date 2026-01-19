@@ -18,7 +18,8 @@ interface Affiliate {
   first_name: string;
   last_name: string;
   link?: string;
-  links?: { url: string; id: string }[];
+  partner_code?: string | null;
+  links?: { url: string; id: string; token?: string }[];
   visitors: number;
   leads: number;
   conversions: number;
@@ -116,6 +117,10 @@ export default function PartnerDashboard() {
 
   const getAffiliateLink = () => {
     return affiliate?.link || affiliate?.links?.[0]?.url || null;
+  };
+
+  const getPartnerCode = () => {
+    return affiliate?.partner_code || affiliate?.links?.[0]?.token || null;
   };
 
   const totalCommissions = commissions.reduce((sum, c) => sum + (c.amount || 0), 0) / 100;
@@ -218,6 +223,11 @@ export default function PartnerDashboard() {
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
+            {getPartnerCode() && (
+              <div className="text-sm text-muted-foreground">
+                Dein Kürzel: <span className="font-mono text-foreground">{getPartnerCode()}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ExternalLink className="h-4 w-4" />
               <span>Teile dein Programm:</span>
