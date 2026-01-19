@@ -175,6 +175,7 @@ const Landing = () => {
               <a href="#tracking" className="hover:text-white transition-colors">Tracking</a>
               <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+              <a href="/partner" className="hover:text-white transition-colors">Partner</a>
             </div>
             <div className="flex gap-2 md:gap-4">
               <Button variant="ghost" onClick={() => navigate("/auth")} className="text-white hover:bg-white/10 text-sm px-2 md:px-4">
@@ -1347,6 +1348,7 @@ const Landing = () => {
               <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
                 <li><a href="#" className="hover:text-primary transition-colors">Über uns</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Kontakt</a></li>
+                <li><a href="/partner" className="hover:text-primary transition-colors">Partner werden</a></li>
               </ul>
             </div>
             <div>
