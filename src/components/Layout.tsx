@@ -204,15 +204,15 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen bg-background relative">
       <div className="ambient-glow" />
       
-      <aside className="w-16 glass-sidebar flex flex-col relative z-50">
+      <aside className="w-[72px] glass-sidebar flex flex-col relative z-50">
         {/* Account Header */}
         <UserAccountHeader />
         
-        <div className="p-2 border-b border-white/5 w-full flex justify-center">
+        <div className="p-2.5 border-b border-white/5 w-full flex justify-center">
           <img 
             src={pitchfirstLogo} 
             alt="pitchfirst.io" 
-            className="h-8 object-contain"
+            className="h-9 object-contain"
           />
         </div>
         
@@ -233,7 +233,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}
         
         <ScrollArea className="flex-1 w-full">
-          <nav className="p-1.5 flex flex-col items-center gap-0.5">
+          <nav className="p-2 flex flex-col items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActiveItem(item);
@@ -243,13 +243,13 @@ const Layout = ({ children }: LayoutProps) => {
                   <HoverCard key={item.path} openDelay={0} closeDelay={100}>
                     <HoverCardTrigger asChild>
                       <button
-                        className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
+                        className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 ${
                           isActive
                             ? "bg-white/10 border border-white/20 shadow-glow-sm"
                             : "hover:bg-white/5"
                         }`}
                       >
-                        <Icon className={`w-4 h-4 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                        <Icon className={`w-[18px] h-[18px] ${isActive ? item.color : 'text-muted-foreground'}`} />
                       </button>
                     </HoverCardTrigger>
                     <HoverCardContent 
@@ -292,16 +292,16 @@ const Layout = ({ children }: LayoutProps) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={item.path}
-                      className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
+                      className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 ${
                         isActive
                           ? "bg-white/10 border border-white/20 shadow-glow-sm"
                           : "hover:bg-white/5"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                      <Icon className={`w-[18px] h-[18px] ${isActive ? item.color : 'text-muted-foreground'}`} />
                     </Link>
                   </HoverCardTrigger>
-                  <HoverCardContent 
+                  <HoverCardContent
                     side="right" 
                     align="start"
                     sideOffset={6}
@@ -315,16 +315,16 @@ const Layout = ({ children }: LayoutProps) => {
           </nav>
         </ScrollArea>
 
-        <div className="p-2 border-t border-white/5 w-full flex justify-center">
+        <div className="p-2.5 border-t border-white/5 w-full flex justify-center">
           <HoverCard openDelay={0} closeDelay={100}>
             <HoverCardTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-10 h-10 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                className="w-11 h-11 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground"
                 onClick={handleLogout}
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-[18px] h-[18px]" />
               </Button>
             </HoverCardTrigger>
             <HoverCardContent 
