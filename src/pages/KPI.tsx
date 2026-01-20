@@ -88,11 +88,16 @@ const KPI = () => {
 
       const startDate = getDateRange();
 
-      // Fetch all deals in the time range
-      const { data: deals } = await supabase
+      // Fetch ALL deals (current state) - we need to see current pipeline status
+      const { data: allDealsData } = await supabase
+        .from("deals")
+        .select("*");
+
+      // Fetch deals that were created OR updated in the time range for activity metrics
+      const { data: recentDeals } = await supabase
         .from("deals")
         .select("*")
-        .gte("created_at", startDate);
+        .or(`created_at.gte.${startDate},updated_at.gte.${startDate}`);
 
       // Fetch all call activities in the time range
       const { data: activities } = await supabase
@@ -101,35 +106,34 @@ const KPI = () => {
         .eq("type", "call")
         .gte("timestamp", startDate);
 
-      const allDeals = deals || [];
+      const allDeals = allDealsData || [];
+      const activeDeals = recentDeals || [];
       const allCalls = activities || [];
 
-      // Lead generation KPIs based on actual stages
-      const pageViews = allDeals.filter((d) => d.stage === "Hat Seite geöffnet").length;
-      const hotLeads = allDeals.filter((d) => d.stage === "Heißer Lead - Anrufen").length;
-      const totalLeads = pageViews + hotLeads;
+      // CURRENT PIPELINE STATUS (regardless of time filter)
+      // These show the current state of the pipeline
+      const currentPageViews = allDeals.filter((d) => d.stage === "Hat Seite geöffnet").length;
+      const currentHotLeads = allDeals.filter((d) => d.stage === "Heißer Lead - Anrufen").length;
+      const currentSettings = allDeals.filter((d) => d.stage === "Setting").length;
+      const currentClosings = allDeals.filter((d) => d.stage === "Closing").length;
 
-      // Setting KPIs
-      const settingsScheduled = allDeals.filter((d) => d.stage === "Setting").length;
+      // No-shows based on next_action field
       const settingNoShows = allDeals.filter((d) => 
         d.next_action?.toLowerCase().includes("no show") && 
         d.stage === "Setting"
       ).length;
-
-      // Closing KPIs
-      const closingsScheduled = allDeals.filter((d) => d.stage === "Closing").length;
       const closingNoShows = allDeals.filter((d) => 
         d.next_action?.toLowerCase().includes("no show") && 
         d.stage === "Closing"
       ).length;
 
-      // Won/Lost deals
-      const wonDeals = allDeals.filter((d) => d.stage === "Abgeschlossen");
-      const lostDeals = allDeals.filter((d) => d.stage === "Verloren");
+      // Won/Lost deals in time range (based on updated_at for when they changed to that stage)
+      const wonDeals = activeDeals.filter((d) => d.stage === "Abgeschlossen");
+      const lostDeals = activeDeals.filter((d) => d.stage === "Verloren");
       const dealsWon = wonDeals.length;
       const dealsLost = lostDeals.length;
 
-      // Revenue
+      // Revenue from won deals in time range
       const totalRevenue = wonDeals.reduce((sum, d) => sum + (Number(d.amount_eur) || 0), 0);
       const avgDealSize = dealsWon > 0 ? totalRevenue / dealsWon : 0;
 
@@ -139,24 +143,25 @@ const KPI = () => {
         ["reached", "interested", "not_interested"].includes(a.outcome || "")
       ).length;
 
-      // Calculate rates
-      const closingBase = settingsScheduled + closingsScheduled;
+      // Calculate rates - use current pipeline for active deals
+      const closingBase = currentSettings + currentClosings;
       const closingRate = closingBase > 0 ? (dealsWon / closingBase) * 100 : 0;
+      const totalLeads = currentPageViews + currentHotLeads;
 
       setKpis({
         totalLeads,
-        pageViews,
-        hotLeads,
-        conversionToHot: totalLeads > 0 ? (hotLeads / totalLeads) * 100 : 0,
+        pageViews: currentPageViews,
+        hotLeads: currentHotLeads,
+        conversionToHot: totalLeads > 0 ? (currentHotLeads / totalLeads) * 100 : 0,
         callsTotal,
         callsReached,
         reachRate: callsTotal > 0 ? (callsReached / callsTotal) * 100 : 0,
-        settingsScheduled,
+        settingsScheduled: currentSettings,
         settingNoShows,
-        settingNoShowRate: settingsScheduled > 0 ? (settingNoShows / settingsScheduled) * 100 : 0,
-        closingsScheduled,
+        settingNoShowRate: currentSettings > 0 ? (settingNoShows / currentSettings) * 100 : 0,
+        closingsScheduled: currentClosings,
         closingNoShows,
-        closingNoShowRate: closingsScheduled > 0 ? (closingNoShows / closingsScheduled) * 100 : 0,
+        closingNoShowRate: currentClosings > 0 ? (closingNoShows / currentClosings) * 100 : 0,
         dealsWon,
         dealsLost,
         closingRate,
