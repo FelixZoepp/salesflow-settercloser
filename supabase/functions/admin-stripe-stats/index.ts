@@ -1,13 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[ADMIN-STRIPE-STATS] ${step}${detailsStr}`);
 };
@@ -53,7 +53,7 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Fetch all subscriptions from Stripe
     logStep("Fetching subscriptions from Stripe");
@@ -94,23 +94,32 @@ serve(async (req) => {
       other: 0,
     };
 
-    // Price ID to plan mapping
-    const PRICE_TO_PLAN: Record<string, { name: string; monthlyAmount: number }> = {
-      // Starter Monthly - €49/month
-      "price_1Tka8gEaO7RPawTGLuKYPnxh": { name: "Starter", monthlyAmount: 4900 },
-      // Starter Yearly - €490/year = €40.83/month
-      "price_1TkaB4EaO7RPawTGTN6m4dWx": { name: "Starter (Jahr)", monthlyAmount: 4083 },
-      // Pro Monthly - €299/month
-      "price_1TkoLkEaO7RPawTGogtgGjKc": { name: "Pro", monthlyAmount: 29900 },
-      // Pro Yearly - €2.490/year = €207.50/month
-      "price_1TkoLkEaO7RPawTGYzwPXQ3P": { name: "Pro (Jahr)", monthlyAmount: 20750 },
+    // Price ID to plan mapping - dynamically calculate from price amount
+    const getPlanInfo = (price: Stripe.Price | undefined): { name: string; monthlyAmount: number } => {
+      if (!price) return { name: 'Unknown', monthlyAmount: 0 };
+      
+      const amount = price.unit_amount || 0;
+      const interval = price.recurring?.interval || 'month';
+      
+      // Calculate monthly amount
+      const monthlyAmount = interval === 'year' ? Math.round(amount / 12) : amount;
+      
+      // Determine plan name based on amount
+      // Starter: ~49-149€/month, Pro: ~299€/month
+      let planName = 'Starter';
+      if (monthlyAmount >= 20000) {
+        planName = interval === 'year' ? 'Pro (Jahr)' : 'Pro';
+      } else if (interval === 'year') {
+        planName = 'Starter (Jahr)';
+      }
+      
+      return { name: planName, monthlyAmount };
     };
 
     for (const sub of allSubscriptions) {
       const customer = sub.customer as Stripe.Customer;
-      const price = sub.items.data[0]?.price;
-      const priceId = price?.id || '';
-      const planInfo = PRICE_TO_PLAN[priceId] || { name: 'Unknown', monthlyAmount: 0 };
+      const price = sub.items.data[0]?.price as Stripe.Price | undefined;
+      const planInfo = getPlanInfo(price);
       
       // Count by plan
       subscriptionsByPlan[planInfo.name] = (subscriptionsByPlan[planInfo.name] || 0) + 1;
@@ -186,9 +195,8 @@ serve(async (req) => {
         const wasActiveInMonth = !canceledAt || canceledAt > monthDate;
         
         if (wasCreatedBefore && wasActiveInMonth) {
-          const price = sub.items.data[0]?.price;
-          const priceId = price?.id || '';
-          const planInfo = PRICE_TO_PLAN[priceId] || { name: 'Unknown', monthlyAmount: 0 };
+          const price = sub.items.data[0]?.price as Stripe.Price | undefined;
+          const planInfo = getPlanInfo(price);
           
           // Only count if status was not incomplete at that time
           if (sub.status !== 'incomplete') {
