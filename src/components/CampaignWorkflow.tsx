@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutoVideoGeneration } from "@/hooks/useAutoVideoGeneration";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -161,6 +162,9 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
       setTemplates(data as FollowupTemplate[]);
     }
   };
+
+  // Auto-process pending videos when connection is accepted
+  useAutoVideoGeneration({ campaignId, enabled: true });
 
   useEffect(() => {
     fetchContacts();
