@@ -611,7 +611,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
 
             {/* Preview Content - Taller */}
             <ScrollArea 
-              className="rounded-b-[2rem] max-h-[60vh]" 
+              className="rounded-b-[2rem] h-[60vh]" 
               style={{ 
                 backgroundColor: template.background_color,
                 color: template.text_color 
