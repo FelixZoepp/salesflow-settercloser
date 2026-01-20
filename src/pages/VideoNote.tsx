@@ -16,6 +16,7 @@ interface ContactData {
   id: string;
   first_name: string;
   last_name: string;
+  company: string | null;
   video_url: string | null;
   pitch_video_url: string | null;
 }
@@ -145,7 +146,7 @@ const VideoNote = () => {
     );
   }
 
-  const companyName = "euer Unternehmen";
+  const companyName = contact?.company || "dein Unternehmen";
 
   return (
     <div className="min-h-screen bg-[#0f172a]" style={{ fontFamily: "'Inter', sans-serif" }}>
