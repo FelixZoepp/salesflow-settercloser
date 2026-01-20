@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { format, subDays, parseISO, startOfDay } from "date-fns";
+import { de } from "date-fns/locale";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
 import { 
   Video, 
   Play, 
@@ -30,7 +44,8 @@ import {
   Clock,
   MousePointerClick,
   TrendingUp,
-  Loader2
+  Loader2,
+  Calendar
 } from "lucide-react";
 
 interface Contact {
@@ -208,7 +223,46 @@ const VideoNoteAdmin = () => {
     };
   })();
 
-  // Update video URL mutation
+  // Generate time-series data for charts (last 14 days)
+  const timeSeriesData = useMemo(() => {
+    const days = 14;
+    const data: { date: string; label: string; views: number; videoPlays: number; ctaClicks: number; bookings: number }[] = [];
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const label = format(date, 'dd. MMM', { locale: de });
+      
+      const dayEvents = trackingEvents.filter(e => {
+        const eventDate = format(parseISO(e.created_at), 'yyyy-MM-dd');
+        return eventDate === dateStr;
+      });
+      
+      data.push({
+        date: dateStr,
+        label,
+        views: dayEvents.filter(e => e.event_type === 'page_view').length,
+        videoPlays: dayEvents.filter(e => e.event_type === 'video_play').length,
+        ctaClicks: dayEvents.filter(e => e.event_type === 'cta_click').length,
+        bookings: dayEvents.filter(e => e.event_type === 'booking_click').length,
+      });
+    }
+    
+    return data;
+  }, [trackingEvents]);
+
+  // Event breakdown for bar chart
+  const eventBreakdownData = useMemo(() => {
+    return [
+      { name: 'Seitenaufrufe', value: analytics.totalViews, fill: '#6366f1' },
+      { name: 'Video-Plays', value: analytics.videoPlays, fill: '#10b981' },
+      { name: 'Video beendet', value: analytics.videoCompletions, fill: '#8b5cf6' },
+      { name: 'CTA-Klicks', value: analytics.ctaClicks, fill: '#f59e0b' },
+      { name: 'Termin-Klicks', value: analytics.bookingClicks, fill: '#ec4899' },
+    ];
+  }, [analytics]);
+
+
   const updateVideoMutation = useMutation({
     mutationFn: async ({ contactId, videoUrl }: { contactId: string; videoUrl: string }) => {
       const { error } = await supabase
@@ -793,6 +847,162 @@ const VideoNoteAdmin = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Time Series Charts */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Views Over Time Chart */}
+              <Card className="glass-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    Aufrufe (letzte 14 Tage)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={timeSeriesData}>
+                        <defs>
+                          <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorPlays" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="label" 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                        />
+                        <Legend />
+                        <Area 
+                          type="monotone" 
+                          dataKey="views" 
+                          name="Seitenaufrufe"
+                          stroke="#6366f1" 
+                          fillOpacity={1} 
+                          fill="url(#colorViews)" 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="videoPlays" 
+                          name="Video-Plays"
+                          stroke="#10b981" 
+                          fillOpacity={1} 
+                          fill="url(#colorPlays)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Conversions Over Time Chart */}
+              <Card className="glass-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MousePointerClick className="w-5 h-5 text-primary" />
+                    Conversions (letzte 14 Tage)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={timeSeriesData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="label" 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                        />
+                        <Legend />
+                        <Bar dataKey="ctaClicks" name="CTA-Klicks" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="bookings" name="Termin-Klicks" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Event Breakdown Chart */}
+            <Card className="glass-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Event-Übersicht
+                </CardTitle>
+                <CardDescription>
+                  Gesamtanzahl aller Events im ausgewählten Zeitraum
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={eventBreakdownData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        type="number"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        type="category"
+                        dataKey="name"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        width={100}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
+                        }}
+                      />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Detailed Analytics */}
             <div className="grid md:grid-cols-2 gap-6">
