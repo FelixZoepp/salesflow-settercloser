@@ -99,11 +99,12 @@ const KPI = () => {
         .select("*")
         .or(`created_at.gte.${startDate},updated_at.gte.${startDate}`);
 
-      // Fetch contacts with high lead score (hot leads based on engagement)
+      // Fetch contacts that became hot (lead_score >= 70) in the time range
       const { data: hotContacts } = await supabase
         .from("contacts")
-        .select("id, lead_score")
-        .gte("lead_score", 70);
+        .select("id, lead_score, updated_at")
+        .gte("lead_score", 70)
+        .gte("updated_at", startDate);
 
       // Fetch all call activities in the time range
       const { data: activities } = await supabase
