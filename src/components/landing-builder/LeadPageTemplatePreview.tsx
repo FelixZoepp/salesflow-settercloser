@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -139,6 +139,45 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   const [uploading, setUploading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"preview" | "editor">("preview");
+  const [activeEditorTab, setActiveEditorTab] = useState("branding");
+
+  // Refs for preview sections
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+  const headerSectionRef = useRef<HTMLElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const coachingSectionRef = useRef<HTMLElement>(null);
+  const comparisonSectionRef = useRef<HTMLElement>(null);
+  const footerSectionRef = useRef<HTMLElement>(null);
+
+  // Scroll to section when editor tab changes
+  const scrollToSection = useCallback((tabValue: string) => {
+    const sectionId = `preview-${tabValue}`;
+    const sectionElement = document.getElementById(sectionId);
+    
+    if (sectionElement && previewScrollRef.current) {
+      // Find the ScrollArea viewport (it's the scrollable container)
+      const scrollContainer = previewScrollRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elementRect = sectionElement.getBoundingClientRect();
+        const scrollTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+        
+        scrollContainer.scrollTo({
+          top: scrollTop - 20,
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback: use scrollIntoView
+        sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, []);
+
+  // Handle editor tab change
+  const handleEditorTabChange = useCallback((value: string) => {
+    setActiveEditorTab(value);
+    scrollToSection(value);
+  }, [scrollToSection]);
 
   useEffect(() => {
     loadTemplate();
@@ -579,9 +618,9 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                 color: template.text_color 
               }}
             >
-              <div className="p-0">
+              <div className="p-0" ref={previewScrollRef}>
                 {/* Header Preview */}
-                <header className="border-b border-slate-800 px-4 py-3">
+                <header id="preview-branding" ref={headerSectionRef} className="border-b border-slate-800 px-4 py-3 scroll-mt-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {template.header_logo_url ? (
@@ -608,7 +647,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                 </header>
 
                 {/* Hero Section Preview */}
-                <section className="py-8 px-4">
+                <section id="preview-hero" ref={heroSectionRef} className="py-8 px-4 scroll-mt-4">
                   <div className="grid md:grid-cols-2 gap-6 items-center">
                     <div className="space-y-4">
                       <h1 className="text-2xl font-bold leading-tight">
@@ -652,7 +691,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                 </section>
 
                 {/* Coaching Section Preview */}
-                <section className="py-6 px-4" style={{ backgroundColor: `${template.background_color}cc` }}>
+                <section id="preview-coaching" ref={coachingSectionRef} className="py-6 px-4 scroll-mt-4" style={{ backgroundColor: `${template.background_color}cc` }}>
                   <div className="text-center mb-4">
                     <span 
                       className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-2"
@@ -718,8 +757,55 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                   </div>
                 </section>
 
+                {/* Comparison Section Preview */}
+                <section id="preview-comparison" ref={comparisonSectionRef} className="py-6 px-4 scroll-mt-4">
+                  <div className="text-center mb-4">
+                    <span 
+                      className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-2"
+                      style={{ backgroundColor: `${template.accent_color}30`, color: template.accent_color }}
+                    >
+                      {template.comparison_badge}
+                    </span>
+                    <h2 className="text-xl font-bold mb-1">{template.comparison_headline}</h2>
+                    <p className="text-xs opacity-70">{template.comparison_subheadline}</p>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="rounded-lg p-3 border border-red-500/30 bg-red-500/5">
+                      <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                        <X className="w-4 h-4 text-red-400" />
+                        {template.others_title}
+                      </h3>
+                      <ul className="space-y-1">
+                        {template.others_items.slice(0, 3).map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs opacity-70">
+                            <X className="w-3 h-3 flex-shrink-0 text-red-400" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div 
+                      className="rounded-lg p-3 border"
+                      style={{ borderColor: `${template.primary_color}40`, backgroundColor: `${template.primary_color}10` }}
+                    >
+                      <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" style={{ color: template.primary_color }} />
+                        {template.us_title}
+                      </h3>
+                      <ul className="space-y-1">
+                        {template.us_items.slice(0, 3).map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs opacity-80">
+                            <Check className="w-3 h-3 flex-shrink-0" style={{ color: template.primary_color }} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
                 {/* Footer Preview */}
-                <footer className="border-t border-slate-800 py-4 px-4 text-center">
+                <footer id="preview-colors" ref={footerSectionRef} className="border-t border-slate-800 py-4 px-4 text-center scroll-mt-4">
                   <p className="text-xs opacity-60">
                     © 2024 {template.footer_company_name}. {template.footer_tagline}
                   </p>
@@ -788,7 +874,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
               </div>
 
               {/* Editor Tabs with Liquid Glass */}
-              <Tabs defaultValue="branding" className="w-full">
+              <Tabs value={activeEditorTab} onValueChange={handleEditorTabChange} className="w-full">
                 <TabsList className="w-full flex flex-wrap h-auto gap-1.5 p-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   {[
                     { value: "branding", icon: ImageIcon, label: "Branding" },
