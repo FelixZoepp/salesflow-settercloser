@@ -130,8 +130,15 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <Routes>
+    {/* Fully public routes - no auth context needed */}
+    <Route path="/p/:slug" element={<VideoNote />} />
+    <Route path="/lp/:slug" element={<PublicLandingPage />} />
+    <Route path="/invite/:token" element={<InviteRegister />} />
+    <Route path="/partner" element={<Partner />} />
     <Route path="/" element={<Landing />} />
     <Route path="/auth" element={<Auth />} />
+    
+    {/* Protected routes */}
     <Route path="/subscription-required" element={<ProtectedRoute><SubscriptionRequired /></ProtectedRoute>} />
     <Route path="/onboarding" element={<SubscriptionRoute><Onboarding /></SubscriptionRoute>} />
     <Route path="/startseite" element={<SubscriptionRoute><Startseite /></SubscriptionRoute>} />
@@ -156,18 +163,18 @@ const AppRoutes = () => (
     <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
-    
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
     <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
     <Route path="/partner-dashboard" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
-    <Route path="/partner" element={<Partner />} />
     <Route path="/training" element={<SubscriptionRoute><Training /></SubscriptionRoute>} />
-    <Route path="/invite/:token" element={<InviteRegister />} />
-    <Route path="/p/:slug" element={<VideoNote />} />
-    <Route path="/lp/:slug" element={<PublicLandingPage />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
+
+// Wrapper for public pages that shouldn't wait for auth
+const PublicPageWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -175,11 +182,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppRoutes />
-          </SubscriptionProvider>
-        </AuthProvider>
+        <Routes>
+          {/* Fully public routes OUTSIDE auth providers */}
+          <Route path="/p/:slug" element={<VideoNote />} />
+          <Route path="/lp/:slug" element={<PublicLandingPage />} />
+          
+          {/* All other routes with auth context */}
+          <Route path="/*" element={
+            <AuthProvider>
+              <SubscriptionProvider>
+                <AppRoutes />
+              </SubscriptionProvider>
+            </AuthProvider>
+          } />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
