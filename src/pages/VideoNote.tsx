@@ -59,31 +59,39 @@ const VideoNote = () => {
   }, [slug, contact?.video_url, isVideoPlaying]);
 
   const loadContactAndTrackView = async () => {
+    console.log('Loading contact for slug:', slug);
+    
     try {
       // Use the secure get_contact_by_slug function (returns minimal data only)
       const { data: contactResult, error: contactError } = await supabase
         .rpc('get_contact_by_slug', { contact_slug: slug });
 
-      if (contactError) throw contactError;
+      console.log('RPC result:', { contactResult, contactError });
+
+      if (contactError) {
+        console.error('RPC error:', contactError);
+        throw contactError;
+      }
 
       // The function returns an array, get first result
-      const contact = Array.isArray(contactResult) ? contactResult[0] : contactResult;
+      const contactData = Array.isArray(contactResult) ? contactResult[0] : contactResult;
 
-      if (!contact) {
+      if (!contactData) {
+        console.log('No contact found for slug:', slug);
         setError("Video nicht gefunden");
         setLoading(false);
         return;
       }
 
-      setContact(contact);
+      console.log('Contact loaded:', contactData);
+      setContact(contactData);
 
-      try {
-        await supabase.functions.invoke('track-video-view', {
-          body: { slug }
-        });
-      } catch (trackError) {
+      // Track view in background - don't await
+      supabase.functions.invoke('track-video-view', {
+        body: { slug }
+      }).catch((trackError) => {
         console.error('Tracking error:', trackError);
-      }
+      });
 
     } catch (err) {
       console.error('Error loading video:', err);
