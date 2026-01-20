@@ -1,11 +1,8 @@
 export type PipelineType = 'cold';
 
 // Simplified pipeline stages (cold outreach)
-// NOTE: Some legacy/automation paths still create deals with stage "Lead" or "New".
-// We include them so those deals are visible in the pipeline.
 export const PIPELINE_STAGES = [
   'Lead',
-  'New',
   'Hat Seite geöffnet',
   'Heißer Lead - Anrufen',
   'Setting',
@@ -36,7 +33,6 @@ export type CallOutcome = typeof CALL_OUTCOMES[number];
 export const getStageColor = (stage: string): string => {
   switch (stage) {
     case 'Lead':
-    case 'New':
       return 'bg-muted text-muted-foreground border border-border';
     case 'Hat Seite geöffnet':
       return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
