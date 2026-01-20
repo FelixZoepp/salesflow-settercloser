@@ -25,6 +25,7 @@ import CallScript from "./pages/CallScript";
 import ObjectionLibrary from "./pages/ObjectionLibrary";
 import MasterAdmin from "./pages/MasterAdmin";
 import VideoNote from "./pages/VideoNote";
+import VideoNoteAdmin from "./pages/VideoNoteAdmin";
 import Campaigns from "./pages/Campaigns";
 import Integrations from "./pages/Integrations";
 import LandingPageBuilder from "./pages/LandingPageBuilder";
@@ -157,6 +158,7 @@ const AppRoutes = () => (
     <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
     <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
     <Route path="/landing-pages" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
+    <Route path="/video-note" element={<SubscriptionRoute><VideoNoteAdmin /></SubscriptionRoute>} />
     <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
     <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
     <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
