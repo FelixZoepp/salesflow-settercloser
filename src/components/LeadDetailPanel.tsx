@@ -582,17 +582,6 @@ Stage: ${deal.stage}
                     <p className="text-sm text-muted-foreground/70 mt-1">{contact.position}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="outline" 
-                    className={`${contact.lead_type === 'inbound' 
-                      ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                      : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                    }`}
-                  >
-                    {contact.lead_type === 'inbound' ? 'Inbound' : 'Outbound'}
-                  </Badge>
-                </div>
               </div>
             </div>
 
@@ -1282,14 +1271,11 @@ Stage: ${deal.stage}
                   {/* Video Note for Outbound */}
                   {contact.lead_type === 'outbound' && (
                     <div className="stat-card !p-0 overflow-hidden">
-                      <div className="flex items-center justify-between p-4 border-b border-white/5">
+                      <div className="flex items-center p-4 border-b border-white/5">
                         <div className="flex items-center gap-2">
                           <Video className="w-4 h-4 text-cyan-400" />
                           <h4 className="text-sm font-medium text-foreground">Videonotiz</h4>
                         </div>
-                        <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
-                          Outbound
-                        </Badge>
                       </div>
                       <div className="p-4 space-y-4">
                         <div className="space-y-2">

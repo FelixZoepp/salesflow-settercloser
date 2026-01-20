@@ -301,32 +301,6 @@ const Contacts = () => {
                 </DialogHeader>
                 
                 <div className="space-y-4 mt-4">
-                  {/* Lead Type */}
-                  <div className="space-y-2">
-                    <Label>Lead-Typ *</Label>
-                    <Select 
-                      value={formData.lead_type} 
-                      onValueChange={(value: "inbound" | "outbound") => setFormData({...formData, lead_type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inbound">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-green-500" />
-                            Inbound
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="outbound">
-                          <div className="flex items-center gap-2">
-                            <Megaphone className="w-4 h-4 text-cyan-500" />
-                            Outbound
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
@@ -427,28 +401,15 @@ const Contacts = () => {
         {/* Contacts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredContacts.map(contact => (
-            <Card key={contact.id} className={`hover:shadow-md transition-shadow ${
-              contact.lead_type === 'outbound' ? 'border-l-4 border-l-cyan-500' : 
-              contact.lead_type === 'inbound' ? 'border-l-4 border-l-green-500' : ''
-            }`}>
+            <Card key={contact.id} className="hover:shadow-md transition-shadow border-l-4 border-l-cyan-500">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-lg">
                     {contact.first_name} {contact.last_name}
                   </h3>
-                  <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditDialog(contact)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    {contact.lead_type && (
-                      <Badge variant="outline" className={`text-xs ${
-                        contact.lead_type === 'outbound' ? 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30' :
-                        'bg-green-500/10 text-green-600 border-green-500/30'
-                      }`}>
-                        {contact.lead_type === 'outbound' ? 'Outbound' : 'Inbound'}
-                      </Badge>
-                    )}
-                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditDialog(contact)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 {contact.company && (
