@@ -46,14 +46,18 @@ export const useFeatureAccess = () => {
                     productId?.toLowerCase() === 'pro' ||
                     productId?.toLowerCase()?.includes('pro');
 
-  // Check for Starter plan - includes Stripe product IDs, internal Starter, and database subscriptions
+  // Check for Starter plan - includes Stripe product IDs, internal Starter, database subscriptions, and "basic"
   const isStarterPlan = productId === SUBSCRIPTION_TIERS.STARTER_MONTHLY || 
                         productId === SUBSCRIPTION_TIERS.STARTER_YEARLY ||
                         productId === 'internal_Starter' ||
                         productId === 'db_starter' ||
                         productId === 'db_Starter' ||
+                        productId === 'db_basic' ||
+                        productId === 'db_Basic' ||
                         productId?.toLowerCase() === 'starter' ||
-                        productId?.toLowerCase()?.includes('starter');
+                        productId?.toLowerCase() === 'basic' ||
+                        productId?.toLowerCase()?.includes('starter') ||
+                        productId?.toLowerCase()?.includes('basic');
 
   const hasFeature = (feature: Feature): boolean => {
     // If loading, assume no access
