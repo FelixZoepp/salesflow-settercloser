@@ -634,7 +634,16 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
               className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
             >
               <Maximize2 className="w-4 h-4" />
-              Testseite
+              Vorschau
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.open("/landing-pages/preview", "_blank")}
+              className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Neuer Tab
             </Button>
             <Button 
               variant="outline" 

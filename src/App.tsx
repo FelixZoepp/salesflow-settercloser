@@ -42,6 +42,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import Training from "./pages/Training";
 import Partner from "./pages/Partner";
+import LeadPagePreview from "./pages/LeadPagePreview";
 
 
 const queryClient = new QueryClient();
@@ -158,6 +159,7 @@ const AppRoutes = () => (
     <Route path="/kpi" element={<SubscriptionRoute><KPI /></SubscriptionRoute>} />
     <Route path="/integrations" element={<SubscriptionRoute><Integrations /></SubscriptionRoute>} />
     <Route path="/landing-pages" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
+    <Route path="/landing-pages/preview" element={<SubscriptionRoute><LeadPagePreview /></SubscriptionRoute>} />
     <Route path="/video-note" element={<SubscriptionRoute><VideoNoteAdmin /></SubscriptionRoute>} />
     <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
     <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
