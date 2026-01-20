@@ -204,17 +204,17 @@ const Campaigns = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-primary/5 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-primary/5">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-8">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">Kampagnen</h1>
-              <p className="text-muted-foreground">Verwalte deine Outreach-Kampagnen</p>
+              <h1 className="text-xl md:text-2xl font-semibold text-foreground">Kampagnen</h1>
+              <p className="text-sm md:text-base text-muted-foreground">Verwalte deine Outreach-Kampagnen</p>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Neue Kampagne
                 </Button>
@@ -265,12 +265,12 @@ const Campaigns = () => {
             </Dialog>
           </div>
 
-          <Tabs defaultValue="campaigns" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="campaigns">Kampagnen</TabsTrigger>
-              <TabsTrigger value="comparison" className="flex items-center gap-1">
+          <Tabs defaultValue="campaigns" className="space-y-4 md:space-y-6">
+            <TabsList className="w-full md:w-auto">
+              <TabsTrigger value="campaigns" className="flex-1 md:flex-none">Kampagnen</TabsTrigger>
+              <TabsTrigger value="comparison" className="flex items-center gap-1 flex-1 md:flex-none">
                 <GitCompare className="h-4 w-4" />
-                Vergleich
+                <span className="hidden sm:inline">Vergleich</span>
               </TabsTrigger>
             </TabsList>
 

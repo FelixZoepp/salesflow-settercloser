@@ -306,34 +306,34 @@ const Startseite = () => {
   return (
     <Layout>
       <div className="min-h-screen noise-bg">
-        <div className="max-w-7xl mx-auto p-1">
+        <div className="max-w-7xl mx-auto">
           {/* Live Call Widget */}
-          <DashboardLiveCallWidget className="mb-6" />
+          <DashboardLiveCallWidget className="mb-4 md:mb-6" />
 
           {/* Welcome Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Willkommen zurück, {profile?.name?.split(' ')[0] || 'User'}! 🎉
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">
+              Willkommen, {profile?.name?.split(' ')[0] || 'User'}! 🎉
             </h1>
-            <p className="text-muted-foreground">
-              Hier ist dein Überblick für heute. Lass uns durchstarten!
+            <p className="text-sm md:text-base text-muted-foreground">
+              Hier ist dein Überblick für heute.
             </p>
           </div>
 
           {/* Main Grid Layout */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
             {/* Left Column - Stats & Quick Actions */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
+              {/* Quick Stats Row - 2x2 on mobile */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div className="stat-card">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Leads gesamt</p>
-                      <p className="text-2xl font-bold text-foreground">{stats.totalLeads}</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Leads</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.totalLeads}</p>
                     </div>
                     <div className="icon-glow icon-glow-blue">
-                      <Users className="w-4 h-4" />
+                      <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>
@@ -341,11 +341,11 @@ const Startseite = () => {
                 <div className="stat-card stat-card-hot">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-orange-400/80 mb-1">Heiße Leads</p>
-                      <p className="text-2xl font-bold text-orange-400">{stats.hotLeads}</p>
+                      <p className="text-[10px] md:text-xs text-orange-400/80 mb-0.5 md:mb-1">Heiße Leads</p>
+                      <p className="text-xl md:text-2xl font-bold text-orange-400">{stats.hotLeads}</p>
                     </div>
                     <div className="icon-glow icon-glow-orange animate-subtle-pulse">
-                      <Flame className="w-4 h-4" />
+                      <Flame className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>
@@ -353,11 +353,11 @@ const Startseite = () => {
                 <div className="stat-card">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Termine (7T)</p>
-                      <p className="text-2xl font-bold text-foreground">{stats.appointmentsThisWeek}</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Termine</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.appointmentsThisWeek}</p>
                     </div>
                     <div className="icon-glow icon-glow-green">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>
@@ -365,31 +365,30 @@ const Startseite = () => {
                 <div className="stat-card">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Conversion</p>
-                      <p className="text-2xl font-bold text-foreground">{stats.conversionRate}%</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Conversion</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.conversionRate}%</p>
                     </div>
                     <div className="icon-glow icon-glow-purple">
-                      <TrendingUp className="w-4 h-4" />
+                      <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {/* Quick Actions - Simplified for mobile */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 <Link 
                   to="/dashboard" 
-                  className="glass-card p-4 hover:bg-white/5 transition-colors group"
+                  className="glass-card p-3 md:p-4 hover:bg-white/5 transition-colors group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                      <LayoutDashboard className="h-5 w-5 text-blue-400" />
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
+                      <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5 text-blue-400" />
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">Dashboard</p>
-                      <p className="text-xs text-muted-foreground">Detaillierte Übersicht</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm md:text-base truncate">Dashboard</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">Übersicht</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                   </div>
                 </Link>
 
