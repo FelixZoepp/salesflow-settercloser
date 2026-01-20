@@ -488,21 +488,35 @@ const VideoNoteAdmin = () => {
           </div>
         </div>
 
-        {/* Campaign Filter */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 max-w-xs">
-            <Label className="text-xs text-muted-foreground mb-1 block">Kampagne</Label>
-            <select 
-              className="w-full bg-background/50 border border-border rounded-lg px-3 py-2 text-sm"
-              value={selectedCampaign || ""}
-              onChange={(e) => setSelectedCampaign(e.target.value || null)}
+        {/* Campaign Filter - Apple Liquid Glass Style */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setSelectedCampaign(null)}
+            className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 ${
+              selectedCampaign === null
+                ? 'bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] backdrop-blur-xl'
+                : 'bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-xl'
+            }`}
+          >
+            Alle Kampagnen
+          </button>
+          {campaigns.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCampaign(c.id)}
+              className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                selectedCampaign === c.id
+                  ? 'bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] backdrop-blur-xl'
+                  : 'bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-xl'
+              }`}
             >
-              <option value="">Alle Kampagnen</option>
-              {campaigns.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
+              <Video className="w-4 h-4" />
+              {c.name}
+              {c.pitch_video_url && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Main Tabs */}
