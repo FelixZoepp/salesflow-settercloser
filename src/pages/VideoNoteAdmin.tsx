@@ -83,6 +83,7 @@ interface CampaignAnalytics {
   bookingClicks: number;
   avgScrollDepth: number;
   conversionRate: number;
+  videoPlayRate: number;
 }
 
 const VideoNoteAdmin = () => {
@@ -187,6 +188,7 @@ const VideoNoteAdmin = () => {
         bookingClicks: 0,
         avgScrollDepth: 0,
         conversionRate: 0,
+        videoPlayRate: 0,
       };
     }
 
@@ -210,6 +212,9 @@ const VideoNoteAdmin = () => {
     
     // Conversion rate = booking clicks / page views
     const conversionRate = pageViews > 0 ? (bookingClicks / pageViews) * 100 : 0;
+    
+    // Video Play Rate = video plays / page views
+    const videoPlayRate = pageViews > 0 ? (videoPlays / pageViews) * 100 : 0;
 
     return {
       totalViews: pageViews,
@@ -220,6 +225,7 @@ const VideoNoteAdmin = () => {
       bookingClicks,
       avgScrollDepth: Math.round(avgScrollDepth),
       conversionRate: Math.round(conversionRate * 10) / 10,
+      videoPlayRate: Math.round(videoPlayRate * 10) / 10,
     };
   })();
 
@@ -790,7 +796,7 @@ const VideoNoteAdmin = () => {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="mt-6 space-y-6">
             {/* Analytics Overview Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card className="glass-card border-border">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
@@ -814,6 +820,20 @@ const VideoNoteAdmin = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Video-Plays</p>
                       <p className="text-2xl font-bold text-foreground">{analytics.videoPlays}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card border-border border-2 border-cyan-500/30 bg-cyan-500/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20">
+                      <TrendingUp className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Video-Play-Rate</p>
+                      <p className="text-2xl font-bold text-cyan-400">{analytics.videoPlayRate}%</p>
                     </div>
                   </div>
                 </CardContent>
@@ -847,6 +867,99 @@ const VideoNoteAdmin = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Video Play Rate Comparison Card */}
+            <Card className="glass-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-cyan-400" />
+                  Page Views vs. Video Plays
+                </CardTitle>
+                <CardDescription>
+                  Wie viele Besucher klicken aktiv auf das Video?
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Visual comparison bars */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-primary" />
+                          Seitenaufrufe
+                        </span>
+                        <span className="font-bold text-foreground">{analytics.totalViews}</span>
+                      </div>
+                      <div className="w-full bg-muted/30 rounded-full h-4 overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Play className="w-4 h-4 text-emerald-400" />
+                          Video-Plays
+                        </span>
+                        <span className="font-bold text-foreground">{analytics.videoPlays}</span>
+                      </div>
+                      <div className="w-full bg-muted/30 rounded-full h-4 overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all"
+                          style={{ width: `${analytics.videoPlayRate}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Video-Play-Rate</span>
+                        <span className={`text-lg font-bold ${
+                          analytics.videoPlayRate >= 50 ? 'text-emerald-400' : 
+                          analytics.videoPlayRate >= 30 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {analytics.videoPlayRate}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {analytics.videoPlayRate >= 50 ? '🎉 Exzellent! Die meisten Besucher schauen das Video.' :
+                         analytics.videoPlayRate >= 30 ? '👍 Gut! Es gibt noch Potenzial zur Verbesserung.' :
+                         '⚠️ Verbesserungspotenzial: Video-Thumbnail oder Platzierung optimieren.'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Funnel visualization */}
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-primary">{analytics.totalViews}</p>
+                          <p className="text-xs text-muted-foreground">Views</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-2xl text-muted-foreground">↓</div>
+                    <div className="text-center px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30">
+                      <span className="text-sm font-medium text-cyan-400">{analytics.videoPlayRate}% klicken Play</span>
+                    </div>
+                    <div className="text-2xl text-muted-foreground">↓</div>
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30">
+                        <div className="text-center">
+                          <p className="text-xl font-bold text-emerald-400">{analytics.videoPlays}</p>
+                          <p className="text-xs text-muted-foreground">Plays</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Time Series Charts */}
             <div className="grid md:grid-cols-2 gap-6">
