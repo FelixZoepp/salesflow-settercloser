@@ -88,16 +88,22 @@ const KPI = () => {
 
       const startDate = getDateRange();
 
-      // Fetch ALL deals (current state) - we need to see current pipeline status
+      // Fetch ALL deals with contact info for lead scoring
       const { data: allDealsData } = await supabase
         .from("deals")
-        .select("*");
+        .select("*, contacts(lead_score)");
 
       // Fetch deals that were created OR updated in the time range for activity metrics
       const { data: recentDeals } = await supabase
         .from("deals")
         .select("*")
         .or(`created_at.gte.${startDate},updated_at.gte.${startDate}`);
+
+      // Fetch contacts with high lead score (hot leads based on engagement)
+      const { data: hotContacts } = await supabase
+        .from("contacts")
+        .select("id, lead_score")
+        .gte("lead_score", 70);
 
       // Fetch all call activities in the time range
       const { data: activities } = await supabase
@@ -110,12 +116,19 @@ const KPI = () => {
       const activeDeals = recentDeals || [];
       const allCalls = activities || [];
 
-      // CURRENT PIPELINE STATUS (regardless of time filter)
-      // These show the current state of the pipeline
+      // CURRENT PIPELINE STATUS
       const currentPageViews = allDeals.filter((d) => d.stage === "Hat Seite geöffnet").length;
-      const currentHotLeads = allDeals.filter((d) => d.stage === "Heißer Lead - Anrufen").length;
+      
+      // Hot leads: contacts with lead_score >= 70 (based on engagement tracking)
+      const currentHotLeads = (hotContacts || []).length;
+      
+      // Settings with due_date set (actually scheduled appointments)
       const currentSettings = allDeals.filter((d) => d.stage === "Setting").length;
+      const scheduledSettings = allDeals.filter((d) => d.stage === "Setting" && d.due_date).length;
+      
+      // Closings with due_date set
       const currentClosings = allDeals.filter((d) => d.stage === "Closing").length;
+      const scheduledClosings = allDeals.filter((d) => d.stage === "Closing" && d.due_date).length;
 
       // No-shows based on next_action field
       const settingNoShows = allDeals.filter((d) => 
@@ -127,13 +140,13 @@ const KPI = () => {
         d.stage === "Closing"
       ).length;
 
-      // Won/Lost deals in time range (based on updated_at for when they changed to that stage)
+      // Won/Lost deals in time range
       const wonDeals = activeDeals.filter((d) => d.stage === "Abgeschlossen");
       const lostDeals = activeDeals.filter((d) => d.stage === "Verloren");
       const dealsWon = wonDeals.length;
       const dealsLost = lostDeals.length;
 
-      // Revenue from won deals in time range
+      // Revenue from won deals
       const totalRevenue = wonDeals.reduce((sum, d) => sum + (Number(d.amount_eur) || 0), 0);
       const avgDealSize = dealsWon > 0 ? totalRevenue / dealsWon : 0;
 
@@ -143,7 +156,7 @@ const KPI = () => {
         ["reached", "interested", "not_interested"].includes(a.outcome || "")
       ).length;
 
-      // Calculate rates - use current pipeline for active deals
+      // Calculate rates
       const closingBase = currentSettings + currentClosings;
       const closingRate = closingBase > 0 ? (dealsWon / closingBase) * 100 : 0;
       const totalLeads = currentPageViews + currentHotLeads;
