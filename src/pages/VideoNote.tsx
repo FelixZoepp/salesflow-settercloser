@@ -86,12 +86,8 @@ const VideoNote = () => {
       console.log('Contact loaded:', contactData);
       setContact(contactData);
 
-      // Track view in background - don't await
-      supabase.functions.invoke('track-video-view', {
-        body: { slug }
-      }).catch((trackError) => {
-        console.error('Tracking error:', trackError);
-      });
+      // NOTE: Page view is tracked via initializeTracking (leadTracker)
+      // Video view is tracked separately when user clicks play button
 
     } catch (err) {
       console.error('Error loading video:', err);
@@ -104,6 +100,15 @@ const VideoNote = () => {
   const handlePlayVideo = () => {
     setIsVideoPlaying(true);
     setCurrentVideo('intro');
+    
+    // Track video view only when user actively clicks to play
+    if (slug) {
+      supabase.functions.invoke('track-video-view', {
+        body: { slug }
+      }).catch((trackError) => {
+        console.error('Video view tracking error:', trackError);
+      });
+    }
   };
 
   const handleVideoEnded = () => {
