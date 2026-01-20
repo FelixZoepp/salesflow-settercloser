@@ -10,7 +10,7 @@ import {
   Play, Calendar, Check, X, Star, CheckCircle, Megaphone, Pen, 
   Users, Loader2, ExternalLink, Save, Wand2, Palette, Type, 
   Layout, Plus, Trash2, RotateCcw, Upload, ImageIcon, Sparkles,
-  Eye, Settings2, Brush
+  Eye, Settings2, Brush, Trophy, Video
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -56,6 +56,22 @@ export interface LeadPageTemplate {
   calendar_url: string;
   footer_company_name: string;
   footer_tagline: string;
+  // Case Studies
+  case_studies_badge: string;
+  case_studies_headline: string;
+  case_studies_subheadline: string;
+  case_studies: CaseStudy[];
+}
+
+export interface CaseStudy {
+  title: string;
+  company_type: string;
+  before_revenue: string;
+  after_revenue: string;
+  timeframe: string;
+  description: string;
+  video_url: string;
+  rating: number;
 }
 
 const defaultTemplate: LeadPageTemplate = {
@@ -121,7 +137,43 @@ const defaultTemplate: LeadPageTemplate = {
   accent_color: "#f59e0b",
   calendar_url: "",
   footer_company_name: "Content-Leads",
-  footer_tagline: "Alle Rechte vorbehalten."
+  footer_tagline: "Alle Rechte vorbehalten.",
+  // Case Studies
+  case_studies_badge: "Erfolgsgeschichten",
+  case_studies_headline: "Das könnten deine Ergebnisse sein",
+  case_studies_subheadline: "Echte Kunden, echte Ergebnisse – keine leeren Versprechen",
+  case_studies: [
+    {
+      title: "Daddel GmbH",
+      company_type: "Webseitenagentur",
+      before_revenue: "10.000€",
+      after_revenue: "20.000€+",
+      timeframe: "in 60 Tagen",
+      description: "Von sporadischen Anfragen zu planbarem Wachstum durch LinkedIn Outreach",
+      video_url: "https://www.youtube.com/embed/evcR2kC6otA",
+      rating: 5
+    },
+    {
+      title: "Teo Hentzschel",
+      company_type: "Webseitenagentur",
+      before_revenue: "0€",
+      after_revenue: "10.000€",
+      timeframe: "in 3 Tagen",
+      description: "Erster Deal direkt nach Start der LinkedIn Kampagne abgeschlossen",
+      video_url: "",
+      rating: 5
+    },
+    {
+      title: "Hendrik Hoffmann",
+      company_type: "Webseitenagentur",
+      before_revenue: "unregelmäßig",
+      after_revenue: "5-stellig",
+      timeframe: "in 30 Tagen",
+      description: "Zusätzlicher Cashflow durch systematische Kaltakquise auf LinkedIn",
+      video_url: "",
+      rating: 5
+    }
+  ]
 };
 
 interface LeadPageTemplatePreviewProps {
@@ -257,6 +309,11 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           calendar_url: data.calendar_url || calendarUrl || "",
           footer_company_name: data.footer_company_name || account?.company_name || defaultTemplate.footer_company_name,
           footer_tagline: data.footer_tagline || account?.tagline || defaultTemplate.footer_tagline,
+          // Case Studies
+          case_studies_badge: data.case_studies_badge || defaultTemplate.case_studies_badge,
+          case_studies_headline: data.case_studies_headline || defaultTemplate.case_studies_headline,
+          case_studies_subheadline: data.case_studies_subheadline || defaultTemplate.case_studies_subheadline,
+          case_studies: (data.case_studies as unknown as CaseStudy[]) || defaultTemplate.case_studies,
         });
       } else {
         // Use account branding data if no template exists
@@ -331,6 +388,11 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
         calendar_url: template.calendar_url,
         footer_company_name: template.footer_company_name,
         footer_tagline: template.footer_tagline,
+        // Case Studies
+        case_studies_badge: template.case_studies_badge,
+        case_studies_headline: template.case_studies_headline,
+        case_studies_subheadline: template.case_studies_subheadline,
+        case_studies: template.case_studies as unknown as any,
       };
 
       // Also save branding to account
@@ -803,6 +865,64 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                   </div>
                 </section>
 
+                {/* Case Studies Preview */}
+                <section id="preview-case-studies" className="py-6 px-4 scroll-mt-4" style={{ backgroundColor: `${template.background_color}ee` }}>
+                  <div className="text-center mb-4">
+                    <span 
+                      className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-2"
+                      style={{ backgroundColor: `${template.accent_color}30`, color: template.accent_color }}
+                    >
+                      {template.case_studies_badge}
+                    </span>
+                    <h2 className="text-xl font-bold mb-1">{template.case_studies_headline.replace("{{first_name}}", firstName)}</h2>
+                    <p className="text-xs opacity-70">{template.case_studies_subheadline}</p>
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {template.case_studies.slice(0, 3).map((study, i) => (
+                      <div 
+                        key={i}
+                        className="rounded-lg p-3 border"
+                        style={{ 
+                          borderColor: `${template.primary_color}30`,
+                          backgroundColor: `${template.primary_color}08`
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${template.primary_color}20` }}>
+                            <Trophy className="w-3.5 h-3.5" style={{ color: template.primary_color }} />
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-bold">{study.title}</h3>
+                            <p className="text-[10px] opacity-60">{study.company_type}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs mb-2">
+                          <span className="text-red-400 line-through">{study.before_revenue}</span>
+                          <span>→</span>
+                          <span style={{ color: template.primary_color }} className="font-bold">{study.after_revenue}</span>
+                          <span className="opacity-60 text-[10px]">{study.timeframe}</span>
+                        </div>
+                        {study.video_url && (
+                          <div className="aspect-video rounded-lg overflow-hidden border border-white/10 flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
+                            <div className="flex items-center gap-1">
+                              <Video className="w-3 h-3" style={{ color: template.primary_color }} />
+                              <span className="text-[10px] opacity-70">Video</span>
+                            </div>
+                          </div>
+                        )}
+                        {!study.video_url && (
+                          <p className="text-[10px] opacity-70">{study.description}</p>
+                        )}
+                        <div className="flex gap-0.5 mt-2">
+                          {[...Array(study.rating)].map((_, j) => (
+                            <Star key={j} className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
                 {/* Footer Preview */}
                 <footer id="preview-colors" ref={footerSectionRef} className="border-t border-slate-800 py-4 px-4 text-center scroll-mt-4">
                   <p className="text-xs opacity-60">
@@ -880,6 +1000,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                     { value: "hero", icon: Layout, label: "Hero" },
                     { value: "coaching", icon: Users, label: "Coaching" },
                     { value: "comparison", icon: Star, label: "Vergleich" },
+                    { value: "case-studies", icon: Trophy, label: "Fallstudien" },
                     { value: "colors", icon: Palette, label: "Farben" },
                   ].map((tab) => (
                     <TabsTrigger 
@@ -1221,6 +1342,167 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                           </Button>
                         </div>
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Case Studies Tab */}
+                  <TabsContent value="case-studies" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      {/* Section Headlines */}
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-3 block">Sektion Überschriften</label>
+                        <div className="space-y-3">
+                          <Input
+                            value={template.case_studies_badge}
+                            onChange={(e) => setTemplate({ ...template, case_studies_badge: e.target.value })}
+                            placeholder="Badge (z.B. Erfolgsgeschichten)"
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                          <Input
+                            value={template.case_studies_headline}
+                            onChange={(e) => setTemplate({ ...template, case_studies_headline: e.target.value })}
+                            placeholder="Headline"
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                          <Input
+                            value={template.case_studies_subheadline}
+                            onChange={(e) => setTemplate({ ...template, case_studies_subheadline: e.target.value })}
+                            placeholder="Subheadline"
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Individual Case Studies */}
+                      {template.case_studies.map((study, index) => (
+                        <div 
+                          key={index} 
+                          className="rounded-xl p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20"
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 rounded-lg bg-amber-500/20">
+                                <Trophy className="w-4 h-4 text-amber-400" />
+                              </div>
+                              <span className="font-medium text-foreground">Fallstudie {index + 1}</span>
+                            </div>
+                            {template.case_studies.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const newStudies = template.case_studies.filter((_, i) => i !== index);
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <Input
+                                value={study.title}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, title: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="Name/Firma"
+                                className="bg-white/[0.03] border-white/10 rounded-xl"
+                              />
+                              <Input
+                                value={study.company_type}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, company_type: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="Branche/Typ"
+                                className="bg-white/[0.03] border-white/10 rounded-xl"
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <Input
+                                value={study.before_revenue}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, before_revenue: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="Vorher"
+                                className="bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                              <Input
+                                value={study.after_revenue}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, after_revenue: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="Nachher"
+                                className="bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                              <Input
+                                value={study.timeframe}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, timeframe: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="Zeitraum"
+                                className="bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                            </div>
+                            <Textarea
+                              value={study.description}
+                              onChange={(e) => {
+                                const newStudies = [...template.case_studies];
+                                newStudies[index] = { ...study, description: e.target.value };
+                                setTemplate({ ...template, case_studies: newStudies });
+                              }}
+                              placeholder="Beschreibung der Erfolgsgeschichte"
+                              className="bg-white/[0.03] border-white/10 rounded-xl min-h-[60px]"
+                            />
+                            <div className="flex items-center gap-2">
+                              <Video className="w-4 h-4 text-muted-foreground" />
+                              <Input
+                                value={study.video_url}
+                                onChange={(e) => {
+                                  const newStudies = [...template.case_studies];
+                                  newStudies[index] = { ...study, video_url: e.target.value };
+                                  setTemplate({ ...template, case_studies: newStudies });
+                                }}
+                                placeholder="YouTube Embed URL (optional)"
+                                className="flex-1 bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Add Case Study Button */}
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const newStudy: CaseStudy = {
+                            title: "Neue Fallstudie",
+                            company_type: "Branche",
+                            before_revenue: "0€",
+                            after_revenue: "10.000€",
+                            timeframe: "in 30 Tagen",
+                            description: "Beschreibung der Erfolgsgeschichte",
+                            video_url: "",
+                            rating: 5
+                          };
+                          setTemplate({ ...template, case_studies: [...template.case_studies, newStudy] });
+                        }}
+                        className="w-full rounded-xl border-dashed border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/10"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Fallstudie hinzufügen
+                      </Button>
                     </div>
                   </TabsContent>
 

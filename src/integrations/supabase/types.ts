@@ -1180,6 +1180,10 @@ export type Database = {
           account_id: string | null
           background_color: string | null
           calendar_url: string | null
+          case_studies: Json | null
+          case_studies_badge: string | null
+          case_studies_headline: string | null
+          case_studies_subheadline: string | null
           coaching_badge: string | null
           coaching_headline: string | null
           coaching_subheadline: string | null
@@ -1224,6 +1228,10 @@ export type Database = {
           account_id?: string | null
           background_color?: string | null
           calendar_url?: string | null
+          case_studies?: Json | null
+          case_studies_badge?: string | null
+          case_studies_headline?: string | null
+          case_studies_subheadline?: string | null
           coaching_badge?: string | null
           coaching_headline?: string | null
           coaching_subheadline?: string | null
@@ -1268,6 +1276,10 @@ export type Database = {
           account_id?: string | null
           background_color?: string | null
           calendar_url?: string | null
+          case_studies?: Json | null
+          case_studies_badge?: string | null
+          case_studies_headline?: string | null
+          case_studies_subheadline?: string | null
           coaching_badge?: string | null
           coaching_headline?: string | null
           coaching_subheadline?: string | null
