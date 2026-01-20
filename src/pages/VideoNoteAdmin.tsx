@@ -90,6 +90,7 @@ const VideoNoteAdmin = () => {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pitchVideoInputRef = useRef<HTMLInputElement>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState(false);
@@ -98,6 +99,9 @@ const VideoNoteAdmin = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("leads");
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [pitchVideoUrl, setPitchVideoUrl] = useState("");
+  const [isUploadingPitch, setIsUploadingPitch] = useState(false);
 
   // Fetch user's account_id
   const { data: profile } = useQuery({
@@ -287,6 +291,84 @@ const VideoNoteAdmin = () => {
     },
   });
 
+  // Update campaign pitch video mutation
+  const updateCampaignPitchMutation = useMutation({
+    mutationFn: async ({ campaignId, pitchVideoUrl }: { campaignId: string; pitchVideoUrl: string }) => {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ pitch_video_url: pitchVideoUrl })
+        .eq('id', campaignId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success("Pitch-Video aktualisiert");
+      setEditingCampaignId(null);
+      setPitchVideoUrl("");
+    },
+    onError: (error) => {
+      toast.error("Fehler beim Speichern: " + error.message);
+    },
+  });
+
+  // Pitch video upload handler
+  const handlePitchVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>, campaignId: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      toast.error("Bitte wähle eine Video-Datei aus");
+      return;
+    }
+
+    const maxSize = 500 * 1024 * 1024; // 500MB for pitch videos
+    if (file.size > maxSize) {
+      toast.error("Video ist zu groß (max. 500MB)");
+      return;
+    }
+
+    setIsUploadingPitch(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `pitch-${campaignId}-${Date.now()}.${fileExt}`;
+      const filePath = `campaign-pitch-videos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('personalized-videos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('personalized-videos')
+        .getPublicUrl(filePath);
+
+      await updateCampaignPitchMutation.mutateAsync({
+        campaignId,
+        pitchVideoUrl: urlData.publicUrl,
+      });
+
+      toast.success("Pitch-Video erfolgreich hochgeladen!");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      toast.error("Upload fehlgeschlagen: " + errorMessage);
+    } finally {
+      setIsUploadingPitch(false);
+      if (pitchVideoInputRef.current) {
+        pitchVideoInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Get lead count per campaign
+  const getLeadCountForCampaign = (campaignId: string) => {
+    return contacts.filter(c => c.campaign_id === campaignId).length;
+  };
+
   // Video upload handler
   const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -429,6 +511,10 @@ const VideoNoteAdmin = () => {
             <TabsTrigger value="leads" className="gap-2">
               <Users className="w-4 h-4" />
               Leads & Videos
+            </TabsTrigger>
+            <TabsTrigger value="campaigns" className="gap-2">
+              <Video className="w-4 h-4" />
+              Kampagnen & Pitch-Videos
             </TabsTrigger>
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -790,6 +876,213 @@ const VideoNoteAdmin = () => {
                   </Card>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Campaigns Tab */}
+          <TabsContent value="campaigns" className="mt-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Campaign List */}
+              <Card className="glass-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Video className="w-5 h-5 text-primary" />
+                    Kampagnen-Übersicht
+                  </CardTitle>
+                  <CardDescription>
+                    Verwalte das zentrale Pitch-Video für jede Kampagne. Alle Leads einer Kampagne erhalten automatisch das gleiche Pitch-Video nach dem personalisierten Intro.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {campaigns.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Video className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>Keine Kampagnen gefunden</p>
+                      <p className="text-sm mt-1">Erstelle eine Kampagne unter "Kampagnen"</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {campaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className={`p-4 rounded-xl border transition-all ${
+                            editingCampaignId === campaign.id
+                              ? 'bg-primary/10 border-primary/30'
+                              : 'bg-muted/20 border-border hover:bg-muted/40'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-foreground">{campaign.name}</h3>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Users className="w-4 h-4" />
+                                  {getLeadCountForCampaign(campaign.id)} Leads
+                                </span>
+                                {campaign.pitch_video_url ? (
+                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Pitch-Video vorhanden
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                    Kein Pitch-Video
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingCampaignId(editingCampaignId === campaign.id ? null : campaign.id);
+                                setPitchVideoUrl(campaign.pitch_video_url || "");
+                              }}
+                            >
+                              {editingCampaignId === campaign.id ? (
+                                <>
+                                  <X className="w-4 h-4 mr-1" />
+                                  Schließen
+                                </>
+                              ) : (
+                                <>
+                                  <Pencil className="w-4 h-4 mr-1" />
+                                  Bearbeiten
+                                </>
+                              )}
+                            </Button>
+                          </div>
+
+                          {/* Expanded Edit Section */}
+                          {editingCampaignId === campaign.id && (
+                            <div className="mt-4 pt-4 border-t border-border space-y-4">
+                              {/* Current Pitch Video Preview */}
+                              {campaign.pitch_video_url && (
+                                <div>
+                                  <Label className="text-sm text-muted-foreground mb-2 block">
+                                    Aktuelles Pitch-Video
+                                  </Label>
+                                  <video
+                                    src={campaign.pitch_video_url}
+                                    controls
+                                    className="w-full max-h-48 rounded-lg bg-black"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Upload New Video */}
+                              <div>
+                                <Label className="text-sm text-muted-foreground mb-2 block">
+                                  Neues Pitch-Video hochladen
+                                </Label>
+                                <div className="flex gap-2">
+                                  <input
+                                    ref={pitchVideoInputRef}
+                                    type="file"
+                                    accept="video/*"
+                                    className="hidden"
+                                    onChange={(e) => handlePitchVideoUpload(e, campaign.id)}
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => pitchVideoInputRef.current?.click()}
+                                    disabled={isUploadingPitch}
+                                    className="gap-2"
+                                  >
+                                    {isUploadingPitch ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Upload className="w-4 h-4" />
+                                    )}
+                                    Video hochladen
+                                  </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Max. 500MB (empfohlen: MP4, 1080p)
+                                </p>
+                              </div>
+
+                              {/* Or enter URL manually */}
+                              <div>
+                                <Label className="text-sm text-muted-foreground mb-2 block">
+                                  Oder Video-URL eingeben
+                                </Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={pitchVideoUrl}
+                                    onChange={(e) => setPitchVideoUrl(e.target.value)}
+                                    placeholder="https://..."
+                                    className="bg-background/50"
+                                  />
+                                  <Button
+                                    onClick={() => {
+                                      updateCampaignPitchMutation.mutate({
+                                        campaignId: campaign.id,
+                                        pitchVideoUrl: pitchVideoUrl,
+                                      });
+                                    }}
+                                    disabled={updateCampaignPitchMutation.isPending || !pitchVideoUrl}
+                                    className="gap-2"
+                                  >
+                                    {updateCampaignPitchMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Save className="w-4 h-4" />
+                                    )}
+                                    Speichern
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Info Card */}
+              <Card className="glass-card border-border h-fit">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Play className="w-5 h-5 text-primary" />
+                    Video-Ablauf für Leads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-sm font-bold text-primary">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground">Personalisiertes Intro (6 Sek.)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Individuell für jeden Lead generiert via Repliq/Make.com
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-px h-4 bg-border ml-4" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-sm font-bold text-emerald-400">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground">Pitch-Video (Kampagne)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Das gleiche Video für alle Leads der Kampagne – zentral hier verwaltet
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-muted/20 rounded-lg border border-border">
+                    <h4 className="font-medium text-foreground mb-2">💡 Tipp</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Das Intro-Video für jeden Lead wird automatisch über Make.com generiert und per API hier gespeichert. Du musst hier nur das zentrale Pitch-Video pflegen.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
