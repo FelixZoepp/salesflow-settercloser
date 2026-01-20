@@ -3,18 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { 
   Play, Calendar, Check, X, Star, CheckCircle, Megaphone, Pen, 
-  ArrowLeft, Monitor, Eye
+  ArrowLeft, Monitor, Eye, Smartphone, Tablet
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { LeadPageTemplate, CaseStudy, defaultTemplate } from "@/components/landing-builder/LeadPageTemplatePreview";
 
+type DeviceView = "mobile" | "tablet" | "desktop";
+
+const deviceWidths: Record<DeviceView, string> = {
+  mobile: "375px",
+  tablet: "768px",
+  desktop: "100%"
+};
+
 const LeadPagePreview = () => {
   const navigate = useNavigate();
   const [template, setTemplate] = useState<LeadPageTemplate>(defaultTemplate);
   const [isLoading, setIsLoading] = useState(true);
+  const [deviceView, setDeviceView] = useState<DeviceView>("desktop");
 
   useEffect(() => {
     loadTemplate();
@@ -131,27 +141,68 @@ const LeadPagePreview = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: template.background_color, color: template.text_color }}>
-      {/* Floating Back Button */}
-      <div className="fixed top-4 left-4 z-50">
-        <Button 
-          onClick={() => navigate("/landing-pages")}
-          className="gap-2 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 text-foreground shadow-lg"
+    <div className="min-h-screen bg-muted/30">
+      {/* Fixed Control Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+          <Button 
+            onClick={() => navigate("/landing-pages")}
+            variant="ghost"
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Zurück zum Editor
+          </Button>
+
+          {/* Device Toggle */}
+          <ToggleGroup 
+            type="single" 
+            value={deviceView} 
+            onValueChange={(v) => v && setDeviceView(v as DeviceView)}
+            className="bg-muted rounded-lg p-1"
+          >
+            <ToggleGroupItem value="mobile" aria-label="Mobile" className="data-[state=on]:bg-background data-[state=on]:shadow-sm px-3">
+              <Smartphone className="w-4 h-4 mr-2" />
+              Mobile
+            </ToggleGroupItem>
+            <ToggleGroupItem value="tablet" aria-label="Tablet" className="data-[state=on]:bg-background data-[state=on]:shadow-sm px-3">
+              <Tablet className="w-4 h-4 mr-2" />
+              Tablet
+            </ToggleGroupItem>
+            <ToggleGroupItem value="desktop" aria-label="Desktop" className="data-[state=on]:bg-background data-[state=on]:shadow-sm px-3">
+              <Monitor className="w-4 h-4 mr-2" />
+              Desktop
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-2">
+            <Eye className="w-4 h-4 mr-2" />
+            Testseiten-Vorschau
+          </Badge>
+        </div>
+      </div>
+
+      {/* Preview Container with device frame */}
+      <div className="pt-20 pb-8 px-4 flex justify-center">
+        <div 
+          className={`transition-all duration-300 ease-out ${deviceView !== "desktop" ? "shadow-2xl rounded-2xl border-8 border-slate-800 bg-slate-800" : ""}`}
+          style={{ 
+            width: deviceWidths[deviceView],
+            maxWidth: "100%"
+          }}
         >
-          <ArrowLeft className="w-4 h-4" />
-          Zurück zum Editor
-        </Button>
-      </div>
-
-      {/* Floating Info Badge */}
-      <div className="fixed top-4 right-4 z-50">
-        <Badge className="bg-primary/20 text-primary border-primary/30 backdrop-blur-xl px-4 py-2">
-          <Eye className="w-4 h-4 mr-2" />
-          Testseiten-Vorschau
-        </Badge>
-      </div>
-
-      <div className="max-w-6xl mx-auto">
+          {/* Device notch for mobile */}
+          {deviceView === "mobile" && (
+            <div className="bg-slate-800 py-2 flex justify-center">
+              <div className="w-24 h-6 bg-black rounded-full" />
+            </div>
+          )}
+          
+          <div 
+            className={`${deviceView !== "desktop" ? "rounded-b-xl overflow-hidden" : ""}`}
+            style={{ backgroundColor: template.background_color, color: template.text_color }}
+          >
+            <div className={deviceView === "desktop" ? "max-w-6xl mx-auto" : ""}>
         {/* Header */}
         <header className="border-b border-slate-800 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -369,6 +420,9 @@ const LeadPagePreview = () => {
             © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
           </p>
         </footer>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
