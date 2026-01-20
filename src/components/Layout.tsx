@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/hover-card";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import UserAccountHeader from "@/components/UserAccountHeader";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 interface LayoutProps {
   children: ReactNode;
@@ -204,7 +205,8 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen bg-background relative">
       <div className="ambient-glow" />
       
-      <aside className="w-[72px] glass-sidebar flex flex-col relative z-50">
+      {/* Desktop Sidebar - hidden on mobile */}
+      <aside className="hidden md:flex w-[72px] glass-sidebar flex-col relative z-50">
         {/* Account Header */}
         <UserAccountHeader />
         
@@ -340,10 +342,19 @@ const Layout = ({ children }: LayoutProps) => {
       </aside>
 
       <main className="flex-1 overflow-auto flex flex-col relative z-10">
-        <div className="flex-1 p-6">
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-center p-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
+          <img 
+            src={pitchfirstLogo} 
+            alt="pitchfirst.io" 
+            className="h-8 object-contain"
+          />
+        </header>
+        
+        <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6">
           {children}
         </div>
-        <footer className="py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
+        <footer className="hidden md:block py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
           <div className="flex justify-center gap-6">
             <a 
               href="https://www.content-leads.de/impressum" 
@@ -364,6 +375,9 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </footer>
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };

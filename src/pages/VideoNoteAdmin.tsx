@@ -474,46 +474,46 @@ const VideoNoteAdmin = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-              <Video className="w-7 h-7 text-primary" />
+            <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2 md:gap-3">
+              <Video className="w-5 h-5 md:w-7 md:h-7 text-primary" />
               Video-Nachrichten
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm md:text-base text-muted-foreground mt-1 hidden md:block">
               Verwalte und bearbeite personalisierte Video-Seiten für deine Leads
             </p>
           </div>
         </div>
 
-        {/* Campaign Filter - Apple Liquid Glass Style */}
-        <div className="flex flex-wrap gap-3">
+        {/* Campaign Filter - Apple Liquid Glass Style - Horizontal scroll on mobile */}
+        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-hide">
           <button
             onClick={() => setSelectedCampaign(null)}
-            className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 ${
+            className={`shrink-0 px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium transition-all duration-300 ${
               selectedCampaign === null
                 ? 'bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] backdrop-blur-xl'
                 : 'bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-xl'
             }`}
           >
-            Alle Kampagnen
+            Alle
           </button>
           {campaigns.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedCampaign(c.id)}
-              className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+              className={`shrink-0 px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 md:gap-2 ${
                 selectedCampaign === c.id
                   ? 'bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] backdrop-blur-xl'
                   : 'bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-xl'
               }`}
             >
-              <Video className="w-4 h-4" />
-              {c.name}
+              <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="truncate max-w-[100px] md:max-w-none">{c.name}</span>
               {c.pitch_video_url && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-400 shrink-0" />
               )}
             </button>
           ))}
@@ -521,24 +521,24 @@ const VideoNoteAdmin = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="leads" className="gap-2">
-              <Users className="w-4 h-4" />
-              Leads & Videos
+          <TabsList className="w-full md:w-auto overflow-x-auto flex-nowrap">
+            <TabsTrigger value="leads" className="gap-1.5 md:gap-2 text-xs md:text-sm flex-1 md:flex-none">
+              <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Leads &</span> Videos
             </TabsTrigger>
-            <TabsTrigger value="campaigns" className="gap-2">
-              <Video className="w-4 h-4" />
-              Kampagnen & Pitch-Videos
+            <TabsTrigger value="campaigns" className="gap-1.5 md:gap-2 text-xs md:text-sm flex-1 md:flex-none">
+              <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Kampagnen &</span> Pitch
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2">
-              <BarChart3 className="w-4 h-4" />
+            <TabsTrigger value="analytics" className="gap-1.5 md:gap-2 text-xs md:text-sm flex-1 md:flex-none">
+              <BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
               Analytics
             </TabsTrigger>
           </TabsList>
 
           {/* Leads Tab */}
-          <TabsContent value="leads" className="mt-6">
-            <div className="grid lg:grid-cols-3 gap-6">
+          <TabsContent value="leads" className="mt-4 md:mt-6">
+            <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
               {/* Left Panel - Contact List */}
               <div className="lg:col-span-1">
                 <Card className="glass-card border-border">
@@ -551,8 +551,8 @@ const VideoNoteAdmin = () => {
                       {contacts.length} Leads mit personalisierten Video-Seiten
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[60vh]">
+                  <CardContent className="p-3 md:p-6">
+                    <ScrollArea className="h-[40vh] md:h-[60vh]">
                       {isLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />

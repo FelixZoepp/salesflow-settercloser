@@ -237,25 +237,26 @@ const Pipeline = () => {
 
   return (
     <Layout>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
+      <div className="space-y-4 md:space-y-6">
+        {/* Header - Mobile optimized */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Outreach Pipeline</h1>
-            <p className="text-muted-foreground text-sm mt-1">Leads aus Ihren Kampagnen</p>
+            <h1 className="text-xl md:text-3xl font-bold">Outreach Pipeline</h1>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1">Leads aus Ihren Kampagnen</p>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 md:gap-3 items-center flex-wrap">
             {/* Campaign Selector */}
             <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-              <SelectTrigger className="w-[220px] glass-card border-white/10">
+              <SelectTrigger className="w-full md:w-[220px] glass-card border-white/10">
                 <Megaphone className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Kampagne wählen" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10 z-50">
                 <SelectItem value="all">Alle Kampagnen</SelectItem>
                 {campaigns.map((campaign) => (
                   <SelectItem key={campaign.id} value={campaign.id}>
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${campaign.status === 'active' ? 'bg-green-500' : 'bg-muted'}`} />
+                      <span className={`w-2 h-2 rounded-full ${campaign.status === 'active' ? 'bg-emerald-500' : 'bg-muted'}`} />
                       {campaign.name}
                     </div>
                   </SelectItem>
@@ -263,40 +264,40 @@ const Pipeline = () => {
               </SelectContent>
             </Select>
             
-            <Button variant="outline" onClick={() => setShowPhoneSetup(!showPhoneSetup)}>
-              <Phone className="w-4 h-4 mr-2" />
-              Telefon
+            <Button variant="outline" size="sm" onClick={() => setShowPhoneSetup(!showPhoneSetup)} className="shrink-0">
+              <Phone className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Telefon</span>
             </Button>
           </div>
         </div>
 
         {showPhoneSetup && (
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <PhoneIntegration />
           </div>
         )}
 
-        {/* KPI Badge Bar */}
-        <div className="flex gap-4 mb-6 flex-wrap">
-          <Badge variant="secondary" className="px-4 py-2 text-sm">
-            <TrendingUp className="w-4 h-4 mr-2" />
+        {/* KPI Badge Bar - Horizontal scroll on mobile */}
+        <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-hide">
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm shrink-0">
+            <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
             {stats.total} Deals
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm">
-            <Euro className="w-4 h-4 mr-2" />
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm shrink-0">
+            <Euro className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
             €{stats.totalValue.toLocaleString()}
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm bg-orange-500/20 text-orange-400 border border-orange-500/30">
-            🔥 {stats.hotLeads} Hot Leads
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm bg-orange-500/20 text-orange-400 border border-orange-500/30 shrink-0">
+            🔥 {stats.hotLeads}
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm bg-purple-500/20 text-purple-400 border border-purple-500/30">
-            📅 {stats.settings} Settings
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm bg-purple-500/20 text-purple-400 border border-purple-500/30 shrink-0">
+            📅 {stats.settings}
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm bg-amber-500/20 text-amber-400 border border-amber-500/30">
-            🎯 {stats.closings} Closings
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+            🎯 {stats.closings}
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
-            ✅ {stats.won} Abgeschlossen
+          <Badge variant="secondary" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] shrink-0">
+            ✅ {stats.won}
           </Badge>
         </div>
 
@@ -306,7 +307,8 @@ const Pipeline = () => {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid gap-6 overflow-x-auto pb-4" style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(280px, 1fr))` }}>
+          {/* Mobile: Vertical stack, Desktop: Horizontal scroll */}
+          <div className="flex flex-col md:grid gap-4 md:gap-6 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0" style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(260px, 1fr))` }}>
             {stages.map(stage => {
             const stageDeals = getStageDeals(stage);
             const totalAmount = stageDeals.reduce((sum, deal) => sum + Number(deal.amount_eur), 0);
@@ -386,16 +388,16 @@ const DroppableStage = ({ stage, stageColor, stageDeals, totalAmount, isDragging
     <div 
       ref={setNodeRef}
       className={`
-        min-w-[280px] rounded-xl p-4 transition-all duration-200
+        min-w-full md:min-w-[260px] rounded-xl p-3 md:p-4 transition-all duration-200
         bg-white/[0.02] border border-white/10
         ${isOver ? 'ring-2 ring-primary bg-primary/10 border-primary/30 scale-[1.02]' : ''}
         ${isDragging && !isOver ? 'border-dashed border-white/20' : ''}
       `}
     >
       {/* Stage Header */}
-      <div className="mb-4 pb-3 border-b border-white/10">
-        <Badge className={`${stageColor} mb-2`}>{stage}</Badge>
-        <div className="text-sm text-muted-foreground">
+      <div className="mb-3 md:mb-4 pb-2 md:pb-3 border-b border-white/10 flex items-center justify-between md:block">
+        <Badge className={`${stageColor} text-xs md:text-sm`}>{stage}</Badge>
+        <div className="text-xs md:text-sm text-muted-foreground md:mt-2">
           {stageDeals.length} Deals • €{totalAmount.toLocaleString()}
         </div>
       </div>
