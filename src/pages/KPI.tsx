@@ -123,13 +123,17 @@ const KPI = () => {
       // Hot leads: contacts with lead_score >= 70 (based on engagement tracking)
       const currentHotLeads = (hotContacts || []).length;
       
-      // Settings with due_date set (actually scheduled appointments)
-      const currentSettings = allDeals.filter((d) => d.stage === "Setting").length;
-      const scheduledSettings = allDeals.filter((d) => d.stage === "Setting" && d.due_date).length;
+      // Settings scheduled within the time range (moved to Setting stage)
+      const currentSettings = allDeals.filter((d) => 
+        d.stage === "Setting" && 
+        new Date(d.updated_at) >= new Date(startDate)
+      ).length;
       
-      // Closings with due_date set
-      const currentClosings = allDeals.filter((d) => d.stage === "Closing").length;
-      const scheduledClosings = allDeals.filter((d) => d.stage === "Closing" && d.due_date).length;
+      // Closings scheduled within the time range
+      const currentClosings = allDeals.filter((d) => 
+        d.stage === "Closing" && 
+        new Date(d.updated_at) >= new Date(startDate)
+      ).length;
 
       // No-shows based on next_action field
       const settingNoShows = allDeals.filter((d) => 
