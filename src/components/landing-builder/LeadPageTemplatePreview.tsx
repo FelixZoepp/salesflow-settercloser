@@ -587,7 +587,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
       {/* Main Content Area - Stacked Layout */}
       <div className="space-y-6">
         {/* Preview Panel - Full Width */}
-        <div className={`${activeView === "editor" ? "hidden lg:block" : ""}`}>
+        <div className={`${activeView === "editor" ? "hidden" : ""} lg:block`}>
           <div className="relative overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.02] pointer-events-none" />
             
@@ -815,7 +815,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
         </div>
 
         {/* Editor Panel */}
-        <div className={`${activeView === "preview" ? "hidden lg:block" : ""}`}>
+        <div className={`${activeView === "preview" ? "hidden" : ""} lg:block`}>
           <div className="relative overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
             <div className="absolute inset-0 bg-gradient-to-br from-secondary/[0.02] via-transparent to-primary/[0.02] pointer-events-none" />
             
