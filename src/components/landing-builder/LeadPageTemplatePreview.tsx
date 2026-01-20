@@ -9,7 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Play, Calendar, Check, X, Star, CheckCircle, Megaphone, Pen, 
   Users, Loader2, ExternalLink, Save, Wand2, Palette, Type, 
-  Layout, Plus, Trash2, RotateCcw, Upload, ImageIcon
+  Layout, Plus, Trash2, RotateCcw, Upload, ImageIcon, Sparkles,
+  Eye, Settings2, Brush
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -137,6 +138,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"preview" | "editor">("preview");
 
   useEffect(() => {
     loadTemplate();
@@ -460,11 +462,17 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
 
   if (isLoading) {
     return (
-      <Card className="glass-card border-white/10">
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
+      <div className="relative overflow-hidden rounded-[2rem] p-8 backdrop-blur-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/40 to-secondary/40 blur-xl animate-pulse" />
+              <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
+            </div>
+            <p className="text-muted-foreground">Lade Vorlage...</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -472,717 +480,707 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   const companyName = "{{company}}";
 
   return (
-    <div className="space-y-4">
-      {/* Header with Save Button */}
-      <div className="flex items-center justify-between">
-        <Badge variant="outline" className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
-          Lead-Seiten Vorlage • Live-Vorschau
-        </Badge>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleReset} className="gap-2">
-            <RotateCcw className="w-4 h-4" />
-            Zurücksetzen
-          </Button>
-          <Button onClick={saveTemplate} disabled={isSaving} className="gap-2">
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Speichern
-          </Button>
+    <div className="space-y-6">
+      {/* Glassmorphism Header Bar */}
+      <div className="relative overflow-hidden rounded-[1.5rem] p-4 backdrop-blur-2xl bg-gradient-to-r from-white/[0.08] via-white/[0.04] to-white/[0.08] border border-white/[0.1] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">Lead-Seiten Editor</h2>
+              <p className="text-sm text-muted-foreground">Personalisierte Landing Pages mit KI</p>
+            </div>
+          </div>
+          
+          {/* View Toggle */}
+          <div className="flex items-center gap-3">
+            <div className="flex rounded-xl bg-white/5 border border-white/10 p-1">
+              <button
+                onClick={() => setActiveView("preview")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeView === "preview"
+                    ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/20 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                Vorschau
+              </button>
+              <button
+                onClick={() => setActiveView("editor")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeView === "editor"
+                    ? "bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Settings2 className="w-4 h-4" />
+                Bearbeiten
+              </button>
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleReset} 
+              className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reset
+            </Button>
+            <Button 
+              onClick={saveTemplate} 
+              disabled={isSaving} 
+              className="gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Speichern
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Live Preview */}
-      <Card className="glass-card border-white/10">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Live-Vorschau
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Unter <code className="bg-white/10 px-1 rounded">/p/[lead-slug]</code>
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea 
-            className="rounded-lg border border-slate-700" 
-            style={{ 
-              height: "600px",
-              backgroundColor: template.background_color,
-              color: template.text_color 
-            }}
-          >
-            <div className="p-0">
-            {/* Header Preview */}
-            <header className="border-b border-slate-800 px-4 py-3">
+      {/* Main Content Area */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Preview Panel */}
+        <div className={`${activeView === "editor" ? "hidden lg:block" : ""}`}>
+          <div className="relative overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.02] pointer-events-none" />
+            
+            {/* Preview Header */}
+            <div className="relative z-10 p-4 border-b border-white/[0.06]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {template.header_logo_url ? (
-                    <img src={template.header_logo_url} alt="Logo" className="h-8 w-auto object-contain" />
-                  ) : (
-                    <div className="text-lg font-bold">
-                      <span style={{ color: template.primary_color }}>{template.header_logo_accent}</span>
-                      {template.header_logo_text.replace(template.header_logo_accent, "")}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 text-xs opacity-70">
-                  {template.header_nav_items.map((item, i) => (
-                    <span key={i}>{item}</span>
-                  ))}
-                </div>
-                <div 
-                  className="font-semibold px-3 py-1.5 rounded text-xs"
-                  style={{ backgroundColor: template.primary_color, color: template.background_color }}
-                >
-                  {template.header_cta_text.replace("{{first_name}}", firstName)}
-                </div>
-              </div>
-            </header>
-
-            {/* Hero Section Preview */}
-            <section className="py-8 px-4">
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                <div className="space-y-4">
-                  <h1 className="text-2xl font-bold leading-tight">
-                    {template.hero_headline.replace("{{first_name}}", firstName)}
-                  </h1>
-                  <p className="text-sm opacity-80">
-                    {template.hero_subheadline
-                      .replace("{{first_name}}", firstName)
-                      .replace("{{company}}", companyName)
-                      .split(companyName)
-                      .map((part, i, arr) => (
-                        <span key={i}>
-                          {part}
-                          {i < arr.length - 1 && <span style={{ color: template.primary_color, fontWeight: 600 }}>{companyName}</span>}
-                        </span>
-                      ))}
-                  </p>
-                  <div 
-                    className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded text-sm"
-                    style={{ backgroundColor: template.primary_color, color: template.background_color }}
-                  >
-                    <Calendar className="w-4 h-4" />
-                    {template.hero_cta_text}
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   </div>
+                  <span className="text-xs text-muted-foreground font-mono">/p/lead-slug</span>
                 </div>
-                <div className="relative">
-                  <div className="absolute -top-6 right-1/4 text-3xl animate-bounce">👇</div>
-                  <div className="rounded-lg overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
-                    <div className="text-center">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: `${template.primary_color}30` }}>
-                        <Play className="w-6 h-6" style={{ color: template.primary_color }} />
-                      </div>
-                      <p className="text-xs opacity-60">Personalisiertes Video</p>
-                    </div>
-                  </div>
-                  <p className="text-center mt-2 text-xs opacity-70">
-                    {template.hero_video_caption.replace("{{first_name}}", firstName)}
-                  </p>
-                </div>
+                <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Live
+                </Badge>
               </div>
-            </section>
-
-            {/* Coaching Section Preview */}
-            <section className="py-6 px-4" style={{ backgroundColor: `${template.background_color}cc` }}>
-              <div className="text-center mb-4">
-                <span 
-                  className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-2"
-                  style={{ backgroundColor: `${template.primary_color}30`, color: template.primary_color }}
-                >
-                  {template.coaching_badge}
-                </span>
-                <h2 className="text-xl font-bold mb-2">{template.coaching_headline}</h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div 
-                  className="rounded-lg p-4 border"
-                  style={{ 
-                    background: `linear-gradient(to bottom right, ${template.primary_color}15, transparent)`,
-                    borderColor: `${template.primary_color}40`
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}30` }}>
-                      <Megaphone className="w-4 h-4" style={{ color: template.primary_color }} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold">{template.pillar1_title}</h3>
-                      <p className="text-xs" style={{ color: template.primary_color }}>{template.pillar1_subtitle}</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-1">
-                    {template.pillar1_items.slice(0, 3).map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs opacity-80">
-                        <Check className="w-3 h-3 flex-shrink-0" style={{ color: template.primary_color }} />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div 
-                  className="rounded-lg p-4 border"
-                  style={{ 
-                    background: `linear-gradient(to bottom right, ${template.secondary_color}15, transparent)`,
-                    borderColor: `${template.secondary_color}40`
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: `${template.secondary_color}30` }}>
-                      <Pen className="w-4 h-4" style={{ color: template.secondary_color }} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold">{template.pillar2_title}</h3>
-                      <p className="text-xs" style={{ color: template.secondary_color }}>{template.pillar2_subtitle}</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-1">
-                    {template.pillar2_items.slice(0, 3).map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs opacity-80">
-                        <Check className="w-3 h-3 flex-shrink-0" style={{ color: template.secondary_color }} />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            {/* Footer Preview */}
-            <footer className="border-t border-slate-800 py-4 px-4 text-center">
-              <p className="text-xs opacity-60">
-                © 2024 {template.footer_company_name}. {template.footer_tagline}
-              </p>
-            </footer>
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
 
-      {/* Editor Section Below Preview */}
-      <Card className="glass-card border-white/10">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <Wand2 className="w-5 h-5 text-primary" />
-            Anpassen
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* AI Customization */}
-          <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
-            <div className="flex items-center gap-2 mb-3">
-              <Wand2 className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">Mit KI anpassen</h3>
-            </div>
-            <Textarea
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="z.B. 'Passe die Seite für eine Immobilienmakler-Agentur an, die sich auf Luxusimmobilien spezialisiert hat.'"
-              className="min-h-[80px] bg-white/5 border-white/10 mb-3"
-            />
-            <Button 
-              onClick={handleAICustomize} 
-              disabled={isGenerating || !aiPrompt.trim()}
-              className="w-full gap-2"
+            {/* Preview Content */}
+            <ScrollArea 
+              className="rounded-b-[2rem]" 
+              style={{ 
+                height: "600px",
+                backgroundColor: template.background_color,
+                color: template.text_color 
+              }}
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  KI passt Vorlage an...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4" />
-                  Mit KI anpassen
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Editor Tabs */}
-          <Tabs defaultValue="branding" className="w-full">
-            <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-white/5 p-1">
-              <TabsTrigger value="branding" className="gap-1 text-xs">
-                <ImageIcon className="w-3 h-3" />
-                Branding
-              </TabsTrigger>
-              <TabsTrigger value="hero" className="gap-1 text-xs">
-                <Layout className="w-3 h-3" />
-                Hero
-              </TabsTrigger>
-              <TabsTrigger value="coaching" className="gap-1 text-xs">
-                <Users className="w-3 h-3" />
-                Coaching
-              </TabsTrigger>
-              <TabsTrigger value="comparison" className="gap-1 text-xs">
-                <Star className="w-3 h-3" />
-                Vergleich
-              </TabsTrigger>
-              <TabsTrigger value="colors" className="gap-1 text-xs">
-                <Palette className="w-3 h-3" />
-                Farben
-              </TabsTrigger>
-              <TabsTrigger value="footer" className="gap-1 text-xs">
-                <Type className="w-3 h-3" />
-                Footer
-              </TabsTrigger>
-            </TabsList>
-
-            <ScrollArea className="h-[350px] mt-4">
-              {/* Branding Tab */}
-              <TabsContent value="branding" className="space-y-4 m-0">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">Logo</label>
-                    {template.header_logo_url ? (
-                      <div className="flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-white/5">
-                        <img src={template.header_logo_url} alt="Logo" className="h-16 w-auto object-contain" />
-                        <div className="flex-1">
-                          <p className="text-sm text-muted-foreground">Logo hochgeladen</p>
+              <div className="p-0">
+                {/* Header Preview */}
+                <header className="border-b border-slate-800 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {template.header_logo_url ? (
+                        <img src={template.header_logo_url} alt="Logo" className="h-8 w-auto object-contain" />
+                      ) : (
+                        <div className="text-lg font-bold">
+                          <span style={{ color: template.primary_color }}>{template.header_logo_accent}</span>
+                          {template.header_logo_text.replace(template.header_logo_accent, "")}
                         </div>
-                        <Button variant="ghost" size="icon" onClick={removeLogo}>
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div
-                        className={`p-6 rounded-lg border-2 border-dashed transition-colors ${
-                          isDragging 
-                            ? "border-primary bg-primary/10" 
-                            : "border-white/20 hover:border-white/40"
-                        }`}
-                        onDrop={handleDrop}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs opacity-70">
+                      {template.header_nav_items.map((item, i) => (
+                        <span key={i}>{item}</span>
+                      ))}
+                    </div>
+                    <div 
+                      className="font-semibold px-3 py-1.5 rounded text-xs"
+                      style={{ backgroundColor: template.primary_color, color: template.background_color }}
+                    >
+                      {template.header_cta_text.replace("{{first_name}}", firstName)}
+                    </div>
+                  </div>
+                </header>
+
+                {/* Hero Section Preview */}
+                <section className="py-8 px-4">
+                  <div className="grid md:grid-cols-2 gap-6 items-center">
+                    <div className="space-y-4">
+                      <h1 className="text-2xl font-bold leading-tight">
+                        {template.hero_headline.replace("{{first_name}}", firstName)}
+                      </h1>
+                      <p className="text-sm opacity-80">
+                        {template.hero_subheadline
+                          .replace("{{first_name}}", firstName)
+                          .replace("{{company}}", companyName)
+                          .split(companyName)
+                          .map((part, i, arr) => (
+                            <span key={i}>
+                              {part}
+                              {i < arr.length - 1 && <span style={{ color: template.primary_color, fontWeight: 600 }}>{companyName}</span>}
+                            </span>
+                          ))}
+                      </p>
+                      <div 
+                        className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded text-sm"
+                        style={{ backgroundColor: template.primary_color, color: template.background_color }}
                       >
-                        <div className="flex flex-col items-center gap-2 text-center">
-                          {uploading ? (
-                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                          ) : (
-                            <Upload className="w-8 h-8 text-muted-foreground" />
-                          )}
-                          <p className="text-sm text-muted-foreground">
-                            {uploading ? "Wird hochgeladen..." : "Logo hierher ziehen oder"}
-                          </p>
-                          {!uploading && (
-                            <label className="cursor-pointer">
-                              <span className="text-primary hover:underline text-sm">Datei auswählen</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleFileSelect}
-                              />
-                            </label>
-                          )}
-                          <p className="text-xs text-muted-foreground">PNG, JPG bis 5MB</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Firmenname</label>
-                    <Input
-                      value={template.footer_company_name}
-                      onChange={(e) => setTemplate({ ...template, footer_company_name: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Tagline</label>
-                    <Input
-                      value={template.footer_tagline}
-                      onChange={(e) => setTemplate({ ...template, footer_tagline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1 block">Primärfarbe</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={template.primary_color}
-                          onChange={(e) => setTemplate({ ...template, primary_color: e.target.value })}
-                          className="w-10 h-10 rounded cursor-pointer border-0"
-                        />
-                        <Input
-                          value={template.primary_color}
-                          onChange={(e) => setTemplate({ ...template, primary_color: e.target.value })}
-                          className="bg-white/5 border-white/10"
-                        />
+                        <Calendar className="w-4 h-4" />
+                        {template.hero_cta_text}
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1 block">Sekundärfarbe</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={template.secondary_color}
-                          onChange={(e) => setTemplate({ ...template, secondary_color: e.target.value })}
-                          className="w-10 h-10 rounded cursor-pointer border-0"
-                        />
-                        <Input
-                          value={template.secondary_color}
-                          onChange={(e) => setTemplate({ ...template, secondary_color: e.target.value })}
-                          className="bg-white/5 border-white/10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Hero Tab */}
-              <TabsContent value="hero" className="space-y-4 m-0">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Logo Text (Fallback)</label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={template.header_logo_accent}
-                        onChange={(e) => setTemplate({ ...template, header_logo_accent: e.target.value })}
-                        placeholder="Akzent"
-                        className="w-1/3 bg-white/5 border-white/10"
-                      />
-                      <Input
-                        value={template.header_logo_text}
-                        onChange={(e) => setTemplate({ ...template, header_logo_text: e.target.value })}
-                        placeholder="Vollständiger Name"
-                        className="flex-1 bg-white/5 border-white/10"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Hero Headline</label>
-                    <Input
-                      value={template.hero_headline}
-                      onChange={(e) => setTemplate({ ...template, hero_headline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Nutze {"{{first_name}}"} für Personalisierung</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Hero Subheadline</label>
-                    <Textarea
-                      value={template.hero_subheadline}
-                      onChange={(e) => setTemplate({ ...template, hero_subheadline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Nutze {"{{company}}"} für Firmenname</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1 block">CTA Button</label>
-                      <Input
-                        value={template.hero_cta_text}
-                        onChange={(e) => setTemplate({ ...template, hero_cta_text: e.target.value })}
-                        className="bg-white/5 border-white/10"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1 block">Header CTA</label>
-                      <Input
-                        value={template.header_cta_text}
-                        onChange={(e) => setTemplate({ ...template, header_cta_text: e.target.value })}
-                        className="bg-white/5 border-white/10"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Video Caption</label>
-                    <Input
-                      value={template.hero_video_caption}
-                      onChange={(e) => setTemplate({ ...template, hero_video_caption: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Kalender URL</label>
-                    <Input
-                      value={template.calendar_url}
-                      onChange={(e) => setTemplate({ ...template, calendar_url: e.target.value })}
-                      placeholder="https://calendly.com/..."
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Coaching Tab */}
-              <TabsContent value="coaching" className="space-y-4 m-0">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Badge</label>
-                    <Input
-                      value={template.coaching_badge}
-                      onChange={(e) => setTemplate({ ...template, coaching_badge: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Headline</label>
-                    <Input
-                      value={template.coaching_headline}
-                      onChange={(e) => setTemplate({ ...template, coaching_headline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Subheadline</label>
-                    <Input
-                      value={template.coaching_subheadline}
-                      onChange={(e) => setTemplate({ ...template, coaching_subheadline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-
-                  {/* Pillar 1 */}
-                  <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Megaphone className="w-4 h-4 text-cyan-400" />
-                      <span className="font-medium text-sm">Säule 1</span>
-                    </div>
-                    <div className="space-y-2">
-                      <Input
-                        value={template.pillar1_title}
-                        onChange={(e) => setTemplate({ ...template, pillar1_title: e.target.value })}
-                        placeholder="Titel"
-                        className="bg-white/5 border-white/10"
-                      />
-                      <Input
-                        value={template.pillar1_subtitle}
-                        onChange={(e) => setTemplate({ ...template, pillar1_subtitle: e.target.value })}
-                        placeholder="Untertitel"
-                        className="bg-white/5 border-white/10"
-                      />
-                      <div className="space-y-1">
-                        {template.pillar1_items.map((item, i) => (
-                          <div key={i} className="flex gap-2">
-                            <Input
-                              value={item}
-                              onChange={(e) => updateListItem("pillar1_items", i, e.target.value)}
-                              className="flex-1 bg-white/5 border-white/10 text-sm"
-                            />
-                            <Button variant="ghost" size="icon" onClick={() => removeListItem("pillar1_items", i)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                    <div className="relative">
+                      <div className="absolute -top-6 right-1/4 text-3xl animate-bounce">👇</div>
+                      <div className="rounded-lg overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
+                        <div className="text-center">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: `${template.primary_color}30` }}>
+                            <Play className="w-6 h-6" style={{ color: template.primary_color }} />
                           </div>
-                        ))}
-                        <Button variant="outline" size="sm" onClick={() => addListItem("pillar1_items")} className="w-full">
-                          <Plus className="w-3 h-3 mr-1" /> Punkt hinzufügen
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pillar 2 */}
-                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Pen className="w-4 h-4 text-purple-400" />
-                      <span className="font-medium text-sm">Säule 2</span>
-                    </div>
-                    <div className="space-y-2">
-                      <Input
-                        value={template.pillar2_title}
-                        onChange={(e) => setTemplate({ ...template, pillar2_title: e.target.value })}
-                        placeholder="Titel"
-                        className="bg-white/5 border-white/10"
-                      />
-                      <Input
-                        value={template.pillar2_subtitle}
-                        onChange={(e) => setTemplate({ ...template, pillar2_subtitle: e.target.value })}
-                        placeholder="Untertitel"
-                        className="bg-white/5 border-white/10"
-                      />
-                      <div className="space-y-1">
-                        {template.pillar2_items.map((item, i) => (
-                          <div key={i} className="flex gap-2">
-                            <Input
-                              value={item}
-                              onChange={(e) => updateListItem("pillar2_items", i, e.target.value)}
-                              className="flex-1 bg-white/5 border-white/10 text-sm"
-                            />
-                            <Button variant="ghost" size="icon" onClick={() => removeListItem("pillar2_items", i)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button variant="outline" size="sm" onClick={() => addListItem("pillar2_items")} className="w-full">
-                          <Plus className="w-3 h-3 mr-1" /> Punkt hinzufügen
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Comparison Tab */}
-              <TabsContent value="comparison" className="space-y-4 m-0">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Badge</label>
-                    <Input
-                      value={template.comparison_badge}
-                      onChange={(e) => setTemplate({ ...template, comparison_badge: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Headline</label>
-                    <Input
-                      value={template.comparison_headline}
-                      onChange={(e) => setTemplate({ ...template, comparison_headline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-
-                  {/* Others */}
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <X className="w-4 h-4 text-red-400" />
-                      <span className="font-medium text-sm">{template.others_title}</span>
-                    </div>
-                    <Input
-                      value={template.others_title}
-                      onChange={(e) => setTemplate({ ...template, others_title: e.target.value })}
-                      placeholder="Titel"
-                      className="bg-white/5 border-white/10 mb-2"
-                    />
-                    <div className="space-y-1">
-                      {template.others_items.map((item, i) => (
-                        <div key={i} className="flex gap-2">
-                          <Input
-                            value={item}
-                            onChange={(e) => updateListItem("others_items", i, e.target.value)}
-                            className="flex-1 bg-white/5 border-white/10 text-sm"
-                          />
-                          <Button variant="ghost" size="icon" onClick={() => removeListItem("others_items", i)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          <p className="text-xs opacity-60">Personalisiertes Video</p>
                         </div>
-                      ))}
-                      <Button variant="outline" size="sm" onClick={() => addListItem("others_items")} className="w-full">
-                        <Plus className="w-3 h-3 mr-1" /> Punkt hinzufügen
-                      </Button>
+                      </div>
+                      <p className="text-center mt-2 text-xs opacity-70">
+                        {template.hero_video_caption.replace("{{first_name}}", firstName)}
+                      </p>
                     </div>
                   </div>
+                </section>
 
-                  {/* Us */}
-                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span className="font-medium text-sm">{template.us_title}</span>
-                    </div>
-                    <Input
-                      value={template.us_title}
-                      onChange={(e) => setTemplate({ ...template, us_title: e.target.value })}
-                      placeholder="Titel"
-                      className="bg-white/5 border-white/10 mb-2"
-                    />
-                    <div className="space-y-1">
-                      {template.us_items.map((item, i) => (
-                        <div key={i} className="flex gap-2">
-                          <Input
-                            value={item}
-                            onChange={(e) => updateListItem("us_items", i, e.target.value)}
-                            className="flex-1 bg-white/5 border-white/10 text-sm"
-                          />
-                          <Button variant="ghost" size="icon" onClick={() => removeListItem("us_items", i)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                {/* Coaching Section Preview */}
+                <section className="py-6 px-4" style={{ backgroundColor: `${template.background_color}cc` }}>
+                  <div className="text-center mb-4">
+                    <span 
+                      className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-2"
+                      style={{ backgroundColor: `${template.primary_color}30`, color: template.primary_color }}
+                    >
+                      {template.coaching_badge}
+                    </span>
+                    <h2 className="text-xl font-bold mb-2">{template.coaching_headline}</h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div 
+                      className="rounded-lg p-4 border"
+                      style={{ 
+                        background: `linear-gradient(to bottom right, ${template.primary_color}15, transparent)`,
+                        borderColor: `${template.primary_color}40`
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}30` }}>
+                          <Megaphone className="w-4 h-4" style={{ color: template.primary_color }} />
                         </div>
-                      ))}
-                      <Button variant="outline" size="sm" onClick={() => addListItem("us_items")} className="w-full">
-                        <Plus className="w-3 h-3 mr-1" /> Punkt hinzufügen
-                      </Button>
+                        <div>
+                          <h3 className="text-sm font-bold">{template.pillar1_title}</h3>
+                          <p className="text-xs" style={{ color: template.primary_color }}>{template.pillar1_subtitle}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-1">
+                        {template.pillar1_items.slice(0, 3).map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs opacity-80">
+                            <Check className="w-3 h-3 flex-shrink-0" style={{ color: template.primary_color }} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                </div>
-              </TabsContent>
 
-              {/* Colors Tab */}
-              <TabsContent value="colors" className="space-y-4 m-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Hintergrundfarbe</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={template.background_color}
-                        onChange={(e) => setTemplate({ ...template, background_color: e.target.value })}
-                        className="w-10 h-10 rounded cursor-pointer border-0"
-                      />
-                      <Input
-                        value={template.background_color}
-                        onChange={(e) => setTemplate({ ...template, background_color: e.target.value })}
-                        className="bg-white/5 border-white/10"
-                      />
+                    <div 
+                      className="rounded-lg p-4 border"
+                      style={{ 
+                        background: `linear-gradient(to bottom right, ${template.secondary_color}15, transparent)`,
+                        borderColor: `${template.secondary_color}40`
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: `${template.secondary_color}30` }}>
+                          <Pen className="w-4 h-4" style={{ color: template.secondary_color }} />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold">{template.pillar2_title}</h3>
+                          <p className="text-xs" style={{ color: template.secondary_color }}>{template.pillar2_subtitle}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-1">
+                        {template.pillar2_items.slice(0, 3).map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs opacity-80">
+                            <Check className="w-3 h-3 flex-shrink-0" style={{ color: template.secondary_color }} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Textfarbe</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={template.text_color}
-                        onChange={(e) => setTemplate({ ...template, text_color: e.target.value })}
-                        className="w-10 h-10 rounded cursor-pointer border-0"
-                      />
-                      <Input
-                        value={template.text_color}
-                        onChange={(e) => setTemplate({ ...template, text_color: e.target.value })}
-                        className="bg-white/5 border-white/10"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Akzentfarbe</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={template.accent_color}
-                        onChange={(e) => setTemplate({ ...template, accent_color: e.target.value })}
-                        className="w-10 h-10 rounded cursor-pointer border-0"
-                      />
-                      <Input
-                        value={template.accent_color}
-                        onChange={(e) => setTemplate({ ...template, accent_color: e.target.value })}
-                        className="bg-white/5 border-white/10"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
+                </section>
 
-              {/* Footer Tab */}
-              <TabsContent value="footer" className="space-y-4 m-0">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Firmenname</label>
-                    <Input
-                      value={template.footer_company_name}
-                      onChange={(e) => setTemplate({ ...template, footer_company_name: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Tagline</label>
-                    <Input
-                      value={template.footer_tagline}
-                      onChange={(e) => setTemplate({ ...template, footer_tagline: e.target.value })}
-                      className="bg-white/5 border-white/10"
-                    />
-                  </div>
-                </div>
-              </TabsContent>
+                {/* Footer Preview */}
+                <footer className="border-t border-slate-800 py-4 px-4 text-center">
+                  <p className="text-xs opacity-60">
+                    © 2024 {template.footer_company_name}. {template.footer_tagline}
+                  </p>
+                </footer>
+              </div>
             </ScrollArea>
-          </Tabs>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+
+        {/* Editor Panel */}
+        <div className={`${activeView === "preview" ? "hidden lg:block" : ""}`}>
+          <div className="relative overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary/[0.02] via-transparent to-primary/[0.02] pointer-events-none" />
+            
+            {/* Editor Header */}
+            <div className="relative z-10 p-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20">
+                  <Brush className="w-4 h-4 text-secondary" />
+                </div>
+                <span className="font-medium text-foreground">Design anpassen</span>
+              </div>
+            </div>
+
+            <div className="relative z-10 p-5 space-y-5">
+              {/* AI Customization - Premium Look */}
+              <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/10 border border-primary/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                      <Wand2 className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">KI-Assistent</h3>
+                      <p className="text-xs text-muted-foreground">Beschreibe deine Änderungen</p>
+                    </div>
+                  </div>
+                  
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="z.B. 'Passe die Seite für eine Immobilienmakler-Agentur an, die sich auf Luxusimmobilien spezialisiert hat.'"
+                    className="min-h-[80px] bg-white/[0.03] border-white/10 rounded-xl mb-4 focus:border-primary/50 focus:ring-primary/20 placeholder:text-muted-foreground/50"
+                  />
+                  
+                  <Button 
+                    onClick={handleAICustomize} 
+                    disabled={isGenerating || !aiPrompt.trim()}
+                    className="w-full gap-2 rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:via-primary/80 hover:to-primary/70 shadow-[0_0_25px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:shadow-none"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        KI arbeitet...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Mit KI anpassen
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Editor Tabs with Liquid Glass */}
+              <Tabs defaultValue="branding" className="w-full">
+                <TabsList className="w-full flex flex-wrap h-auto gap-1.5 p-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  {[
+                    { value: "branding", icon: ImageIcon, label: "Branding" },
+                    { value: "hero", icon: Layout, label: "Hero" },
+                    { value: "coaching", icon: Users, label: "Coaching" },
+                    { value: "comparison", icon: Star, label: "Vergleich" },
+                    { value: "colors", icon: Palette, label: "Farben" },
+                  ].map((tab) => (
+                    <TabsTrigger 
+                      key={tab.value} 
+                      value={tab.value} 
+                      className="flex-1 gap-1.5 text-xs rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-white/10 data-[state=active]:to-white/5 data-[state=active]:border data-[state=active]:border-white/10 data-[state=active]:shadow-[0_2px_10px_rgba(0,0,0,0.2)] transition-all duration-200"
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <ScrollArea className="h-[380px] mt-4 pr-3">
+                  {/* Branding Tab */}
+                  <TabsContent value="branding" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      {/* Logo Upload */}
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-3 block">Logo</label>
+                        {template.header_logo_url ? (
+                          <div className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                            <img src={template.header_logo_url} alt="Logo" className="h-14 w-auto object-contain" />
+                            <div className="flex-1">
+                              <p className="text-sm text-muted-foreground">Logo aktiv</p>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={removeLogo}
+                              className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className={`p-6 rounded-xl border-2 border-dashed transition-all duration-300 ${
+                              isDragging 
+                                ? "border-primary bg-primary/10 shadow-[0_0_30px_rgba(6,182,212,0.2)]" 
+                                : "border-white/20 hover:border-white/40 hover:bg-white/[0.02]"
+                            }`}
+                            onDrop={handleDrop}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                          >
+                            <div className="flex flex-col items-center gap-3 text-center">
+                              {uploading ? (
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                              ) : (
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                  <Upload className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  {uploading ? "Wird hochgeladen..." : "Logo hierher ziehen"}
+                                </p>
+                                {!uploading && (
+                                  <label className="cursor-pointer">
+                                    <span className="text-primary hover:underline text-sm">oder Datei auswählen</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={handleFileSelect}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground/60">PNG, JPG bis 5MB</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Company Info */}
+                      <div className="grid gap-4">
+                        <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                          <label className="text-sm font-medium text-foreground mb-2 block">Firmenname</label>
+                          <Input
+                            value={template.footer_company_name}
+                            onChange={(e) => setTemplate({ ...template, footer_company_name: e.target.value })}
+                            className="bg-white/[0.03] border-white/10 rounded-xl focus:border-primary/50"
+                          />
+                        </div>
+                        <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                          <label className="text-sm font-medium text-foreground mb-2 block">Tagline</label>
+                          <Input
+                            value={template.footer_tagline}
+                            onChange={(e) => setTemplate({ ...template, footer_tagline: e.target.value })}
+                            className="bg-white/[0.03] border-white/10 rounded-xl focus:border-primary/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Hero Tab */}
+                  <TabsContent value="hero" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-2 block">Hero Headline</label>
+                        <Input
+                          value={template.hero_headline}
+                          onChange={(e) => setTemplate({ ...template, hero_headline: e.target.value })}
+                          className="bg-white/[0.03] border-white/10 rounded-xl"
+                        />
+                        <p className="text-xs text-muted-foreground/60 mt-2">Nutze {"{{first_name}}"} für Personalisierung</p>
+                      </div>
+                      
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-2 block">Subheadline</label>
+                        <Textarea
+                          value={template.hero_subheadline}
+                          onChange={(e) => setTemplate({ ...template, hero_subheadline: e.target.value })}
+                          className="bg-white/[0.03] border-white/10 rounded-xl min-h-[80px]"
+                        />
+                        <p className="text-xs text-muted-foreground/60 mt-2">Nutze {"{{company}}"} für Firmenname</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                          <label className="text-sm font-medium text-foreground mb-2 block">CTA Button</label>
+                          <Input
+                            value={template.hero_cta_text}
+                            onChange={(e) => setTemplate({ ...template, hero_cta_text: e.target.value })}
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                        <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                          <label className="text-sm font-medium text-foreground mb-2 block">Header CTA</label>
+                          <Input
+                            value={template.header_cta_text}
+                            onChange={(e) => setTemplate({ ...template, header_cta_text: e.target.value })}
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-2 block">Kalender URL</label>
+                        <Input
+                          value={template.calendar_url}
+                          onChange={(e) => setTemplate({ ...template, calendar_url: e.target.value })}
+                          placeholder="https://calendly.com/..."
+                          className="bg-white/[0.03] border-white/10 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Coaching Tab */}
+                  <TabsContent value="coaching" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-2 block">Coaching Headline</label>
+                        <Input
+                          value={template.coaching_headline}
+                          onChange={(e) => setTemplate({ ...template, coaching_headline: e.target.value })}
+                          className="bg-white/[0.03] border-white/10 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Pillar 1 */}
+                      <div className="rounded-xl p-4 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 rounded-lg bg-cyan-500/20">
+                            <Megaphone className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <span className="font-medium text-foreground">Säule 1: Outreach</span>
+                        </div>
+                        <div className="space-y-3">
+                          <Input
+                            value={template.pillar1_title}
+                            onChange={(e) => setTemplate({ ...template, pillar1_title: e.target.value })}
+                            placeholder="Titel"
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                          <div className="space-y-2">
+                            {template.pillar1_items.map((item, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input
+                                  value={item}
+                                  onChange={(e) => updateListItem("pillar1_items", i, e.target.value)}
+                                  className="flex-1 bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                                />
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => removeListItem("pillar1_items", i)}
+                                  className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => addListItem("pillar1_items")} 
+                              className="w-full rounded-xl border-dashed border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/10"
+                            >
+                              <Plus className="w-3.5 h-3.5 mr-1.5" /> Punkt hinzufügen
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pillar 2 */}
+                      <div className="rounded-xl p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 rounded-lg bg-purple-500/20">
+                            <Pen className="w-4 h-4 text-purple-400" />
+                          </div>
+                          <span className="font-medium text-foreground">Säule 2: Content</span>
+                        </div>
+                        <div className="space-y-3">
+                          <Input
+                            value={template.pillar2_title}
+                            onChange={(e) => setTemplate({ ...template, pillar2_title: e.target.value })}
+                            placeholder="Titel"
+                            className="bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                          <div className="space-y-2">
+                            {template.pillar2_items.map((item, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input
+                                  value={item}
+                                  onChange={(e) => updateListItem("pillar2_items", i, e.target.value)}
+                                  className="flex-1 bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                                />
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => removeListItem("pillar2_items", i)}
+                                  className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => addListItem("pillar2_items")} 
+                              className="w-full rounded-xl border-dashed border-white/20 hover:border-purple-500/50 hover:bg-purple-500/10"
+                            >
+                              <Plus className="w-3.5 h-3.5 mr-1.5" /> Punkt hinzufügen
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Comparison Tab */}
+                  <TabsContent value="comparison" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06]">
+                        <label className="text-sm font-medium text-foreground mb-2 block">Vergleichs-Headline</label>
+                        <Input
+                          value={template.comparison_headline}
+                          onChange={(e) => setTemplate({ ...template, comparison_headline: e.target.value })}
+                          className="bg-white/[0.03] border-white/10 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Others */}
+                      <div className="rounded-xl p-4 bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/20">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 rounded-lg bg-red-500/20">
+                            <X className="w-4 h-4 text-red-400" />
+                          </div>
+                          <span className="font-medium text-foreground">Andere Anbieter</span>
+                        </div>
+                        <div className="space-y-2">
+                          {template.others_items.map((item, i) => (
+                            <div key={i} className="flex gap-2">
+                              <Input
+                                value={item}
+                                onChange={(e) => updateListItem("others_items", i, e.target.value)}
+                                className="flex-1 bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => removeListItem("others_items", i)}
+                                className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => addListItem("others_items")} 
+                            className="w-full rounded-xl border-dashed border-white/20 hover:border-red-500/50 hover:bg-red-500/10"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1.5" /> Punkt hinzufügen
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Us */}
+                      <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 rounded-lg bg-emerald-500/20">
+                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <span className="font-medium text-foreground">Unser Coaching</span>
+                        </div>
+                        <div className="space-y-2">
+                          {template.us_items.map((item, i) => (
+                            <div key={i} className="flex gap-2">
+                              <Input
+                                value={item}
+                                onChange={(e) => updateListItem("us_items", i, e.target.value)}
+                                className="flex-1 bg-white/[0.03] border-white/10 rounded-xl text-sm"
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => removeListItem("us_items", i)}
+                                className="rounded-xl hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => addListItem("us_items")} 
+                            className="w-full rounded-xl border-dashed border-white/20 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1.5" /> Punkt hinzufügen
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Colors Tab */}
+                  <TabsContent value="colors" className="space-y-4 m-0">
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { key: "primary_color", label: "Primärfarbe", gradient: "from-cyan-500/20 to-cyan-500/5" },
+                        { key: "secondary_color", label: "Sekundärfarbe", gradient: "from-purple-500/20 to-purple-500/5" },
+                        { key: "background_color", label: "Hintergrund", gradient: "from-slate-500/20 to-slate-500/5" },
+                        { key: "text_color", label: "Textfarbe", gradient: "from-white/20 to-white/5" },
+                        { key: "accent_color", label: "Akzentfarbe", gradient: "from-amber-500/20 to-amber-500/5" },
+                      ].map((color) => (
+                        <div 
+                          key={color.key} 
+                          className={`rounded-xl p-4 bg-gradient-to-br ${color.gradient} border border-white/[0.08]`}
+                        >
+                          <label className="text-sm font-medium text-foreground mb-3 block">{color.label}</label>
+                          <div className="flex gap-3 items-center">
+                            <div className="relative">
+                              <input
+                                type="color"
+                                value={(template as any)[color.key]}
+                                onChange={(e) => setTemplate({ ...template, [color.key]: e.target.value })}
+                                className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white/20 overflow-hidden"
+                                style={{ backgroundColor: (template as any)[color.key] }}
+                              />
+                              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20 pointer-events-none" />
+                            </div>
+                            <Input
+                              value={(template as any)[color.key]}
+                              onChange={(e) => setTemplate({ ...template, [color.key]: e.target.value })}
+                              className="bg-white/[0.03] border-white/10 rounded-xl text-sm font-mono"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
