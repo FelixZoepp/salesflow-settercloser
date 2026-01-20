@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Play, Calendar, Check, X, Star, CheckCircle, Megaphone, Pen, 
   Users, Loader2, ExternalLink, Save, Wand2, Palette, Type, 
   Layout, Plus, Trash2, RotateCcw, Upload, ImageIcon, Sparkles,
-  Eye, Settings2, Brush, Trophy, Video
+  Eye, Settings2, Brush, Trophy, Video, Maximize2, Monitor
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -192,6 +193,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   const [accountId, setAccountId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"preview" | "editor">("preview");
   const [activeEditorTab, setActiveEditorTab] = useState("branding");
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
   // Refs for preview sections
   const previewScrollRef = useRef<HTMLDivElement>(null);
@@ -625,6 +627,15 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
 
             <div className="h-8 w-px bg-white/10" />
 
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsFullscreenOpen(true)}
+              className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
+            >
+              <Maximize2 className="w-4 h-4" />
+              Testseite
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 
@@ -1548,6 +1559,270 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           </div>
         </div>
       </div>
+      {/* Fullscreen Preview Modal */}
+      <Dialog open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
+        <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden bg-transparent border-0">
+          <div className="relative w-full h-full overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.1] shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            {/* Header */}
+            <div className="relative z-10 p-4 border-b border-white/[0.08] flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                  <div className="w-3 h-3 rounded-full bg-warning/60" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground font-mono">/p/lead-slug</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge className="bg-primary/20 text-primary border-primary/30">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Vollbild-Vorschau
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsFullscreenOpen(false)}
+                  className="rounded-xl hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Fullscreen Content */}
+            <ScrollArea 
+              className="h-[calc(95vh-80px)]" 
+              style={{ 
+                backgroundColor: template.background_color,
+                color: template.text_color 
+              }}
+            >
+              <div className="max-w-6xl mx-auto">
+                {/* Header Preview */}
+                <header className="border-b border-slate-800 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {template.header_logo_url ? (
+                        <img src={template.header_logo_url} alt="Logo" className="h-10 w-auto object-contain" />
+                      ) : (
+                        <div className="text-xl font-bold">
+                          <span style={{ color: template.primary_color }}>{template.header_logo_accent}</span>
+                          {template.header_logo_text.replace(template.header_logo_accent, "")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6 text-sm opacity-70">
+                      {template.header_nav_items.map((item, i) => (
+                        <span key={i} className="hover:opacity-100 cursor-pointer transition-opacity">{item}</span>
+                      ))}
+                    </div>
+                    <div 
+                      className="font-semibold px-4 py-2 rounded-lg text-sm cursor-pointer hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: template.primary_color, color: template.background_color }}
+                    >
+                      {template.header_cta_text.replace("{{first_name}}", "Max")}
+                    </div>
+                  </div>
+                </header>
+
+                {/* Hero Section */}
+                <section className="py-16 px-6">
+                  <div className="grid md:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold leading-tight">
+                        {template.hero_headline.replace("{{first_name}}", "Max")}
+                      </h1>
+                      <p className="text-lg opacity-80 leading-relaxed">
+                        {template.hero_subheadline
+                          .replace("{{first_name}}", "Max")
+                          .replace("{{company}}", "Muster GmbH")}
+                      </p>
+                      <div 
+                        className="inline-flex items-center gap-3 font-semibold px-6 py-3 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                        style={{ backgroundColor: template.primary_color, color: template.background_color }}
+                      >
+                        <Calendar className="w-5 h-5" />
+                        {template.hero_cta_text}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -top-8 right-1/4 text-5xl animate-bounce">👇</div>
+                      <div className="rounded-xl overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
+                        <div className="text-center">
+                          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${template.primary_color}30` }}>
+                            <Play className="w-8 h-8" style={{ color: template.primary_color }} />
+                          </div>
+                          <p className="text-sm opacity-60">Personalisiertes Video</p>
+                        </div>
+                      </div>
+                      <p className="text-center mt-3 opacity-70">
+                        {template.hero_video_caption.replace("{{first_name}}", "Max")}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Coaching Section */}
+                <section className="py-16 px-6" style={{ backgroundColor: `${template.primary_color}08` }}>
+                  <div className="text-center mb-12">
+                    <Badge className="mb-4" style={{ backgroundColor: `${template.primary_color}20`, color: template.primary_color, borderColor: `${template.primary_color}30` }}>
+                      {template.coaching_badge}
+                    </Badge>
+                    <h2 className="text-3xl font-bold mb-4">{template.coaching_headline}</h2>
+                    <p className="opacity-70 max-w-2xl mx-auto">{template.coaching_subheadline.replace("{{company}}", "Muster GmbH")}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    {/* Pillar 1 */}
+                    <div className="rounded-xl p-6 border" style={{ backgroundColor: `${template.primary_color}10`, borderColor: `${template.primary_color}30` }}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: `${template.primary_color}30` }}>
+                          <Megaphone className="w-5 h-5" style={{ color: template.primary_color }} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{template.pillar1_title}</h3>
+                          <p className="text-sm opacity-60">{template.pillar1_subtitle}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-3">
+                        {template.pillar1_items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color: template.primary_color }} />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Pillar 2 */}
+                    <div className="rounded-xl p-6 border" style={{ backgroundColor: `${template.secondary_color}10`, borderColor: `${template.secondary_color}30` }}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: `${template.secondary_color}30` }}>
+                          <Pen className="w-5 h-5" style={{ color: template.secondary_color }} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{template.pillar2_title}</h3>
+                          <p className="text-sm opacity-60">{template.pillar2_subtitle}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-3">
+                        {template.pillar2_items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color: template.secondary_color }} />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Combined */}
+                  <div className="mt-8 p-6 rounded-xl text-center max-w-3xl mx-auto" style={{ backgroundColor: `${template.accent_color}15`, borderColor: `${template.accent_color}30`, border: `1px solid ${template.accent_color}30` }}>
+                    <h3 className="text-xl font-semibold mb-2">{template.combined_headline}</h3>
+                    <p className="opacity-80">{template.combined_text}</p>
+                  </div>
+                </section>
+
+                {/* Case Studies Section */}
+                {template.case_studies.length > 0 && (
+                  <section className="py-16 px-6">
+                    <div className="text-center mb-12">
+                      <Badge className="mb-4" style={{ backgroundColor: `${template.accent_color}20`, color: template.accent_color, borderColor: `${template.accent_color}30` }}>
+                        {template.case_studies_badge}
+                      </Badge>
+                      <h2 className="text-3xl font-bold mb-4">{template.case_studies_headline.replace("{{first_name}}", "Max")}</h2>
+                      <p className="opacity-70">{template.case_studies_subheadline}</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                      {template.case_studies.map((study, index) => (
+                        <div key={index} className="rounded-xl p-6 border" style={{ backgroundColor: `${template.accent_color}08`, borderColor: `${template.accent_color}20` }}>
+                          <div className="flex items-center gap-1 mb-3">
+                            {[...Array(study.rating)].map((_, i) => (
+                              <Star key={i} className="w-4 h-4 fill-current" style={{ color: template.accent_color }} />
+                            ))}
+                          </div>
+                          <h3 className="font-semibold mb-1">{study.title}</h3>
+                          <p className="text-xs opacity-60 mb-3">{study.company_type}</p>
+                          <div className="flex items-center gap-2 mb-3 text-sm">
+                            <span className="line-through opacity-50">{study.before_revenue}</span>
+                            <span>→</span>
+                            <span className="font-semibold" style={{ color: template.primary_color }}>{study.after_revenue}</span>
+                            <span className="text-xs opacity-60">{study.timeframe}</span>
+                          </div>
+                          <p className="text-sm opacity-80">{study.description}</p>
+                          {study.video_url && (
+                            <div className="mt-4 aspect-video rounded-lg overflow-hidden bg-black/20 flex items-center justify-center">
+                              <div className="p-3 rounded-full" style={{ backgroundColor: `${template.primary_color}30` }}>
+                                <Play className="w-6 h-6" style={{ color: template.primary_color }} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Comparison Section */}
+                <section className="py-16 px-6" style={{ backgroundColor: `${template.secondary_color}05` }}>
+                  <div className="text-center mb-12">
+                    <Badge className="mb-4" style={{ backgroundColor: `${template.secondary_color}20`, color: template.secondary_color, borderColor: `${template.secondary_color}30` }}>
+                      {template.comparison_badge}
+                    </Badge>
+                    <h2 className="text-3xl font-bold mb-4">{template.comparison_headline}</h2>
+                    <p className="opacity-70">{template.comparison_subheadline}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    {/* Others */}
+                    <div className="rounded-xl p-6 border border-destructive/20 bg-destructive/5">
+                      <h3 className="font-semibold text-destructive mb-4 flex items-center gap-2">
+                        <X className="w-5 h-5" />
+                        {template.others_title}
+                      </h3>
+                      <ul className="space-y-3">
+                        {template.others_items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm opacity-80">
+                            <X className="w-4 h-4 mt-0.5 shrink-0 text-destructive" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Us */}
+                    <div className="rounded-xl p-6 border border-emerald-500/20 bg-emerald-500/5">
+                      <h3 className="font-semibold text-emerald-500 mb-4 flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5" />
+                        {template.us_title}
+                      </h3>
+                      <ul className="space-y-3">
+                        {template.us_items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="py-8 px-6 border-t border-slate-800 text-center">
+                  <p className="text-sm opacity-60">
+                    © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
+                  </p>
+                </footer>
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
