@@ -1014,7 +1014,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                   ))}
                 </TabsList>
 
-                <ScrollArea className="h-[380px] mt-4 pr-3">
+                <ScrollArea className="h-[calc(100vh-420px)] min-h-[400px] mt-4 pr-3">
                   {/* Branding Tab */}
                   <TabsContent value="branding" className="space-y-4 m-0">
                     <div className="space-y-4">
