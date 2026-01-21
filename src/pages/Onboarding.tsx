@@ -781,14 +781,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
                 {customDomain && (
                   <>
-                    {/* DNS Instructions for Vercel */}
+                    {/* DNS Instructions */}
                     <div className="p-4 bg-muted/50 border rounded-lg space-y-3">
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Globe className="h-4 w-4" />
                         DNS-Einrichtung
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Füge bei deinem Domain-Provider folgenden DNS-Eintrag hinzu:
+                        Gehe zu deinem Domain-Anbieter (z.B. IONOS, Strato, GoDaddy) und füge diesen Eintrag hinzu:
                       </p>
                       
                       <div className="grid grid-cols-3 gap-2 text-xs">
@@ -801,7 +801,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                           <p className="font-mono font-medium">
                             {customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "").startsWith('www.') 
                               ? 'www' 
-                              : customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "").split('.')[0]}
+                              : '@'}
                           </p>
                         </div>
                         <div className="p-2 bg-background rounded border">
@@ -810,20 +810,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Alternativ CNAME:</strong> Du kannst auch einen CNAME auf <code className="text-primary">cname.vercel-dns.com</code> setzen.
-                        </p>
-                      </div>
-
                       <p className="text-xs text-muted-foreground">
-                        Die DNS-Änderung kann bis zu 24 Stunden dauern. SSL wird automatisch eingerichtet.
+                        Das wars! Die Änderung kann bis zu 24 Stunden dauern. SSL wird automatisch eingerichtet.
                       </p>
                     </div>
 
                     {/* Preview */}
                     <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">So sieht die Lead-URL aus:</p>
+                      <p className="text-sm text-muted-foreground mb-1">Deine Leads bekommen dann URLs wie:</p>
                       <code className="text-sm text-primary font-medium">
                         https://{customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mueller
                       </code>
