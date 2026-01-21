@@ -761,47 +761,68 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
             {/* Step 3: Custom Domain */}
             {activeStep === 2 && (
               <div className="space-y-4">
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <p className="text-sm">
-                    <strong>Wichtig:</strong> Du musst deine Domain zuerst in den{" "}
-                    <strong>Lovable Projekt-Einstellungen → Domains</strong> verbinden.{" "}
-                    <a
-                      href="https://docs.lovable.dev/features/custom-domain"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      Anleitung lesen
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </p>
-                </div>
-
                 <div className="space-y-2">
-                  <Label>Deine Custom Domain</Label>
+                  <Label>Deine Domain für Lead-Seiten</Label>
                   <div className="flex gap-2">
                     <div className="flex items-center bg-muted px-3 rounded-l-md border border-r-0">
                       <span className="text-muted-foreground text-sm">https://</span>
                     </div>
                     <Input
-                      placeholder="meine-domain.de"
+                      placeholder="www.meine-agentur.de"
                       value={customDomain}
                       onChange={(e) => setCustomDomain(e.target.value)}
                       className="rounded-l-none"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Diese Domain wird für alle personalisierten Lead-Links verwendet.
+                    z.B. <code>www.meine-agentur.de</code> oder <code>leads.meine-firma.de</code>
                   </p>
                 </div>
 
                 {customDomain && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Beispiel personalisierte URL:</p>
-                    <code className="text-sm text-primary">
-                      https://{customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mustermann-abc
-                    </code>
-                  </div>
+                  <>
+                    {/* DNS Instructions */}
+                    <div className="p-4 bg-muted/50 border rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        DNS-Einrichtung
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Füge bei deinem Domain-Provider folgenden DNS-Eintrag hinzu:
+                      </p>
+                      
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="p-2 bg-background rounded border">
+                          <p className="text-muted-foreground">Typ</p>
+                          <p className="font-mono font-medium">A</p>
+                        </div>
+                        <div className="p-2 bg-background rounded border">
+                          <p className="text-muted-foreground">Name/Host</p>
+                          <p className="font-mono font-medium">
+                            {customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "").startsWith('www.') 
+                              ? 'www' 
+                              : customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "").split('.')[0]}
+                          </p>
+                        </div>
+                        <div className="p-2 bg-background rounded border">
+                          <p className="text-muted-foreground">Wert/Ziel</p>
+                          <p className="font-mono font-medium text-primary">185.158.133.1</p>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        Die DNS-Änderung kann bis zu 24 Stunden dauern.
+                      </p>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">So sieht die Lead-URL aus:</p>
+                      <code className="text-sm text-primary font-medium">
+                        https://{customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mueller
+                      </code>
+                    </div>
+                  </>
                 )}
 
                 <Button 
