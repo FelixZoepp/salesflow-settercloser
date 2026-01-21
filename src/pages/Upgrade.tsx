@@ -17,9 +17,12 @@ import {
   BarChart3,
   Zap,
   Crown,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 import { useFeatureAccess, SUBSCRIPTION_TIERS } from "@/hooks/useFeatureAccess";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface FeatureRow {
   name: string;
@@ -108,6 +111,7 @@ const proFeatureIcons = [
 export default function Upgrade() {
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const { isProPlan, isStarterPlan, subscribed } = useFeatureAccess();
 
   const plans = {
@@ -119,6 +123,47 @@ export default function Upgrade() {
       monthly: { price: "299€", period: "/Monat", link: "https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b", savings: "" },
       yearly: { price: "2.990€", period: "/Jahr", link: "https://buy.stripe.com/cNi3cv1gWfw6aUD16igMw0c", savings: "2 Monate gratis" },
     },
+  };
+
+  const handleUpgrade = async (targetPlan: 'starter' | 'pro') => {
+    // If user already has an active subscription, use proration upgrade
+    if (subscribed) {
+      setIsUpgrading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('upgrade-subscription', {
+          body: { 
+            targetPlan, 
+            billingPeriod 
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.type === 'checkout') {
+          // Redirect to Stripe Checkout for new subscription
+          window.open(data.url, "_blank");
+        } else if (data.type === 'upgraded') {
+          // Direct upgrade with proration
+          toast.success(
+            `Upgrade erfolgreich! Du wurdest anteilig mit ${data.totalCharged.toFixed(2)}€ belastet.`,
+            { duration: 5000 }
+          );
+          // Refresh page to update subscription status
+          window.location.reload();
+        } else if (data.error) {
+          toast.error(data.error);
+        }
+      } catch (err) {
+        console.error('Upgrade error:', err);
+        toast.error('Fehler beim Upgrade. Bitte versuche es erneut.');
+      } finally {
+        setIsUpgrading(false);
+      }
+    } else {
+      // No subscription yet - use payment links
+      const link = plans[targetPlan][billingPeriod].link;
+      window.open(link, "_blank");
+    }
   };
 
   const handleCheckout = (link: string) => {
@@ -229,10 +274,16 @@ export default function Upgrade() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => handleCheckout(currentStarterPlan.link)}
-                disabled={isStarterPlan}
+                onClick={() => handleUpgrade('starter')}
+                disabled={isStarterPlan || isUpgrading}
               >
-                {isStarterPlan ? "Aktueller Plan" : "Starter wählen"}
+                {isUpgrading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird verarbeitet...</>
+                ) : isStarterPlan ? (
+                  "Aktueller Plan"
+                ) : (
+                  "Starter wählen"
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -288,10 +339,14 @@ export default function Upgrade() {
 
               <Button 
                 className="w-full bg-primary hover:bg-primary/90"
-                onClick={() => handleCheckout(currentProPlan.link)}
-                disabled={isProPlan}
+                onClick={() => handleUpgrade('pro')}
+                disabled={isProPlan || isUpgrading}
               >
-                {isProPlan ? "Aktueller Plan" : (
+                {isUpgrading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird verarbeitet...</>
+                ) : isProPlan ? (
+                  "Aktueller Plan"
+                ) : (
                   <>
                     Auf Pro upgraden
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -377,13 +432,25 @@ export default function Upgrade() {
                 </p>
                 <Button 
                   size="lg"
-                  onClick={() => handleCheckout(currentProPlan.link)}
+                  onClick={() => handleUpgrade('pro')}
                   className="bg-primary hover:bg-primary/90"
+                  disabled={isUpgrading}
                 >
-                  <Crown className="mr-2 h-5 w-5" />
-                  Jetzt auf Pro upgraden
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  {isUpgrading ? (
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Wird verarbeitet...</>
+                  ) : (
+                    <>
+                      <Crown className="mr-2 h-5 w-5" />
+                      Jetzt auf Pro upgraden
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
                 </Button>
+                {isStarterPlan && (
+                  <p className="text-sm text-muted-foreground mt-3">
+                    💡 Du zahlst nur die Differenz für deine Restlaufzeit (anteilige Berechnung)
+                  </p>
+                )}
               </div>
             </Card>
           </div>
