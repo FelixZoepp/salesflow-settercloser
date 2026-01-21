@@ -137,7 +137,8 @@ export default function SoftphoneDialog({
       setSipSettings(data as SipSettings);
     } catch (error: any) {
       console.error('Error loading SIP settings:', error);
-      setErrorMessage(error.message || "Fehler beim Laden der SIP-Einstellungen");
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Fehler beim Laden der SIP-Einstellungen');
+      setErrorMessage(errorMessage);
       setCallStatus('error');
     }
   };
@@ -323,7 +324,8 @@ export default function SoftphoneDialog({
     } catch (error: any) {
       console.error('Error processing recording:', error);
       setProcessingStatus('error');
-      toast.error(`Verarbeitung fehlgeschlagen: ${error.message}`);
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Unbekannter Fehler');
+      toast.error(`Verarbeitung fehlgeschlagen: ${errorMessage}`);
     }
   };
 
@@ -486,7 +488,8 @@ export default function SoftphoneDialog({
       
     } catch (error: any) {
       console.error('Call start error:', error);
-      setErrorMessage(error.message || "Fehler beim Starten des Anrufs");
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Fehler beim Starten des Anrufs');
+      setErrorMessage(errorMessage);
       setCallStatus('error');
     }
   };
