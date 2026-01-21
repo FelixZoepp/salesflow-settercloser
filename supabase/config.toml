@@ -89,3 +89,9 @@ verify_jwt = false
 
 [functions.telephony-webhook]
 verify_jwt = false
+
+[functions.twilio-token]
+verify_jwt = false
+
+[functions.twilio-voice]
+verify_jwt = false

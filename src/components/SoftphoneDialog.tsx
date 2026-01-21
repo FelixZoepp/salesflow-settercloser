@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2, Circle, FileText, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TwilioClient, TwilioClientCallbacks } from "@/lib/twilioClient";
 import { SipClient, SipClientConfig, SipClientCallbacks } from "@/lib/sipClient";
 import LiveObjectionPanel from "./LiveObjectionPanel";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -57,8 +58,10 @@ export default function SoftphoneDialog({
   const [callSummary, setCallSummary] = useState<CallSummary | null>(null);
   const [callSessionId, setCallSessionId] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [useTwilio, setUseTwilio] = useState(false);
   
-  const clientRef = useRef<SipClient | null>(null);
+  const twilioClientRef = useRef<TwilioClient | null>(null);
+  const sipClientRef = useRef<SipClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callStartTimeRef = useRef<Date | null>(null);
@@ -111,9 +114,17 @@ export default function SoftphoneDialog({
 
       if (error) throw error;
 
+      // Check if Twilio is configured (provider is twilio or secrets exist)
+      if (data?.sip_provider === 'twilio') {
+        setUseTwilio(true);
+        setSipSettings(data as SipSettings);
+        return;
+      }
+
       if (!data || !data.sip_enabled) {
-        setErrorMessage("SIP-Telefonie ist nicht aktiviert. Bitte konfiguriere deine SIP-Einstellungen unter Integrationen.");
-        setCallStatus('error');
+        // Try Twilio by default if no SIP settings
+        setUseTwilio(true);
+        setSipSettings({ sip_enabled: true, sip_provider: 'twilio' } as SipSettings);
         return;
       }
 
@@ -136,9 +147,13 @@ export default function SoftphoneDialog({
       clearInterval(callTimerRef.current);
       callTimerRef.current = null;
     }
-    if (clientRef.current) {
-      clientRef.current.disconnect();
-      clientRef.current = null;
+    if (twilioClientRef.current) {
+      twilioClientRef.current.disconnect();
+      twilioClientRef.current = null;
+    }
+    if (sipClientRef.current) {
+      sipClientRef.current.disconnect();
+      sipClientRef.current = null;
     }
     if (audioRef.current) {
       audioRef.current.srcObject = null;
@@ -321,84 +336,153 @@ export default function SoftphoneDialog({
     setCallSummary(null);
 
     try {
-      // Decode password
-      const password = atob(sipSettings.sip_password_encrypted || '');
-
-      const config: SipClientConfig = {
-        sipServer: sipSettings.sip_server!,
-        login: sipSettings.sip_username!,
-        password: password,
-        domain: sipSettings.sip_domain || sipSettings.sip_server!.replace('wss://', '').split('/')[0],
-        displayName: sipSettings.sip_display_name || undefined
-      };
-
       let localStreamForRecording: MediaStream | null = null;
 
-      const callbacks: SipClientCallbacks = {
-        onRegistered: () => {
-          console.log('SIP Registered - starting call');
-          setCallStatus('dialing');
-          clientRef.current?.call(phoneNumber);
-        },
-        onUnregistered: () => {
-          console.log('SIP Unregistered');
-        },
-        onRegistrationFailed: (error) => {
-          console.error('Registration failed:', error);
-          setErrorMessage(`Registrierung fehlgeschlagen: ${error}`);
-          setCallStatus('error');
-        },
-        onCallConnecting: () => {
-          console.log('Call connecting...');
-          setCallStatus('ringing');
-        },
-        onCallConnected: () => {
-          console.log('Call connected!');
-          setCallStatus('connected');
-          callStartTimeRef.current = new Date();
-          startCallTimer();
-          logCallStart();
-        },
-        onCallEnded: async (reason) => {
-          console.log('Call ended:', reason);
-          setCallStatus('ended');
-          stopCallTimer();
-          stopRecording();
-          
-          // Process recording if we have a session
-          if (callSessionId) {
-            await processRecording(callSessionId);
+      // Use Twilio if configured
+      if (useTwilio) {
+        console.log('Starting Twilio call...');
+        
+        const twilioCallbacks: TwilioClientCallbacks = {
+          onReady: () => {
+            console.log('Twilio ready - starting call');
+            setCallStatus('dialing');
+            twilioClientRef.current?.call(phoneNumber);
+          },
+          onError: (error) => {
+            console.error('Twilio error:', error);
+            setErrorMessage(`Twilio-Fehler: ${error}`);
+            setCallStatus('error');
+          },
+          onIncoming: (from) => {
+            console.log('Incoming call from:', from);
+          },
+          onCallConnecting: () => {
+            console.log('Twilio call connecting...');
+            setCallStatus('ringing');
+          },
+          onCallConnected: () => {
+            console.log('Twilio call connected!');
+            setCallStatus('connected');
+            callStartTimeRef.current = new Date();
+            startCallTimer();
+            logCallStart();
+          },
+          onCallEnded: async (reason) => {
+            console.log('Twilio call ended:', reason);
+            setCallStatus('ended');
+            stopCallTimer();
+            stopRecording();
+            
+            if (callSessionId) {
+              await processRecording(callSessionId);
+            }
+          },
+          onCallFailed: (error) => {
+            console.error('Twilio call failed:', error);
+            setErrorMessage(`Anruf fehlgeschlagen: ${error}`);
+            setCallStatus('error');
+            stopRecording();
+          },
+          onRemoteAudio: (stream) => {
+            console.log('Twilio remote audio received');
+            setRemoteStream(stream);
+            if (audioRef.current) {
+              audioRef.current.srcObject = stream;
+              audioRef.current.play().catch(console.error);
+            }
+            
+            if (localStreamForRecording) {
+              startRecording(localStreamForRecording, stream);
+            }
+          },
+          onLocalAudio: (stream) => {
+            console.log('Twilio local audio captured');
+            localStreamForRecording = stream;
           }
-        },
-        onCallFailed: (error) => {
-          console.error('Call failed:', error);
-          setErrorMessage(`Anruf fehlgeschlagen: ${error}`);
-          setCallStatus('error');
-          stopRecording();
-        },
-        onRemoteAudio: (stream) => {
-          console.log('Remote audio received');
-          setRemoteStream(stream);
-          if (audioRef.current) {
-            audioRef.current.srcObject = stream;
-            audioRef.current.play().catch(console.error);
-          }
-          
-          // Start recording when we have both streams
-          if (localStreamForRecording) {
-            startRecording(localStreamForRecording, stream);
-          }
-        },
-        onLocalAudio: (stream) => {
-          console.log('Local audio captured');
-          localStreamForRecording = stream;
-        }
-      };
+        };
 
-      clientRef.current = new SipClient(config, callbacks);
-      
-      setCallStatus('registering');
-      await clientRef.current.connect();
+        twilioClientRef.current = new TwilioClient(twilioCallbacks);
+        
+        setCallStatus('registering');
+        await twilioClientRef.current.connect();
+        
+      } else {
+        // Use SIP client for other providers
+        console.log('Starting SIP call...');
+        const password = atob(sipSettings.sip_password_encrypted || '');
+
+        const config: SipClientConfig = {
+          sipServer: sipSettings.sip_server!,
+          login: sipSettings.sip_username!,
+          password: password,
+          domain: sipSettings.sip_domain || sipSettings.sip_server!.replace('wss://', '').split('/')[0],
+          displayName: sipSettings.sip_display_name || undefined
+        };
+
+        const callbacks: SipClientCallbacks = {
+          onRegistered: () => {
+            console.log('SIP Registered - starting call');
+            setCallStatus('dialing');
+            sipClientRef.current?.call(phoneNumber);
+          },
+          onUnregistered: () => {
+            console.log('SIP Unregistered');
+          },
+          onRegistrationFailed: (error) => {
+            console.error('Registration failed:', error);
+            setErrorMessage(`Registrierung fehlgeschlagen: ${error}`);
+            setCallStatus('error');
+          },
+          onCallConnecting: () => {
+            console.log('Call connecting...');
+            setCallStatus('ringing');
+          },
+          onCallConnected: () => {
+            console.log('Call connected!');
+            setCallStatus('connected');
+            callStartTimeRef.current = new Date();
+            startCallTimer();
+            logCallStart();
+          },
+          onCallEnded: async (reason) => {
+            console.log('Call ended:', reason);
+            setCallStatus('ended');
+            stopCallTimer();
+            stopRecording();
+            
+            if (callSessionId) {
+              await processRecording(callSessionId);
+            }
+          },
+          onCallFailed: (error) => {
+            console.error('Call failed:', error);
+            setErrorMessage(`Anruf fehlgeschlagen: ${error}`);
+            setCallStatus('error');
+            stopRecording();
+          },
+          onRemoteAudio: (stream) => {
+            console.log('Remote audio received');
+            setRemoteStream(stream);
+            if (audioRef.current) {
+              audioRef.current.srcObject = stream;
+              audioRef.current.play().catch(console.error);
+            }
+            
+            if (localStreamForRecording) {
+              startRecording(localStreamForRecording, stream);
+            }
+          },
+          onLocalAudio: (stream) => {
+            console.log('Local audio captured');
+            localStreamForRecording = stream;
+          }
+        };
+
+        sipClientRef.current = new SipClient(config, callbacks);
+        
+        setCallStatus('registering');
+        await sipClientRef.current.connect();
+      }
       
     } catch (error: any) {
       console.error('Call start error:', error);
@@ -450,8 +534,11 @@ export default function SoftphoneDialog({
   };
 
   const handleHangup = async () => {
-    if (clientRef.current) {
-      await clientRef.current.hangup();
+    if (twilioClientRef.current) {
+      await twilioClientRef.current.hangup();
+    }
+    if (sipClientRef.current) {
+      await sipClientRef.current.hangup();
     }
     
     // Update call session with end time

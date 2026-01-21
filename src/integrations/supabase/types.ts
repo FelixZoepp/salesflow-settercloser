@@ -42,6 +42,7 @@ export type Database = {
           telephony_webhook_secret: string | null
           telephony_webhook_verified: boolean | null
           telephony_webhook_verified_at: string | null
+          twilio_twiml_app_sid: string | null
           updated_at: string
         }
         Insert: {
@@ -71,6 +72,7 @@ export type Database = {
           telephony_webhook_secret?: string | null
           telephony_webhook_verified?: boolean | null
           telephony_webhook_verified_at?: string | null
+          twilio_twiml_app_sid?: string | null
           updated_at?: string
         }
         Update: {
@@ -100,6 +102,7 @@ export type Database = {
           telephony_webhook_secret?: string | null
           telephony_webhook_verified?: boolean | null
           telephony_webhook_verified_at?: string | null
+          twilio_twiml_app_sid?: string | null
           updated_at?: string
         }
         Relationships: [
