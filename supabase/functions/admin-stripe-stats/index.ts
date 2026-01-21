@@ -55,6 +55,14 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    // PitchFirst Product IDs - only count these as valid subscriptions
+    const PITCHFIRST_PRODUCT_IDS = [
+      "prod_Tka87AKXNmsZUv", // Starter Monthly
+      "prod_TkaAeLeq8rEn90", // Starter Yearly
+      "prod_TkoJ98sfzflYyR", // Pro Monthly
+      "prod_TkoJ8E0e8l4vwV", // Pro Yearly
+    ];
+
     // Fetch all subscriptions from Stripe
     logStep("Fetching subscriptions from Stripe");
     
@@ -65,19 +73,29 @@ serve(async (req) => {
     while (hasMore) {
       const params: Stripe.SubscriptionListParams = {
         limit: 100,
-        expand: ['data.customer', 'data.items.data.price'],
+        expand: ['data.customer', 'data.items.data.price', 'data.items.data.price.product'],
       };
       if (startingAfter) params.starting_after = startingAfter;
 
       const response = await stripe.subscriptions.list(params);
-      allSubscriptions.push(...response.data);
+      
+      // Filter to only include PitchFirst products
+      const pitchFirstSubs = response.data.filter((sub: Stripe.Subscription) => {
+        const price = sub.items.data[0]?.price;
+        const productId = typeof price?.product === 'string' 
+          ? price.product 
+          : (price?.product as Stripe.Product)?.id;
+        return productId && PITCHFIRST_PRODUCT_IDS.includes(productId);
+      });
+      
+      allSubscriptions.push(...pitchFirstSubs);
       hasMore = response.has_more;
       if (response.data.length > 0) {
         startingAfter = response.data[response.data.length - 1].id;
       }
     }
 
-    logStep("Fetched subscriptions", { count: allSubscriptions.length });
+    logStep("Fetched PitchFirst subscriptions", { count: allSubscriptions.length });
 
     // Calculate MRR and ARR
     let mrr = 0;
