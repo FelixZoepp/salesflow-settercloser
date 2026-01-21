@@ -781,7 +781,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
                 {customDomain && (
                   <>
-                    {/* DNS Instructions */}
+                    {/* DNS Instructions for Vercel */}
                     <div className="p-4 bg-muted/50 border rounded-lg space-y-3">
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Globe className="h-4 w-4" />
@@ -806,12 +806,18 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                         </div>
                         <div className="p-2 bg-background rounded border">
                           <p className="text-muted-foreground">Wert/Ziel</p>
-                          <p className="font-mono font-medium text-primary">185.158.133.1</p>
+                          <p className="font-mono font-medium text-primary">76.76.21.21</p>
                         </div>
                       </div>
 
+                      <div className="pt-2 border-t">
+                        <p className="text-xs text-muted-foreground">
+                          <strong>Alternativ CNAME:</strong> Du kannst auch einen CNAME auf <code className="text-primary">cname.vercel-dns.com</code> setzen.
+                        </p>
+                      </div>
+
                       <p className="text-xs text-muted-foreground">
-                        Die DNS-Änderung kann bis zu 24 Stunden dauern.
+                        Die DNS-Änderung kann bis zu 24 Stunden dauern. SSL wird automatisch eingerichtet.
                       </p>
                     </div>
 
