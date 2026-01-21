@@ -4,16 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Download, Upload, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ColumnMapper, { ColumnMapping } from "@/components/ColumnMapper";
+import DuplicatePreview, { DuplicateMatch, DuplicateAction } from "@/components/DuplicatePreview";
 
 interface ImportResult {
   imported_count: number;
   updated_count: number;
   skipped_count: number;
   errors: Array<{ row: number; message: string }>;
+}
+
+interface DuplicateCheckResponse {
+  mode: 'check_duplicates';
+  duplicates: DuplicateMatch[];
+  newLeadsCount: number;
+  parseErrors: Array<{ row: number; message: string }>;
 }
 
 // Parse CSV properly handling quoted values
@@ -93,16 +101,23 @@ function applyMapping(headers: string[], rows: string[][], mappings: ColumnMappi
   return newLines.join('\n');
 }
 
+type ImportStep = 'upload' | 'mapping' | 'duplicates' | 'importing' | 'result';
+
 export default function ImportLeads() {
   const [file, setFile] = useState<File | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [step, setStep] = useState<ImportStep>('upload');
   const [result, setResult] = useState<ImportResult | null>(null);
   
   // Column mapping state
-  const [showMapper, setShowMapper] = useState(false);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
-  const [rawCsvContent, setRawCsvContent] = useState<string>('');
+  const [mappedCsvData, setMappedCsvData] = useState<string>('');
+  
+  // Duplicate state
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [parseErrors, setParseErrors] = useState<Array<{ row: number; message: string }>>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const csvTemplate = `company_name,website,phone,street,zip,city,country,first_name,last_name,email,position,source,external_id
 Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,Geschäftsführer,Website,ext_001
@@ -125,18 +140,17 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setResult(null);
-      setShowMapper(false);
+      setStep('upload');
       
       // Parse CSV to extract headers for mapping
       try {
         const content = await selectedFile.text();
-        setRawCsvContent(content);
         const { headers, rows } = parseCSV(content);
         
         if (headers.length > 0) {
           setCsvHeaders(headers);
           setCsvRows(rows);
-          setShowMapper(true);
+          setStep('mapping');
         } else {
           toast({
             title: "Fehler",
@@ -156,22 +170,62 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
   };
 
   const handleMappingConfirmed = async (mappings: ColumnMapping[]) => {
-    setImporting(true);
-    setResult(null);
+    setIsProcessing(true);
 
     try {
       // Transform CSV with mappings
       const transformedCsv = applyMapping(csvHeaders, csvRows, mappings);
+      setMappedCsvData(transformedCsv);
 
-      // Call edge function
+      // Check for duplicates first
       const { data, error } = await supabase.functions.invoke('import-leads', {
-        body: { csvData: transformedCsv },
+        body: { 
+          csvData: transformedCsv,
+          mode: 'check_duplicates'
+        },
+      });
+
+      if (error) throw error;
+
+      const checkResult = data as DuplicateCheckResponse;
+      setDuplicates(checkResult.duplicates);
+      setNewLeadsCount(checkResult.newLeadsCount);
+      setParseErrors(checkResult.parseErrors || []);
+      
+      if (checkResult.duplicates.length > 0) {
+        setStep('duplicates');
+      } else {
+        // No duplicates, proceed directly to import
+        await performImport(transformedCsv, []);
+      }
+    } catch (error) {
+      console.error('Duplicate check error:', error);
+      toast({
+        title: "Fehler bei der Duplikat-Prüfung",
+        description: error instanceof Error ? error.message : "Ein Fehler ist aufgetreten",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const performImport = async (csvData: string, duplicateActions: DuplicateAction[]) => {
+    setStep('importing');
+    setIsProcessing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('import-leads', {
+        body: { 
+          csvData,
+          duplicateActions
+        },
       });
 
       if (error) throw error;
 
       setResult(data);
-      setShowMapper(false);
+      setStep('result');
       
       toast({
         title: "Import abgeschlossen",
@@ -184,16 +238,33 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
         description: error instanceof Error ? error.message : "Ein Fehler ist aufgetreten",
         variant: "destructive",
       });
+      setStep('mapping');
     } finally {
-      setImporting(false);
+      setIsProcessing(false);
     }
   };
 
+  const handleDuplicateConfirm = async (actions: DuplicateAction[]) => {
+    await performImport(mappedCsvData, actions);
+  };
+
   const handleCancel = () => {
-    setShowMapper(false);
+    setStep('upload');
     setFile(null);
     setCsvHeaders([]);
     setCsvRows([]);
+    setDuplicates([]);
+    setMappedCsvData('');
+  };
+
+  const handleStartOver = () => {
+    setStep('upload');
+    setFile(null);
+    setCsvHeaders([]);
+    setCsvRows([]);
+    setDuplicates([]);
+    setMappedCsvData('');
+    setResult(null);
   };
 
   return (
@@ -206,7 +277,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
           </p>
         </div>
 
-        {!showMapper && (
+        {step === 'upload' && (
           <>
             <Card className="mb-6">
               <CardHeader>
@@ -272,7 +343,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                     />
                   </div>
 
-                  {file && !showMapper && (
+                  {file && step === 'upload' && (
                     <Alert>
                       <CheckCircle2 className="h-4 w-4" />
                       <AlertDescription>
@@ -286,7 +357,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
           </>
         )}
 
-        {showMapper && (
+        {step === 'mapping' && (
           <ColumnMapper
             csvHeaders={csvHeaders}
             previewData={csvRows}
@@ -295,24 +366,37 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
           />
         )}
 
-        {importing && (
-          <Card className="mt-6">
-            <CardContent className="py-8">
-              <div className="flex items-center justify-center gap-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <span>Import läuft...</span>
+        {step === 'duplicates' && (
+          <DuplicatePreview
+            duplicates={duplicates}
+            newLeadsCount={newLeadsCount}
+            onConfirm={handleDuplicateConfirm}
+            onCancel={handleCancel}
+            isProcessing={isProcessing}
+          />
+        )}
+
+        {step === 'importing' && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="text-lg">Import läuft...</span>
+                <p className="text-sm text-muted-foreground">
+                  Dies kann einen Moment dauern, bitte warten Sie.
+                </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {result && (
-          <Card className="mt-6">
+        {step === 'result' && result && (
+          <Card>
             <CardHeader>
               <CardTitle>Import-Ergebnis</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {result.imported_count}
@@ -334,7 +418,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
               </div>
 
               {result.errors.length > 0 && (
-                <div>
+                <div className="mb-6">
                   <Alert variant="destructive" className="mb-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
@@ -360,6 +444,28 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                   </Table>
                 </div>
               )}
+
+              <Button onClick={handleStartOver} variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Weiteren Import starten
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Parse errors from duplicate check */}
+        {step === 'duplicates' && parseErrors.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Hinweise zu ungültigen Zeilen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {parseErrors.length} Zeilen werden übersprungen (fehlende Pflichtfelder)
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         )}
