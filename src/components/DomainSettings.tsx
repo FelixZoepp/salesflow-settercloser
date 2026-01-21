@@ -114,22 +114,22 @@ export default function DomainSettings() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>DNS-Einrichtung:</strong> Füge folgende DNS-Einträge bei deinem Domain-Provider hinzu:
+                <strong>DNS-Einrichtung:</strong> Füge einen A-Record bei deinem Domain-Provider hinzu
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
-              <h4 className="font-medium text-sm">Erforderliche DNS-Einträge:</h4>
+              <h4 className="font-medium text-sm">Erforderlicher DNS-Eintrag:</h4>
               
-              {/* CNAME Record */}
+              {/* A Record */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">CNAME Record</span>
+                  <span className="text-xs font-medium text-muted-foreground">A Record</span>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     className="h-6 px-2"
-                    onClick={() => copyToClipboard(`${cleanedDomain.split('.')[0]} CNAME salesflow-settercloser.lovable.app`)}
+                    onClick={() => copyToClipboard("185.158.133.1")}
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -137,42 +137,22 @@ export default function DomainSettings() {
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="p-2 bg-background rounded border">
                     <p className="text-muted-foreground">Typ</p>
-                    <p className="font-mono">CNAME</p>
+                    <p className="font-mono">A</p>
                   </div>
                   <div className="p-2 bg-background rounded border">
                     <p className="text-muted-foreground">Name/Host</p>
-                    <p className="font-mono">{cleanedDomain.split('.')[0]}</p>
+                    <p className="font-mono">{cleanedDomain.includes('.') ? cleanedDomain.split('.')[0] : '@'}</p>
                   </div>
                   <div className="p-2 bg-background rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary">salesflow-settercloser.lovable.app</p>
+                    <p className="font-mono text-primary">185.158.133.1</p>
                   </div>
                 </div>
               </div>
 
-              {/* For SMTP/Email Verification */}
-              <div className="space-y-1 pt-2 border-t">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Für E-Mail/SMTP-Verifizierung (optional)</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2 bg-background rounded border">
-                    <p className="text-muted-foreground">Typ</p>
-                    <p className="font-mono">TXT</p>
-                  </div>
-                  <div className="p-2 bg-background rounded border">
-                    <p className="text-muted-foreground">Name/Host</p>
-                    <p className="font-mono">@</p>
-                  </div>
-                  <div className="p-2 bg-background rounded border">
-                    <p className="text-muted-foreground">Wert</p>
-                    <p className="font-mono text-xs">v=spf1 include:_spf.google.com ~all</p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Passe den SPF-Eintrag an deinen E-Mail-Provider an (z.B. für Resend, Mailgun, etc.)
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Die DNS-Änderung kann bis zu 24 Stunden dauern, bis sie aktiv ist.
+              </p>
             </div>
 
             {/* Preview */}
