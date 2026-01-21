@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Euro, TrendingUp, Phone, Megaphone } from "lucide-react";
+import { Calendar, Euro, TrendingUp, Phone, Megaphone, ExternalLink, Video } from "lucide-react";
 import { toast } from "sonner";
 import { getPipelineStages, getStageColor } from "@/lib/pipelineStages";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
@@ -24,7 +24,16 @@ interface Deal {
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
-  contacts: { first_name: string; last_name: string; phone: string | null; mobile: string | null; lead_score?: number; campaign_id?: string } | null;
+  contacts: { 
+    first_name: string; 
+    last_name: string; 
+    phone: string | null; 
+    mobile: string | null; 
+    lead_score?: number; 
+    campaign_id?: string;
+    personalized_url?: string | null;
+    video_status?: string | null;
+  } | null;
   setter: { name: string } | null;
   closer: { name: string } | null;
 }
@@ -123,7 +132,7 @@ const Pipeline = () => {
         .from('deals')
         .select(`
           *,
-          contacts (first_name, last_name, phone, mobile, lead_score, campaign_id),
+          contacts (first_name, last_name, phone, mobile, lead_score, campaign_id, personalized_url, video_status),
           setter:setter_id (name),
           closer:closer_id (name)
         `)
@@ -539,6 +548,30 @@ const DraggableDealCard = ({ deal, onOpenDetail, onStartCall }: DraggableDealCar
           <Badge variant="destructive" className="text-xs">
             Keine nächste Aktion
           </Badge>
+        )}
+
+        {/* Personalized URL Link */}
+        {deal.contacts?.personalized_url && (
+          <div className="pt-2 border-t border-white/10 mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-xs gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(deal.contacts!.personalized_url!, '_blank');
+              }}
+            >
+              {deal.contacts.video_status === 'ready' ? (
+                <Video className="w-3.5 h-3.5 text-emerald-500" />
+              ) : deal.contacts.video_status === 'generating_intro' ? (
+                <Video className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              ) : (
+                <ExternalLink className="w-3.5 h-3.5" />
+              )}
+              <span className="truncate">{deal.contacts.personalized_url.replace('https://', '')}</span>
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
