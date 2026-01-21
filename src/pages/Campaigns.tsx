@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -51,6 +53,11 @@ const Campaigns = () => {
     name: "",
     description: "",
     status: "draft",
+    linkedin_profile_age: "",
+    linkedin_currently_active: false,
+    linkedin_was_banned: false,
+    max_daily_connections: 15,
+    max_daily_messages: 10,
   });
 
   useEffect(() => {
@@ -135,13 +142,27 @@ const Campaigns = () => {
         description: newCampaign.description || null,
         status: newCampaign.status,
         account_id: profile?.account_id,
+        linkedin_profile_age: newCampaign.linkedin_profile_age || null,
+        linkedin_currently_active: newCampaign.linkedin_currently_active,
+        linkedin_was_banned: newCampaign.linkedin_was_banned,
+        max_daily_connections: newCampaign.max_daily_connections,
+        max_daily_messages: newCampaign.max_daily_messages,
       });
 
       if (error) throw error;
 
       toast.success("Kampagne erstellt");
       setIsCreateDialogOpen(false);
-      setNewCampaign({ name: "", description: "", status: "draft" });
+      setNewCampaign({ 
+        name: "", 
+        description: "", 
+        status: "draft",
+        linkedin_profile_age: "",
+        linkedin_currently_active: false,
+        linkedin_was_banned: false,
+        max_daily_connections: 15,
+        max_daily_messages: 10,
+      });
       fetchCampaigns();
     } catch (error: any) {
       console.error("Error creating campaign:", error);
@@ -223,40 +244,176 @@ const Campaigns = () => {
                 <DialogHeader>
                   <DialogTitle>Neue Kampagne erstellen</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={newCampaign.name}
-                      onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
-                      placeholder="z.B. Outreach November 2025"
-                    />
+                <div className="space-y-6 mt-4 max-h-[70vh] overflow-y-auto pr-2">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        value={newCampaign.name}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                        placeholder="z.B. Outreach November 2025"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Beschreibung</Label>
+                      <Textarea
+                        id="description"
+                        value={newCampaign.description}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                        placeholder="Optional: Beschreibe die Kampagne"
+                      />
+                    </div>
+                    <div>
+                      <Label>Status</Label>
+                      <Select
+                        value={newCampaign.status}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, status: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">Entwurf</SelectItem>
+                          <SelectItem value="active">Aktiv</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="description">Beschreibung</Label>
-                    <Textarea
-                      id="description"
-                      value={newCampaign.description}
-                      onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                      placeholder="Optional: Beschreibe die Kampagne"
-                    />
+
+                  {/* LinkedIn Profile Assessment */}
+                  <div className="border-t border-border pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Linkedin className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">LinkedIn-Profil Bewertung</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Diese Informationen helfen uns, sichere Limit-Empfehlungen zu berechnen.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Wie alt ist dein LinkedIn-Profil?</Label>
+                        <Select
+                          value={newCampaign.linkedin_profile_age}
+                          onValueChange={(value) => setNewCampaign({ ...newCampaign, linkedin_profile_age: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Wähle aus..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="under_6_months">Unter 6 Monate</SelectItem>
+                            <SelectItem value="6_to_12_months">6-12 Monate</SelectItem>
+                            <SelectItem value="1_to_2_years">1-2 Jahre</SelectItem>
+                            <SelectItem value="2_to_5_years">2-5 Jahre</SelectItem>
+                            <SelectItem value="over_5_years">Über 5 Jahre</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">Sendest du aktuell viele Vernetzungsanfragen?</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Mehr als 10 pro Tag in den letzten Wochen
+                          </p>
+                        </div>
+                        <Switch
+                          checked={newCampaign.linkedin_currently_active}
+                          onCheckedChange={(checked) => setNewCampaign({ ...newCampaign, linkedin_currently_active: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-amber-500" />
+                            Wurdest du schon mal von LinkedIn gesperrt?
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Account-Sperrung oder Einschränkungen in der Vergangenheit
+                          </p>
+                        </div>
+                        <Switch
+                          checked={newCampaign.linkedin_was_banned}
+                          onCheckedChange={(checked) => setNewCampaign({ ...newCampaign, linkedin_was_banned: checked })}
+                        />
+                      </div>
+                    </div>
+
+                    {newCampaign.linkedin_was_banned && (
+                      <Alert className="mt-4 bg-amber-500/10 border-amber-500/30">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <AlertDescription className="text-sm">
+                          Bei vorherigen Sperrungen empfehlen wir konservativere Limits. Starte langsam und steigere schrittweise.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
-                  <div>
-                    <Label>Status</Label>
-                    <Select
-                      value={newCampaign.status}
-                      onValueChange={(value) => setNewCampaign({ ...newCampaign, status: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Entwurf</SelectItem>
-                        <SelectItem value="active">Aktiv</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                  {/* Daily Limits */}
+                  <div className="border-t border-border pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">Tägliche Limits</h4>
+                    </div>
+
+                    <Alert className="mb-4 bg-primary/5 border-primary/20">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <AlertDescription className="text-sm">
+                        <strong>Tipp:</strong> Bei einer Annahmequote von 50%+ kannst du die Vernetzungen wöchentlich um 5 erhöhen.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="max_connections">Max. Vernetzungen/Tag</Label>
+                        <Input
+                          id="max_connections"
+                          type="number"
+                          min={5}
+                          max={50}
+                          value={newCampaign.max_daily_connections}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, max_daily_connections: parseInt(e.target.value) || 15 })}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Empfohlen: 15</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="max_messages">Max. Erstnachrichten/Tag</Label>
+                        <Input
+                          id="max_messages"
+                          type="number"
+                          min={5}
+                          max={30}
+                          value={newCampaign.max_daily_messages}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, max_daily_messages: parseInt(e.target.value) || 10 })}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Empfohlen: 10</p>
+                      </div>
+                    </div>
+
+                    {/* Dynamic recommendation based on profile */}
+                    {newCampaign.linkedin_profile_age && (
+                      <div className="mt-4 p-3 rounded-lg bg-muted/50">
+                        <p className="text-sm font-medium mb-2">📊 Empfehlung basierend auf deinem Profil:</p>
+                        <p className="text-sm text-muted-foreground">
+                          {newCampaign.linkedin_was_banned ? (
+                            "Starte mit max. 10 Vernetzungen/Tag wegen vorheriger Sperrung. Steigere nach 2 Wochen ohne Probleme."
+                          ) : newCampaign.linkedin_profile_age === "under_6_months" ? (
+                            "Neues Profil: Starte mit 10-12 Vernetzungen/Tag. Steigere langsam."
+                          ) : newCampaign.linkedin_profile_age === "6_to_12_months" ? (
+                            "Profil im Aufbau: 12-15 Vernetzungen/Tag sind sicher."
+                          ) : newCampaign.linkedin_profile_age === "1_to_2_years" ? (
+                            "Etabliertes Profil: 15-20 Vernetzungen/Tag möglich."
+                          ) : (
+                            "Langjähriges Profil: 20-25 Vernetzungen/Tag bei guter Annahmequote möglich."
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </div>
+
                   <Button onClick={createCampaign} disabled={!newCampaign.name} className="w-full">
                     Kampagne erstellen
                   </Button>
