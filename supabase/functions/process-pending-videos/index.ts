@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Decrypt XOR encrypted key
+function decryptKey(encryptedValue: string, secret: string): string {
+  const binary = atob(encryptedValue);
+  const encrypted = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    encrypted[i] = binary.charCodeAt(i);
+  }
+  
+  const secretBytes = new TextEncoder().encode(secret);
+  const decrypted = new Uint8Array(encrypted.length);
+  
+  for (let i = 0; i < encrypted.length; i++) {
+    decrypted[i] = encrypted[i] ^ secretBytes[i % secretBytes.length];
+  }
+  
+  return new TextDecoder().decode(decrypted);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,7 +32,6 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const HEYGEN_API_KEY = Deno.env.get('HEYGEN_API_KEY');
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -23,10 +40,10 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find contacts with pending_auto video status
+    // Find contacts with pending_auto video status - include account_id
     const { data: pendingContacts, error: fetchError } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, company, campaign_id')
+      .select('id, first_name, last_name, company, campaign_id, account_id')
       .eq('video_status', 'pending_auto')
       .eq('lead_type', 'outbound')
       .limit(5);
@@ -47,6 +64,9 @@ serve(async (req) => {
 
     const results: Array<{ contactId: string; name: string; videoId: string; status: string }> = [];
 
+    // Cache for account API keys to avoid repeated lookups
+    const apiKeyCache: Record<string, string> = {};
+
     for (const contact of pendingContacts) {
       if (!contact.campaign_id) {
         console.log(`Contact ${contact.id} has no campaign, skipping`);
@@ -55,6 +75,59 @@ serve(async (req) => {
           .update({ video_status: 'error', video_error: 'Keine Kampagne zugewiesen' })
           .eq('id', contact.id);
         continue;
+      }
+
+      if (!contact.account_id) {
+        console.log(`Contact ${contact.id} has no account_id, skipping`);
+        await supabase
+          .from('contacts')
+          .update({ video_status: 'error', video_error: 'Kein Account zugewiesen' })
+          .eq('id', contact.id);
+        continue;
+      }
+
+      // Get HeyGen API key for this account (from encrypted_api_keys table)
+      let heygenApiKey = apiKeyCache[contact.account_id];
+      
+      if (!heygenApiKey) {
+        const { data: keyData, error: keyError } = await supabase
+          .from('encrypted_api_keys')
+          .select('encrypted_value')
+          .eq('account_id', contact.account_id)
+          .eq('key_name', 'heygen_api_key')
+          .maybeSingle();
+
+        if (keyError) {
+          console.error('Error fetching API key:', keyError);
+          await supabase
+            .from('contacts')
+            .update({ video_status: 'error', video_error: 'Fehler beim Abrufen des API Keys' })
+            .eq('id', contact.id);
+          continue;
+        }
+
+        if (!keyData) {
+          console.log(`No HeyGen API key found for account ${contact.account_id}`);
+          await supabase
+            .from('contacts')
+            .update({ video_status: 'error', video_error: 'Kein HeyGen API Key für diesen Account hinterlegt. Bitte im Onboarding oder unter Einstellungen -> Integrationen eingeben.' })
+            .eq('id', contact.id);
+          continue;
+        }
+
+        // Decrypt the key
+        try {
+          heygenApiKey = decryptKey(keyData.encrypted_value, SUPABASE_SERVICE_ROLE_KEY);
+          apiKeyCache[contact.account_id] = heygenApiKey;
+          console.log(`Decrypted HeyGen API key for account ${contact.account_id}`);
+        } catch (decryptError) {
+          console.error('Error decrypting API key:', decryptError);
+          await supabase
+            .from('contacts')
+            .update({ video_status: 'error', video_error: 'Fehler beim Entschlüsseln des API Keys' })
+            .eq('id', contact.id);
+          continue;
+        }
       }
 
       const { data: campaign } = await supabase
@@ -186,11 +259,12 @@ serve(async (req) => {
         };
 
         console.log('Sending HeyGen request for contact:', contact.id);
+        console.log('Using avatar:', campaign.heygen_avatar_id);
 
         const heygenResponse = await fetch('https://api.heygen.com/v2/video/generate', {
           method: 'POST',
           headers: {
-            'X-Api-Key': HEYGEN_API_KEY!,
+            'X-Api-Key': heygenApiKey,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
@@ -199,11 +273,21 @@ serve(async (req) => {
         if (!heygenResponse.ok) {
           const errorText = await heygenResponse.text();
           console.error('HeyGen API error:', errorText);
+          
+          let errorMessage = `HeyGen Fehler: ${heygenResponse.status}`;
+          if (heygenResponse.status === 401) {
+            errorMessage = 'HeyGen API Key ungültig oder abgelaufen. Bitte im Onboarding oder unter Einstellungen -> Integrationen aktualisieren.';
+          } else if (heygenResponse.status === 403) {
+            errorMessage = 'HeyGen API Zugriff verweigert. Bitte API Key Berechtigungen prüfen.';
+          } else if (heygenResponse.status === 429) {
+            errorMessage = 'HeyGen Rate Limit erreicht. Bitte später erneut versuchen.';
+          }
+          
           await supabase
             .from('contacts')
             .update({ 
               video_status: 'error', 
-              video_error: `HeyGen Fehler: ${heygenResponse.status}` 
+              video_error: errorMessage 
             })
             .eq('id', contact.id);
           continue;
