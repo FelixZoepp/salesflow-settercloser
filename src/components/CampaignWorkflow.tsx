@@ -1066,6 +1066,13 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                               <MessageSquare className="h-4 w-4 mr-1" />
                               Gesendet
                             </Button>
+                            <Button 
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => updateStatus(contact.id, 'reagiert_warm', 'responded_at')}
+                            >
+                              Hat geantwortet
+                            </Button>
                           </>
                         }
                       />
@@ -1133,6 +1140,13 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                             >
                               FU1 gesendet
                             </Button>
+                            <Button 
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => updateStatus(contact.id, 'reagiert_warm', 'responded_at')}
+                            >
+                              Hat geantwortet
+                            </Button>
                           </>
                         }
                       />
@@ -1197,6 +1211,13 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                             >
                               FU2 gesendet
                             </Button>
+                            <Button 
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => updateStatus(contact.id, 'reagiert_warm', 'responded_at')}
+                            >
+                              Hat geantwortet
+                            </Button>
                           </>
                         }
                       />
@@ -1260,6 +1281,13 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
                               onClick={() => updateStatus(contact.id, 'fu3_gesendet', 'fu3_sent_at')}
                             >
                               FU3 gesendet
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => updateStatus(contact.id, 'reagiert_warm', 'responded_at')}
+                            >
+                              Hat geantwortet
                             </Button>
                             <Button 
                               size="sm"
