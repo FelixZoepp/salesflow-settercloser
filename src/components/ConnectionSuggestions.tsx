@@ -39,7 +39,7 @@ interface ConnectionSuggestionsProps {
 
 export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSuggestionsProps) {
   const [suggestions, setSuggestions] = useState<SuggestedContact[]>([]);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [todaySentCount, setTodaySentCount] = useState(0);
   const [campaignSettings, setCampaignSettings] = useState<CampaignSettings>({ max_daily_connections: 15 });
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -59,20 +59,23 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
         setCampaignSettings({ max_daily_connections: campaign.max_daily_connections || 15 });
       }
 
-      // Count pending connections (vernetzung_ausstehend)
-      const { count: pending } = await supabase
+      // Count connections sent TODAY (resets at midnight)
+      const today = new Date().toISOString().split('T')[0];
+      const { count: sentToday } = await supabase
         .from('contacts')
         .select('id', { count: 'exact', head: true })
         .eq('campaign_id', campaignId)
-        .eq('workflow_status', 'vernetzung_ausstehend');
+        .gte('connection_sent_at', `${today}T00:00:00`)
+        .lt('connection_sent_at', `${today}T23:59:59.999`);
 
-      setPendingCount(pending || 0);
+      setTodaySentCount(sentToday || 0);
 
-      // Calculate available slots
+      // Calculate available slots for TODAY
       const maxConnections = campaign?.max_daily_connections || 15;
-      const availableSlots = Math.max(0, maxConnections - (pending || 0));
+      const availableSlots = Math.max(0, maxConnections - (sentToday || 0));
 
       // Get contacts ready for connection (neu or bereit_fuer_vernetzung)
+      // Show all available, but limit suggestion count to available slots
       const { data: readyContacts } = await supabase
         .from('contacts')
         .select('id, first_name, last_name, company, position, linkedin_url, workflow_status')
@@ -80,7 +83,7 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
         .eq('lead_type', 'outbound')
         .in('workflow_status', ['neu', 'bereit_fuer_vernetzung'])
         .order('created_at', { ascending: true })
-        .limit(availableSlots);
+        .limit(availableSlots > 0 ? availableSlots : 50); // Show up to 50 if limit reached for visibility
 
       setSuggestions((readyContacts || []) as SuggestedContact[]);
     } catch (error) {
@@ -146,7 +149,7 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
     }
   };
 
-  const availableSlots = Math.max(0, campaignSettings.max_daily_connections - pendingCount);
+  const availableSlots = Math.max(0, campaignSettings.max_daily_connections - todaySentCount);
   const allSelected = suggestions.length > 0 && selectedIds.size === suggestions.length;
 
   if (loading) {
@@ -174,18 +177,18 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <UserPlus className="h-4 w-4" />
-              <span className="text-xs">Ausstehend</span>
+              <span className="text-xs">Heute gesendet</span>
             </div>
-            <p className="text-2xl font-bold">{pendingCount}</p>
+            <p className="text-2xl font-bold">{todaySentCount}</p>
           </CardContent>
         </Card>
-        <Card className="bg-primary/10 border-primary/30">
+        <Card className={availableSlots > 0 ? "bg-primary/10 border-primary/30" : "bg-destructive/10 border-destructive/30"}>
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-primary mb-1">
+            <div className={`flex items-center gap-2 mb-1 ${availableSlots > 0 ? 'text-primary' : 'text-destructive'}`}>
               <CheckCircle2 className="h-4 w-4" />
-              <span className="text-xs">Verfügbar</span>
+              <span className="text-xs">Noch verfügbar</span>
             </div>
-            <p className="text-2xl font-bold text-primary">{availableSlots}</p>
+            <p className={`text-2xl font-bold ${availableSlots > 0 ? 'text-primary' : 'text-destructive'}`}>{availableSlots}</p>
           </CardContent>
         </Card>
       </div>
@@ -195,7 +198,8 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Du hast bereits {pendingCount} ausstehende Vernetzungsanfragen. Warte bis diese angenommen oder abgelehnt werden, bevor du neue sendest.
+            Du hast heute bereits {todaySentCount} Vernetzungsanfragen gesendet (Limit: {campaignSettings.max_daily_connections}). 
+            Das Limit wird um Mitternacht zurückgesetzt.
           </AlertDescription>
         </Alert>
       ) : (
@@ -203,7 +207,7 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
           <UserPlus className="h-4 w-4 text-primary" />
           <AlertDescription>
             Du kannst heute noch <strong>{availableSlots}</strong> Vernetzungsanfragen senden. 
-            Unten findest du Vorschläge aus deiner Kampagne.
+            Wähle Leads aus und markiere sie nach dem Senden als "gesendet".
           </AlertDescription>
         </Alert>
       )}
