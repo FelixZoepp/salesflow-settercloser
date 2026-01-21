@@ -58,7 +58,8 @@ export class TwilioClient {
 
       this.device.on('error', (error) => {
         console.error('Twilio device error:', error);
-        this.callbacks.onError(error.message || 'Device error');
+        const errorMessage = error?.message || (typeof error === 'string' ? error : 'Device error');
+        this.callbacks.onError(errorMessage);
       });
 
       this.device.on('incoming', (call) => {
@@ -73,7 +74,8 @@ export class TwilioClient {
 
     } catch (error: any) {
       console.error('Twilio connect error:', error);
-      this.callbacks.onError(error.message || 'Connection failed');
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Connection failed');
+      this.callbacks.onError(errorMessage);
       throw error;
     }
   }
@@ -137,7 +139,8 @@ export class TwilioClient {
 
       this.currentCall.on('error', (error) => {
         console.error('Call error:', error);
-        this.callbacks.onCallFailed(error.message || 'Call failed');
+        const errorMessage = error?.message || (typeof error === 'string' ? error : 'Call failed');
+        this.callbacks.onCallFailed(errorMessage);
         this.cleanup();
       });
 
@@ -148,7 +151,8 @@ export class TwilioClient {
 
     } catch (error: any) {
       console.error('Call initiation error:', error);
-      this.callbacks.onCallFailed(error.message || 'Failed to start call');
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Failed to start call');
+      this.callbacks.onCallFailed(errorMessage);
       throw error;
     }
   }
