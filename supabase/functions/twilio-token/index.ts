@@ -65,11 +65,23 @@ serve(async (req) => {
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
+    const apiKeySid = Deno.env.get('TWILIO_API_KEY_SID');
+    const apiKeySecret = Deno.env.get('TWILIO_API_KEY_SECRET');
 
     if (!accountSid || !authToken) {
       return new Response(JSON.stringify({ 
         error: 'Twilio credentials not configured',
         details: 'Please add TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN to your secrets'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!apiKeySid || !apiKeySecret) {
+      return new Response(JSON.stringify({ 
+        error: 'Twilio API Key not configured',
+        details: 'Please add TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET to your secrets. Create an API Key at https://console.twilio.com/us1/account/keys-credentials/api-keys'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -162,11 +174,12 @@ serve(async (req) => {
     }
 
     // Generate Access Token using Twilio's API
-    // We need to create a JWT token manually since we can't use the twilio npm package in edge functions
+    // Twilio Access Tokens must be signed with API Key Secret (not Auth Token)
     const identity = user.id;
     const ttl = 3600; // 1 hour
 
     // Create JWT header and payload
+    // The issuer (iss) must be the API Key SID, not the Account SID
     const header = {
       typ: 'JWT',
       alg: 'HS256',
@@ -175,9 +188,9 @@ serve(async (req) => {
 
     const now = Math.floor(Date.now() / 1000);
     const payload = {
-      jti: `${accountSid}-${now}`,
-      iss: accountSid,
-      sub: accountSid,
+      jti: `${apiKeySid}-${now}`,
+      iss: apiKeySid,  // API Key SID, not Account SID
+      sub: accountSid, // Account SID goes here
       nbf: now,
       exp: now + ttl,
       grants: {
@@ -199,9 +212,9 @@ serve(async (req) => {
     const headerEncoded = base64UrlEncode(header);
     const payloadEncoded = base64UrlEncode(payload);
 
-    // Create signature using HMAC-SHA256
+    // Create signature using HMAC-SHA256 with API Key Secret (not Auth Token!)
     const encoder = new TextEncoder();
-    const keyData = encoder.encode(authToken);
+    const keyData = encoder.encode(apiKeySecret);
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
