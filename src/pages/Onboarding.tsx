@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,9 +155,13 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   const [generating, setGenerating] = useState(false);
   const [calendarUrl, setCalendarUrl] = useState("");
 
+  // Track if initial step has been set to prevent re-renders on focus
+  const initialStepSet = useRef(false);
+
   useEffect(() => {
-    if (!onboardingLoading) {
-      // Set active step to the first incomplete step
+    if (!onboardingLoading && !initialStepSet.current) {
+      initialStepSet.current = true;
+      // Set active step to the first incomplete step only on initial load
       if (!status.steps.heygen) setActiveStep(0);
       else if (!status.steps.telephony) setActiveStep(1);
       else if (!status.steps.domain) setActiveStep(2);
@@ -167,7 +171,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       else if (!status.steps.landingPage) setActiveStep(6);
       else setActiveStep(6);
     }
-  }, [status, onboardingLoading]);
+  }, [onboardingLoading]);
 
   const handleSaveHeyGen = async () => {
     if (!accountId) return;
