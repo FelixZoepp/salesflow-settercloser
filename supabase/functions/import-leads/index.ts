@@ -31,6 +31,26 @@ interface ImportResult {
   errors: Array<{ row: number; message: string }>;
 }
 
+interface DuplicateMatch {
+  csvRowIndex: number;
+  csvData: Record<string, string>;
+  existingContact: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+    company: string | null;
+    linkedin_url: string | null;
+  };
+  matchReason: 'email' | 'linkedin' | 'name_company';
+}
+
+interface DuplicateCheckResult {
+  duplicates: DuplicateMatch[];
+  newLeadsCount: number;
+  parsedRows: Array<{ index: number; data: CSVRow }>;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -77,14 +97,15 @@ Deno.serve(async (req) => {
     const accountId = profile.account_id;
     console.log(`User account_id: ${accountId}`);
 
-    // Parse the CSV data, leadType and optional campaignId from request body
-    const { csvData, leadType, campaignId } = await req.json();
+    // Parse the CSV data, leadType, optional campaignId, and mode from request body
+    const { csvData, leadType, campaignId, mode, duplicateActions } = await req.json();
     if (!csvData) {
       throw new Error('Missing CSV data');
     }
     
     const isOutbound = leadType === 'outbound';
-    console.log(`Import type: ${leadType}, campaign_id: ${campaignId || 'none'}`);
+    const isPreviewMode = mode === 'check_duplicates';
+    console.log(`Import type: ${leadType}, campaign_id: ${campaignId || 'none'}, mode: ${mode || 'import'}`);
 
     const lines = csvData.trim().split('\n');
     if (lines.length < 2) {
@@ -94,49 +115,167 @@ Deno.serve(async (req) => {
     // Parse header
     const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
     
+    // Parse all rows first
+    const parsedRows: Array<{ index: number; data: CSVRow; valid: boolean }> = [];
+    const parseErrors: Array<{ row: number; message: string }> = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map((v: string) => v.trim());
+      const row: CSVRow = {};
+      
+      headers.forEach((header: string, idx: number) => {
+        if (values[idx]) {
+          row[header as keyof CSVRow] = values[idx];
+        }
+      });
+
+      const companyName = row.company_name || row.company;
+      
+      // Validate row
+      let valid = true;
+      if (isOutbound) {
+        if (!row.first_name || !row.last_name) {
+          parseErrors.push({ 
+            row: i + 1, 
+            message: 'Missing required field: first_name and last_name' 
+          });
+          valid = false;
+        }
+      } else {
+        if (!companyName && !row.email) {
+          parseErrors.push({ 
+            row: i + 1, 
+            message: 'Missing required field: company_name or email' 
+          });
+          valid = false;
+        }
+      }
+      
+      parsedRows.push({ index: i - 1, data: row, valid });
+    }
+
+    // DUPLICATE CHECK MODE
+    if (isPreviewMode) {
+      console.log('Running duplicate check mode...');
+      const duplicates: DuplicateMatch[] = [];
+      let newLeadsCount = 0;
+      
+      for (const { index, data: row, valid } of parsedRows) {
+        if (!valid) continue;
+        
+        let foundDuplicate = false;
+        
+        // Check by email
+        if (row.email) {
+          const { data: existingByEmail } = await supabase
+            .from('contacts')
+            .select('id, first_name, last_name, email, company, linkedin_url')
+            .eq('account_id', accountId)
+            .eq('email', row.email)
+            .maybeSingle();
+          
+          if (existingByEmail) {
+            duplicates.push({
+              csvRowIndex: index,
+              csvData: row as Record<string, string>,
+              existingContact: existingByEmail,
+              matchReason: 'email',
+            });
+            foundDuplicate = true;
+          }
+        }
+        
+        // Check by LinkedIn URL
+        if (!foundDuplicate && row.linkedin_url) {
+          const { data: existingByLinkedin } = await supabase
+            .from('contacts')
+            .select('id, first_name, last_name, email, company, linkedin_url')
+            .eq('account_id', accountId)
+            .eq('linkedin_url', row.linkedin_url)
+            .maybeSingle();
+          
+          if (existingByLinkedin) {
+            duplicates.push({
+              csvRowIndex: index,
+              csvData: row as Record<string, string>,
+              existingContact: existingByLinkedin,
+              matchReason: 'linkedin',
+            });
+            foundDuplicate = true;
+          }
+        }
+        
+        // Check by name + company
+        if (!foundDuplicate && row.first_name && row.last_name && (row.company_name || row.company)) {
+          const companyName = row.company_name || row.company;
+          const { data: existingByName } = await supabase
+            .from('contacts')
+            .select('id, first_name, last_name, email, company, linkedin_url')
+            .eq('account_id', accountId)
+            .ilike('first_name', row.first_name)
+            .ilike('last_name', row.last_name)
+            .ilike('company', companyName || '')
+            .maybeSingle();
+          
+          if (existingByName) {
+            duplicates.push({
+              csvRowIndex: index,
+              csvData: row as Record<string, string>,
+              existingContact: existingByName,
+              matchReason: 'name_company',
+            });
+            foundDuplicate = true;
+          }
+        }
+        
+        if (!foundDuplicate) {
+          newLeadsCount++;
+        }
+      }
+      
+      const checkResult: DuplicateCheckResult = {
+        duplicates,
+        newLeadsCount,
+        parsedRows: parsedRows.filter(r => r.valid).map(r => ({ index: r.index, data: r.data })),
+      };
+      
+      console.log(`Duplicate check complete: ${duplicates.length} duplicates, ${newLeadsCount} new`);
+      
+      return new Response(
+        JSON.stringify({ mode: 'check_duplicates', ...checkResult, parseErrors }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // IMPORT MODE
+    // Build a map of duplicate actions by row index
+    const actionMap: Record<number, 'update' | 'skip' | 'create'> = {};
+    if (duplicateActions && Array.isArray(duplicateActions)) {
+      for (const action of duplicateActions) {
+        actionMap[action.csvRowIndex] = action.action;
+      }
+    }
+    
     const result: ImportResult = {
       imported_count: 0,
       updated_count: 0,
-      skipped_count: 0,
-      errors: [],
+      skipped_count: parseErrors.length,
+      errors: [...parseErrors],
     };
 
-    // Process each row
-    for (let i = 1; i < lines.length; i++) {
-      const rowNumber = i + 1;
+    // Process each valid row
+    for (const { index, data: row, valid } of parsedRows) {
+      if (!valid) continue;
+      
+      const rowNumber = index + 2; // CSV row number (1-indexed, +1 for header)
       try {
-        const values = lines[i].split(',').map((v: string) => v.trim());
-        const row: CSVRow = {};
-        
-        headers.forEach((header: string, idx: number) => {
-          if (values[idx]) {
-            row[header as keyof CSVRow] = values[idx];
-          }
-        });
-
-        // Use company from row (support both company_name and company fields)
         const companyName = row.company_name || row.company;
         
-        // For outbound leads, we only require first_name + last_name
-        // For inbound/other leads, we require company_name or email
-        if (isOutbound) {
-          if (!row.first_name || !row.last_name) {
-            result.errors.push({ 
-              row: rowNumber, 
-              message: 'Missing required field: first_name and last_name' 
-            });
-            result.skipped_count++;
-            continue;
-          }
-        } else {
-          if (!companyName && !row.email) {
-            result.errors.push({ 
-              row: rowNumber, 
-              message: 'Missing required field: company_name or email' 
-            });
-            result.skipped_count++;
-            continue;
-          }
+        // Check if this row has a duplicate action specified
+        const duplicateAction = actionMap[index];
+        if (duplicateAction === 'skip') {
+          result.skipped_count++;
+          continue;
         }
 
         // Find or create company
@@ -208,30 +347,32 @@ Deno.serve(async (req) => {
         
         // For outbound leads, we create contacts directly without requiring email
         if (isOutbound) {
-          // Check if contact exists by linkedin_url or name+company combination
+          // Check if contact exists (unless forced to create new)
           let existingContact = null;
           
-          if (row.linkedin_url) {
-            const { data } = await supabase
-              .from('contacts')
-              .select('id')
-              .eq('linkedin_url', row.linkedin_url)
-              .eq('owner_user_id', user.id)
-              .maybeSingle();
-            existingContact = data;
-          }
-          
-          if (!existingContact && row.email) {
-            const { data } = await supabase
-              .from('contacts')
-              .select('id')
-              .eq('email', row.email)
-              .eq('owner_user_id', user.id)
-              .maybeSingle();
-            existingContact = data;
+          if (duplicateAction !== 'create') {
+            if (row.linkedin_url) {
+              const { data } = await supabase
+                .from('contacts')
+                .select('id')
+                .eq('linkedin_url', row.linkedin_url)
+                .eq('account_id', accountId)
+                .maybeSingle();
+              existingContact = data;
+            }
+            
+            if (!existingContact && row.email) {
+              const { data } = await supabase
+                .from('contacts')
+                .select('id')
+                .eq('email', row.email)
+                .eq('account_id', accountId)
+                .maybeSingle();
+              existingContact = data;
+            }
           }
 
-          if (existingContact) {
+          if (existingContact && duplicateAction !== 'create') {
             // Update existing contact
             await supabase
               .from('contacts')
@@ -281,14 +422,19 @@ Deno.serve(async (req) => {
           }
         } else if (row.email) {
           // Original logic for inbound leads with email
-          const { data: existingContact } = await supabase
-            .from('contacts')
-            .select('id')
-            .eq('email', row.email)
-            .eq('owner_user_id', user.id)
-            .maybeSingle();
+          let existingContact = null;
+          
+          if (duplicateAction !== 'create') {
+            const { data } = await supabase
+              .from('contacts')
+              .select('id')
+              .eq('email', row.email)
+              .eq('account_id', accountId)
+              .maybeSingle();
+            existingContact = data;
+          }
 
-          if (existingContact) {
+          if (existingContact && duplicateAction !== 'create') {
             // Update existing contact
             await supabase
               .from('contacts')
