@@ -95,11 +95,53 @@ export const useSubscription = () => {
         }
       }
 
-      // No active trial, check Stripe subscription
+      // First: check internal subscriptions table directly (more reliable than edge function)
+      const { data: internalSub } = await supabase
+        .from('subscriptions')
+        .select('plan_name, status, current_period_end')
+        .eq('user_id', sessionData.session.user.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (internalSub) {
+        const endOk = !internalSub.current_period_end || 
+          new Date(internalSub.current_period_end) > new Date();
+        
+        if (endOk) {
+          console.log('[useSubscription] Found active subscription in DB:', internalSub.plan_name);
+          setStatus({
+            subscribed: true,
+            productId: `db_${internalSub.plan_name}`,
+            subscriptionEnd: internalSub.current_period_end,
+            loading: false,
+            error: null,
+            isTrial: internalSub.status === 'trialing',
+            trialEndsAt: null,
+          });
+          return;
+        }
+      }
+
+      // Fallback: check Stripe subscription via edge function
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Subscription check error:', error);
+        // Even if edge function fails, if we have a subscription in DB, use that
+        if (internalSub) {
+          setStatus({
+            subscribed: true,
+            productId: `db_${internalSub.plan_name}`,
+            subscriptionEnd: internalSub.current_period_end,
+            loading: false,
+            error: null,
+            isTrial: false,
+            trialEndsAt: null,
+          });
+          return;
+        }
         setStatus(prev => ({
           ...prev,
           loading: false,
