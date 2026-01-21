@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SubscriptionStatus {
@@ -22,11 +22,25 @@ export const useSubscription = () => {
     trialEndsAt: null,
   });
 
+  // Prevent UX-breaking full-page loaders on background refresh (e.g. window focus)
+  const lastUserIdRef = useRef<string | null>(null);
+
   const checkSubscription = useCallback(async () => {
     try {
-      setStatus(prev => ({ ...prev, loading: true, error: null }));
-      
       const { data: sessionData } = await supabase.auth.getSession();
+
+      const currentUserId = sessionData.session?.user?.id ?? null;
+      const isNewUserSession = currentUserId !== lastUserIdRef.current;
+      lastUserIdRef.current = currentUserId;
+
+      // Only show the global "loading" state on initial load / user switch.
+      // On background refresh (interval/focus), keep loading=false so pages don't unmount.
+      setStatus((prev) => ({
+        ...prev,
+        loading: isNewUserSession ? true : prev.loading,
+        error: null,
+      }));
+
       if (!sessionData.session) {
         setStatus({
           subscribed: false,
