@@ -34,9 +34,23 @@ export class PlacetelClient {
   }
 
   async connect(): Promise<void> {
-    const uri = UserAgent.makeURI(`sip:${this.config.login}@${this.config.domain}`);
+    // Extract username part if login contains @ (e.g., "felix@zoeppmedia.de" -> "felix")
+    // Some SIP providers use full email as username, but for URI we need just the user part
+    let sipUser = this.config.login;
+    if (this.config.login.includes('@')) {
+      // If the domain in login matches the SIP domain, use just the username
+      const [userPart, domainPart] = this.config.login.split('@');
+      // Use the full login if it looks like an email that's different from SIP domain
+      // Otherwise use just the user part
+      if (domainPart === this.config.domain || this.config.domain.includes('placetel')) {
+        sipUser = userPart;
+      }
+    }
+    
+    const uri = UserAgent.makeURI(`sip:${sipUser}@${this.config.domain}`);
     if (!uri) {
-      throw new Error('Failed to create SIP URI');
+      console.error('Failed to create SIP URI with:', { login: sipUser, domain: this.config.domain });
+      throw new Error(`Failed to create SIP URI: invalid login "${sipUser}" or domain "${this.config.domain}"`);
     }
 
     // Determine WebSocket URL - Placetel typically uses wss on port 443
