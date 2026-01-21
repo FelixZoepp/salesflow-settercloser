@@ -3,16 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import SkyBackground from "@/components/ui/SkyBackground";
-import { AIObjectionDemo } from "@/components/landing/AIObjectionDemo";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
+
+// Lazy load heavy components for better mobile performance
+const SkyBackground = lazy(() => import("@/components/ui/SkyBackground"));
+const AIObjectionDemo = lazy(() => import("@/components/landing/AIObjectionDemo").then(m => ({ default: m.AIObjectionDemo })));
 
 const Landing = () => {
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile for performance optimizations
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -157,9 +168,9 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0e27] relative overflow-x-hidden">
-      {/* Blurred Ellipse Background - smaller on mobile */}
+      {/* Blurred Ellipse Background - reduced blur on mobile for performance */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] md:w-[800px] h-[300px] md:h-[600px] bg-primary/20 rounded-full blur-[80px] md:blur-[120px]"></div>
+        <div className={`absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] md:w-[800px] h-[300px] md:h-[600px] bg-primary/20 rounded-full ${isMobile ? 'blur-[40px]' : 'blur-[80px] md:blur-[120px]'}`}></div>
       </div>
       
       {/* Navigation */}
@@ -195,7 +206,14 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <SkyBackground starCount={250} shootingEveryMs={[3000, 8000]} enableParallax={true} />
+          {/* Lazy load SkyBackground with reduced settings on mobile for performance */}
+          <Suspense fallback={<div className="hero-gradient-layer" aria-hidden />}>
+            <SkyBackground 
+              starCount={isMobile ? 80 : 250} 
+              shootingEveryMs={isMobile ? [8000, 15000] : [3000, 8000]} 
+              enableParallax={!isMobile} 
+            />
+          </Suspense>
         </div>
         <div className="container mx-auto text-center max-w-5xl relative z-[1]">
           <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium">
@@ -554,6 +572,8 @@ const Landing = () => {
                       src={felixLiveCallImage} 
                       alt="Felix Zoepp - Live Call Host" 
                       className="w-full h-full object-cover object-[center_30%] md:object-[center_35%]"
+                      loading="lazy"
+                      decoding="async"
                     />
                     
                     {/* Speaking indicator overlay - top right corner */}
@@ -828,8 +848,10 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* AI Objection Handler Section */}
-      <AIObjectionDemo />
+      {/* AI Objection Handler Section - Lazy loaded for performance */}
+      <Suspense fallback={<div className="py-12 md:py-20" />}>
+        <AIObjectionDemo />
+      </Suspense>
 
       {/* Tracking Section */}
       <section id="tracking" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
