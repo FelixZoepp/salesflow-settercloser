@@ -562,7 +562,7 @@ const Landing = () => {
                       <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-500 animate-pulse"></div>
                       <span className="text-[10px] md:text-xs text-gray-400">LIVE</span>
                     </div>
-                    <span className="text-[10px] md:text-xs text-gray-500">Mittwoch 11:00</span>
+                    <span className="text-[10px] md:text-xs text-gray-500">Mittwoch 17:00</span>
                   </div>
                   
                   {/* Video area */}
