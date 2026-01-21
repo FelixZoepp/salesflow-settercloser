@@ -535,6 +535,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          acceptance_rate_pct: number | null
           account_id: string | null
           created_at: string
           description: string | null
@@ -542,14 +543,21 @@ export type Database = {
           heygen_avatar_id: string | null
           heygen_voice_id: string | null
           id: string
+          linkedin_currently_active: boolean | null
+          linkedin_profile_age: string | null
+          linkedin_was_banned: boolean | null
+          max_daily_connections: number | null
+          max_daily_messages: number | null
           name: string
           pitch_video_url: string | null
+          recommended_connections: number | null
           start_date: string | null
           status: string
           updated_at: string
           voice_source_audio_url: string | null
         }
         Insert: {
+          acceptance_rate_pct?: number | null
           account_id?: string | null
           created_at?: string
           description?: string | null
@@ -557,14 +565,21 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          linkedin_currently_active?: boolean | null
+          linkedin_profile_age?: string | null
+          linkedin_was_banned?: boolean | null
+          max_daily_connections?: number | null
+          max_daily_messages?: number | null
           name: string
           pitch_video_url?: string | null
+          recommended_connections?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string
           voice_source_audio_url?: string | null
         }
         Update: {
+          acceptance_rate_pct?: number | null
           account_id?: string | null
           created_at?: string
           description?: string | null
@@ -572,8 +587,14 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          linkedin_currently_active?: boolean | null
+          linkedin_profile_age?: string | null
+          linkedin_was_banned?: boolean | null
+          max_daily_connections?: number | null
+          max_daily_messages?: number | null
           name?: string
           pitch_video_url?: string | null
+          recommended_connections?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string
