@@ -120,6 +120,12 @@ const Onboarding = () => {
 
   // Step 2: Custom Domain
   const [customDomain, setCustomDomain] = useState("");
+  const [domainVerifying, setDomainVerifying] = useState(false);
+  const [domainStatus, setDomainStatus] = useState<{
+    checked: boolean;
+    reachable: boolean;
+    message: string;
+  } | null>(null);
 
   // Step 2: SIP Telephony
   const [sipProvider, setSipProvider] = useState("placetel");
@@ -252,6 +258,51 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       console.error(error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleVerifyDomain = async () => {
+    if (!customDomain) {
+      toast.error("Bitte Domain eingeben");
+      return;
+    }
+
+    setDomainVerifying(true);
+    setDomainStatus(null);
+
+    try {
+      const cleanDomain = customDomain
+        .replace(/^https?:\/\//, "")
+        .replace(/\/$/, "")
+        .trim();
+
+      const { data, error } = await supabase.functions.invoke('verify-domain', {
+        body: { domain: cleanDomain },
+      });
+
+      if (error) throw error;
+
+      setDomainStatus({
+        checked: true,
+        reachable: data.reachable || false,
+        message: data.message || 'Domain-Status unbekannt',
+      });
+
+      if (data.reachable) {
+        toast.success("Domain ist erreichbar!");
+      } else {
+        toast.info(data.message);
+      }
+    } catch (error) {
+      console.error('Error verifying domain:', error);
+      setDomainStatus({
+        checked: true,
+        reachable: false,
+        message: 'Fehler bei der Überprüfung',
+      });
+      toast.error("Fehler bei der Domain-Überprüfung");
+    } finally {
+      setDomainVerifying(false);
     }
   };
 
@@ -814,6 +865,40 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
                         Das wars! Die Änderung kann bis zu 24 Stunden dauern. SSL wird automatisch eingerichtet.
                       </p>
                     </div>
+
+                    {/* Verify Domain Button */}
+                    <Button 
+                      variant="outline"
+                      onClick={handleVerifyDomain} 
+                      disabled={domainVerifying}
+                      className="w-full"
+                    >
+                      {domainVerifying && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                      {domainVerifying ? 'Prüfe Domain...' : 'Domain jetzt prüfen'}
+                    </Button>
+
+                    {/* Domain Status */}
+                    {domainStatus?.checked && (
+                      <div className={`p-3 rounded-lg border flex items-start gap-2 ${
+                        domainStatus.reachable 
+                          ? 'bg-green-500/10 border-green-500/30' 
+                          : 'bg-amber-500/10 border-amber-500/30'
+                      }`}>
+                        {domainStatus.reachable ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div>
+                          <p className={`text-sm font-medium ${
+                            domainStatus.reachable ? 'text-green-700 dark:text-green-300' : 'text-amber-700 dark:text-amber-300'
+                          }`}>
+                            {domainStatus.reachable ? 'Domain ist bereit!' : 'Noch nicht erreichbar'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{domainStatus.message}</p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Preview */}
                     <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
