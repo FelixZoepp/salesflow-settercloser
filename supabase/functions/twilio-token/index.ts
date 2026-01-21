@@ -84,6 +84,7 @@ serve(async (req) => {
       .maybeSingle();
 
     let twimlAppSid = integration?.twilio_twiml_app_sid;
+    const voiceUrl = `${supabaseUrl}/functions/v1/twilio-voice`;
 
     // If no TwiML App exists, create one
     if (!twimlAppSid) {
@@ -99,7 +100,7 @@ serve(async (req) => {
           },
           body: new URLSearchParams({
             FriendlyName: 'Lovable Voice App',
-            VoiceUrl: `${supabaseUrl}/functions/v1/twilio-voice`,
+            VoiceUrl: voiceUrl,
             VoiceMethod: 'POST',
           }).toString(),
         }
@@ -130,6 +131,34 @@ serve(async (req) => {
         }, { onConflict: 'account_id' });
 
       console.log('TwiML App created:', twimlAppSid);
+    } else {
+      // Update existing TwiML App to ensure URL is correct
+      console.log('Updating TwiML App URL:', twimlAppSid);
+      
+      try {
+        const updateAppResponse = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Applications/${twimlAppSid}.json`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              VoiceUrl: voiceUrl,
+              VoiceMethod: 'POST',
+            }).toString(),
+          }
+        );
+        
+        if (updateAppResponse.ok) {
+          console.log('TwiML App URL updated successfully');
+        } else {
+          console.warn('Failed to update TwiML App URL:', await updateAppResponse.text());
+        }
+      } catch (updateError) {
+        console.warn('Error updating TwiML App:', updateError);
+      }
     }
 
     // Generate Access Token using Twilio's API

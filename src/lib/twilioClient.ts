@@ -179,7 +179,14 @@ export class TwilioClient {
   async disconnect(): Promise<void> {
     await this.hangup();
     if (this.device) {
-      await this.device.unregister();
+      // Only unregister if device is registered
+      if (this.device.state === Device.State.Registered) {
+        try {
+          await this.device.unregister();
+        } catch (err) {
+          console.warn('Unregister error (ignored):', err);
+        }
+      }
       this.device.destroy();
       this.device = null;
     }
