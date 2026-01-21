@@ -63,6 +63,11 @@ serve(async (req) => {
       "prod_TkoJ8E0e8l4vwV", // Pro Yearly
     ];
 
+    // Excluded customer emails (not PitchFirst customers)
+    const EXCLUDED_CUSTOMER_EMAILS = [
+      "leon@ostermann.email", // Wrong payment link
+    ];
+
     // Fetch all subscriptions from Stripe
     logStep("Fetching subscriptions from Stripe");
     
@@ -73,14 +78,23 @@ serve(async (req) => {
     while (hasMore) {
       const params: Stripe.SubscriptionListParams = {
         limit: 100,
-        expand: ['data.customer', 'data.items.data.price', 'data.items.data.price.product'],
+        expand: ['data.customer', 'data.items.data.price'],
       };
       if (startingAfter) params.starting_after = startingAfter;
 
       const response = await stripe.subscriptions.list(params);
       
-      // Filter to only include PitchFirst products
+      // Filter to only include PitchFirst products and exclude certain customers
       const pitchFirstSubs = response.data.filter((sub: Stripe.Subscription) => {
+        const customer = sub.customer as Stripe.Customer;
+        const customerEmail = customer?.email?.toLowerCase() || '';
+        
+        // Exclude specific customers
+        if (EXCLUDED_CUSTOMER_EMAILS.some(e => customerEmail.includes(e.toLowerCase()))) {
+          return false;
+        }
+        
+        // Filter by product ID
         const price = sub.items.data[0]?.price;
         const productId = typeof price?.product === 'string' 
           ? price.product 
