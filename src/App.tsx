@@ -18,6 +18,7 @@ import KPI from "./pages/KPI";
 import ActivityLog from "./pages/ActivityLog";
 import PowerDialer from "./pages/PowerDialer";
 import Landing from "./pages/Landing";
+import AGB from "./pages/AGB";
 import NotFound from "./pages/NotFound";
 import ImportLeads from "./pages/ImportLeads";
 import ApiKeys from "./pages/ApiKeys";
@@ -137,6 +138,7 @@ const AppRoutes = () => (
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
     <Route path="/invite/:token" element={<InviteRegister />} />
     <Route path="/partner" element={<Partner />} />
+    <Route path="/agb" element={<AGB />} />
     <Route path="/" element={<Landing />} />
     <Route path="/auth" element={<Auth />} />
     

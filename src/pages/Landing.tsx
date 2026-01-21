@@ -1356,7 +1356,7 @@ const Landing = () => {
               <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
                 <li><a href="https://www.pitchfirst.io/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Datenschutz</a></li>
                 <li><a href="https://www.pitchfirst.io/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">AGB</a></li>
+                <li><a href="/agb" className="hover:text-primary transition-colors">AGB</a></li>
               </ul>
             </div>
           </div>
