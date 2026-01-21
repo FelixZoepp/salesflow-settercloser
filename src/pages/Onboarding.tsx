@@ -37,10 +37,11 @@ import {
   Phone
 } from "lucide-react";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
+import TelephonyOnboarding from "@/components/TelephonyOnboarding";
 
 const STEP_TITLES = [
   "HeyGen Integration",
-  "SIP-Telefonie",
+  "Telefonie-Setup",
   "Custom Domain",
   "Pitch-Video hochladen",
   "Leads importieren",
@@ -706,99 +707,16 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
               </>
             )}
 
-            {/* Step 2: SIP Telephony */}
-            {activeStep === 1 && (
+            {/* Step 2: Telefonie-Setup */}
+            {activeStep === 1 && accountId && (
               <div className="space-y-4">
-                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                  <p className="text-sm">
-                    <strong>SIP-Telefonie</strong> ermöglicht dir, direkt aus der App zu telefonieren und 
-                    Anrufe aufzuzeichnen. Unterstützte Anbieter: Placetel, sipgate, etc.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>SIP-Anbieter</Label>
-                  <select
-                    value={sipProvider}
-                    onChange={(e) => setSipProvider(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  >
-                    <option value="placetel">Placetel</option>
-                    <option value="sipgate">sipgate</option>
-                    <option value="other">Anderer Anbieter</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sipServer">WebSocket Server URL</Label>
-                  <Input
-                    id="sipServer"
-                    placeholder={sipProvider === 'placetel' ? 'wss://webrtc.2.placetel.de' : 'wss://...'}
-                    value={sipServer}
-                    onChange={(e) => setSipServer(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {sipProvider === 'placetel' && 'Für Placetel: wss://webrtc.2.placetel.de'}
-                    {sipProvider === 'sipgate' && 'Für sipgate: wss://api.sipgate.com/ws'}
-                    {sipProvider === 'other' && 'WebSocket-URL deines SIP-Anbieters'}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sipUsername">SIP-Benutzername</Label>
-                  <Input
-                    id="sipUsername"
-                    placeholder="z.B. 123456 oder user@domain.de"
-                    value={sipUsername}
-                    onChange={(e) => setSipUsername(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sipPassword">SIP-Passwort</Label>
-                  <div className="relative">
-                    <Input
-                      id="sipPassword"
-                      type={showSipPassword ? "text" : "password"}
-                      placeholder="Dein SIP-Passwort"
-                      value={sipPassword}
-                      onChange={(e) => setSipPassword(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowSipPassword(!showSipPassword)}
-                    >
-                      {showSipPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sipDisplayName">Anzeigename (optional)</Label>
-                  <Input
-                    id="sipDisplayName"
-                    placeholder="z.B. Max Mustermann"
-                    value={sipDisplayName}
-                    onChange={(e) => setSipDisplayName(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Wird dem Angerufenen angezeigt
-                  </p>
-                </div>
-
-                <Button 
-                  onClick={handleSaveSip} 
-                  disabled={saving || !sipServer || !sipUsername || !sipPassword}
-                  className="w-full"
-                >
-                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  SIP-Telefonie speichern & weiter
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-
+                <TelephonyOnboarding 
+                  accountId={accountId} 
+                  onComplete={async () => {
+                    await refresh();
+                    setActiveStep(2);
+                  }} 
+                />
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveStep(2)}

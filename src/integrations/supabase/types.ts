@@ -35,6 +35,13 @@ export type Database = {
           smtp_password_encrypted: string | null
           smtp_port: number | null
           smtp_username: string | null
+          telephony_country: string | null
+          telephony_onboarding_completed: boolean | null
+          telephony_provider: string | null
+          telephony_timezone: string | null
+          telephony_webhook_secret: string | null
+          telephony_webhook_verified: boolean | null
+          telephony_webhook_verified_at: string | null
           updated_at: string
         }
         Insert: {
@@ -57,6 +64,13 @@ export type Database = {
           smtp_password_encrypted?: string | null
           smtp_port?: number | null
           smtp_username?: string | null
+          telephony_country?: string | null
+          telephony_onboarding_completed?: boolean | null
+          telephony_provider?: string | null
+          telephony_timezone?: string | null
+          telephony_webhook_secret?: string | null
+          telephony_webhook_verified?: boolean | null
+          telephony_webhook_verified_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -79,6 +93,13 @@ export type Database = {
           smtp_password_encrypted?: string | null
           smtp_port?: number | null
           smtp_username?: string | null
+          telephony_country?: string | null
+          telephony_onboarding_completed?: boolean | null
+          telephony_provider?: string | null
+          telephony_timezone?: string | null
+          telephony_webhook_secret?: string | null
+          telephony_webhook_verified?: boolean | null
+          telephony_webhook_verified_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -87,6 +108,104 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: true
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_phone_numbers: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          label: string | null
+          phone_number: string
+          updated_at: string
+          verified: boolean | null
+          verified_at: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          phone_number: string
+          updated_at?: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          phone_number?: string
+          updated_at?: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_phone_numbers_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_team_members: {
+        Row: {
+          account_id: string
+          created_at: string
+          email: string
+          extension: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone_number: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          email: string
+          extension?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          email?: string
+          extension?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_team_members_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1594,6 +1713,62 @@ export type Database = {
           },
         ]
       }
+      telephony_webhook_events: {
+        Row: {
+          account_id: string | null
+          call_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          event_type: string
+          from_number: string | null
+          id: string
+          processed: boolean | null
+          provider: string
+          raw_payload: Json | null
+          recording_url: string | null
+          status: string | null
+          to_number: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          call_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type: string
+          from_number?: string | null
+          id?: string
+          processed?: boolean | null
+          provider: string
+          raw_payload?: Json | null
+          recording_url?: string | null
+          status?: string | null
+          to_number?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          call_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type?: string
+          from_number?: string | null
+          id?: string
+          processed?: boolean | null
+          provider?: string
+          raw_payload?: Json | null
+          recording_url?: string | null
+          status?: string | null
+          to_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telephony_webhook_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       cold_call_queue: {
@@ -1737,6 +1912,13 @@ export type Database = {
       outreach_status: "offen" | "gesendet" | "follow_up" | "geschlossen"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
+      telephony_provider:
+        | "placetel"
+        | "sipgate"
+        | "aircall"
+        | "twilio"
+        | "telekom_nfon"
+        | "other"
       user_role: "setter" | "closer" | "admin"
     }
     CompositeTypes: {
@@ -1924,6 +2106,14 @@ export const Constants = {
       outreach_status: ["offen", "gesendet", "follow_up", "geschlossen"],
       task_related_type: ["deal", "contact"],
       task_status: ["open", "done"],
+      telephony_provider: [
+        "placetel",
+        "sipgate",
+        "aircall",
+        "twilio",
+        "telekom_nfon",
+        "other",
+      ],
       user_role: ["setter", "closer", "admin"],
     },
   },
