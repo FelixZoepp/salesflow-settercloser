@@ -50,13 +50,13 @@ interface TelephonySettings {
   onboarding_completed: boolean;
 }
 
+// Vereinfacht auf Twilio BYOC - Kunde bringt seinen eigenen Twilio-Account mit
+// Andere Provider (Placetel, Sipgate, Webex) hatten Anbindungsprobleme
 const PROVIDERS = [
-  { value: "placetel", label: "Placetel", type: "webhook" },
-  { value: "sipgate", label: "Sipgate", type: "api" },
-  { value: "aircall", label: "Aircall", type: "api" },
-  { value: "twilio", label: "Twilio", type: "byoc" },
-  { value: "telekom_nfon", label: "Telekom / NFON", type: "other" },
-  { value: "other", label: "Anderer Anbieter", type: "other" },
+  { value: "twilio", label: "Twilio (empfohlen)", type: "byoc", description: "Bring your own Twilio Account" },
+  { value: "placetel", label: "Placetel", type: "webhook", description: "Webhook-basiertes Tracking" },
+  { value: "sipgate", label: "Sipgate", type: "webhook", description: "Webhook-basiertes Tracking" },
+  { value: "other", label: "Anderer Anbieter", type: "other", description: "Manuelle Einrichtung" },
 ];
 
 const TIMEZONES = [
@@ -390,42 +390,56 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
               Schritt 1: Telefonie-Anbieter
             </CardTitle>
             <CardDescription>
-              Wähle deinen bestehenden Telefonieanbieter aus. Die Gesprächskosten entstehen ausschließlich bei deinem Anbieter.
+              Verbinde deinen eigenen Telefonieanbieter. Wir empfehlen Twilio für die beste Browser-Telefonie-Erfahrung.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Alert className="bg-muted/50 border-muted">
-              <Info className="w-4 h-4" />
+            <Alert className="bg-primary/10 border-primary/20">
+              <Info className="w-4 h-4 text-primary" />
               <AlertDescription>
-                <strong>Hinweis:</strong> Unser Tool stellt keine Telefonie bereit. Alle Gespräche werden über Ihren bestehenden Telefonieanbieter geführt.
+                <strong>Empfehlung: Twilio</strong> – Mit deinem eigenen Twilio-Account kannst du direkt aus dem Browser telefonieren. 
+                Die Kosten (ca. 0,01-0,02€/Min) entstehen direkt bei Twilio.
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Anbieter auswählen *</Label>
-              <Select 
-                value={settings.provider} 
-                onValueChange={(value) => setSettings(prev => ({ ...prev, provider: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Anbieter wählen..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVIDERS.map((provider) => (
-                    <SelectItem key={provider.value} value={provider.value}>
-                      <div className="flex items-center gap-2">
-                        {provider.label}
-                        <Badge variant="secondary" className="text-[10px]">
-                          {provider.type === "webhook" && "Webhook"}
-                          {provider.type === "api" && "API"}
-                          {provider.type === "byoc" && "BYOC"}
-                          {provider.type === "other" && "Manuell"}
-                        </Badge>
+              {PROVIDERS.map((provider) => (
+                <div 
+                  key={provider.value}
+                  onClick={() => setSettings(prev => ({ ...prev, provider: provider.value }))}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    settings.provider === provider.value 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        settings.provider === provider.value 
+                          ? 'border-primary bg-primary' 
+                          : 'border-muted-foreground'
+                      }`}>
+                        {settings.provider === provider.value && (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
+                          </div>
+                        )}
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      <div>
+                        <span className="font-medium">{provider.label}</span>
+                        <p className="text-xs text-muted-foreground">{provider.description}</p>
+                      </div>
+                    </div>
+                    <Badge variant={provider.value === 'twilio' ? 'default' : 'secondary'} className="text-[10px]">
+                      {provider.type === "webhook" && "Tracking"}
+                      {provider.type === "byoc" && "Browser-Telefonie"}
+                      {provider.type === "other" && "Manuell"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -755,24 +769,41 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
               </Alert>
             )}
 
-            {/* BYOC for Twilio */}
+            {/* BYOC for Twilio - Hauptoption */}
             {settings.provider === "twilio" && (
-              <Alert className="bg-muted/50">
-                <Info className="w-4 h-4" />
-                <AlertDescription>
-                  Für Twilio BYOC nutze bitte die SIP-Einstellungen unter Integrationen → SIP-Provider.
-                  Die Kosten für Twilio-Anrufe entstehen direkt in deinem Twilio-Account.
-                </AlertDescription>
-              </Alert>
+              <div className="space-y-4">
+                <Alert className="bg-primary/10 border-primary/20">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <AlertDescription>
+                    <strong>Twilio BYOC einrichten:</strong>
+                    <ol className="list-decimal ml-4 mt-2 space-y-2">
+                      <li>Erstelle einen <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer" className="text-primary underline">Twilio Account</a> (falls noch nicht vorhanden)</li>
+                      <li>Kaufe eine Telefonnummer im Twilio Dashboard</li>
+                      <li>Gehe zu <strong>Integrationen → SIP-Provider</strong> in unserem Tool</li>
+                      <li>Wähle "Twilio" und gib deine Twilio-Zugangsdaten ein</li>
+                      <li>Teste die Verbindung</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <h4 className="font-medium mb-2">Twilio Kosten (ca.)</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Ausgehende Anrufe nach DE: ~0,014€/Min</li>
+                    <li>• Telefonnummer (DE): ~1€/Monat</li>
+                    <li>• Keine Grundgebühr, Pay-as-you-go</li>
+                  </ul>
+                </div>
+              </div>
             )}
 
             {/* Other providers */}
-            {(settings.provider === "telekom_nfon" || settings.provider === "other") && (
+            {settings.provider === "other" && (
               <Alert className="bg-muted/50">
                 <Info className="w-4 h-4" />
                 <AlertDescription>
-                  Für diesen Anbieter ist eine manuelle Konfiguration erforderlich. 
-                  Kontaktiere uns unter support@pitchfirst.io für Unterstützung bei der Einrichtung.
+                  Für andere Anbieter ist eine manuelle Konfiguration erforderlich. 
+                  Kontaktiere uns unter <a href="mailto:support@pitchfirst.io" className="text-primary underline">support@pitchfirst.io</a> für Unterstützung.
                 </AlertDescription>
               </Alert>
             )}
