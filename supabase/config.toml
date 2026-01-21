@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.twilio-voice]
 verify_jwt = false
+
+[functions.upgrade-subscription]
+verify_jwt = true
