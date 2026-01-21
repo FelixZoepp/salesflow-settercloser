@@ -175,6 +175,34 @@ export default function SipProviderSettings() {
   };
 
   const handleTestConnection = async () => {
+    // For Twilio, test the token generation
+    if (settings.sip_provider === 'twilio') {
+      setTesting(true);
+      setTestResult(null);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('twilio-token');
+        
+        if (error || data?.error) {
+          throw new Error(data?.error || error?.message || 'Token generation failed');
+        }
+        
+        if (data?.token) {
+          setTestResult('success');
+          toast.success("Twilio-Verbindung erfolgreich! Token wurde generiert.");
+        } else {
+          throw new Error('Kein Token erhalten');
+        }
+      } catch (error: any) {
+        setTestResult('error');
+        toast.error(`Twilio-Fehler: ${error.message}`);
+      } finally {
+        setTesting(false);
+      }
+      return;
+    }
+
+    // For other providers, test WebSocket connection
     if (!settings.sip_server || !settings.sip_username) {
       toast.error("Bitte fülle alle Pflichtfelder aus");
       return;
@@ -184,7 +212,6 @@ export default function SipProviderSettings() {
     setTestResult(null);
 
     try {
-      // Test WebSocket connection to SIP server
       const ws = new WebSocket(settings.sip_server);
       
       const timeout = setTimeout(() => {
@@ -280,8 +307,27 @@ export default function SipProviderSettings() {
 
         {settings.sip_provider && (
           <>
-            {/* Provider Help */}
-            {selectedProvider?.helpUrl && (
+            {/* Twilio-specific UI */}
+            {settings.sip_provider === 'twilio' && (
+              <Alert className="bg-primary/10 border-primary/20">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <AlertDescription>
+                  <strong>Twilio ist konfiguriert!</strong>
+                  <p className="mt-2 text-sm">
+                    Die Twilio-Credentials (Account SID, Auth Token, Telefonnummer) sind als Secrets gespeichert. 
+                    Klicke auf "Verbindung testen" um die Konfiguration zu prüfen.
+                  </p>
+                  <ul className="mt-2 text-sm text-muted-foreground list-disc ml-4">
+                    <li>Anrufkosten: ~0,014€/Min nach DE</li>
+                    <li>Telefonnummer: ~1€/Monat</li>
+                    <li>Abrechnung direkt über deinen Twilio-Account</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Provider Help - not for Twilio */}
+            {settings.sip_provider !== 'twilio' && selectedProvider?.helpUrl && (
               <Alert>
                 <Info className="w-4 h-4" />
                 <AlertDescription>
@@ -297,61 +343,67 @@ export default function SipProviderSettings() {
               </Alert>
             )}
 
-            {/* Server Settings */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>WebSocket Server *</Label>
-                <Input
-                  value={settings.sip_server || ""}
-                  onChange={(e) => setSettings(prev => ({ ...prev, sip_server: e.target.value }))}
-                  placeholder="wss://pbx.example.de"
-                />
-                <p className="text-xs text-muted-foreground">WebSocket-URL des SIP-Servers</p>
-              </div>
+            {/* Server Settings - only for non-Twilio providers */}
+            {settings.sip_provider !== 'twilio' && (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>WebSocket Server *</Label>
+                    <Input
+                      value={settings.sip_server || ""}
+                      onChange={(e) => setSettings(prev => ({ ...prev, sip_server: e.target.value }))}
+                      placeholder="wss://pbx.example.de"
+                    />
+                    <p className="text-xs text-muted-foreground">WebSocket-URL des SIP-Servers</p>
+                  </div>
 
-              <div className="space-y-2">
-                <Label>SIP Domain</Label>
-                <Input
-                  value={settings.sip_domain || ""}
-                  onChange={(e) => setSettings(prev => ({ ...prev, sip_domain: e.target.value }))}
-                  placeholder="pbx.example.de"
-                />
-                <p className="text-xs text-muted-foreground">Domain für SIP-URI (user@domain)</p>
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label>SIP Domain</Label>
+                    <Input
+                      value={settings.sip_domain || ""}
+                      onChange={(e) => setSettings(prev => ({ ...prev, sip_domain: e.target.value }))}
+                      placeholder="pbx.example.de"
+                    />
+                    <p className="text-xs text-muted-foreground">Domain für SIP-URI (user@domain)</p>
+                  </div>
+                </div>
 
-            {/* Credentials */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>SIP-Benutzername *</Label>
-                <Input
-                  value={settings.sip_username || ""}
-                  onChange={(e) => setSettings(prev => ({ ...prev, sip_username: e.target.value }))}
-                  placeholder="123456"
-                />
-              </div>
+                {/* Credentials */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>SIP-Benutzername *</Label>
+                    <Input
+                      value={settings.sip_username || ""}
+                      onChange={(e) => setSettings(prev => ({ ...prev, sip_username: e.target.value }))}
+                      placeholder="123456"
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label>SIP-Passwort *</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label>SIP-Passwort *</Label>
+                    <Input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Display Name */}
-            <div className="space-y-2">
-              <Label>Anzeigename (Caller ID)</Label>
-              <Input
-                value={settings.sip_display_name || ""}
-                onChange={(e) => setSettings(prev => ({ ...prev, sip_display_name: e.target.value }))}
-                placeholder="Max Mustermann"
-              />
-              <p className="text-xs text-muted-foreground">Name, der dem Angerufenen angezeigt wird</p>
-            </div>
+            {/* Display Name - only for non-Twilio */}
+            {settings.sip_provider !== 'twilio' && (
+              <div className="space-y-2">
+                <Label>Anzeigename (Caller ID)</Label>
+                <Input
+                  value={settings.sip_display_name || ""}
+                  onChange={(e) => setSettings(prev => ({ ...prev, sip_display_name: e.target.value }))}
+                  placeholder="Max Mustermann"
+                />
+                <p className="text-xs text-muted-foreground">Name, der dem Angerufenen angezeigt wird</p>
+              </div>
+            )}
 
             {/* Test Result */}
             {testResult && (
@@ -379,14 +431,14 @@ export default function SipProviderSettings() {
               <Button
                 variant="outline"
                 onClick={handleTestConnection}
-                disabled={testing || !settings.sip_server}
+                disabled={testing || (settings.sip_provider !== 'twilio' && !settings.sip_server)}
               >
                 {testing ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
                   <TestTube className="w-4 h-4 mr-2" />
                 )}
-                Verbindung testen
+                {settings.sip_provider === 'twilio' ? 'Twilio testen' : 'Verbindung testen'}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? (
