@@ -132,12 +132,25 @@ export default function ImportLeads() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [leadType, setLeadType] = useState<'inbound' | 'outbound'>('inbound');
 
-  // Load campaigns on mount
+  // Load campaigns for current account only
   useEffect(() => {
     const loadCampaigns = async () => {
+      // First get the user's account_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.account_id) return;
+
       const { data, error } = await supabase
         .from('campaigns')
         .select('id, name, status')
+        .eq('account_id', profile.account_id)
         .order('name');
       
       if (!error && data) {
