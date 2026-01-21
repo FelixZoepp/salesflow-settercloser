@@ -92,12 +92,29 @@ serve(async (req) => {
       return hex.slice(0, len);
     };
 
+    const isTokenUnique = (token: string | null | undefined): boolean => {
+      if (!token) return false;
+      // A unique token should have a suffix pattern like "name-a1b2c3" (at least 4 hex chars after dash)
+      return /^.+-[a-f0-9]{4,}$/i.test(token);
+    };
+
     const ensurePrimaryAffiliateLink = async (affiliateId: string) => {
       let links = await listAffiliateLinks(affiliateId);
 
-      if (links.length === 0) {
+      // Check if existing link already has a unique token
+      const existingLink = links?.[0];
+      const existingToken = existingLink?.token;
+      
+      // If no links exist OR existing token is not unique (no suffix), create a new unique one
+      if (links.length === 0 || !isTokenUnique(existingToken)) {
         const base = buildPreferredTokenBase();
         let createdLink: any | null = null;
+
+        logStep("Creating unique affiliate link", { 
+          reason: links.length === 0 ? "no_links" : "token_not_unique",
+          existingToken,
+          base 
+        });
 
         // Create link with a unique token (never duplicate)
         for (let attempt = 0; attempt < 8; attempt++) {
@@ -118,7 +135,7 @@ serve(async (req) => {
           if (createRes.ok) {
             const createdJson = await createRes.json();
             createdLink = createdJson?.data ?? createdJson;
-            logStep("Created affiliate link", {
+            logStep("Created unique affiliate link", {
               affiliateId,
               url: createdLink?.url,
               token: createdLink?.token,
@@ -161,7 +178,8 @@ serve(async (req) => {
         }
 
         if (createdLink) {
-          links = [createdLink];
+          // Use the new unique link as primary
+          links = [createdLink, ...links];
         }
       }
 
