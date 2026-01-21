@@ -204,7 +204,7 @@ const Contacts = () => {
         .insert({
           contact_id: contact.id,
           title: `${contact.first_name} ${contact.last_name} - ${contact.company || 'Kaltakquise'}`,
-          stage: 'New',
+          stage: 'Lead',
           pipeline: 'cold',
           amount_eur: 0,
           setter_id: user.id
