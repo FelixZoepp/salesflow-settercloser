@@ -62,6 +62,21 @@ Deno.serve(async (req) => {
 
     console.log(`Import leads request from user: ${user.id}`);
 
+    // Get user's account_id from profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.account_id) {
+      console.error('Profile error:', profileError);
+      throw new Error('User account not found');
+    }
+
+    const accountId = profile.account_id;
+    console.log(`User account_id: ${accountId}`);
+
     // Parse the CSV data, leadType and optional campaignId from request body
     const { csvData, leadType, campaignId } = await req.json();
     if (!csvData) {
@@ -172,6 +187,7 @@ Deno.serve(async (req) => {
               .from('companies')
               .insert({
                 owner_user_id: user.id,
+                account_id: accountId,
                 name: companyName,
                 website: row.website || null,
                 phone: row.phone || null,
@@ -182,7 +198,6 @@ Deno.serve(async (req) => {
               })
               .select()
               .single();
-
             if (companyError) throw companyError;
             companyId = newCompany.id;
           }
@@ -242,6 +257,7 @@ Deno.serve(async (req) => {
               .from('contacts')
               .insert({
                 owner_user_id: user.id,
+                account_id: accountId,
                 first_name: row.first_name || '',
                 last_name: row.last_name || '',
                 company: companyName || null,
@@ -297,6 +313,7 @@ Deno.serve(async (req) => {
               .from('contacts')
               .insert({
                 owner_user_id: user.id,
+                account_id: accountId,
                 first_name: row.first_name || '',
                 last_name: row.last_name || '',
                 company: companyName || null,
@@ -334,6 +351,7 @@ Deno.serve(async (req) => {
             .from('contacts')
             .insert({
               owner_user_id: user.id,
+              account_id: accountId,
               first_name: row.first_name || '',
               last_name: row.last_name || '',
               company: companyName || null,
