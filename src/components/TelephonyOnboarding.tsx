@@ -771,29 +771,157 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
 
             {/* BYOC for Twilio - Hauptoption */}
             {settings.provider === "twilio" && (
-              <div className="space-y-4">
-                <Alert className="bg-primary/10 border-primary/20">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
+              <div className="space-y-6">
+                {/* Voraussetzungen */}
+                <Alert className="bg-amber-500/10 border-amber-500/30">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <AlertDescription>
-                    <strong>Twilio BYOC einrichten:</strong>
-                    <ol className="list-decimal ml-4 mt-2 space-y-2">
-                      <li>Erstelle einen <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer" className="text-primary underline">Twilio Account</a> (falls noch nicht vorhanden)</li>
-                      <li>Kaufe eine Telefonnummer im Twilio Dashboard</li>
-                      <li>Gehe zu <strong>Integrationen → SIP-Provider</strong> in unserem Tool</li>
-                      <li>Wähle "Twilio" und gib deine Twilio-Zugangsdaten ein</li>
-                      <li>Teste die Verbindung</li>
-                    </ol>
+                    <strong>Wichtig:</strong> Du benötigst einen aktiven Twilio-Account mit einer verifizierten Telefonnummer 
+                    und ausreichendem Guthaben. Testkonten funktionieren nur für verifizierte Nummern.
                   </AlertDescription>
                 </Alert>
-                
+
+                {/* Schritt-für-Schritt Anleitung */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Twilio einrichten – Schritt für Schritt</h4>
+                  
+                  {/* Schritt 1: Account erstellen */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">1</Badge>
+                      <h5 className="font-medium">Twilio Account erstellen</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Falls du noch keinen Twilio-Account hast, erstelle einen unter:
+                    </p>
+                    <a 
+                      href="https://www.twilio.com/try-twilio" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                    >
+                      twilio.com/try-twilio <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* Schritt 2: Telefonnummer kaufen */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">2</Badge>
+                      <h5 className="font-medium">Telefonnummer kaufen</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Im Twilio Dashboard: <strong>Phone Numbers → Buy a number</strong>
+                    </p>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Wähle eine Nummer mit <strong>Voice</strong>-Funktion (z.B. +49 für Deutschland).
+                    </p>
+                    <a 
+                      href="https://console.twilio.com/us1/develop/phone-numbers/manage/incoming" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                    >
+                      Twilio Phone Numbers <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* Schritt 3: Account SID & Auth Token */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">3</Badge>
+                      <h5 className="font-medium">Account SID & Auth Token kopieren</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Auf der Twilio Console Startseite findest du:
+                    </p>
+                    <ul className="text-sm text-muted-foreground ml-7 list-disc list-inside space-y-1">
+                      <li><strong>Account SID</strong> – beginnt mit "AC..."</li>
+                      <li><strong>Auth Token</strong> – klicke auf "Show" zum Anzeigen</li>
+                    </ul>
+                    <a 
+                      href="https://console.twilio.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                    >
+                      Twilio Console <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* Schritt 4: API Key erstellen */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">4</Badge>
+                      <h5 className="font-medium">API Key erstellen (wichtig!)</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Für Browser-Telefonie brauchst du zusätzlich einen API Key:
+                    </p>
+                    <ol className="text-sm text-muted-foreground ml-7 list-decimal list-inside space-y-1">
+                      <li>Gehe zu <strong>Account → API keys & tokens</strong></li>
+                      <li>Klicke auf <strong>Create API Key</strong></li>
+                      <li>Wähle "Standard" als Key Type</li>
+                      <li>Kopiere <strong>SID</strong> (beginnt mit "SK...") und <strong>Secret</strong></li>
+                    </ol>
+                    <Alert className="ml-7 mt-2 bg-destructive/10 border-destructive/30">
+                      <AlertTriangle className="w-4 h-4 text-destructive" />
+                      <AlertDescription className="text-xs">
+                        <strong>Wichtig:</strong> Das Secret wird nur einmal angezeigt! Speichere es sofort.
+                      </AlertDescription>
+                    </Alert>
+                    <a 
+                      href="https://console.twilio.com/us1/account/keys-credentials/api-keys" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm mt-2"
+                    >
+                      API Keys erstellen <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* Schritt 5: In unserem Tool eintragen */}
+                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">5</Badge>
+                      <h5 className="font-medium">Zugangsdaten bei uns eintragen</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-7">
+                      Gehe zu <strong>Integrationen → SIP-Provider Einstellungen</strong> und trage ein:
+                    </p>
+                    <ul className="text-sm text-muted-foreground ml-7 list-disc list-inside space-y-1">
+                      <li><strong>TWILIO_ACCOUNT_SID</strong> – dein Account SID</li>
+                      <li><strong>TWILIO_AUTH_TOKEN</strong> – dein Auth Token</li>
+                      <li><strong>TWILIO_PHONE_NUMBER</strong> – deine gekaufte Nummer (z.B. +4930123456)</li>
+                      <li><strong>TWILIO_API_KEY_SID</strong> – der API Key SID (SK...)</li>
+                      <li><strong>TWILIO_API_KEY_SECRET</strong> – das API Key Secret</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Kostenübersicht */}
                 <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <h4 className="font-medium mb-2">Twilio Kosten (ca.)</h4>
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-muted-foreground" />
+                    Twilio Kosten (ca.)
+                  </h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Ausgehende Anrufe nach DE: ~0,014€/Min</li>
+                    <li>• Eingehende Anrufe: ~0,005€/Min</li>
                     <li>• Telefonnummer (DE): ~1€/Monat</li>
-                    <li>• Keine Grundgebühr, Pay-as-you-go</li>
+                    <li>• <strong>Keine Grundgebühr</strong> – Pay-as-you-go</li>
                   </ul>
                 </div>
+
+                {/* Hinweis Test vs. Produktiv */}
+                <Alert className="bg-muted/50 border-border">
+                  <Info className="w-4 h-4" />
+                  <AlertDescription className="text-sm">
+                    <strong>Test-Account vs. Produktiv:</strong> Mit einem Twilio Test-Account kannst du nur 
+                    verifizierte Telefonnummern anrufen. Für den Produktivbetrieb musst du deinen Account upgraden 
+                    und Guthaben aufladen.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
 
