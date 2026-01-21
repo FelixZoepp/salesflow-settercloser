@@ -113,6 +113,8 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [contacts, setContacts] = useState<WorkflowContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayMessageCount, setTodayMessageCount] = useState(0);
+  const [todayConnectionCount, setTodayConnectionCount] = useState(0);
+  const [todayFuCount, setTodayFuCount] = useState(0);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importing, setImporting] = useState(false);
@@ -124,7 +126,8 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
   const MAX_DAILY_MESSAGES = 10;
-  const MAX_PENDING_CONNECTIONS = 15;
+  const MAX_DAILY_CONNECTIONS = 15;
+  const MAX_DAILY_FOLLOWUPS = 20;
 
   const fetchContacts = async () => {
     setLoading(true);
@@ -141,12 +144,28 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     } else {
       setContacts((data || []) as WorkflowContact[]);
       
-      // Count today's messages
+      // Count today's activities - reset daily at midnight
       const today = new Date().toISOString().split('T')[0];
+      
+      // Count today's first messages
       const todayMessages = (data || []).filter((c: any) => 
         c.first_message_sent_at && c.first_message_sent_at.startsWith(today)
       ).length;
       setTodayMessageCount(todayMessages);
+      
+      // Count today's sent connections
+      const todayConnections = (data || []).filter((c: any) => 
+        c.connection_sent_at && c.connection_sent_at.startsWith(today)
+      ).length;
+      setTodayConnectionCount(todayConnections);
+      
+      // Count today's follow-ups
+      const todayFollowups = (data || []).filter((c: any) => 
+        (c.fu1_sent_at && c.fu1_sent_at.startsWith(today)) ||
+        (c.fu2_sent_at && c.fu2_sent_at.startsWith(today)) ||
+        (c.fu3_sent_at && c.fu3_sent_at.startsWith(today))
+      ).length;
+      setTodayFuCount(todayFollowups);
     }
     setLoading(false);
   };
@@ -427,8 +446,10 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
   const warmLeads = contacts.filter(c => c.workflow_status === 'reagiert_warm');
   
-  const slotsAvailable = MAX_PENDING_CONNECTIONS - pendingConnections.length;
+  // Daily limits - these reset at midnight
+  const connectionsRemaining = MAX_DAILY_CONNECTIONS - todayConnectionCount;
   const messagesRemaining = MAX_DAILY_MESSAGES - todayMessageCount;
+  const followupsRemaining = MAX_DAILY_FOLLOWUPS - todayFuCount;
 
   const ContactCard = ({ contact, actions, showLinkedIn = false }: { contact: WorkflowContact; actions: React.ReactNode; showLinkedIn?: boolean }) => (
     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
@@ -711,12 +732,17 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Neue Vernetzungen</span>
+              <span className="text-sm text-muted-foreground">Vernetzungen heute</span>
             </div>
             <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{slotsAvailable > 0 ? slotsAvailable : 0}</span>
+              <span className={connectionsRemaining <= 0 ? "text-destructive" : "text-muted-foreground"}>
+                {connectionsRemaining > 0 ? connectionsRemaining : 0}
+              </span>
               {' / '}
-              <span>{MAX_PENDING_CONNECTIONS}</span>
+              <span>{MAX_DAILY_CONNECTIONS}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Reset um Mitternacht
             </p>
           </CardContent>
         </Card>
@@ -727,9 +753,14 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
               <span className="text-sm text-muted-foreground">Erstnachrichten heute</span>
             </div>
             <p className="text-2xl font-bold">
-              <span className="text-muted-foreground">{messagesRemaining > 0 ? messagesRemaining : 0}</span>
+              <span className={messagesRemaining <= 0 ? "text-destructive" : "text-muted-foreground"}>
+                {messagesRemaining > 0 ? messagesRemaining : 0}
+              </span>
               {' / '}
               <span>{MAX_DAILY_MESSAGES}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Reset um Mitternacht
             </p>
           </CardContent>
         </Card>
@@ -737,9 +768,18 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Follow-ups offen</span>
+              <span className="text-sm text-muted-foreground">Follow-ups heute</span>
             </div>
-            <p className="text-2xl font-bold">{fu1Due.length + fu2Due.length + fu3Due.length}</p>
+            <p className="text-2xl font-bold">
+              <span className={followupsRemaining <= 0 ? "text-destructive" : "text-muted-foreground"}>
+                {followupsRemaining > 0 ? followupsRemaining : 0}
+              </span>
+              {' / '}
+              <span>{MAX_DAILY_FOLLOWUPS}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {fu1Due.length + fu2Due.length + fu3Due.length} fällig
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -788,7 +828,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
             )}
           </TabsTrigger>
           <TabsTrigger value="new-connections">
-            Neue ({slotsAvailable > 0 ? Math.min(slotsAvailable, readyForConnection.length) : 0})
+            Neue ({connectionsRemaining > 0 ? Math.min(connectionsRemaining, readyForConnection.length) : 0})
           </TabsTrigger>
           <TabsTrigger value="first-messages">
             Erstnachrichten ({Math.min(acceptedConnections.length, messagesRemaining)})
@@ -851,33 +891,32 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           </Card>
         </TabsContent>
 
-        {/* Step 2: New Connections */}
         <TabsContent value="new-connections" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Schritt 2: Neue Vernetzungen senden</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {slotsAvailable > 0 
-                  ? `Du kannst noch ${Math.min(slotsAvailable, readyForConnection.length)} Vernetzungsanfragen senden (max. 20 offene).`
-                  : "Du hast bereits 20 offene Vernetzungsanfragen. Warte bis einige angenommen werden."
+                {connectionsRemaining > 0 
+                  ? `Du kannst heute noch ${Math.min(connectionsRemaining, readyForConnection.length)} Vernetzungsanfragen senden.`
+                  : "Du hast heute das Limit erreicht. Morgen kannst du wieder neue senden."
                 }
               </p>
             </CardHeader>
             <CardContent>
-              {slotsAvailable <= 0 ? (
+              {connectionsRemaining <= 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-2" />
-                  <p>Limit erreicht! Warte auf Annahmen.</p>
+                  <p>Tageslimit erreicht! Morgen geht's weiter.</p>
                 </div>
               ) : readyForConnection.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-emerald-500" />
                   <p>Keine neuen Leads für Vernetzung verfügbar.</p>
                 </div>
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-2">
-                    {readyForConnection.slice(0, slotsAvailable).map(contact => (
+                    {readyForConnection.slice(0, connectionsRemaining).map(contact => (
                       <ContactCard 
                         key={contact.id} 
                         contact={contact}
