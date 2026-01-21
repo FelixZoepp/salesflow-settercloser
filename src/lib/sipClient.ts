@@ -1,6 +1,12 @@
+/**
+ * SIP Client für Browser-Telefonie
+ * 
+ * Primär für Twilio BYOC optimiert, funktioniert aber auch mit anderen SIP-Providern.
+ * Nutzt SIP.js für WebRTC-basierte Anrufe.
+ */
 import { UserAgent, Inviter, SessionState, Registerer, RegistererState, Session } from 'sip.js';
 
-export interface PlacetelConfig {
+export interface SipClientConfig {
   sipServer: string;
   login: string;
   password: string;
@@ -8,7 +14,7 @@ export interface PlacetelConfig {
   displayName?: string;
 }
 
-export interface PlacetelCallbacks {
+export interface SipClientCallbacks {
   onRegistered: () => void;
   onUnregistered: () => void;
   onRegistrationFailed: (error: string) => void;
@@ -20,29 +26,32 @@ export interface PlacetelCallbacks {
   onLocalAudio: (stream: MediaStream) => void;
 }
 
-export class PlacetelClient {
+// Legacy exports for backward compatibility
+export type PlacetelConfig = SipClientConfig;
+export type PlacetelCallbacks = SipClientCallbacks;
+
+export class SipClient {
   private userAgent: UserAgent | null = null;
   private registerer: Registerer | null = null;
   private currentSession: Session | null = null;
-  private callbacks: PlacetelCallbacks;
-  private config: PlacetelConfig;
+  private callbacks: SipClientCallbacks;
+  private config: SipClientConfig;
   private localStream: MediaStream | null = null;
 
-  constructor(config: PlacetelConfig, callbacks: PlacetelCallbacks) {
+  constructor(config: SipClientConfig, callbacks: SipClientCallbacks) {
     this.config = config;
     this.callbacks = callbacks;
   }
 
   async connect(): Promise<void> {
-    // Extract username part if login contains @ (e.g., "felix@zoeppmedia.de" -> "felix")
-    // Some SIP providers use full email as username, but for URI we need just the user part
+    // Extract username part if login contains @ (e.g., "user@domain.com" -> "user")
     let sipUser = this.config.login;
     if (this.config.login.includes('@')) {
-      // If the domain in login matches the SIP domain, use just the username
       const [userPart, domainPart] = this.config.login.split('@');
-      // Use the full login if it looks like an email that's different from SIP domain
-      // Otherwise use just the user part
-      if (domainPart === this.config.domain || this.config.domain.includes('placetel')) {
+      // Use just the username part if domain matches
+      if (domainPart === this.config.domain || 
+          this.config.domain.includes('twilio') || 
+          this.config.domain.includes('pstn')) {
         sipUser = userPart;
       }
     }
@@ -53,17 +62,10 @@ export class PlacetelClient {
       throw new Error(`Failed to create SIP URI: invalid login "${sipUser}" or domain "${this.config.domain}"`);
     }
 
-    // Determine WebSocket URL - Placetel uses different endpoints
-    // Based on Placetel documentation: wss://webrtc.2.placetel.de (without /ws path)
+    // Determine WebSocket URL
     let wsServer = this.config.sipServer.includes('://')
       ? this.config.sipServer
       : `wss://${this.config.sipServer}`;
-    
-    // Remove any trailing path that was incorrectly added
-    // Placetel WebRTC server does NOT use /ws path
-    if (wsServer.includes('placetel') && wsServer.endsWith('/ws')) {
-      wsServer = wsServer.replace(/\/ws$/, '');
-    }
     
     console.log('Connecting to SIP WebSocket:', wsServer);
 
@@ -85,7 +87,7 @@ export class PlacetelClient {
 
     // Start the user agent
     await this.userAgent.start();
-    console.log('Placetel UserAgent started');
+    console.log('SIP UserAgent started');
 
     // Register with the SIP server
     this.registerer = new Registerer(this.userAgent);
@@ -240,3 +242,6 @@ export class PlacetelClient {
     return this.currentSession?.state === SessionState.Established;
   }
 }
+
+// Legacy alias for backward compatibility
+export const PlacetelClient = SipClient;
