@@ -553,24 +553,22 @@ const DraggableDealCard = ({ deal, onOpenDetail, onStartCall }: DraggableDealCar
         {/* Personalized URL Link */}
         {deal.contacts?.personalized_url && (
           <div className="pt-2 border-t border-white/10 mt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full text-xs gap-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(deal.contacts!.personalized_url!, '_blank');
-              }}
+            <a
+              href={deal.contacts.personalized_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
             >
               {deal.contacts.video_status === 'ready' ? (
-                <Video className="w-3.5 h-3.5 text-emerald-500" />
+                <Video className="w-3 h-3 text-emerald-500 shrink-0" />
               ) : deal.contacts.video_status === 'generating_intro' ? (
-                <Video className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                <Video className="w-3 h-3 text-amber-500 animate-pulse shrink-0" />
               ) : (
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3 h-3 shrink-0" />
               )}
               <span className="truncate">{deal.contacts.personalized_url.replace('https://', '')}</span>
-            </Button>
+            </a>
           </div>
         )}
       </CardContent>
