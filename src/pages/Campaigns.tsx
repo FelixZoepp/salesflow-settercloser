@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin, UserPlus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import { CampaignStatistics } from "@/components/CampaignStatistics";
 import { CampaignComparison } from "@/components/CampaignComparison";
 import { CampaignLeadsTable } from "@/components/CampaignLeadsTable";
 import { VideoWorkflowPanel } from "@/components/VideoWorkflowPanel";
+import { ConnectionSuggestions } from "@/components/ConnectionSuggestions";
 
 interface Campaign {
   id: string;
@@ -498,8 +499,12 @@ const Campaigns = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <Tabs defaultValue="leads">
-                        <TabsList>
+                      <Tabs defaultValue="suggestions">
+                        <TabsList className="flex-wrap">
+                          <TabsTrigger value="suggestions" className="flex items-center gap-1">
+                            <UserPlus className="h-4 w-4" />
+                            Vernetzung
+                          </TabsTrigger>
                           <TabsTrigger value="leads" className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
                             Leads
@@ -519,6 +524,13 @@ const Campaigns = () => {
                           <TabsTrigger value="overview">Übersicht</TabsTrigger>
                           <TabsTrigger value="tracking">Tracking</TabsTrigger>
                         </TabsList>
+
+                        <TabsContent value="suggestions" className="mt-6">
+                          <ConnectionSuggestions 
+                            campaignId={selectedCampaign.id} 
+                            campaignName={selectedCampaign.name} 
+                          />
+                        </TabsContent>
 
                         <TabsContent value="leads" className="mt-6">
                           <CampaignLeadsTable 
