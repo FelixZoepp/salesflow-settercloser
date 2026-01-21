@@ -27,8 +27,11 @@ import {
   Plus,
   Trash2,
   Settings2,
-  Pencil
+  Pencil,
+  AlertTriangle,
+  TrendingDown
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -446,6 +449,26 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
   const warmLeads = contacts.filter(c => c.workflow_status === 'reagiert_warm');
   
+  // Calculate acceptance rate over last 7+ days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  const connectionsSentLast7Days = contacts.filter(c => {
+    if (!c.connection_sent_at) return false;
+    return new Date(c.connection_sent_at) >= sevenDaysAgo;
+  });
+  
+  const connectionsAcceptedLast7Days = contacts.filter(c => {
+    if (!c.connection_sent_at || !c.connection_accepted_at) return false;
+    return new Date(c.connection_sent_at) >= sevenDaysAgo;
+  });
+  
+  const acceptanceRate = connectionsSentLast7Days.length >= 5 
+    ? Math.round((connectionsAcceptedLast7Days.length / connectionsSentLast7Days.length) * 100)
+    : null; // Only calculate if we have at least 5 data points
+  
+  const showLowAcceptanceWarning = acceptanceRate !== null && acceptanceRate < 20;
+  
   // Daily limits - these reset at midnight
   const connectionsRemaining = MAX_DAILY_CONNECTIONS - todayConnectionCount;
   const messagesRemaining = MAX_DAILY_MESSAGES - todayMessageCount;
@@ -783,6 +806,29 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           </CardContent>
         </Card>
       </div>
+
+      {/* Low Acceptance Rate Warning */}
+      {showLowAcceptanceWarning && (
+        <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/10">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTitle className="text-amber-500 flex items-center gap-2">
+            <TrendingDown className="h-4 w-4" />
+            Niedrige Annahmequote: {acceptanceRate}%
+          </AlertTitle>
+          <AlertDescription className="text-amber-200/80 mt-2">
+            <p className="mb-2">
+              In den letzten 7 Tagen wurden nur {connectionsAcceptedLast7Days.length} von {connectionsSentLast7Days.length} Vernetzungsanfragen angenommen.
+            </p>
+            <p className="font-medium">Empfehlungen:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1 text-sm">
+              <li>Reduziere die täglichen Vernetzungen auf 8-10</li>
+              <li>Überprüfe deine Zielgruppe – passt sie zu deinem Angebot?</li>
+              <li>Optimiere dein LinkedIn-Profil (Headline, Foto, About)</li>
+              <li>Prüfe ob deine Vernetzungsanfragen personalisiert sind</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Warm Leads Alert */}
       {warmLeads.length > 0 && (
