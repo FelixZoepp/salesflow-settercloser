@@ -373,7 +373,7 @@ Deno.serve(async (req) => {
           }
 
           if (existingContact && duplicateAction !== 'create') {
-            // Update existing contact
+            // Update existing contact - also update campaign_id
             await supabase
               .from('contacts')
               .update({
@@ -387,6 +387,7 @@ Deno.serve(async (req) => {
                 source: row.source || null,
                 linkedin_url: row.linkedin_url || null,
                 email: row.email || null,
+                campaign_id: campaignId || null,
               })
               .eq('id', existingContact.id);
             
@@ -435,7 +436,7 @@ Deno.serve(async (req) => {
           }
 
           if (existingContact && duplicateAction !== 'create') {
-            // Update existing contact
+            // Update existing contact - also update campaign_id
             await supabase
               .from('contacts')
               .update({
@@ -448,13 +449,14 @@ Deno.serve(async (req) => {
                 source: row.source || null,
                 external_id: row.external_id || null,
                 linkedin_url: row.linkedin_url || null,
+                campaign_id: campaignId || null,
               })
               .eq('id', existingContact.id);
             
             contactId = existingContact.id;
             result.updated_count++;
           } else {
-            // Create new contact
+            // Create new contact with campaign_id
             const { data: newContact, error: contactError } = await supabase
               .from('contacts')
               .insert({
@@ -470,6 +472,8 @@ Deno.serve(async (req) => {
                 source: row.source || null,
                 external_id: row.external_id || null,
                 linkedin_url: row.linkedin_url || null,
+                lead_type: 'inbound',
+                campaign_id: campaignId || null,
               })
               .select()
               .single();
@@ -484,6 +488,7 @@ Deno.serve(async (req) => {
               .insert({
                 contact_id: contactId,
                 setter_id: user.id,
+                account_id: accountId,
                 title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
                 stage: 'Lead',
                 pipeline: 'cold',
@@ -492,7 +497,7 @@ Deno.serve(async (req) => {
               });
           }
         } else if (companyId) {
-          // Create contact without email (if we have company)
+          // Create contact without email (if we have company) - with campaign_id
           const { data: newContact, error: contactError } = await supabase
             .from('contacts')
             .insert({
@@ -507,6 +512,8 @@ Deno.serve(async (req) => {
               source: row.source || null,
               external_id: row.external_id || null,
               linkedin_url: row.linkedin_url || null,
+              lead_type: 'inbound',
+              campaign_id: campaignId || null,
             })
             .select()
             .single();
@@ -521,6 +528,7 @@ Deno.serve(async (req) => {
             .insert({
               contact_id: contactId,
               setter_id: user.id,
+              account_id: accountId,
               title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
               stage: 'Lead',
               pipeline: 'cold',
