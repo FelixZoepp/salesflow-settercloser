@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Upload, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Download, Upload, AlertCircle, CheckCircle2, Loader2, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ColumnMapper, { ColumnMapping } from "@/components/ColumnMapper";
 import DuplicatePreview, { DuplicateMatch, DuplicateAction } from "@/components/DuplicatePreview";
+
+interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+}
 
 interface ImportResult {
   imported_count: number;
@@ -118,6 +126,26 @@ export default function ImportLeads() {
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [parseErrors, setParseErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Campaign state
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [leadType, setLeadType] = useState<'inbound' | 'outbound'>('inbound');
+
+  // Load campaigns on mount
+  useEffect(() => {
+    const loadCampaigns = async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('id, name, status')
+        .order('name');
+      
+      if (!error && data) {
+        setCampaigns(data);
+      }
+    };
+    loadCampaigns();
+  }, []);
 
   const csvTemplate = `company_name,website,phone,street,zip,city,country,first_name,last_name,email,position,source,external_id
 Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,Geschäftsführer,Website,ext_001
@@ -181,7 +209,9 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
       const { data, error } = await supabase.functions.invoke('import-leads', {
         body: { 
           csvData: transformedCsv,
-          mode: 'check_duplicates'
+          mode: 'check_duplicates',
+          leadType,
+          campaignId: selectedCampaignId
         },
       });
 
@@ -218,7 +248,9 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
       const { data, error } = await supabase.functions.invoke('import-leads', {
         body: { 
           csvData,
-          duplicateActions
+          duplicateActions,
+          leadType,
+          campaignId: selectedCampaignId
         },
       });
 
@@ -315,6 +347,68 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                     <div><code>position</code> - Position</div>
                     <div><code>source</code> - Quelle</div>
                     <div><code>external_id</code> - Externe ID</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Megaphone className="h-5 w-5" />
+                  Import-Einstellungen
+                </CardTitle>
+                <CardDescription>
+                  Wählen Sie den Lead-Typ und optional eine Kampagne für die importierten Leads
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lead-type">Lead-Typ</Label>
+                    <Select
+                      value={leadType}
+                      onValueChange={(value) => setLeadType(value as 'inbound' | 'outbound')}
+                    >
+                      <SelectTrigger id="lead-type">
+                        <SelectValue placeholder="Lead-Typ wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inbound">Inbound (eingehende Leads)</SelectItem>
+                        <SelectItem value="outbound">Outbound (aktive Akquise)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {leadType === 'outbound' 
+                        ? 'Outbound-Leads benötigen Vorname + Nachname' 
+                        : 'Inbound-Leads benötigen E-Mail oder Firmenname'}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="campaign">Kampagne (optional)</Label>
+                    <Select
+                      value={selectedCampaignId || 'none'}
+                      onValueChange={(value) => setSelectedCampaignId(value === 'none' ? null : value)}
+                    >
+                      <SelectTrigger id="campaign">
+                        <SelectValue placeholder="Kampagne wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Keine Kampagne</SelectItem>
+                        {campaigns.map((campaign) => (
+                          <SelectItem key={campaign.id} value={campaign.id}>
+                            {campaign.name}
+                            {campaign.status === 'active' && (
+                              <span className="ml-2 text-xs text-green-600">(aktiv)</span>
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Leads werden dieser Kampagne zugeordnet
+                    </p>
                   </div>
                 </div>
               </CardContent>
