@@ -53,16 +53,16 @@ export class PlacetelClient {
       throw new Error(`Failed to create SIP URI: invalid login "${sipUser}" or domain "${this.config.domain}"`);
     }
 
-    // Determine WebSocket URL - Placetel typically uses wss on port 443
-    // Many SIP providers require a specific path like /ws or /websocket
+    // Determine WebSocket URL - Placetel uses different endpoints
+    // Based on Placetel documentation: wss://webrtc.2.placetel.de (without /ws path)
     let wsServer = this.config.sipServer.includes('://')
       ? this.config.sipServer
       : `wss://${this.config.sipServer}`;
     
-    // Add common WebSocket paths if not already present
-    if (!wsServer.includes('/ws') && !wsServer.includes('/websocket') && !wsServer.includes('/sip')) {
-      // Try with /ws path first (most common for Placetel)
-      wsServer = wsServer.replace(/\/$/, '') + '/ws';
+    // Remove any trailing path that was incorrectly added
+    // Placetel WebRTC server does NOT use /ws path
+    if (wsServer.includes('placetel') && wsServer.endsWith('/ws')) {
+      wsServer = wsServer.replace(/\/ws$/, '');
     }
     
     console.log('Connecting to SIP WebSocket:', wsServer);
