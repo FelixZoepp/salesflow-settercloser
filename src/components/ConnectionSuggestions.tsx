@@ -80,7 +80,6 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
         .from('contacts')
         .select('id, first_name, last_name, company, position, linkedin_url, workflow_status')
         .eq('campaign_id', campaignId)
-        .eq('lead_type', 'outbound')
         .in('workflow_status', ['neu', 'bereit_fuer_vernetzung'])
         .order('created_at', { ascending: true })
         .limit(availableSlots > 0 ? availableSlots : 50); // Show up to 50 if limit reached for visibility
@@ -130,6 +129,8 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
       const { error } = await supabase
         .from('contacts')
         .update({
+          // When a connection is sent, this lead participates in the LinkedIn outreach workflow.
+          lead_type: 'outbound',
           workflow_status: 'vernetzung_ausstehend',
           connection_sent_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -285,7 +286,7 @@ export function ConnectionSuggestions({ campaignId, campaignName }: ConnectionSu
                             target="_blank" 
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-[#0A66C2] hover:text-[#004182]"
+                            className="text-primary hover:text-primary/80"
                           >
                             <Linkedin className="h-4 w-4" />
                           </a>
