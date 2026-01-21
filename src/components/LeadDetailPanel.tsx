@@ -47,6 +47,8 @@ interface Contact {
   outreach_status: string | null;
   outreach_message: string | null;
   lead_score: number | null;
+  personalized_url: string | null;
+  video_status: string | null;
 }
 
 interface Company {
@@ -595,6 +597,14 @@ Stage: ${deal.stage}
                   >
                     Übersicht
                   </TabsTrigger>
+                  {contact.lead_type === 'outbound' && contact.personalized_url && (
+                    <TabsTrigger 
+                      value="personalized" 
+                      className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                    >
+                      Personalisierte Seite
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger 
                     value="activities" 
                     className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
@@ -690,32 +700,6 @@ Stage: ${deal.stage}
                     </div>
                   </div>
 
-                  {contact.lead_type === 'outbound' && contact.slug && (
-                    <div className="stat-card !p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Personalisierte Seite</p>
-                          <a 
-                            href={`${window.location.origin}/p/${contact.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline flex items-center gap-2"
-                          >
-                            {window.location.origin}/p/{contact.slug}
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}/p/${contact.slug}`, "URL")}
-                        >
-                          <Copy className="w-3.5 h-3.5 mr-2" />
-                          Kopieren
-                        </Button>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Contact Data */}
                   <div>
@@ -1161,6 +1145,108 @@ Stage: ${deal.stage}
                     </div>
                   </div>
                 </TabsContent>
+
+                {/* Personalized Page Tab */}
+                {contact.lead_type === 'outbound' && contact.personalized_url && (
+                  <TabsContent value="personalized" className="p-6 space-y-6 mt-0">
+                    <div className="stat-card !p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Globe className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-foreground">Personalisierte Landing Page</h3>
+                            <p className="text-xs text-muted-foreground">Für {contact.first_name} {contact.last_name}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">URL</p>
+                          <a 
+                            href={contact.personalized_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline flex items-center gap-2 break-all"
+                          >
+                            {contact.personalized_url}
+                            <ExternalLink className="w-4 h-4 shrink-0" />
+                          </a>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => copyToClipboard(contact.personalized_url!, "URL")}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            URL kopieren
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => window.open(contact.personalized_url!, '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Seite öffnen
+                          </Button>
+                        </div>
+
+                        {/* Video Status */}
+                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Video-Status</p>
+                          <div className="flex items-center gap-2">
+                            <Video className={`w-4 h-4 ${
+                              contact.video_status === 'ready' ? 'text-emerald-500' :
+                              contact.video_status === 'generating_intro' ? 'text-amber-500 animate-pulse' :
+                              contact.video_status === 'error' ? 'text-red-500' :
+                              'text-muted-foreground'
+                            }`} />
+                            <span className="text-sm text-foreground">
+                              {contact.video_status === 'ready' ? 'Video bereit' :
+                               contact.video_status === 'generating_intro' ? 'Video wird generiert...' :
+                               contact.video_status === 'pending' ? 'Ausstehend' :
+                               contact.video_status === 'pending_auto' ? 'Wird automatisch generiert' :
+                               contact.video_status === 'error' ? 'Fehler bei Generierung' :
+                               contact.video_status || 'Kein Video'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* View Stats */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Seitenaufrufe</p>
+                            <div className="flex items-center gap-2">
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-lg font-semibold text-foreground">{contact.view_count || 0}</span>
+                            </div>
+                          </div>
+                          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Status</p>
+                            <Badge 
+                              variant="secondary" 
+                              className={contact.viewed ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-muted text-muted-foreground'}
+                            >
+                              {contact.viewed ? 'Angesehen' : 'Noch nicht angesehen'}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {contact.viewed_at && (
+                          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Zuletzt angesehen</p>
+                            <span className="text-sm text-foreground">
+                              {new Date(contact.viewed_at).toLocaleString('de-DE')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
 
                 <TabsContent value="call" className="p-6 space-y-6 mt-0">
                   {/* Live Call Section */}
