@@ -54,9 +54,18 @@ export class PlacetelClient {
     }
 
     // Determine WebSocket URL - Placetel typically uses wss on port 443
-    const wsServer = this.config.sipServer.includes('://')
+    // Many SIP providers require a specific path like /ws or /websocket
+    let wsServer = this.config.sipServer.includes('://')
       ? this.config.sipServer
       : `wss://${this.config.sipServer}`;
+    
+    // Add common WebSocket paths if not already present
+    if (!wsServer.includes('/ws') && !wsServer.includes('/websocket') && !wsServer.includes('/sip')) {
+      // Try with /ws path first (most common for Placetel)
+      wsServer = wsServer.replace(/\/$/, '') + '/ws';
+    }
+    
+    console.log('Connecting to SIP WebSocket:', wsServer);
 
     this.userAgent = new UserAgent({
       uri,
