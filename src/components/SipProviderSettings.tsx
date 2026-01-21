@@ -21,30 +21,28 @@ interface SipSettings {
   sip_enabled: boolean;
 }
 
-const PROVIDER_PRESETS: Record<string, { server: string; domain: string; name: string; helpUrl: string }> = {
-  placetel: {
-    name: "Placetel",
-    server: "wss://pbx.placetel.de",
-    domain: "pbx.placetel.de",
-    helpUrl: "https://www.placetel.de/ratgeber/webrtc"
+// Twilio als primärer Provider - andere Provider hatten Anbindungsprobleme
+const PROVIDER_PRESETS: Record<string, { server: string; domain: string; name: string; helpUrl: string; description: string }> = {
+  twilio: {
+    name: "Twilio (empfohlen)",
+    server: "wss://your-region.pstn.twilio.com",
+    domain: "pstn.twilio.com",
+    helpUrl: "https://www.twilio.com/docs/voice/sdks/javascript",
+    description: "Bring your own Twilio Account - beste Browser-Telefonie"
   },
   sipgate: {
     name: "Sipgate",
     server: "wss://app.sipgate.com",
     domain: "sipgate.de",
-    helpUrl: "https://www.sipgate.de/hilfe"
-  },
-  twilio: {
-    name: "Twilio",
-    server: "wss://your-domain.pstn.twilio.com",
-    domain: "pstn.twilio.com",
-    helpUrl: "https://www.twilio.com/docs/voice/sdks/javascript"
+    helpUrl: "https://www.sipgate.de/hilfe",
+    description: "Für Sipgate-Kunden"
   },
   custom: {
-    name: "Eigener SIP-Provider",
+    name: "Anderer SIP-Provider",
     server: "",
     domain: "",
-    helpUrl: ""
+    helpUrl: "",
+    description: "Manuelle Konfiguration"
   }
 };
 
@@ -234,10 +232,10 @@ export default function SipProviderSettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Phone className="w-5 h-5 text-primary" />
-          SIP-Provider (BYOC)
+          Browser-Telefonie (Twilio)
         </CardTitle>
         <CardDescription>
-          Verbinde deinen eigenen SIP-Provider für Browser-Telefonie. Die Kosten gehen direkt an deinen Provider.
+          Verbinde deinen Twilio-Account für Browser-basierte Telefonie. Anrufkosten entstehen direkt bei Twilio (~0,014€/Min DE).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -267,14 +265,17 @@ export default function SipProviderSettings() {
                 <SelectItem key={key} value={key}>
                   <div className="flex items-center gap-2">
                     {preset.name}
-                    {key !== 'custom' && (
-                      <Badge variant="secondary" className="text-[10px]">Vorkonfiguriert</Badge>
+                    {key === 'twilio' && (
+                      <Badge variant="default" className="text-[10px]">Empfohlen</Badge>
                     )}
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {settings.sip_provider && PROVIDER_PRESETS[settings.sip_provider]?.description}
+          </p>
         </div>
 
         {settings.sip_provider && (

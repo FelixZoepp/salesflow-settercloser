@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2, Circle, FileText, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PlacetelClient, PlacetelConfig, PlacetelCallbacks } from "@/lib/placetelClient";
+import { SipClient, SipClientConfig, SipClientCallbacks } from "@/lib/sipClient";
 import LiveObjectionPanel from "./LiveObjectionPanel";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
@@ -58,7 +58,7 @@ export default function SoftphoneDialog({
   const [callSessionId, setCallSessionId] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   
-  const clientRef = useRef<PlacetelClient | null>(null);
+  const clientRef = useRef<SipClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callStartTimeRef = useRef<Date | null>(null);
@@ -324,7 +324,7 @@ export default function SoftphoneDialog({
       // Decode password
       const password = atob(sipSettings.sip_password_encrypted || '');
 
-      const config: PlacetelConfig = {
+      const config: SipClientConfig = {
         sipServer: sipSettings.sip_server!,
         login: sipSettings.sip_username!,
         password: password,
@@ -334,7 +334,7 @@ export default function SoftphoneDialog({
 
       let localStreamForRecording: MediaStream | null = null;
 
-      const callbacks: PlacetelCallbacks = {
+      const callbacks: SipClientCallbacks = {
         onRegistered: () => {
           console.log('SIP Registered - starting call');
           setCallStatus('dialing');
@@ -395,7 +395,7 @@ export default function SoftphoneDialog({
         }
       };
 
-      clientRef.current = new PlacetelClient(config, callbacks);
+      clientRef.current = new SipClient(config, callbacks);
       
       setCallStatus('registering');
       await clientRef.current.connect();
