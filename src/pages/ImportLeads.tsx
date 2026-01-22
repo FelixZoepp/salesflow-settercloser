@@ -211,6 +211,17 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
   };
 
   const handleMappingConfirmed = async (mappings: ColumnMapping[]) => {
+    // Validate campaign is selected
+    if (!selectedCampaignId) {
+      toast({
+        title: "Kampagne erforderlich",
+        description: "Bitte wähle eine Kampagne aus, bevor du fortfährst.",
+        variant: "destructive",
+      });
+      setStep('upload');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -399,16 +410,17 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="campaign">Kampagne (optional)</Label>
+                    <Label htmlFor="campaign">
+                      Kampagne <span className="text-destructive">*</span>
+                    </Label>
                     <Select
-                      value={selectedCampaignId || 'none'}
-                      onValueChange={(value) => setSelectedCampaignId(value === 'none' ? null : value)}
+                      value={selectedCampaignId || ''}
+                      onValueChange={(value) => setSelectedCampaignId(value || null)}
                     >
-                      <SelectTrigger id="campaign">
-                        <SelectValue placeholder="Kampagne wählen" />
+                      <SelectTrigger id="campaign" className={!selectedCampaignId ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Kampagne wählen (Pflichtfeld)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Keine Kampagne</SelectItem>
                         {campaigns.map((campaign) => (
                           <SelectItem key={campaign.id} value={campaign.id}>
                             {campaign.name}
@@ -420,7 +432,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Leads werden dieser Kampagne zugeordnet
+                      Jeder Lead muss einer Kampagne zugeordnet werden
                     </p>
                   </div>
                 </div>
