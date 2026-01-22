@@ -20,12 +20,14 @@ import {
   ChevronRight,
   Clock,
   User,
-  Building2
+  Building2,
+  Rocket
 } from "lucide-react";
 import { formatDistanceToNow, isToday, isTomorrow, isPast, format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { DashboardLiveCallWidget } from "@/components/DashboardLiveCallWidget";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface UserProfile {
   name: string;
@@ -64,6 +66,7 @@ interface SetupTask {
 
 const Startseite = () => {
   const navigate = useNavigate();
+  const { status: onboardingStatus, loading: onboardingLoading } = useOnboarding();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [stats, setStats] = useState<QuickStats>({
@@ -73,7 +76,7 @@ const Startseite = () => {
     conversionRate: 0
   });
   const [loading, setLoading] = useState(true);
-  const [setupTasks, setSetupTasks] = useState<SetupTask[]>([]);
+  const [setupTasks, setSetupTasks] = useState<SetupTask[]>();
 
   useEffect(() => {
     fetchData();
@@ -288,10 +291,15 @@ const Startseite = () => {
       : format(date, "dd.MM.yyyy", { locale: de });
   };
 
-  const completedSetupTasks = setupTasks.filter(t => t.completed).length;
-  const setupProgress = setupTasks.length > 0 
-    ? Math.round((completedSetupTasks / setupTasks.length) * 100) 
+  const completedSetupTasks = setupTasks?.filter(t => t.completed).length || 0;
+  const setupProgress = (setupTasks?.length || 0) > 0 
+    ? Math.round((completedSetupTasks / (setupTasks?.length || 1)) * 100) 
     : 0;
+
+  // Calculate onboarding progress
+  const onboardingSteps = Object.values(onboardingStatus.steps);
+  const completedOnboardingSteps = onboardingSteps.filter(Boolean).length;
+  const onboardingProgress = Math.round((completedOnboardingSteps / onboardingSteps.length) * 100);
 
   if (loading) {
     return (
@@ -307,6 +315,44 @@ const Startseite = () => {
     <Layout>
       <div className="min-h-screen noise-bg">
         <div className="max-w-7xl mx-auto">
+          {/* Onboarding Banner - Show prominently if not complete */}
+          {!onboardingLoading && !onboardingStatus.isComplete && (
+            <Card className="mb-6 border-2 border-primary/50 bg-gradient-to-r from-primary/10 to-primary/5">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-primary/20 flex items-center justify-center">
+                      <Rocket className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg md:text-xl font-bold text-foreground mb-1">
+                      Einrichtung fortsetzen
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Schließe die Einrichtung ab, um alle Funktionen freizuschalten.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Progress value={onboardingProgress} className="h-2 flex-1 max-w-xs" />
+                      <span className="text-sm font-medium text-primary">
+                        {completedOnboardingSteps}/{onboardingSteps.length} Schritte
+                      </span>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/onboarding')}
+                    className="w-full md:w-auto"
+                    size="lg"
+                  >
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Jetzt fortsetzen
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Live Call Widget */}
           <DashboardLiveCallWidget className="mb-4 md:mb-6" />
 

@@ -125,14 +125,14 @@ export default function SubscriptionSuccess() {
       }
       
       if (data.user) {
-        toast.success("Account erstellt! Du wirst weitergeleitet...");
+        toast.success("Account erstellt! Du wirst zum Onboarding weitergeleitet...");
         setAccountCreated(true);
         setNeedsRegistration(false);
         
-        // Give Supabase time to process the auth and profile trigger
+        // Redirect to onboarding for new users
         setTimeout(() => {
-          refresh();
-        }, 1000);
+          navigate("/onboarding");
+        }, 1500);
       }
     } catch (error: any) {
       console.error("Error creating account:", error);
