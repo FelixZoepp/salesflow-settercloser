@@ -116,20 +116,21 @@ export default function Upgrade() {
 
   const plans = {
     starter: {
-      monthly: { price: "149€", period: "/Monat", link: "https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09", savings: "" },
-      yearly: { price: "1.490€", period: "/Jahr", link: "https://buy.stripe.com/8x2dR98JocjU1k316igMw0a", savings: "2 Monate gratis" },
+      monthly: { price: "149€", period: "/Monat", savings: "" },
+      yearly: { price: "1.490€", period: "/Jahr", savings: "2 Monate gratis" },
     },
     pro: {
-      monthly: { price: "299€", period: "/Monat", link: "https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b", savings: "" },
-      yearly: { price: "2.990€", period: "/Jahr", link: "https://buy.stripe.com/cNi3cv1gWfw6aUD16igMw0c", savings: "2 Monate gratis" },
+      monthly: { price: "299€", period: "/Monat", savings: "" },
+      yearly: { price: "2.990€", period: "/Jahr", savings: "2 Monate gratis" },
     },
   };
 
   const handleUpgrade = async (targetPlan: 'starter' | 'pro') => {
-    // If user already has an active subscription, use proration upgrade
-    if (subscribed) {
-      setIsUpgrading(true);
-      try {
+    setIsUpgrading(true);
+    
+    try {
+      // If user already has an active subscription, use proration upgrade
+      if (subscribed) {
         const { data, error } = await supabase.functions.invoke('upgrade-subscription', {
           body: { 
             targetPlan, 
@@ -141,7 +142,7 @@ export default function Upgrade() {
 
         if (data.type === 'checkout') {
           // Redirect to Stripe Checkout for new subscription
-          window.open(data.url, "_blank");
+          window.location.href = data.url;
         } else if (data.type === 'upgraded') {
           // Direct upgrade with proration
           toast.success(
@@ -153,23 +154,31 @@ export default function Upgrade() {
         } else if (data.error) {
           toast.error(data.error);
         }
-      } catch (err) {
-        console.error('Upgrade error:', err);
-        toast.error('Fehler beim Upgrade. Bitte versuche es erneut.');
-      } finally {
-        setIsUpgrading(false);
-      }
-    } else {
-      // No subscription yet - use payment links
-      const link = plans[targetPlan][billingPeriod].link;
-      window.open(link, "_blank");
-    }
-  };
+      } else {
+        // No subscription yet - create checkout session
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: { 
+            plan: targetPlan, 
+            billingPeriod,
+            origin: window.location.origin
+          }
+        });
 
-  const handleCheckout = (link: string) => {
-    // Stripe Payment Links don't support dynamic success URLs,
-    // so we open in new tab and check status on focus
-    window.open(link, "_blank");
+        if (error) throw error;
+
+        if (data.url) {
+          // Redirect to Stripe Checkout (same tab for better UX)
+          window.location.href = data.url;
+        } else {
+          throw new Error("No checkout URL received");
+        }
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Fehler beim Checkout. Bitte versuche es erneut.');
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   const currentStarterPlan = plans.starter[billingPeriod];
