@@ -559,6 +559,14 @@ const Startseite = () => {
                           <div
                             key={task.id}
                             className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors cursor-pointer group"
+                            onClick={() => {
+                              // Navigate to contact/deal if related
+                              if (task.related_type === 'contact' && task.related_id) {
+                                navigate(`/pipeline?contact=${task.related_id}`);
+                              } else if (task.related_type === 'deal' && task.related_id) {
+                                navigate(`/pipeline?deal=${task.related_id}`);
+                              }
+                            }}
                           >
                             <Button
                               variant="ghost"
