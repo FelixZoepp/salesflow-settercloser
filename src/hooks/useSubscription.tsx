@@ -202,9 +202,21 @@ export const useSubscription = () => {
     };
     window.addEventListener('focus', handleFocus);
 
+    // Listen for auth state changes and refresh subscription when user logs in
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        console.log('[useSubscription] User signed in, refreshing subscription status');
+        // Use setTimeout to avoid Supabase deadlock
+        setTimeout(() => {
+          checkSubscription();
+        }, 0);
+      }
+    });
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
+      authSubscription.unsubscribe();
     };
   }, [checkSubscription]);
 
