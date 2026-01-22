@@ -98,3 +98,9 @@ verify_jwt = false
 
 [functions.upgrade-subscription]
 verify_jwt = true
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.get-checkout-customer]
+verify_jwt = false
