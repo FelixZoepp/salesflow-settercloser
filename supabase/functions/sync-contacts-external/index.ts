@@ -114,30 +114,23 @@ Deno.serve(async (req) => {
     // Sync each contact
     for (const contact of contacts || []) {
       try {
-        // Prepare contact data for external DB (you may need to adjust field mapping)
-        const externalContact = {
+        // Prepare contact data for external DB - minimal fields only
+        // IMPORTANT: Your external DB needs at least: external_id, first_name, last_name, email
+        const externalContact: Record<string, unknown> = {
           external_id: contact.id, // Store original ID for reference
           first_name: contact.first_name,
           last_name: contact.last_name,
           email: contact.email,
           phone: contact.phone,
-          mobile: contact.mobile,
           company: contact.company,
-          position: contact.position,
-          website: contact.website,
-          street: contact.street,
-          city: contact.city,
-          country: contact.country,
-          linkedin_url: contact.linkedin_url,
-          source: contact.source,
-          tags: contact.tags,
-          lead_type: contact.lead_type,
-          lead_score: contact.lead_score,
-          notes: contact.notes,
-          created_at: contact.created_at,
-          updated_at: contact.updated_at,
-          synced_at: new Date().toISOString(),
         };
+
+        // Remove null/undefined values to prevent errors on insert
+        Object.keys(externalContact).forEach(key => {
+          if (externalContact[key] === null || externalContact[key] === undefined) {
+            delete externalContact[key];
+          }
+        });
 
         // Check if contact already exists in external DB
         const { data: existing } = await externalSupabase
