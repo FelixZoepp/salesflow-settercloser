@@ -192,12 +192,15 @@ const Landing = () => {
               <Button variant="ghost" onClick={() => navigate("/auth")} className="text-white hover:bg-white/10 text-sm px-2 md:px-4">
                 Anmelden
               </Button>
-              <Button 
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-white text-primary hover:bg-white/90 text-sm px-3 md:px-4"
+              <a 
+                href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Jetzt starten
-              </Button>
+                <Button className="bg-white text-primary hover:bg-white/90 text-sm px-3 md:px-4">
+                  Demo buchen
+                </Button>
+              </a>
             </div>
           </div>
         </div>
@@ -243,6 +246,20 @@ const Landing = () => {
               Zugang sichern
               <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
             </Button>
+            <a 
+              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white/30 bg-white/10 hover:bg-white/20 text-white px-4 md:px-8 h-12 md:h-14 text-sm md:text-lg"
+              >
+                <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Demo buchen
+              </Button>
+            </a>
           </div>
 
           {/* Stats */}
@@ -1281,6 +1298,25 @@ const Landing = () => {
               </a>
             </div>
           </div>
+          
+          {/* Demo Button unter Preisen */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm mb-4">Noch Fragen? Lass uns sprechen:</p>
+            <a 
+              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-primary/50 bg-primary/10 hover:bg-primary/20 text-white px-6 md:px-8 h-12 md:h-14"
+              >
+                <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Kostenlose Demo buchen
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -1336,55 +1372,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Demo Booking Section */}
-      <section id="demo" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
-          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border-2 border-primary/30 bg-gradient-to-b from-primary/10 to-transparent">
-            <div className="p-6 md:p-12">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs md:text-sm font-medium mb-4">
-                  <Phone className="h-4 w-4" />
-                  Kostenlose Demo
-                </div>
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-white">
-                  Erlebe pitchfirst.io <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">live</span>
-                </h2>
-                <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
-                  Buche jetzt deine persönliche Demo und wir zeigen dir, wie du mit KI-gestütztem LinkedIn Outreach 
-                  mehr Termine legst – in nur 30 Minuten.
-                </p>
-              </div>
-              
-              {/* Calendly Embed */}
-              <div className="rounded-xl overflow-hidden bg-white/5 border border-white/10">
-                <iframe
-                  src="https://calendly.com/felix-pitchfirst/demo-pitchfirst?hide_gdpr_banner=1&background_color=0a0e27&text_color=ffffff&primary_color=3b82f6"
-                  width="100%"
-                  height="650"
-                  frameBorder="0"
-                  title="Demo-Termin buchen"
-                  className="min-h-[600px] md:min-h-[650px]"
-                />
-              </div>
-              
-              <div className="mt-6 flex flex-wrap justify-center gap-4 md:gap-8 text-gray-400 text-xs md:text-sm">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span>30 Min. persönliche Demo</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span>Unverbindlich & kostenlos</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span>Individuelle Beratung</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 md:py-12 px-4 md:px-6 bg-[#0a0e27] relative z-[1]">
