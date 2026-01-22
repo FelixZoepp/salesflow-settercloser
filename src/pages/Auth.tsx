@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
-type AuthMode = "login" | "register" | "forgot-password" | "reset-password";
+type AuthMode = "login" | "forgot-password" | "reset-password";
 
 const getUrlAuthType = () => {
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -23,8 +23,6 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   const checkOnboardingAndRedirect = useCallback(async (userId: string) => {
@@ -96,34 +94,6 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Erfolgreich eingeloggt!");
-      } else if (mode === "register") {
-        if (!phoneNumber.trim()) {
-          toast.error("Bitte geben Sie eine Telefonnummer ein");
-          return;
-        }
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: name,
-              phone_number: phoneNumber,
-            },
-            emailRedirectTo: `${window.location.origin}/`,
-          },
-        });
-        if (error) throw error;
-        
-        // Update profile with phone number after signup
-        if (data.user) {
-          await supabase
-            .from('profiles')
-            .update({ phone_number: phoneNumber })
-            .eq('id', data.user.id);
-        }
-        
-        toast.success("Account erstellt! Sie können sich jetzt einloggen.");
-        setMode("login");
       } else if (mode === "forgot-password") {
         // Use production domain for password reset
         const resetRedirectUrl = window.location.hostname.includes('lovable') 
@@ -169,7 +139,6 @@ const Auth = () => {
   const getTitle = () => {
     switch (mode) {
       case "login": return "Anmelden";
-      case "register": return "Registrieren";
       case "forgot-password": return "Passwort vergessen";
       case "reset-password": return "Neues Passwort setzen";
     }
@@ -178,7 +147,6 @@ const Auth = () => {
   const getDescription = () => {
     switch (mode) {
       case "login": return "Melden Sie sich bei Ihrem Account an";
-      case "register": return "Erstellen Sie einen neuen Account";
       case "forgot-password": return "Geben Sie Ihre E-Mail-Adresse ein";
       case "reset-password": return "Wählen Sie ein neues Passwort";
     }
@@ -188,7 +156,6 @@ const Auth = () => {
     if (loading) return "Lädt...";
     switch (mode) {
       case "login": return "Anmelden";
-      case "register": return "Registrieren";
       case "forgot-password": return "Link senden";
       case "reset-password": return "Passwort ändern";
     }
@@ -213,32 +180,6 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "register" && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Telefonnummer *</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="+49 123 456789"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    required
-                  />
-                </div>
-              </>
-            )}
-            
             {mode !== "reset-password" && (
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
@@ -252,7 +193,7 @@ const Auth = () => {
               </div>
             )}
             
-            {(mode === "login" || mode === "register" || mode === "reset-password") && (
+            {(mode === "login" || mode === "reset-password") && (
               <div className="space-y-2">
                 <Label htmlFor="password">
                   {mode === "reset-password" ? "Neues Passwort" : "Passwort"}
@@ -296,27 +237,15 @@ const Auth = () => {
               >
                 Passwort vergessen?
               </button>
-              <button
-                type="button"
-                onClick={() => setMode("register")}
-                className="text-sm text-muted-foreground hover:text-foreground"
+              <a
+                href="/upgrade"
+                className="text-sm text-primary hover:text-primary/80"
               >
-                Noch kein Account? Registrieren
-              </button>
+                Noch kein Account? Jetzt starten
+              </a>
             </div>
           )}
           
-          {mode === "register" && (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setMode("login")}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Bereits registriert? Anmelden
-              </button>
-            </div>
-          )}
         </CardContent>
       </Card>
       <footer className="mt-8 text-center text-muted-foreground text-sm">
