@@ -1298,33 +1298,6 @@ const Landing = () => {
               </a>
             </div>
           </div>
-          
-          {/* Demo Call Box */}
-          <div className="max-w-md mx-auto mt-8">
-            <div className="rounded-2xl border-2 border-white/10 bg-white/[0.02] p-6 md:p-8 text-center hover:border-white/20 transition-all">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-medium mb-4">
-                <Phone className="h-3 w-3" />
-                Persönliche Beratung
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Noch Fragen?</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Lass uns in einem kurzen Call besprechen, ob pitchfirst.io zu dir passt.
-              </p>
-              <a 
-                href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button 
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-lg shadow-primary/30 h-12 md:h-14"
-                >
-                  <Phone className="mr-2 h-4 w-4" />
-                  Demo buchen
-                </Button>
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1339,17 +1312,21 @@ const Landing = () => {
                 Bereit für mehr Termine<br />durch LinkedIn?
               </h2>
               <p className="text-sm md:text-xl mb-6 md:mb-8 opacity-95 max-w-2xl mx-auto px-2">
-                Starte jetzt mit KI-generierten Landingpages 
-                und Echtzeit-Tracking – und verdopple deine Outreach-Ergebnisse.
+                Lass uns in einem kurzen Call besprechen, ob pitchfirst.io zu dir passt.
               </p>
-              <Button 
-                size="lg" 
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-white text-primary hover:bg-gray-100 shadow-2xl px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg font-bold"
+              <a 
+                href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Zugang sichern
-                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-              </Button>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-primary hover:bg-gray-100 shadow-2xl px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg font-bold"
+                >
+                  <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                  Demo Termin buchen
+                </Button>
+              </a>
             </div>
           </div>
         </div>
