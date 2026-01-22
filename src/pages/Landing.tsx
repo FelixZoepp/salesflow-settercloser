@@ -1299,23 +1299,31 @@ const Landing = () => {
             </div>
           </div>
           
-          {/* Demo Button unter Preisen */}
-          <div className="mt-8 text-center">
-            <p className="text-gray-400 text-sm mb-4">Noch Fragen? Lass uns sprechen:</p>
-            <a 
-              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-primary/50 bg-primary/10 hover:bg-primary/20 text-white px-6 md:px-8 h-12 md:h-14"
+          {/* Demo Call Box */}
+          <div className="max-w-md mx-auto mt-8">
+            <div className="rounded-2xl border-2 border-white/10 bg-white/[0.02] p-6 md:p-8 text-center hover:border-white/20 transition-all">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-medium mb-4">
+                <Phone className="h-3 w-3" />
+                Persönliche Beratung
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Noch Fragen?</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                Lass uns in einem kurzen Call besprechen, ob pitchfirst.io zu dir passt.
+              </p>
+              <a 
+                href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Kostenlose Demo buchen
-              </Button>
-            </a>
+                <Button 
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-lg shadow-primary/30 h-12 md:h-14"
+                >
+                  <Phone className="mr-2 h-4 w-4" />
+                  Demo buchen
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </section>
