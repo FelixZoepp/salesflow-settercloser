@@ -1295,15 +1295,15 @@ const Landing = () => {
                 Bereit für mehr Termine<br />durch LinkedIn?
               </h2>
               <p className="text-sm md:text-xl mb-6 md:mb-8 opacity-95 max-w-2xl mx-auto px-2">
-                Lass uns in einem kurzen Call zeigen, wie KI-generierte Landingpages 
-                und Echtzeit-Tracking deine Outreach-Ergebnisse verdoppeln können.
+                Starte jetzt mit KI-generierten Landingpages 
+                und Echtzeit-Tracking – und verdopple deine Outreach-Ergebnisse.
               </p>
               <Button 
                 size="lg" 
-                onClick={() => window.open("https://calendly.com/zoepp-media/vorgesprach-demo-software", "_blank")}
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                 className="bg-white text-primary hover:bg-gray-100 shadow-2xl px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg font-bold"
               >
-                Jetzt Demo-Call buchen
+                Zugang sichern
                 <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </div>
