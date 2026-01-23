@@ -268,7 +268,7 @@ const Auth = () => {
       <footer className="mt-8 text-center text-muted-foreground text-sm">
         <div className="flex justify-center gap-6">
           <a 
-            href="https://www.content-leads.de/impressum" 
+            href="https://content-leads.de/impressum" 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
