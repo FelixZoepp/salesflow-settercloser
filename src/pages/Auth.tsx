@@ -237,12 +237,29 @@ const Auth = () => {
               >
                 Passwort vergessen?
               </button>
-              <a
-                href="/upgrade"
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('create-checkout', {
+                      body: { 
+                        plan: 'starter', 
+                        billingPeriod: 'monthly',
+                        origin: window.location.origin
+                      }
+                    });
+                    if (error) throw error;
+                    if (data?.url) {
+                      window.location.href = data.url;
+                    }
+                  } catch (err) {
+                    toast.error("Fehler beim Starten. Bitte versuche es erneut.");
+                  }
+                }}
                 className="text-sm text-primary hover:text-primary/80"
               >
                 Noch kein Account? Jetzt starten
-              </a>
+              </button>
             </div>
           )}
           
