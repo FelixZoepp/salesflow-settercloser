@@ -276,7 +276,7 @@ const Auth = () => {
             Impressum
           </a>
           <a 
-            href="https://www.content-leads.de/datenschutz" 
+            href="https://content-leads.de/datenschutz" 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
