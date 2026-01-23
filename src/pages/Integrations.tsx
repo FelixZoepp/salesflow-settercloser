@@ -12,6 +12,7 @@ import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, Externa
 import SmtpSettings from "@/components/SmtpSettings";
 import DomainSettings from "@/components/DomainSettings";
 import SipProviderSettings from "@/components/SipProviderSettings";
+import AvvAgreement from "@/components/AvvAgreement";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
@@ -152,6 +153,9 @@ const Integrations = () => {
             Verbinde deine externen Dienste
           </p>
         </div>
+
+        {/* AVV Agreement */}
+        <AvvAgreement showAcceptCheckbox={false} />
 
         {/* Custom Domain */}
         <DomainSettings />

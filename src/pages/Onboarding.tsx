@@ -34,8 +34,12 @@ import {
   Wand2,
   Palette,
   Calendar,
-  Phone
+  Phone,
+  FileCheck,
+  ScrollText
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
 import TelephonyOnboarding from "@/components/TelephonyOnboarding";
 
@@ -113,6 +117,12 @@ const Onboarding = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
+  // AVV (Auftragsverarbeitungsvertrag) acceptance
+  const [avvAccepted, setAvvAccepted] = useState(false);
+  const [avvAcceptedAt, setAvvAcceptedAt] = useState<string | null>(null);
+  const [avvLoading, setAvvLoading] = useState(true);
+  const [avvSaving, setAvvSaving] = useState(false);
+
   // Step 1: HeyGen
   const [apiKey, setApiKey] = useState("");
   const [avatarId, setAvatarId] = useState("");
@@ -164,6 +174,57 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
   // Track if initial step has been set to prevent re-renders on focus
   const initialStepSet = useRef(false);
+
+  // Fetch AVV acceptance status
+  useEffect(() => {
+    const fetchAvvStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avv_accepted_at')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.avv_accepted_at) {
+          setAvvAcceptedAt(profile.avv_accepted_at);
+          setAvvAccepted(true);
+        }
+      } catch (error) {
+        console.error('Error fetching AVV status:', error);
+      } finally {
+        setAvvLoading(false);
+      }
+    };
+    fetchAvvStatus();
+  }, []);
+
+  const handleAcceptAvv = async () => {
+    setAvvSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Nicht angemeldet");
+
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avv_accepted_at: now })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setAvvAcceptedAt(now);
+      setAvvAccepted(true);
+      toast.success("AVV erfolgreich akzeptiert!");
+    } catch (error) {
+      console.error('Error accepting AVV:', error);
+      toast.error("Fehler beim Speichern der AVV-Zustimmung");
+    } finally {
+      setAvvSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!onboardingLoading && !initialStepSet.current) {
@@ -498,7 +559,46 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   const completedSteps = Object.values(status.steps).filter(Boolean).length;
   const progressPercent = (completedSteps / 7) * 100;
 
-  if (accountLoading || onboardingLoading) {
+  const AVV_TEXT = `Auftragsverarbeitungsvertrag (Kurzfassung)
+
+1. Gegenstand der Verarbeitung
+
+pitchfirst.io verarbeitet personenbezogene Daten ausschließlich zur technischen Bereitstellung, Wartung und Sicherstellung des Plattformbetriebs.
+
+2. Art der Daten
+
+• Bestandsdaten (z. B. Benutzerkonten)
+• Technische Nutzungsdaten
+• vom Nutzer gespeicherte Inhalte (nur technisch, nicht inhaltlich)
+
+3. Zweck der Verarbeitung
+
+Ausschließlich zur Erbringung der vertraglich geschuldeten Softwareleistung.
+
+4. Weisungsgebundenheit
+
+Die Verarbeitung erfolgt ausschließlich auf Weisung des Nutzers.
+pitchfirst.io trifft keine eigenen Entscheidungen über Zwecke oder Mittel der Verarbeitung.
+
+5. Pflichten des Nutzers
+
+Der Nutzer ist verantwortlich für:
+• Rechtmäßigkeit der Datenverarbeitung
+• Einholung erforderlicher Einwilligungen
+• Erfüllung von Informationspflichten gegenüber Betroffenen
+
+6. Technische und organisatorische Maßnahmen
+
+pitchfirst.io setzt geeignete technische und organisatorische Maßnahmen gemäß Art. 32 DSGVO ein, insbesondere:
+• Zugriffsbeschränkungen
+• Verschlüsselung
+• Rollen- und Berechtigungskonzepte
+
+7. Unterauftragsverarbeiter
+
+Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hosting, Infrastruktur) zu, insbesondere Supabase.`;
+
+  if (accountLoading || onboardingLoading || avvLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
@@ -508,14 +608,77 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     );
   }
 
+  // Show AVV acceptance screen if not yet accepted
+  if (!avvAcceptedAt) {
+    return (
+      <Layout>
+        <div className="max-w-2xl mx-auto p-6 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <ScrollText className="h-6 w-6" />
+              <span className="text-sm font-medium">Bevor es losgeht</span>
+            </div>
+            <h1 className="text-3xl font-bold">Auftragsverarbeitungsvertrag</h1>
+            <p className="text-muted-foreground">
+              Bitte lies und akzeptiere den AVV, um mit dem Onboarding fortzufahren.
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck className="h-5 w-5" />
+                AVV (Kurzfassung)
+              </CardTitle>
+              <CardDescription>
+                DSGVO-konforme Vereinbarung zur Datenverarbeitung
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ScrollArea className="h-80 rounded-lg border bg-muted/30 p-4">
+                <div className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {AVV_TEXT}
+                </div>
+              </ScrollArea>
+
+              <div className="flex items-start gap-3 pt-2">
+                <Checkbox
+                  id="avv-accept"
+                  checked={avvAccepted}
+                  onCheckedChange={(checked) => setAvvAccepted(checked === true)}
+                  className="mt-0.5"
+                />
+                <label 
+                  htmlFor="avv-accept" 
+                  className="text-sm font-normal cursor-pointer leading-relaxed"
+                >
+                  Ich habe den Auftragsverarbeitungsvertrag gelesen und akzeptiere die darin enthaltenen Bedingungen.
+                </label>
+              </div>
+
+              <Button 
+                onClick={handleAcceptAvv} 
+                disabled={!avvAccepted || avvSaving}
+                className="w-full"
+              >
+                {avvSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                AVV akzeptieren und fortfahren
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
   if (status.isComplete) {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto p-6 space-y-6">
-          <Card className="border-green-500/50 bg-green-500/5">
+          <Card className="border-primary/30 bg-primary/5">
             <CardContent className="p-8 text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-                <Rocket className="h-10 w-10 text-green-500" />
+              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+                <Rocket className="h-10 w-10 text-primary" />
               </div>
               <h1 className="text-3xl font-bold">Onboarding abgeschlossen! 🎉</h1>
               <p className="text-muted-foreground">
