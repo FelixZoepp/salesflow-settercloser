@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronRight, Camera, Loader2, User, Settings } from "lucide-react";
+import { ChevronRight, Camera, Loader2, User, Settings, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
 
@@ -16,9 +16,20 @@ interface UserProfile {
 }
 
 export default function UserAccountHeader() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Fehler beim Ausloggen");
+    } else {
+      toast.success("Erfolgreich ausgeloggt");
+      navigate("/auth");
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -195,6 +206,13 @@ export default function UserAccountHeader() {
                 <span>Einstellungen</span>
                 <ChevronRight className="w-4 h-4 ml-auto" />
               </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors w-full"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Abmelden</span>
+              </button>
             </div>
           </div>
         </PopoverContent>
