@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.sync-contacts-external]
 verify_jwt = true
+
+[functions.sync-contact-single]
+verify_jwt = false
