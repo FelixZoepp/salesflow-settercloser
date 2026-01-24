@@ -53,6 +53,8 @@ export interface LeadPageTemplate {
   calendar_url: string;
   footer_company_name: string;
   footer_tagline: string;
+  footer_impressum_url: string;
+  footer_datenschutz_url: string;
 }
 
 const defaultTemplate: LeadPageTemplate = {
@@ -117,7 +119,9 @@ const defaultTemplate: LeadPageTemplate = {
   accent_color: "#f59e0b",
   calendar_url: "",
   footer_company_name: "Content-Leads",
-  footer_tagline: "Alle Rechte vorbehalten."
+  footer_tagline: "Alle Rechte vorbehalten.",
+  footer_impressum_url: "https://content-leads.de/impressum",
+  footer_datenschutz_url: "https://content-leads.de/datenschutz"
 };
 
 interface LeadPageTemplateEditorProps {
@@ -677,6 +681,24 @@ export const LeadPageTemplateEditor = ({
                   <Input
                     value={template.footer_tagline}
                     onChange={(e) => onTemplateChange({ ...template, footer_tagline: e.target.value })}
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Impressum Link</label>
+                  <Input
+                    value={template.footer_impressum_url}
+                    onChange={(e) => onTemplateChange({ ...template, footer_impressum_url: e.target.value })}
+                    placeholder="https://example.com/impressum"
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Datenschutz Link</label>
+                  <Input
+                    value={template.footer_datenschutz_url}
+                    onChange={(e) => onTemplateChange({ ...template, footer_datenschutz_url: e.target.value })}
+                    placeholder="https://example.com/datenschutz"
                     className="bg-white/5 border-white/10"
                   />
                 </div>

@@ -57,6 +57,8 @@ export interface LeadPageTemplate {
   calendar_url: string;
   footer_company_name: string;
   footer_tagline: string;
+  footer_impressum_url: string;
+  footer_datenschutz_url: string;
   // Case Studies
   case_studies_badge: string;
   case_studies_headline: string;
@@ -171,6 +173,8 @@ export const defaultTemplate: LeadPageTemplate = {
   calendar_url: "",
   footer_company_name: "Content-Leads",
   footer_tagline: "Alle Rechte vorbehalten.",
+  footer_impressum_url: "https://content-leads.de/impressum",
+  footer_datenschutz_url: "https://content-leads.de/datenschutz",
   // Case Studies
   case_studies_badge: "Erfolgsgeschichten",
   case_studies_headline: "Das könnten deine Ergebnisse sein",
@@ -374,6 +378,8 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           calendar_url: data.calendar_url || calendarUrl || "",
           footer_company_name: data.footer_company_name || account?.company_name || defaultTemplate.footer_company_name,
           footer_tagline: data.footer_tagline || account?.tagline || defaultTemplate.footer_tagline,
+          footer_impressum_url: data.footer_impressum_url || defaultTemplate.footer_impressum_url,
+          footer_datenschutz_url: data.footer_datenschutz_url || defaultTemplate.footer_datenschutz_url,
           // Case Studies
           case_studies_badge: data.case_studies_badge || defaultTemplate.case_studies_badge,
           case_studies_headline: data.case_studies_headline || defaultTemplate.case_studies_headline,
@@ -1113,9 +1119,21 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
 
                 {/* Footer Preview */}
                 <footer id="preview-colors" ref={footerSectionRef} className="py-8 px-6 border-t border-slate-800 text-center scroll-mt-4">
-                  <p className="text-sm opacity-60">
+                  <p className="text-sm opacity-60 mb-3">
                     © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
                   </p>
+                  <div className="flex items-center justify-center gap-4 text-xs opacity-50">
+                    {template.footer_impressum_url && (
+                      <a href={template.footer_impressum_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                        Impressum
+                      </a>
+                    )}
+                    {template.footer_datenschutz_url && (
+                      <a href={template.footer_datenschutz_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                        Datenschutz
+                      </a>
+                    )}
+                  </div>
                 </footer>
               </div>
             </ScrollArea>
@@ -1991,9 +2009,21 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
 
                 {/* Footer */}
                 <footer className="py-8 px-6 border-t border-slate-800 text-center">
-                  <p className="text-sm opacity-60">
+                  <p className="text-sm opacity-60 mb-3">
                     © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
                   </p>
+                  <div className="flex items-center justify-center gap-4 text-xs opacity-50">
+                    {template.footer_impressum_url && (
+                      <a href={template.footer_impressum_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                        Impressum
+                      </a>
+                    )}
+                    {template.footer_datenschutz_url && (
+                      <a href={template.footer_datenschutz_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                        Datenschutz
+                      </a>
+                    )}
+                  </div>
                 </footer>
               </div>
             </ScrollArea>
