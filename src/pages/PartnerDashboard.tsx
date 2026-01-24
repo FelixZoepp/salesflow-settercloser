@@ -87,21 +87,46 @@ export default function PartnerDashboard() {
   const createAffiliate = async () => {
     try {
       setCreating(true);
+      
+      // Prüfe ob Nutzer eingeloggt ist
+      if (!user?.email) {
+        toast.error("Bitte logge dich zuerst ein, um Partner zu werden.");
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke("rewardful-affiliate", {
         body: { action: "create-affiliate" },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Verbindungsfehler");
+      }
 
-      if (data.exists) {
+      if (data?.error) {
+        console.error("API error:", data.error);
+        throw new Error(data.error);
+      }
+
+      if (data?.exists) {
         setAffiliate(data.affiliate);
         setReferrals(data.referrals || []);
         setCommissions(data.commissions || []);
         toast.success("Partner-Account erfolgreich erstellt!");
+      } else {
+        toast.error("Unerwartete Antwort vom Server. Bitte versuche es erneut.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating affiliate:", error);
-      toast.error("Fehler beim Erstellen des Partner-Accounts");
+      const message = error?.message || "Unbekannter Fehler";
+      
+      if (message.includes("Authentication") || message.includes("authorization")) {
+        toast.error("Bitte logge dich erneut ein und versuche es nochmal.");
+      } else if (message.includes("REWARDFUL")) {
+        toast.error("Partner-System nicht konfiguriert. Bitte kontaktiere den Support.");
+      } else {
+        toast.error(`Fehler: ${message}`);
+      }
     } finally {
       setCreating(false);
     }
