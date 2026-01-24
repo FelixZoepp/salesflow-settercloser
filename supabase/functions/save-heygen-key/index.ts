@@ -45,15 +45,15 @@ serve(async (req) => {
       throw new Error('Nicht authentifiziert');
     }
 
-    // Check if user is admin
+    // Check if user has an account
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, account_id')
       .eq('id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
-      throw new Error('Nur Administratoren können API Keys speichern');
+    if (!profile || !profile.account_id) {
+      throw new Error('Kein Account gefunden');
     }
 
     const { accountId, apiKey } = await req.json();
