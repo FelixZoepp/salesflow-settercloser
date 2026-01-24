@@ -412,6 +412,13 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
     setSaving(true);
     try {
+      // Get HeyGen settings from account_integrations to copy to campaign
+      const { data: integration } = await supabase
+        .from('account_integrations')
+        .select('heygen_avatar_id, heygen_voice_id')
+        .eq('account_id', accountId)
+        .maybeSingle();
+
       const { error } = await supabase
         .from('campaigns')
         .insert({
@@ -419,11 +426,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           name: campaignName,
           pitch_video_url: pitchVideoUrl,
           status: 'active',
+          // Copy HeyGen settings from account to campaign for video generation
+          heygen_avatar_id: integration?.heygen_avatar_id || null,
+          heygen_voice_id: integration?.heygen_voice_id || null,
         });
 
       if (error) throw error;
 
-      toast.success("Kampagne erstellt!");
+      toast.success("Kampagne erstellt mit Pitch-Video!");
       await refresh();
       setActiveStep(4);
     } catch (error) {
