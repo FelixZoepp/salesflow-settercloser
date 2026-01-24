@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { LeadPageTemplate, CaseStudy, defaultTemplate } from "@/components/landing-builder/LeadPageTemplatePreview";
+import { LeadPageTemplate, CaseStudy, FAQItem, Testimonial, defaultTemplate } from "@/components/landing-builder/LeadPageTemplatePreview";
 
 type DeviceView = "mobile" | "tablet" | "desktop";
 
@@ -111,6 +111,26 @@ const LeadPagePreview = () => {
           case_studies_headline: data.case_studies_headline || defaultTemplate.case_studies_headline,
           case_studies_subheadline: data.case_studies_subheadline || defaultTemplate.case_studies_subheadline,
           case_studies: (data.case_studies as unknown as CaseStudy[]) || defaultTemplate.case_studies,
+          // Guarantee Section
+          guarantee_badge: data.guarantee_badge || defaultTemplate.guarantee_badge,
+          guarantee_headline: data.guarantee_headline || defaultTemplate.guarantee_headline,
+          guarantee_description: data.guarantee_description || defaultTemplate.guarantee_description,
+          guarantee_items: (data.guarantee_items as string[]) || defaultTemplate.guarantee_items,
+          // FAQ Section
+          faq_badge: data.faq_badge || defaultTemplate.faq_badge,
+          faq_headline: data.faq_headline || defaultTemplate.faq_headline,
+          faq_subheadline: data.faq_subheadline || defaultTemplate.faq_subheadline,
+          faq_items: (data.faq_items as unknown as FAQItem[]) || defaultTemplate.faq_items,
+          // CTA Section
+          cta_badge: data.cta_badge || defaultTemplate.cta_badge,
+          cta_headline: data.cta_headline || defaultTemplate.cta_headline,
+          cta_description: data.cta_description || defaultTemplate.cta_description,
+          cta_button_text: data.cta_button_text || defaultTemplate.cta_button_text,
+          // Testimonials Section
+          testimonials_badge: data.testimonials_badge || defaultTemplate.testimonials_badge,
+          testimonials_headline: data.testimonials_headline || defaultTemplate.testimonials_headline,
+          testimonials_subheadline: data.testimonials_subheadline || defaultTemplate.testimonials_subheadline,
+          testimonials: (data.testimonials as unknown as Testimonial[]) || defaultTemplate.testimonials,
         });
       } else {
         setTemplate({ 
@@ -411,6 +431,125 @@ const LeadPagePreview = () => {
                 ))}
               </ul>
             </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        {template.testimonials && template.testimonials.length > 0 && (
+          <section className="py-16 px-6">
+            <div className="text-center mb-12">
+              <Badge className="mb-4" style={{ backgroundColor: `${template.primary_color}20`, color: template.primary_color, borderColor: `${template.primary_color}30` }}>
+                {template.testimonials_badge}
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">{template.testimonials_headline}</h2>
+              <p className="opacity-70">{template.testimonials_subheadline}</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {template.testimonials.map((testimonial, index) => (
+                <div 
+                  key={index} 
+                  className="rounded-xl p-6 border"
+                  style={{ borderColor: `${template.primary_color}20`, backgroundColor: `${template.primary_color}05` }}
+                >
+                  <p className="italic text-lg mb-4 opacity-90">"{testimonial.quote}"</p>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: template.primary_color }}
+                    >
+                      {testimonial.author.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{testimonial.author}</p>
+                      <p className="text-sm opacity-60">{testimonial.role}, {testimonial.company}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Guarantee Section */}
+        <section className="py-16 px-6" style={{ backgroundColor: `${template.accent_color}08` }}>
+          <div className="text-center mb-12">
+            <Badge className="mb-4" style={{ backgroundColor: `${template.accent_color}20`, color: template.accent_color, borderColor: `${template.accent_color}30` }}>
+              {template.guarantee_badge}
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">{template.guarantee_headline}</h2>
+            <p className="opacity-70 max-w-2xl mx-auto">{template.guarantee_description}</p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
+            {template.guarantee_items.map((item, index) => (
+              <div 
+                key={index}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border"
+                style={{ borderColor: `${template.accent_color}30`, backgroundColor: `${template.accent_color}10` }}
+              >
+                <CheckCircle className="w-5 h-5" style={{ color: template.accent_color }} />
+                <span className="text-sm font-medium">{item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        {template.faq_items && template.faq_items.length > 0 && (
+          <section className="py-16 px-6" style={{ backgroundColor: `${template.primary_color}05` }}>
+            <div className="text-center mb-12">
+              <Badge className="mb-4" style={{ backgroundColor: `${template.primary_color}20`, color: template.primary_color, borderColor: `${template.primary_color}30` }}>
+                {template.faq_badge}
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">{template.faq_headline}</h2>
+              <p className="opacity-70">{template.faq_subheadline}</p>
+            </div>
+
+            <div className="space-y-4 max-w-3xl mx-auto">
+              {template.faq_items.map((faq, index) => (
+                <div 
+                  key={index}
+                  className="rounded-xl p-6 border"
+                  style={{ borderColor: `${template.primary_color}20`, backgroundColor: template.background_color }}
+                >
+                  <h4 className="font-semibold text-lg mb-2" style={{ color: template.primary_color }}>
+                    {faq.question}
+                  </h4>
+                  <p className="opacity-75">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* CTA Section with Calendar */}
+        <section 
+          className="py-16 px-6 text-center"
+          style={{ 
+            background: `linear-gradient(135deg, ${template.primary_color} 0%, ${template.secondary_color} 100%)`,
+            color: '#fff'
+          }}
+        >
+          <div className="max-w-3xl mx-auto">
+            <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
+            <h2 className="text-3xl font-bold mb-4">
+              {template.cta_headline.replace("{{first_name}}", "Max")}
+            </h2>
+            <p className="text-lg opacity-90 mb-8">
+              {template.cta_description}
+            </p>
+            <a
+              href={template.calendar_url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-lg cursor-pointer hover:scale-105 transition-transform"
+              style={{ backgroundColor: template.accent_color, color: '#fff' }}
+            >
+              <Calendar className="w-5 h-5" />
+              {template.cta_button_text}
+            </a>
+            <p className="text-sm opacity-60 mt-4">Unverbindlich & kostenlos</p>
           </div>
         </section>
 

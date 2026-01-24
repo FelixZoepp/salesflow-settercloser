@@ -1351,8 +1351,20 @@ export type Database = {
           comparison_headline: string | null
           comparison_subheadline: string | null
           created_at: string
+          cta_badge: string | null
+          cta_button_text: string | null
+          cta_description: string | null
+          cta_headline: string | null
+          faq_badge: string | null
+          faq_headline: string | null
+          faq_items: Json | null
+          faq_subheadline: string | null
           footer_company_name: string | null
           footer_tagline: string | null
+          guarantee_badge: string | null
+          guarantee_description: string | null
+          guarantee_headline: string | null
+          guarantee_items: Json | null
           header_cta_text: string | null
           header_logo_accent: string | null
           header_logo_text: string | null
@@ -1376,6 +1388,10 @@ export type Database = {
           pillar2_title: string | null
           primary_color: string | null
           secondary_color: string | null
+          testimonials: Json | null
+          testimonials_badge: string | null
+          testimonials_headline: string | null
+          testimonials_subheadline: string | null
           text_color: string | null
           updated_at: string
           us_items: Json | null
@@ -1399,8 +1415,20 @@ export type Database = {
           comparison_headline?: string | null
           comparison_subheadline?: string | null
           created_at?: string
+          cta_badge?: string | null
+          cta_button_text?: string | null
+          cta_description?: string | null
+          cta_headline?: string | null
+          faq_badge?: string | null
+          faq_headline?: string | null
+          faq_items?: Json | null
+          faq_subheadline?: string | null
           footer_company_name?: string | null
           footer_tagline?: string | null
+          guarantee_badge?: string | null
+          guarantee_description?: string | null
+          guarantee_headline?: string | null
+          guarantee_items?: Json | null
           header_cta_text?: string | null
           header_logo_accent?: string | null
           header_logo_text?: string | null
@@ -1424,6 +1452,10 @@ export type Database = {
           pillar2_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          testimonials?: Json | null
+          testimonials_badge?: string | null
+          testimonials_headline?: string | null
+          testimonials_subheadline?: string | null
           text_color?: string | null
           updated_at?: string
           us_items?: Json | null
@@ -1447,8 +1479,20 @@ export type Database = {
           comparison_headline?: string | null
           comparison_subheadline?: string | null
           created_at?: string
+          cta_badge?: string | null
+          cta_button_text?: string | null
+          cta_description?: string | null
+          cta_headline?: string | null
+          faq_badge?: string | null
+          faq_headline?: string | null
+          faq_items?: Json | null
+          faq_subheadline?: string | null
           footer_company_name?: string | null
           footer_tagline?: string | null
+          guarantee_badge?: string | null
+          guarantee_description?: string | null
+          guarantee_headline?: string | null
+          guarantee_items?: Json | null
           header_cta_text?: string | null
           header_logo_accent?: string | null
           header_logo_text?: string | null
@@ -1472,6 +1516,10 @@ export type Database = {
           pillar2_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          testimonials?: Json | null
+          testimonials_badge?: string | null
+          testimonials_headline?: string | null
+          testimonials_subheadline?: string | null
           text_color?: string | null
           updated_at?: string
           us_items?: Json | null
