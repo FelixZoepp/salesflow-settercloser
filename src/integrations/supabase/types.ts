@@ -1961,7 +1961,7 @@ export type Database = {
         | "twilio"
         | "telekom_nfon"
         | "other"
-      user_role: "setter" | "closer" | "admin"
+      user_role: "setter" | "closer" | "admin" | "standard" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2156,7 +2156,7 @@ export const Constants = {
         "telekom_nfon",
         "other",
       ],
-      user_role: ["setter", "closer", "admin"],
+      user_role: ["setter", "closer", "admin", "standard", "pro"],
     },
   },
 } as const
