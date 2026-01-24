@@ -1013,44 +1013,73 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
 
             {/* Step 4: Pitch Video */}
             {activeStep === 3 && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="campaignName">Kampagnenname</Label>
-                  <Input
-                    id="campaignName"
-                    placeholder="z.B. LinkedIn Outreach Q1"
-                    value={campaignName}
-                    onChange={(e) => setCampaignName(e.target.value)}
-                  />
-                </div>
+              <div className="space-y-4">
+                {status.steps.pitchVideo ? (
+                  <>
+                    <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                      <div>
+                        <p className="font-medium text-green-700 dark:text-green-300">Kampagne bereits erstellt!</p>
+                        <p className="text-sm text-muted-foreground">Du kannst weitere Kampagnen später in den Einstellungen erstellen.</p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => setActiveStep(4)}
+                      className="w-full"
+                    >
+                      Weiter zum nächsten Schritt
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="campaignName">Kampagnenname</Label>
+                      <Input
+                        id="campaignName"
+                        placeholder="z.B. LinkedIn Outreach Q1"
+                        value={campaignName}
+                        onChange={(e) => setCampaignName(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="pitchVideoUrl" className="flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Pitch-Video URL
-                  </Label>
-                  <Input
-                    id="pitchVideoUrl"
-                    placeholder="https://... (z.B. von Vimeo, YouTube, oder direkte URL)"
-                    value={pitchVideoUrl}
-                    onChange={(e) => setPitchVideoUrl(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Lade dein 2-Minuten Pitch-Video auf einen Video-Host hoch und füge die URL hier ein.
-                    Das Video wird nach dem personalisierten Intro abgespielt.
-                  </p>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pitchVideoUrl" className="flex items-center gap-2">
+                        <Video className="h-4 w-4" />
+                        Pitch-Video URL
+                      </Label>
+                      <Input
+                        id="pitchVideoUrl"
+                        placeholder="https://... (z.B. von Vimeo, YouTube, oder direkte URL)"
+                        value={pitchVideoUrl}
+                        onChange={(e) => setPitchVideoUrl(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Lade dein 2-Minuten Pitch-Video auf einen Video-Host hoch und füge die URL hier ein.
+                        Das Video wird nach dem personalisierten Intro abgespielt.
+                      </p>
+                    </div>
 
-                <Button 
-                  onClick={handleSaveCampaign} 
-                  disabled={saving || !campaignName || !pitchVideoUrl}
-                  className="w-full"
-                >
-                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Kampagne erstellen & weiter
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </>
+                    <Button 
+                      onClick={handleSaveCampaign} 
+                      disabled={saving || !campaignName || !pitchVideoUrl}
+                      className="w-full"
+                    >
+                      {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                      Kampagne erstellen & weiter
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setActiveStep(4)}
+                      className="w-full"
+                    >
+                      Später einrichten
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
 
             {/* Step 5: Leads */}
