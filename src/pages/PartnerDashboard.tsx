@@ -265,19 +265,42 @@ export default function PartnerDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <div className="flex-1 p-3 bg-background rounded-lg border font-mono text-sm overflow-x-auto">
-                {getAffiliateLink() || "Link wird generiert..."}
-              </div>
-              <Button onClick={copyLink} variant="outline" disabled={!getAffiliateLink()}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Partner Code prominent anzeigen */}
             {getPartnerCode() && (
-              <div className="text-sm text-muted-foreground">
-                Dein Kürzel: <span className="font-mono text-foreground">{getPartnerCode()}</span>
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Dein eindeutiges Kürzel</p>
+                    <p className="text-xl font-bold font-mono text-primary">{getPartnerCode()}</p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(getPartnerCode() || "");
+                      toast.success("Kürzel kopiert!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
+            
+            {/* Affiliate Link */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Dein Affiliate-Link</p>
+              <div className="flex gap-2">
+                <div className="flex-1 p-3 bg-background rounded-lg border font-mono text-sm overflow-x-auto whitespace-nowrap">
+                  {getAffiliateLink() || "Link wird generiert..."}
+                </div>
+                <Button onClick={copyLink} variant="outline" disabled={!getAffiliateLink()}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Kopieren
+                </Button>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ExternalLink className="h-4 w-4" />
               <span>Teile dein Programm:</span>

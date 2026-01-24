@@ -95,7 +95,8 @@ serve(async (req) => {
     const isTokenUnique = (token: string | null | undefined): boolean => {
       if (!token) return false;
       // A unique token should have a suffix pattern like "name-a1b2c3" (at least 4 hex chars after dash)
-      return /^.+-[a-f0-9]{4,}$/i.test(token);
+      // OR it should be a UUID-like pattern from Rewardful
+      return /^.+-[a-f0-9]{4,}$/i.test(token) || /^[a-f0-9]{8,}$/i.test(token);
     };
 
     const ensurePrimaryAffiliateLink = async (affiliateId: string) => {
