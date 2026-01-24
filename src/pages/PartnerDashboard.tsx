@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Copy, Users, Euro, TrendingUp, Link as LinkIcon, Loader2, UserPlus, ExternalLink } from "lucide-react";
+import { Copy, Users, Euro, TrendingUp, Link as LinkIcon, Loader2, UserPlus, ExternalLink, Download, Award } from "lucide-react";
+import partnerBadge from "@/assets/pitchfirst-partner-badge.png";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -307,6 +308,56 @@ export default function PartnerDashboard() {
               <Link to="/partner" className="text-primary hover:underline" target="_blank">
                 Öffentliche Partner-Seite öffnen →
               </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Partner Badge */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Offizielles Partner-Badge
+            </CardTitle>
+            <CardDescription>
+              Nutze dieses Badge auf deiner Website, in E-Mails oder Social Media um zu zeigen, dass du offizieller PitchFirst Partner bist
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="bg-muted/50 p-6 rounded-lg flex items-center justify-center">
+                <img 
+                  src={partnerBadge} 
+                  alt="PitchFirst Official Partner Badge" 
+                  className="h-40 w-auto object-contain"
+                />
+              </div>
+              <div className="flex-1 space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Zeige deinen Kunden und Followern, dass du ein verifizierter PitchFirst Partner bist. 
+                    Das Badge steht für Qualität und Vertrauen.
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>✓ Transparenter Hintergrund (PNG)</li>
+                    <li>✓ Hochauflösend für alle Medien</li>
+                    <li>✓ Ideal für Website, LinkedIn & E-Mail-Signatur</li>
+                  </ul>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = partnerBadge;
+                    link.download = 'pitchfirst-partner-badge.png';
+                    link.click();
+                    toast.success("Partner-Badge heruntergeladen!");
+                  }}
+                  className="w-full md:w-auto"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Badge herunterladen
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
