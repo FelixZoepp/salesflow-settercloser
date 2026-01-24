@@ -497,18 +497,39 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       if (error) throw error;
 
-      setGeneratedContent(data.content);
-      setGeneratedStyles(data.styles);
+      if (!data?.content) {
+        throw new Error(data?.error || 'Keine Inhalte generiert');
+      }
+
+      // Extract content and styles from response
+      const content = data.content;
+      const suggestedColors = content.suggestedColors;
       
-      // Auto-generate name from headline if not set
-      if (!landingPageName && data.content?.hero?.headline) {
-        setLandingPageName(data.content.hero.headline.slice(0, 50));
+      // Map suggestedColors to styles format
+      const styles: LandingPageStyles = suggestedColors ? {
+        primaryColor: suggestedColors.primary || defaultStyles.primaryColor,
+        secondaryColor: suggestedColors.secondary || defaultStyles.secondaryColor,
+        accentColor: suggestedColors.accent || defaultStyles.accentColor,
+        backgroundColor: suggestedColors.background || defaultStyles.backgroundColor,
+        textColor: suggestedColors.text || defaultStyles.textColor,
+        fontFamily: defaultStyles.fontFamily,
+      } : defaultStyles;
+
+      setGeneratedContent(content);
+      setGeneratedStyles(styles);
+      
+      // Auto-generate name from suggestedName or headline
+      if (!landingPageName) {
+        const suggestedName = content.suggestedName || content.hero?.headline?.slice(0, 50);
+        if (suggestedName) {
+          setLandingPageName(suggestedName);
+        }
       }
 
       toast.success("Landing Page generiert!");
     } catch (error) {
-      console.error(error);
-      toast.error("Fehler bei der Generierung");
+      console.error('Landing page generation error:', error);
+      toast.error(error instanceof Error ? error.message : "Fehler bei der Generierung");
     } finally {
       setGenerating(false);
     }
