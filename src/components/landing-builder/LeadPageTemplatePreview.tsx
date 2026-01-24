@@ -62,6 +62,38 @@ export interface LeadPageTemplate {
   case_studies_headline: string;
   case_studies_subheadline: string;
   case_studies: CaseStudy[];
+  // Guarantee Section
+  guarantee_badge: string;
+  guarantee_headline: string;
+  guarantee_description: string;
+  guarantee_items: string[];
+  // FAQ Section
+  faq_badge: string;
+  faq_headline: string;
+  faq_subheadline: string;
+  faq_items: FAQItem[];
+  // CTA Section
+  cta_badge: string;
+  cta_headline: string;
+  cta_description: string;
+  cta_button_text: string;
+  // Testimonials Section
+  testimonials_badge: string;
+  testimonials_headline: string;
+  testimonials_subheadline: string;
+  testimonials: Testimonial[];
+}
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface Testimonial {
+  quote: string;
+  author: string;
+  role: string;
+  company: string;
 }
 
 export interface CaseStudy {
@@ -75,7 +107,7 @@ export interface CaseStudy {
   rating: number;
 }
 
-const defaultTemplate: LeadPageTemplate = {
+export const defaultTemplate: LeadPageTemplate = {
   name: "Standard-Vorlage",
   is_active: true,
   header_logo_text: "Content-Leads",
@@ -174,6 +206,37 @@ const defaultTemplate: LeadPageTemplate = {
       video_url: "",
       rating: 5
     }
+  ],
+  // Guarantee Section
+  guarantee_badge: "Unsere Garantie",
+  guarantee_headline: "Deine Investition ist geschützt",
+  guarantee_description: "Wir sind so überzeugt von unserer Methode, dass wir dir eine 100% Zufriedenheitsgarantie geben. Wenn du nicht zufrieden bist, bekommst du dein Geld zurück.",
+  guarantee_items: [
+    "Geld-zurück-Garantie in den ersten 30 Tagen",
+    "Kostenlose Nachbetreuung bei Fragen",
+    "Lifetime-Zugang zu allen Updates"
+  ],
+  // FAQ Section
+  faq_badge: "Häufige Fragen",
+  faq_headline: "Noch Fragen?",
+  faq_subheadline: "Hier findest du Antworten auf die wichtigsten Fragen",
+  faq_items: [
+    { question: "Wie schnell sehe ich Ergebnisse?", answer: "Die meisten Kunden sehen erste Ergebnisse innerhalb der ersten 7 Tage." },
+    { question: "Brauche ich technische Vorkenntnisse?", answer: "Nein, wir führen dich Schritt für Schritt durch den gesamten Prozess." },
+    { question: "Wie viel Zeit muss ich investieren?", answer: "Wir empfehlen ca. 2-3 Stunden pro Woche für optimale Ergebnisse." }
+  ],
+  // CTA Section
+  cta_badge: "Jetzt starten",
+  cta_headline: "Bereit für den nächsten Schritt, {{first_name}}?",
+  cta_description: "Vereinbare jetzt ein kostenloses Strategiegespräch und erfahre, wie wir dir helfen können.",
+  cta_button_text: "Kostenloses Gespräch buchen",
+  // Testimonials Section
+  testimonials_badge: "Was unsere Kunden sagen",
+  testimonials_headline: "Echte Erfolgsgeschichten",
+  testimonials_subheadline: "Höre, was andere über ihre Erfahrungen berichten",
+  testimonials: [
+    { quote: "Innerhalb von 2 Wochen hatte ich meinen ersten Abschluss über LinkedIn. Absolut empfehlenswert!", author: "Michael S.", role: "Geschäftsführer", company: "Digital Consulting GmbH" },
+    { quote: "Die persönliche Betreuung ist einzigartig. Man fühlt sich wirklich gut aufgehoben.", author: "Sarah K.", role: "Marketing Managerin", company: "TechStart AG" }
   ]
 };
 
@@ -316,6 +379,26 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           case_studies_headline: data.case_studies_headline || defaultTemplate.case_studies_headline,
           case_studies_subheadline: data.case_studies_subheadline || defaultTemplate.case_studies_subheadline,
           case_studies: (data.case_studies as unknown as CaseStudy[]) || defaultTemplate.case_studies,
+          // Guarantee Section
+          guarantee_badge: data.guarantee_badge || defaultTemplate.guarantee_badge,
+          guarantee_headline: data.guarantee_headline || defaultTemplate.guarantee_headline,
+          guarantee_description: data.guarantee_description || defaultTemplate.guarantee_description,
+          guarantee_items: (data.guarantee_items as string[]) || defaultTemplate.guarantee_items,
+          // FAQ Section
+          faq_badge: data.faq_badge || defaultTemplate.faq_badge,
+          faq_headline: data.faq_headline || defaultTemplate.faq_headline,
+          faq_subheadline: data.faq_subheadline || defaultTemplate.faq_subheadline,
+          faq_items: (data.faq_items as unknown as FAQItem[]) || defaultTemplate.faq_items,
+          // CTA Section
+          cta_badge: data.cta_badge || defaultTemplate.cta_badge,
+          cta_headline: data.cta_headline || defaultTemplate.cta_headline,
+          cta_description: data.cta_description || defaultTemplate.cta_description,
+          cta_button_text: data.cta_button_text || defaultTemplate.cta_button_text,
+          // Testimonials Section
+          testimonials_badge: data.testimonials_badge || defaultTemplate.testimonials_badge,
+          testimonials_headline: data.testimonials_headline || defaultTemplate.testimonials_headline,
+          testimonials_subheadline: data.testimonials_subheadline || defaultTemplate.testimonials_subheadline,
+          testimonials: (data.testimonials as unknown as Testimonial[]) || defaultTemplate.testimonials,
         });
       } else {
         // Use account branding data if no template exists
@@ -395,6 +478,26 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
         case_studies_headline: template.case_studies_headline,
         case_studies_subheadline: template.case_studies_subheadline,
         case_studies: template.case_studies as unknown as any,
+        // Guarantee Section
+        guarantee_badge: template.guarantee_badge,
+        guarantee_headline: template.guarantee_headline,
+        guarantee_description: template.guarantee_description,
+        guarantee_items: template.guarantee_items,
+        // FAQ Section
+        faq_badge: template.faq_badge,
+        faq_headline: template.faq_headline,
+        faq_subheadline: template.faq_subheadline,
+        faq_items: template.faq_items as unknown as any,
+        // CTA Section
+        cta_badge: template.cta_badge,
+        cta_headline: template.cta_headline,
+        cta_description: template.cta_description,
+        cta_button_text: template.cta_button_text,
+        // Testimonials Section
+        testimonials_badge: template.testimonials_badge,
+        testimonials_headline: template.testimonials_headline,
+        testimonials_subheadline: template.testimonials_subheadline,
+        testimonials: template.testimonials as unknown as any,
       };
 
       // Also save branding to account
@@ -888,6 +991,123 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                         ))}
                       </ul>
                     </div>
+                  </div>
+                </section>
+
+                {/* Testimonials Section */}
+                {template.testimonials && template.testimonials.length > 0 && (
+                  <section id="preview-testimonials" className="py-16 px-6 scroll-mt-4">
+                    <div className="text-center mb-12">
+                      <Badge className="mb-4" style={{ backgroundColor: `${template.primary_color}20`, color: template.primary_color, borderColor: `${template.primary_color}30` }}>
+                        {template.testimonials_badge}
+                      </Badge>
+                      <h2 className="text-3xl font-bold mb-4">{template.testimonials_headline}</h2>
+                      <p className="opacity-70">{template.testimonials_subheadline}</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                      {template.testimonials.map((testimonial, index) => (
+                        <div 
+                          key={index} 
+                          className="rounded-xl p-6 border"
+                          style={{ borderColor: `${template.primary_color}20`, backgroundColor: `${template.primary_color}05` }}
+                        >
+                          <p className="italic text-lg mb-4 opacity-90">"{testimonial.quote}"</p>
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                              style={{ backgroundColor: template.primary_color }}
+                            >
+                              {testimonial.author.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-semibold">{testimonial.author}</p>
+                              <p className="text-sm opacity-60">{testimonial.role}, {testimonial.company}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Guarantee Section */}
+                <section id="preview-guarantee" className="py-16 px-6 scroll-mt-4" style={{ backgroundColor: `${template.accent_color}08` }}>
+                  <div className="text-center mb-12">
+                    <Badge className="mb-4" style={{ backgroundColor: `${template.accent_color}20`, color: template.accent_color, borderColor: `${template.accent_color}30` }}>
+                      {template.guarantee_badge}
+                    </Badge>
+                    <h2 className="text-3xl font-bold mb-4">{template.guarantee_headline}</h2>
+                    <p className="opacity-70 max-w-2xl mx-auto">{template.guarantee_description}</p>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
+                    {template.guarantee_items.map((item, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full border"
+                        style={{ borderColor: `${template.accent_color}30`, backgroundColor: `${template.accent_color}10` }}
+                      >
+                        <CheckCircle className="w-5 h-5" style={{ color: template.accent_color }} />
+                        <span className="text-sm font-medium">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* FAQ Section */}
+                {template.faq_items && template.faq_items.length > 0 && (
+                  <section id="preview-faq" className="py-16 px-6 scroll-mt-4" style={{ backgroundColor: `${template.primary_color}05` }}>
+                    <div className="text-center mb-12">
+                      <Badge className="mb-4" style={{ backgroundColor: `${template.primary_color}20`, color: template.primary_color, borderColor: `${template.primary_color}30` }}>
+                        {template.faq_badge}
+                      </Badge>
+                      <h2 className="text-3xl font-bold mb-4">{template.faq_headline}</h2>
+                      <p className="opacity-70">{template.faq_subheadline}</p>
+                    </div>
+
+                    <div className="space-y-4 max-w-3xl mx-auto">
+                      {template.faq_items.map((faq, index) => (
+                        <div 
+                          key={index}
+                          className="rounded-xl p-6 border"
+                          style={{ borderColor: `${template.primary_color}20`, backgroundColor: `${template.background_color}` }}
+                        >
+                          <h4 className="font-semibold text-lg mb-2" style={{ color: template.primary_color }}>
+                            {faq.question}
+                          </h4>
+                          <p className="opacity-75">{faq.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* CTA Section with Calendar */}
+                <section 
+                  id="preview-cta" 
+                  className="py-16 px-6 text-center scroll-mt-4"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${template.primary_color} 0%, ${template.secondary_color} 100%)`,
+                    color: '#fff'
+                  }}
+                >
+                  <div className="max-w-3xl mx-auto">
+                    <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
+                    <h2 className="text-3xl font-bold mb-4">
+                      {template.cta_headline.replace("{{first_name}}", firstName)}
+                    </h2>
+                    <p className="text-lg opacity-90 mb-8">
+                      {template.cta_description}
+                    </p>
+                    <div
+                      className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-lg cursor-pointer hover:scale-105 transition-transform"
+                      style={{ backgroundColor: template.accent_color, color: '#fff' }}
+                    >
+                      <Calendar className="w-5 h-5" />
+                      {template.cta_button_text}
+                    </div>
+                    <p className="text-sm opacity-60 mt-4">Unverbindlich & kostenlos</p>
                   </div>
                 </section>
 
@@ -1784,4 +2004,4 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   );
 };
 
-export { defaultTemplate };
+
