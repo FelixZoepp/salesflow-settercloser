@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { 
   Play, Calendar, Check, X, Star, CheckCircle, Megaphone, Pen, 
   Users, Loader2, ExternalLink, Save, Wand2, Palette, Type, 
-  Layout, Plus, Trash2, RotateCcw, Upload, ImageIcon, Sparkles,
-  Eye, Settings2, Brush, Trophy, Video, Maximize2, Monitor
+  Layout, Plus, Trash2, Upload, ImageIcon, Sparkles,
+  Eye, Settings2, Brush, Trophy, Video, Monitor
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -583,9 +583,9 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
   const companyName = "{{company}}";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Glassmorphism Header Bar */}
-      <div className="relative overflow-hidden rounded-[1.5rem] p-4 backdrop-blur-2xl bg-gradient-to-r from-white/[0.08] via-white/[0.04] to-white/[0.08] border border-white/[0.1] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]">
+      <div className="relative overflow-hidden rounded-2xl p-5 backdrop-blur-xl bg-card/80 border border-border shadow-lg">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -599,43 +599,34 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
           </div>
           
           {/* View Toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="flex rounded-xl bg-white/5 border border-white/10 p-1">
               <button
                 onClick={() => setActiveView("preview")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   activeView === "preview"
                     ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/20 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Eye className="w-4 h-4" />
-                Vorschau
+                <span className="hidden sm:inline">Vorschau</span>
               </button>
               <button
                 onClick={() => setActiveView("editor")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   activeView === "editor"
                     ? "bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Settings2 className="w-4 h-4" />
-                Bearbeiten
+                <span className="hidden sm:inline">Bearbeiten</span>
               </button>
             </div>
 
-            <div className="h-8 w-px bg-white/10" />
+            <div className="hidden sm:block h-8 w-px bg-white/10" />
 
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsFullscreenOpen(true)}
-              className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
-            >
-              <Maximize2 className="w-4 h-4" />
-              Vorschau
-            </Button>
             <Button 
               variant="outline" 
               size="sm" 
@@ -643,16 +634,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
               className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
             >
               <ExternalLink className="w-4 h-4" />
-              Neuer Tab
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleReset} 
-              className="gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Reset
+              <span className="hidden sm:inline">Vorschau öffnen</span>
             </Button>
             <Button 
               onClick={saveTemplate} 
@@ -660,40 +642,38 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
               className="gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Speichern
+              <span className="hidden sm:inline">Speichern</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content Area - Stacked Layout */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Preview Panel - Full Width */}
         <div className={`${activeView === "editor" ? "hidden" : ""} lg:block`}>
-          <div className="relative overflow-hidden rounded-[2rem] backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.02] pointer-events-none" />
-            
+          <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-xl">
             {/* Preview Header */}
-            <div className="relative z-10 p-4 border-b border-white/[0.06]">
+            <div className="relative z-10 px-5 py-4 border-b border-border bg-muted/50">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                <div className="flex items-center gap-4">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">/p/lead-slug</span>
+                  <span className="text-sm text-muted-foreground font-mono">/p/lead-slug</span>
                 </div>
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
+                <Badge className="bg-primary/20 text-primary border-primary/30">
                   <Eye className="w-3 h-3 mr-1" />
-                  Live
+                  Live Vorschau
                 </Badge>
               </div>
             </div>
 
             {/* Preview Content - Taller */}
             <ScrollArea 
-              className="rounded-b-[2rem] h-[60vh]" 
+              className="rounded-b-2xl h-[65vh]" 
               style={{ 
                 backgroundColor: template.background_color,
                 color: template.text_color 
@@ -701,7 +681,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
             >
               <div className="p-0" ref={previewScrollRef}>
                 {/* Header Preview */}
-                <header id="preview-branding" ref={headerSectionRef} className="border-b border-slate-800 px-4 py-3 scroll-mt-4">
+                <header id="preview-branding" ref={headerSectionRef} className="border-b px-5 py-4 scroll-mt-4" style={{ borderColor: `${template.text_color}20` }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {template.header_logo_url ? (
@@ -728,13 +708,13 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                 </header>
 
                 {/* Hero Section Preview */}
-                <section id="preview-hero" ref={heroSectionRef} className="py-8 px-4 scroll-mt-4">
-                  <div className="grid md:grid-cols-2 gap-6 items-center">
-                    <div className="space-y-4">
-                      <h1 className="text-2xl font-bold leading-tight">
+                <section id="preview-hero" ref={heroSectionRef} className="py-12 px-6 scroll-mt-4">
+                  <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div className="space-y-6">
+                      <h1 className="text-3xl font-bold leading-tight">
                         {template.hero_headline.replace("{{first_name}}", firstName)}
                       </h1>
-                      <p className="text-sm opacity-80">
+                      <p className="text-base opacity-80 leading-relaxed">
                         {template.hero_subheadline
                           .replace("{{first_name}}", firstName)
                           .replace("{{company}}", companyName)
@@ -747,24 +727,24 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
                           ))}
                       </p>
                       <div 
-                        className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded text-sm"
+                        className="inline-flex items-center gap-2 font-semibold px-5 py-3 rounded-lg text-base shadow-lg"
                         style={{ backgroundColor: template.primary_color, color: template.background_color }}
                       >
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-5 h-5" />
                         {template.hero_cta_text}
                       </div>
                     </div>
                     <div className="relative">
-                      <div className="absolute -top-6 right-1/4 text-3xl animate-bounce">👇</div>
-                      <div className="rounded-lg overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
-                        <div className="text-center">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: `${template.primary_color}30` }}>
-                            <Play className="w-6 h-6" style={{ color: template.primary_color }} />
+                      <div className="absolute -top-8 right-1/4 text-4xl animate-bounce">👇</div>
+                      <div className="rounded-xl overflow-hidden border-2 aspect-video flex items-center justify-center shadow-2xl" style={{ backgroundColor: `${template.primary_color}15`, borderColor: `${template.primary_color}40` }}>
+                        <div className="text-center p-6">
+                          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${template.primary_color}30` }}>
+                            <Play className="w-8 h-8" style={{ color: template.primary_color }} />
                           </div>
-                          <p className="text-xs opacity-60">Personalisiertes Video</p>
+                          <p className="text-sm opacity-70">Personalisiertes Video</p>
                         </div>
                       </div>
-                      <p className="text-center mt-2 text-xs opacity-70">
+                      <p className="text-center mt-3 text-sm opacity-70">
                         {template.hero_video_caption.replace("{{first_name}}", firstName)}
                       </p>
                     </div>
