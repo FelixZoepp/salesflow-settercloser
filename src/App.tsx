@@ -34,8 +34,6 @@ import PublicLandingPage from "./pages/PublicLandingPage";
 import Profile from "./pages/Profile";
 import SubscriptionRequired from "./pages/SubscriptionRequired";
 import Billing from "./pages/Billing";
-import Invitations from "./pages/Invitations";
-import InviteRegister from "./pages/InviteRegister";
 import EmailTemplates from "./pages/EmailTemplates";
 import DealAnalytics from "./pages/DealAnalytics";
 import Upgrade from "./pages/Upgrade";
@@ -136,7 +134,7 @@ const AppRoutes = () => (
     {/* Fully public routes - no auth context needed */}
     <Route path="/p/:slug" element={<VideoNote />} />
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
-    <Route path="/invite/:token" element={<InviteRegister />} />
+    
     <Route path="/partner" element={<Partner />} />
     <Route path="/agb" element={<AGB />} />
     <Route path="/" element={<Landing />} />
@@ -166,7 +164,7 @@ const AppRoutes = () => (
     <Route path="/landing-builder" element={<SubscriptionRoute><LandingPageBuilder /></SubscriptionRoute>} />
     <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
     <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
-    <Route path="/invitations" element={<SubscriptionRoute><Invitations /></SubscriptionRoute>} />
+    
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
