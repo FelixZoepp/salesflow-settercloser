@@ -100,92 +100,89 @@ serve(async (req) => {
     };
 
     const ensurePrimaryAffiliateLink = async (affiliateId: string) => {
-      let links = await listAffiliateLinks(affiliateId);
+      const links = await listAffiliateLinks(affiliateId);
 
-      // Check if existing link already has a unique token
-      const existingLink = links?.[0];
-      const existingToken = existingLink?.token;
+      // First, try to find a unique link (with suffix pattern)
+      const uniqueLink = links.find(l => isTokenUnique(l?.token));
       
-      // If no links exist OR existing token is not unique (no suffix), create a new unique one
-      if (links.length === 0 || !isTokenUnique(existingToken)) {
-        const base = buildPreferredTokenBase();
-        let createdLink: any | null = null;
+      if (uniqueLink) {
+        logStep("Found existing unique link", { token: uniqueLink.token });
+        return { 
+          primaryUrl: uniqueLink.url, 
+          primaryToken: uniqueLink.token, 
+          links 
+        };
+      }
 
-        logStep("Creating unique affiliate link", { 
-          reason: links.length === 0 ? "no_links" : "token_not_unique",
-          existingToken,
-          base 
+      // No unique link exists - try to create one
+      const base = buildPreferredTokenBase();
+      let createdLink: any | null = null;
+
+      logStep("Attempting to create unique affiliate link", { 
+        existingLinksCount: links.length,
+        existingTokens: links.map(l => l?.token),
+        base 
+      });
+
+      // Try to create link with a unique token
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const tokenCandidate = `${base}-${randomSuffix(6)}`;
+
+        const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
+          method: "POST",
+          headers: {
+            Authorization: headers.Authorization,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            affiliate_id: affiliateId,
+            token: tokenCandidate,
+          }).toString(),
         });
 
-        // Create link with a unique token (never duplicate)
-        for (let attempt = 0; attempt < 8; attempt++) {
-          const tokenCandidate = `${base}-${randomSuffix(6)}`;
-
-          const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
-            method: "POST",
-            headers: {
-              Authorization: headers.Authorization,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              affiliate_id: affiliateId,
-              token: tokenCandidate,
-            }).toString(),
+        if (createRes.ok) {
+          const createdJson = await createRes.json();
+          createdLink = createdJson?.data ?? createdJson;
+          logStep("Created unique affiliate link", {
+            affiliateId,
+            url: createdLink?.url,
+            token: createdLink?.token,
           });
-
-          if (createRes.ok) {
-            const createdJson = await createRes.json();
-            createdLink = createdJson?.data ?? createdJson;
-            logStep("Created unique affiliate link", {
-              affiliateId,
-              url: createdLink?.url,
-              token: createdLink?.token,
-            });
-            break;
-          }
-
-          const errorText = await createRes.text();
-          if (createRes.status === 422 && errorText.toLowerCase().includes("token is already in use")) {
-            continue;
-          }
-
-          logStep("Failed to create affiliate link (with token)", { status: createRes.status, error: errorText });
           break;
         }
 
-        // Fallback: create without token (Rewardful will still generate a unique token)
-        if (!createdLink) {
-          const createRes = await fetch("https://api.getrewardful.com/v1/affiliate_links", {
-            method: "POST",
-            headers: {
-              Authorization: headers.Authorization,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({ affiliate_id: affiliateId }).toString(),
+        const errorText = await createRes.text();
+        
+        // Plan limitation - cannot create new links, use existing
+        if (createRes.status === 402) {
+          logStep("Rewardful plan does not allow creating new links, using existing", { 
+            existingToken: links?.[0]?.token 
           });
-
-          if (createRes.ok) {
-            const createdJson = await createRes.json();
-            createdLink = createdJson?.data ?? createdJson;
-            logStep("Created affiliate link (fallback)", {
-              affiliateId,
-              url: createdLink?.url,
-              token: createdLink?.token,
-            });
-          } else {
-            const errorText = await createRes.text();
-            logStep("Failed to create affiliate link (fallback)", { status: createRes.status, error: errorText });
-          }
+          break;
+        }
+        
+        if (createRes.status === 422 && errorText.toLowerCase().includes("token is already in use")) {
+          logStep("Token already in use, retrying...", { attempt, token: tokenCandidate });
+          continue;
         }
 
-        if (createdLink) {
-          // Use the new unique link as primary
-          links = [createdLink, ...links];
-        }
+        logStep("Failed to create affiliate link", { status: createRes.status, error: errorText });
+        break;
       }
 
+      // Return the newly created unique link as PRIMARY, or fall back to existing
+      if (createdLink) {
+        return { 
+          primaryUrl: createdLink.url, 
+          primaryToken: createdLink.token, 
+          links: [createdLink, ...links] 
+        };
+      }
+
+      // Use existing link as fallback
       const primaryUrl = links?.[0]?.url ?? null;
       const primaryToken = links?.[0]?.token ?? null;
+      logStep("Using existing affiliate link", { primaryToken });
       return { primaryUrl, primaryToken, links };
     };
 
