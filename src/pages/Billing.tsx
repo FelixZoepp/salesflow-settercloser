@@ -203,7 +203,13 @@ const Billing = () => {
                   <p className="text-sm text-muted-foreground mb-1">Tarif</p>
                   <p className="text-lg font-semibold text-foreground">
                     {dbSubscription?.plan_name 
-                      ? dbSubscription.plan_name.charAt(0).toUpperCase() + dbSubscription.plan_name.slice(1)
+                      ? dbSubscription.plan_name === 'basic' 
+                        ? 'Starter' 
+                        : dbSubscription.plan_name === 'pro' 
+                          ? 'Pro' 
+                          : dbSubscription.plan_name === 'enterprise'
+                            ? 'Enterprise'
+                            : dbSubscription.plan_name.charAt(0).toUpperCase() + dbSubscription.plan_name.slice(1)
                       : isTrial 
                         ? 'Trial' 
                         : productId 
