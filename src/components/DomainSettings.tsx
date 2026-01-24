@@ -114,44 +114,78 @@ export default function DomainSettings() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>DNS-Einrichtung:</strong> Füge einen A-Record bei deinem Domain-Provider hinzu
+                <strong>DNS-Einrichtung:</strong> Füge einen A-Record <strong>oder</strong> CNAME-Record bei deinem Domain-Provider hinzu
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
-              <h4 className="font-medium text-sm">Erforderlicher DNS-Eintrag:</h4>
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+              <h4 className="font-medium text-sm">Wähle eine der folgenden Optionen:</h4>
               
-              {/* A Record */}
-              <div className="space-y-1">
+              {/* Option 1: A Record */}
+              <div className="space-y-2 p-3 bg-background rounded-lg border">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">A Record</span>
+                  <span className="text-xs font-semibold text-foreground">Option 1: A-Record (empfohlen)</span>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     className="h-6 px-2"
                     onClick={() => copyToClipboard("185.158.133.1")}
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-3 w-3 mr-1" />
+                    <span className="text-xs">IP kopieren</span>
                   </Button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2 bg-background rounded border">
+                  <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Typ</p>
-                    <p className="font-mono">A</p>
+                    <p className="font-mono font-semibold">A</p>
                   </div>
-                  <div className="p-2 bg-background rounded border">
+                  <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Name/Host</p>
                     <p className="font-mono">{cleanedDomain.includes('.') ? cleanedDomain.split('.')[0] : '@'}</p>
                   </div>
-                  <div className="p-2 bg-background rounded border">
+                  <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
                     <p className="font-mono text-primary">185.158.133.1</p>
                   </div>
                 </div>
               </div>
 
+              {/* Option 2: CNAME Record */}
+              <div className="space-y-2 p-3 bg-background rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">Option 2: CNAME-Record (Alternative)</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 px-2"
+                    onClick={() => copyToClipboard("cname.lovable.app")}
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    <span className="text-xs">CNAME kopieren</span>
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="p-2 bg-muted rounded border">
+                    <p className="text-muted-foreground">Typ</p>
+                    <p className="font-mono font-semibold">CNAME</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded border">
+                    <p className="text-muted-foreground">Name/Host</p>
+                    <p className="font-mono">{cleanedDomain.includes('.') ? cleanedDomain.split('.')[0] : 'www'}</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded border">
+                    <p className="text-muted-foreground">Wert/Ziel</p>
+                    <p className="font-mono text-primary">cname.lovable.app</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ⚠️ CNAME funktioniert nur für Subdomains (z.B. leads.meine-firma.de), nicht für Root-Domains.
+                </p>
+              </div>
+
               <p className="text-xs text-muted-foreground">
-                Die DNS-Änderung kann bis zu 24 Stunden dauern, bis sie aktiv ist.
+                Die DNS-Änderung kann bis zu 24–48 Stunden dauern, bis sie aktiv ist.
               </p>
             </div>
 
