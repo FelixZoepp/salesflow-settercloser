@@ -1360,6 +1360,8 @@ export type Database = {
           faq_items: Json | null
           faq_subheadline: string | null
           footer_company_name: string | null
+          footer_datenschutz_url: string | null
+          footer_impressum_url: string | null
           footer_tagline: string | null
           guarantee_badge: string | null
           guarantee_description: string | null
@@ -1424,6 +1426,8 @@ export type Database = {
           faq_items?: Json | null
           faq_subheadline?: string | null
           footer_company_name?: string | null
+          footer_datenschutz_url?: string | null
+          footer_impressum_url?: string | null
           footer_tagline?: string | null
           guarantee_badge?: string | null
           guarantee_description?: string | null
@@ -1488,6 +1492,8 @@ export type Database = {
           faq_items?: Json | null
           faq_subheadline?: string | null
           footer_company_name?: string | null
+          footer_datenschutz_url?: string | null
+          footer_impressum_url?: string | null
           footer_tagline?: string | null
           guarantee_badge?: string | null
           guarantee_description?: string | null

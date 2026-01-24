@@ -107,6 +107,8 @@ const LeadPagePreview = () => {
           calendar_url: data.calendar_url || "",
           footer_company_name: data.footer_company_name || account?.company_name || defaultTemplate.footer_company_name,
           footer_tagline: data.footer_tagline || account?.tagline || defaultTemplate.footer_tagline,
+          footer_impressum_url: data.footer_impressum_url || defaultTemplate.footer_impressum_url,
+          footer_datenschutz_url: data.footer_datenschutz_url || defaultTemplate.footer_datenschutz_url,
           case_studies_badge: data.case_studies_badge || defaultTemplate.case_studies_badge,
           case_studies_headline: data.case_studies_headline || defaultTemplate.case_studies_headline,
           case_studies_subheadline: data.case_studies_subheadline || defaultTemplate.case_studies_subheadline,
@@ -555,9 +557,21 @@ const LeadPagePreview = () => {
 
         {/* Footer */}
         <footer className="py-8 px-6 border-t border-slate-800 text-center">
-          <p className="text-sm opacity-60">
+          <p className="text-sm opacity-60 mb-3">
             © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
           </p>
+          <div className="flex items-center justify-center gap-4 text-xs opacity-50">
+            {template.footer_impressum_url && (
+              <a href={template.footer_impressum_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                Impressum
+              </a>
+            )}
+            {template.footer_datenschutz_url && (
+              <a href={template.footer_datenschutz_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">
+                Datenschutz
+              </a>
+            )}
+          </div>
         </footer>
             </div>
           </div>
