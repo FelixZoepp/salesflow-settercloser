@@ -9,13 +9,12 @@ const corsHeaders = {
 /**
  * Generiert ein Twilio Access Token für Browser-basierte Telefonie
  * 
- * Benötigte Secrets:
- * - TWILIO_ACCOUNT_SID
- * - TWILIO_AUTH_TOKEN  
- * - TWILIO_PHONE_NUMBER (die gekaufte Twilio-Nummer)
- * 
- * Optional in account_integrations:
- * - twilio_twiml_app_sid (wird automatisch erstellt falls nicht vorhanden)
+ * Liest Twilio-Credentials aus der account_integrations Tabelle:
+ * - twilio_account_sid
+ * - twilio_auth_token
+ * - twilio_phone_number
+ * - twilio_api_key_sid
+ * - twilio_api_key_secret
  */
 serve(async (req) => {
   // Handle CORS preflight
@@ -61,17 +60,37 @@ serve(async (req) => {
       });
     }
 
-    // Get Twilio credentials from secrets
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
-    const apiKeySid = Deno.env.get('TWILIO_API_KEY_SID');
-    const apiKeySecret = Deno.env.get('TWILIO_API_KEY_SECRET');
+    // Get Twilio credentials from account_integrations
+    const { data: integration, error: integrationError } = await supabase
+      .from('account_integrations')
+      .select('twilio_account_sid, twilio_auth_token, twilio_phone_number, twilio_api_key_sid, twilio_api_key_secret, twilio_twiml_app_sid')
+      .eq('account_id', profile.account_id)
+      .maybeSingle();
 
-    if (!accountSid || !authToken) {
+    if (integrationError) {
+      console.error('Error fetching integration:', integrationError);
+    }
+
+    // Try DB credentials first, fallback to env vars
+    const accountSid = integration?.twilio_account_sid || Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authTokenValue = integration?.twilio_auth_token || Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioPhoneNumber = integration?.twilio_phone_number || Deno.env.get('TWILIO_PHONE_NUMBER');
+    const apiKeySid = integration?.twilio_api_key_sid || Deno.env.get('TWILIO_API_KEY_SID');
+    const apiKeySecret = integration?.twilio_api_key_secret || Deno.env.get('TWILIO_API_KEY_SECRET');
+
+    console.log('Twilio credentials check:', {
+      hasAccountSid: !!accountSid,
+      hasAuthToken: !!authTokenValue,
+      hasApiKeySid: !!apiKeySid,
+      hasApiKeySecret: !!apiKeySecret,
+      hasPhoneNumber: !!twilioPhoneNumber,
+      source: integration?.twilio_account_sid ? 'database' : 'env'
+    });
+
+    if (!accountSid || !authTokenValue) {
       return new Response(JSON.stringify({ 
         error: 'Twilio credentials not configured',
-        details: 'Please add TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN to your secrets'
+        details: 'Bitte gib Account SID und Auth Token im Onboarding ein.'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -81,7 +100,7 @@ serve(async (req) => {
     if (!apiKeySid || !apiKeySecret) {
       return new Response(JSON.stringify({ 
         error: 'Twilio API Key not configured',
-        details: 'Please add TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET to your secrets. Create an API Key at https://console.twilio.com/us1/account/keys-credentials/api-keys'
+        details: 'Bitte erstelle einen API Key unter https://console.twilio.com/us1/account/keys-credentials/api-keys und gib SID und Secret ein.'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -89,12 +108,6 @@ serve(async (req) => {
     }
 
     // Get or create TwiML App SID
-    const { data: integration } = await supabase
-      .from('account_integrations')
-      .select('twilio_twiml_app_sid')
-      .eq('account_id', profile.account_id)
-      .maybeSingle();
-
     let twimlAppSid = integration?.twilio_twiml_app_sid;
     const voiceUrl = `${supabaseUrl}/functions/v1/twilio-voice`;
 
@@ -107,7 +120,7 @@ serve(async (req) => {
         {
           method: 'POST',
           headers: {
-            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+            'Authorization': 'Basic ' + btoa(`${accountSid}:${authTokenValue}`),
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: new URLSearchParams({
@@ -122,8 +135,8 @@ serve(async (req) => {
         const errorText = await createAppResponse.text();
         console.error('Failed to create TwiML App:', errorText);
         return new Response(JSON.stringify({ 
-          error: 'Failed to create TwiML App',
-          details: errorText 
+          error: 'Twilio API Fehler',
+          details: 'Konnte TwiML App nicht erstellen. Prüfe deine Account SID und Auth Token.'
         }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -153,7 +166,7 @@ serve(async (req) => {
           {
             method: 'POST',
             headers: {
-              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+              'Authorization': 'Basic ' + btoa(`${accountSid}:${authTokenValue}`),
               'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
@@ -174,12 +187,10 @@ serve(async (req) => {
     }
 
     // Generate Access Token using Twilio's API
-    // Twilio Access Tokens must be signed with API Key Secret (not Auth Token)
     const identity = user.id;
     const ttl = 3600; // 1 hour
 
     // Create JWT header and payload
-    // The issuer (iss) must be the API Key SID, not the Account SID
     const header = {
       typ: 'JWT',
       alg: 'HS256',
@@ -189,8 +200,8 @@ serve(async (req) => {
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       jti: `${apiKeySid}-${now}`,
-      iss: apiKeySid,  // API Key SID, not Account SID
-      sub: accountSid, // Account SID goes here
+      iss: apiKeySid,
+      sub: accountSid,
       nbf: now,
       exp: now + ttl,
       grants: {
@@ -212,7 +223,7 @@ serve(async (req) => {
     const headerEncoded = base64UrlEncode(header);
     const payloadEncoded = base64UrlEncode(payload);
 
-    // Create signature using HMAC-SHA256 with API Key Secret (not Auth Token!)
+    // Create signature using HMAC-SHA256 with API Key Secret
     const encoder = new TextEncoder();
     const keyData = encoder.encode(apiKeySecret);
     const key = await crypto.subtle.importKey(
