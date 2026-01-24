@@ -106,6 +106,18 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
   const [webhookSecret, setWebhookSecret] = useState("");
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [webhookTestResult, setWebhookTestResult] = useState<'success' | 'error' | 'pending' | null>(null);
+  
+  // Twilio Credentials
+  const [twilioCredentials, setTwilioCredentials] = useState({
+    accountSid: "",
+    authToken: "",
+    phoneNumber: "",
+    apiKeySid: "",
+    apiKeySecret: "",
+  });
+  const [testingTwilio, setTestingTwilio] = useState(false);
+  const [twilioTestResult, setTwilioTestResult] = useState<'success' | 'error' | null>(null);
+  const [showTwilioSecrets, setShowTwilioSecrets] = useState(false);
 
   useEffect(() => {
     if (accountId) {
@@ -252,13 +264,24 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
         toast.success("Team gespeichert");
         setCurrentStep(4);
       } else if (step === 4) {
-        // Mark onboarding as completed
+        // Save Twilio credentials and mark onboarding as completed
+        const updateData: any = {
+          telephony_onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Add Twilio credentials if provider is twilio
+        if (settings.provider === "twilio") {
+          updateData.twilio_account_sid = twilioCredentials.accountSid;
+          updateData.twilio_auth_token = twilioCredentials.authToken;
+          updateData.twilio_phone_number = twilioCredentials.phoneNumber;
+          updateData.twilio_api_key_sid = twilioCredentials.apiKeySid;
+          updateData.twilio_api_key_secret = twilioCredentials.apiKeySecret;
+        }
+
         await supabase
           .from("account_integrations")
-          .update({
-            telephony_onboarding_completed: true,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("account_id", accountId);
 
         toast.success("Telefonie-Setup abgeschlossen!");
@@ -295,6 +318,63 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
   const copyWebhookUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
     toast.success("Webhook-URL kopiert!");
+  };
+
+  const testTwilioConnection = async () => {
+    setTestingTwilio(true);
+    setTwilioTestResult(null);
+    
+    try {
+      // First save the credentials to the database
+      const { error: saveError } = await supabase
+        .from("account_integrations")
+        .upsert({
+          account_id: accountId,
+          twilio_account_sid: twilioCredentials.accountSid,
+          twilio_auth_token: twilioCredentials.authToken,
+          twilio_phone_number: twilioCredentials.phoneNumber,
+          twilio_api_key_sid: twilioCredentials.apiKeySid,
+          twilio_api_key_secret: twilioCredentials.apiKeySecret,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "account_id" });
+
+      if (saveError) throw saveError;
+
+      // Try to get a Twilio token to test the connection
+      const { data, error } = await supabase.functions.invoke('twilio-token');
+
+      if (error) {
+        console.error("Twilio token error:", error);
+        setTwilioTestResult('error');
+        toast.error("Verbindung fehlgeschlagen: " + (error.message || "Überprüfe deine Zugangsdaten"));
+        return;
+      }
+
+      if (data?.token) {
+        setTwilioTestResult('success');
+        toast.success("Twilio-Verbindung erfolgreich!");
+        
+        // Mark as verified
+        await supabase
+          .from("account_integrations")
+          .update({
+            telephony_webhook_verified: true,
+            telephony_webhook_verified_at: new Date().toISOString(),
+          })
+          .eq("account_id", accountId);
+          
+        setSettings(prev => ({ ...prev, webhook_verified: true }));
+      } else {
+        setTwilioTestResult('error');
+        toast.error("Keine gültige Antwort von Twilio erhalten");
+      }
+    } catch (error: any) {
+      console.error("Twilio test error:", error);
+      setTwilioTestResult('error');
+      toast.error(error.message || "Verbindung fehlgeschlagen");
+    } finally {
+      setTestingTwilio(false);
+    }
   };
 
   const testWebhookConnection = async () => {
@@ -781,122 +861,124 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
                   </AlertDescription>
                 </Alert>
 
-                {/* Schritt-für-Schritt Anleitung */}
+                {/* Zugangsdaten Eingabe */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-lg">Twilio einrichten – Schritt für Schritt</h4>
+                  <h4 className="font-semibold text-lg">Twilio Zugangsdaten</h4>
                   
-                  {/* Schritt 1: Account erstellen */}
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-primary text-primary-foreground">1</Badge>
-                      <h5 className="font-medium">Twilio Account erstellen</h5>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="accountSid">Account SID</Label>
+                      <Input
+                        id="accountSid"
+                        placeholder="AC..."
+                        value={twilioCredentials.accountSid}
+                        onChange={(e) => setTwilioCredentials(prev => ({ ...prev, accountSid: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Findest du auf der <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Twilio Console</a> Startseite
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Falls du noch keinen Twilio-Account hast, erstelle einen unter:
-                    </p>
-                    <a 
-                      href="https://www.twilio.com/try-twilio" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
-                    >
-                      twilio.com/try-twilio <ExternalLink className="w-3 h-3" />
-                    </a>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="authToken">Auth Token</Label>
+                      <Input
+                        id="authToken"
+                        type={showTwilioSecrets ? "text" : "password"}
+                        placeholder="••••••••••••••••••••••••••••••••"
+                        value={twilioCredentials.authToken}
+                        onChange={(e) => setTwilioCredentials(prev => ({ ...prev, authToken: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Telefonnummer</Label>
+                      <Input
+                        id="phoneNumber"
+                        placeholder="+4930123456789"
+                        value={twilioCredentials.phoneNumber}
+                        onChange={(e) => setTwilioCredentials(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Deine gekaufte Twilio-Nummer mit Ländervorwahl
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="apiKeySid">API Key SID</Label>
+                      <Input
+                        id="apiKeySid"
+                        placeholder="SK..."
+                        value={twilioCredentials.apiKeySid}
+                        onChange={(e) => setTwilioCredentials(prev => ({ ...prev, apiKeySid: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Erstelle unter <a href="https://console.twilio.com/us1/account/keys-credentials/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">API Keys</a> einen "Standard" Key
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="apiKeySecret">API Key Secret</Label>
+                      <Input
+                        id="apiKeySecret"
+                        type={showTwilioSecrets ? "text" : "password"}
+                        placeholder="••••••••••••••••••••••••••••••••"
+                        value={twilioCredentials.apiKeySecret}
+                        onChange={(e) => setTwilioCredentials(prev => ({ ...prev, apiKeySecret: e.target.value }))}
+                      />
+                      <Alert className="mt-2 bg-destructive/10 border-destructive/30">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        <AlertDescription className="text-xs">
+                          <strong>Wichtig:</strong> Das Secret wird nur einmal angezeigt! Speichere es sofort.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
                   </div>
 
-                  {/* Schritt 2: Telefonnummer kaufen */}
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-primary text-primary-foreground">2</Badge>
-                      <h5 className="font-medium">Telefonnummer kaufen</h5>
-                    </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Im Twilio Dashboard: <strong>Phone Numbers → Buy a number</strong>
-                    </p>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Wähle eine Nummer mit <strong>Voice</strong>-Funktion (z.B. +49 für Deutschland).
-                    </p>
-                    <a 
-                      href="https://console.twilio.com/us1/develop/phone-numbers/manage/incoming" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowTwilioSecrets(!showTwilioSecrets)}
                     >
-                      Twilio Phone Numbers <ExternalLink className="w-3 h-3" />
-                    </a>
+                      {showTwilioSecrets ? "Secrets verbergen" : "Secrets anzeigen"}
+                    </Button>
                   </div>
+                </div>
 
-                  {/* Schritt 3: Account SID & Auth Token */}
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-primary text-primary-foreground">3</Badge>
-                      <h5 className="font-medium">Account SID & Auth Token kopieren</h5>
-                    </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Auf der Twilio Console Startseite findest du:
-                    </p>
-                    <ul className="text-sm text-muted-foreground ml-7 list-disc list-inside space-y-1">
-                      <li><strong>Account SID</strong> – beginnt mit "AC..."</li>
-                      <li><strong>Auth Token</strong> – klicke auf "Show" zum Anzeigen</li>
-                    </ul>
-                    <a 
-                      href="https://console.twilio.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                {/* Verbindungstest */}
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <Label>Verbindung testen</Label>
+                  <div className="flex items-center gap-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={testTwilioConnection}
+                      disabled={testingTwilio || !twilioCredentials.accountSid || !twilioCredentials.authToken || !twilioCredentials.apiKeySid || !twilioCredentials.apiKeySecret}
                     >
-                      Twilio Console <ExternalLink className="w-3 h-3" />
-                    </a>
+                      {testingTwilio ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      Twilio testen
+                    </Button>
+                    
+                    {twilioTestResult === 'success' && (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>Verbindung erfolgreich!</span>
+                      </div>
+                    )}
+                    {twilioTestResult === 'error' && (
+                      <div className="flex items-center gap-2 text-destructive">
+                        <XCircle className="w-5 h-5" />
+                        <span>Verbindung fehlgeschlagen</span>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Schritt 4: API Key erstellen */}
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-primary text-primary-foreground">4</Badge>
-                      <h5 className="font-medium">API Key erstellen (wichtig!)</h5>
-                    </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Für Browser-Telefonie brauchst du zusätzlich einen API Key:
-                    </p>
-                    <ol className="text-sm text-muted-foreground ml-7 list-decimal list-inside space-y-1">
-                      <li>Gehe zu <strong>Account → API keys & tokens</strong></li>
-                      <li>Klicke auf <strong>Create API Key</strong></li>
-                      <li>Wähle "Standard" als Key Type</li>
-                      <li>Kopiere <strong>SID</strong> (beginnt mit "SK...") und <strong>Secret</strong></li>
-                    </ol>
-                    <Alert className="ml-7 mt-2 bg-destructive/10 border-destructive/30">
-                      <AlertTriangle className="w-4 h-4 text-destructive" />
-                      <AlertDescription className="text-xs">
-                        <strong>Wichtig:</strong> Das Secret wird nur einmal angezeigt! Speichere es sofort.
-                      </AlertDescription>
-                    </Alert>
-                    <a 
-                      href="https://console.twilio.com/us1/account/keys-credentials/api-keys" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="ml-7 inline-flex items-center gap-1 text-primary hover:underline text-sm mt-2"
-                    >
-                      API Keys erstellen <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-
-                  {/* Schritt 5: In unserem Tool eintragen */}
-                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-primary text-primary-foreground">5</Badge>
-                      <h5 className="font-medium">Zugangsdaten bei uns eintragen</h5>
-                    </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      Gehe zu <strong>Integrationen → SIP-Provider Einstellungen</strong> und trage ein:
-                    </p>
-                    <ul className="text-sm text-muted-foreground ml-7 list-disc list-inside space-y-1">
-                      <li><strong>TWILIO_ACCOUNT_SID</strong> – dein Account SID</li>
-                      <li><strong>TWILIO_AUTH_TOKEN</strong> – dein Auth Token</li>
-                      <li><strong>TWILIO_PHONE_NUMBER</strong> – deine gekaufte Nummer (z.B. +4930123456)</li>
-                      <li><strong>TWILIO_API_KEY_SID</strong> – der API Key SID (SK...)</li>
-                      <li><strong>TWILIO_API_KEY_SECRET</strong> – das API Key Secret</li>
-                    </ul>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Teste die Verbindung bevor du fortfährst. Wir prüfen ob deine Zugangsdaten korrekt sind.
+                  </p>
                 </div>
 
                 {/* Kostenübersicht */}

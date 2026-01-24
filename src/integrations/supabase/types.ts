@@ -42,6 +42,11 @@ export type Database = {
           telephony_webhook_secret: string | null
           telephony_webhook_verified: boolean | null
           telephony_webhook_verified_at: string | null
+          twilio_account_sid: string | null
+          twilio_api_key_secret: string | null
+          twilio_api_key_sid: string | null
+          twilio_auth_token: string | null
+          twilio_phone_number: string | null
           twilio_twiml_app_sid: string | null
           updated_at: string
         }
@@ -72,6 +77,11 @@ export type Database = {
           telephony_webhook_secret?: string | null
           telephony_webhook_verified?: boolean | null
           telephony_webhook_verified_at?: string | null
+          twilio_account_sid?: string | null
+          twilio_api_key_secret?: string | null
+          twilio_api_key_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_phone_number?: string | null
           twilio_twiml_app_sid?: string | null
           updated_at?: string
         }
@@ -102,6 +112,11 @@ export type Database = {
           telephony_webhook_secret?: string | null
           telephony_webhook_verified?: boolean | null
           telephony_webhook_verified_at?: string | null
+          twilio_account_sid?: string | null
+          twilio_api_key_secret?: string | null
+          twilio_api_key_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_phone_number?: string | null
           twilio_twiml_app_sid?: string | null
           updated_at?: string
         }
