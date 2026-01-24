@@ -50,13 +50,9 @@ interface TelephonySettings {
   onboarding_completed: boolean;
 }
 
-// Vereinfacht auf Twilio BYOC - Kunde bringt seinen eigenen Twilio-Account mit
-// Andere Provider (Placetel, Sipgate, Webex) hatten Anbindungsprobleme
+// Nur Twilio BYOC - Kunde bringt seinen eigenen Twilio-Account mit
 const PROVIDERS = [
-  { value: "twilio", label: "Twilio (empfohlen)", type: "byoc", description: "Bring your own Twilio Account" },
-  { value: "placetel", label: "Placetel", type: "webhook", description: "Webhook-basiertes Tracking" },
-  { value: "sipgate", label: "Sipgate", type: "webhook", description: "Webhook-basiertes Tracking" },
-  { value: "other", label: "Anderer Anbieter", type: "other", description: "Manuelle Einrichtung" },
+  { value: "twilio", label: "Twilio", type: "byoc", description: "Bring your own Twilio Account – Browser-Telefonie" },
 ];
 
 const TIMEZONES = [
