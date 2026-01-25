@@ -1064,7 +1064,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                             size="sm" 
                             className="h-6 px-2"
                             onClick={() => {
-                              navigator.clipboard.writeText("185.158.133.1");
+                              navigator.clipboard.writeText("76.76.21.21");
                               toast.success("IP kopiert!");
                             }}
                           >
@@ -1087,7 +1087,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                           </div>
                           <div className="p-2 bg-muted rounded border">
                             <p className="text-muted-foreground">Wert/Ziel</p>
-                            <p className="font-mono text-primary">185.158.133.1</p>
+                            <p className="font-mono text-primary">76.76.21.21</p>
                           </div>
                         </div>
                       </div>
@@ -1102,7 +1102,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                             size="sm" 
                             className="h-6 px-2"
                             onClick={() => {
-                              navigator.clipboard.writeText("cname.lovable.app");
+                              navigator.clipboard.writeText("cname.vercel-dns.com");
                               toast.success("CNAME kopiert!");
                             }}
                           >
@@ -1125,7 +1125,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                           </div>
                           <div className="p-2 bg-muted rounded border">
                             <p className="text-muted-foreground">Wert/Ziel</p>
-                            <p className="font-mono text-primary">cname.lovable.app</p>
+                            <p className="font-mono text-primary">cname.vercel-dns.com</p>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
