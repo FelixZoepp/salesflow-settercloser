@@ -254,19 +254,35 @@ const VideoNote = () => {
               </div>
               
               <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-cyan-500/20 border border-slate-600/50 bg-slate-800">
-                {contact.video_url ? (
+                {contact.video_url || contact.pitch_video_url ? (
                   <>
                     {!isVideoPlaying ? (
                       <div 
                         className="relative cursor-pointer group"
                         onClick={handlePlayVideo}
                       >
-                      <video
-                        ref={introVideoRef}
-                        src={contact.video_url}
-                        className="w-full aspect-video object-cover"
-                        muted
-                      />
+                      {contact.video_url ? (
+                        <video
+                          ref={introVideoRef}
+                          src={contact.video_url}
+                          className="w-full aspect-video object-cover"
+                          muted
+                        />
+                      ) : contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) ? (
+                        <div className="w-full aspect-video bg-slate-900 flex items-center justify-center">
+                          <img 
+                            src={`https://img.youtube.com/vi/${contact.pitch_video_url.includes('youtu.be/') ? contact.pitch_video_url.split('youtu.be/')[1]?.split('?')[0] : new URLSearchParams(contact.pitch_video_url.split('?')[1]).get('v')}/maxresdefault.jpg`}
+                            alt="Video thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <video
+                          src={contact.pitch_video_url!}
+                          className="w-full aspect-video object-cover"
+                          muted
+                        />
+                      )}
                       <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                         <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-full flex items-center gap-4 transition-all transform group-hover:scale-105 shadow-xl shadow-cyan-500/40 text-lg">
                           <Play className="w-7 h-7 fill-current" />
@@ -276,17 +292,19 @@ const VideoNote = () => {
                     </div>
                   ) : (
                     <div className="relative">
-                      {/* Intro video - always rendered but hidden when pitch plays */}
-                      <video
-                        ref={introVideoRef}
-                        key="intro"
-                        src={contact.video_url}
-                        controls
-                        autoPlay={currentVideo === 'intro'}
-                        playsInline
-                        className={`w-full aspect-video ${currentVideo === 'pitch' ? 'hidden' : ''}`}
-                        onEnded={handleVideoEnded}
-                      />
+                      {/* Intro video - only if it exists */}
+                      {contact.video_url && (
+                        <video
+                          ref={introVideoRef}
+                          key="intro"
+                          src={contact.video_url}
+                          controls
+                          autoPlay={currentVideo === 'intro'}
+                          playsInline
+                          className={`w-full aspect-video ${currentVideo === 'pitch' ? 'hidden' : ''}`}
+                          onEnded={handleVideoEnded}
+                        />
+                      )}
                       
                       {/* Pitch video - rendered but hidden until intro ends */}
                       {contact.pitch_video_url && !isYouTubeUrl(contact.pitch_video_url) && (
@@ -295,15 +313,15 @@ const VideoNote = () => {
                           key="pitch"
                           src={contact.pitch_video_url}
                           controls
-                          autoPlay={currentVideo === 'pitch'}
+                          autoPlay={currentVideo === 'pitch' || !contact.video_url}
                           playsInline
                           preload="auto"
-                          className={`w-full aspect-video ${currentVideo === 'intro' ? 'hidden' : ''}`}
+                          className={`w-full aspect-video ${currentVideo === 'intro' && contact.video_url ? 'hidden' : ''}`}
                         />
                       )}
                       
-                      {/* YouTube pitch - only render when pitch is active to avoid broken iframe */}
-                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && currentVideo === 'pitch' && (
+                      {/* YouTube pitch - render when pitch is active OR no intro exists */}
+                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (currentVideo === 'pitch' || !contact.video_url) && (
                         <iframe
                           src={getYouTubeEmbedUrl(contact.pitch_video_url)}
                           className="w-full aspect-video"
