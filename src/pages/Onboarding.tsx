@@ -251,14 +251,24 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   // Load existing HeyGen settings
   useEffect(() => {
     const loadHeyGenSettings = async () => {
-      if (!accountId) return;
+      if (!accountId) {
+        console.log('No accountId yet, skipping HeyGen settings load');
+        return;
+      }
 
+      console.log('Loading HeyGen settings for account:', accountId);
       try {
         // Check if API key exists
-        const { data: keyData } = await supabase.functions.invoke('check-heygen-key', {
+        const { data: keyData, error: keyError } = await supabase.functions.invoke('check-heygen-key', {
           body: { accountId },
         });
-        setHasExistingApiKey(keyData?.hasKey || false);
+        
+        if (keyError) {
+          console.error('Error checking HeyGen key:', keyError);
+        } else {
+          console.log('HeyGen key check result:', keyData);
+          setHasExistingApiKey(keyData?.hasKey || false);
+        }
 
         // Load avatar/voice IDs
         const { data: integration } = await supabase
@@ -267,6 +277,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           .eq('account_id', accountId)
           .maybeSingle();
 
+        console.log('Loaded integration data:', integration);
         if (integration) {
           if (integration.heygen_avatar_id) setAvatarId(integration.heygen_avatar_id);
           if (integration.heygen_voice_id) setVoiceId(integration.heygen_voice_id);
