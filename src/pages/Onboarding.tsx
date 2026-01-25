@@ -276,15 +276,22 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   }, [accountId]);
 
   const handleSaveHeyGen = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast.error("Kein Account gefunden – bitte neu einloggen.");
+      return;
+    }
+
+    const apiKeyTrimmed = apiKey.trim();
+    const avatarIdTrimmed = avatarId.trim();
+    const voiceIdTrimmed = voiceId.trim();
     
     // Only require API key if none exists
-    if (!hasExistingApiKey && !apiKey) {
+    if (!hasExistingApiKey && !apiKeyTrimmed) {
       toast.error("Bitte API Key eingeben");
       return;
     }
 
-    if (!avatarId) {
+    if (!avatarIdTrimmed) {
       toast.error("Bitte Avatar ID eingeben");
       return;
     }
@@ -292,9 +299,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     setSaving(true);
     try {
       // Only save API key if provided (new or updating)
-      if (apiKey) {
+      if (apiKeyTrimmed) {
         const { error: keyError } = await supabase.functions.invoke('save-heygen-key', {
-          body: { accountId, apiKey },
+          body: { accountId, apiKey: apiKeyTrimmed },
         });
         if (keyError) throw keyError;
         setHasExistingApiKey(true);
@@ -305,8 +312,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
         .from('account_integrations')
         .upsert({
           account_id: accountId,
-          heygen_avatar_id: avatarId || null,
-          heygen_voice_id: voiceId || null,
+          heygen_avatar_id: avatarIdTrimmed || null,
+          heygen_voice_id: voiceIdTrimmed || null,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'account_id' });
 
@@ -316,8 +323,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       await refresh();
       setActiveStep(1);
     } catch (error) {
-      toast.error("Fehler beim Speichern");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Fehler beim Speichern";
+      toast.error(message);
+      console.error('Error saving HeyGen integration:', error);
     } finally {
       setSaving(false);
     }
@@ -944,8 +952,13 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                 </div>
 
                 <Button 
+                  type="button"
                   onClick={handleSaveHeyGen} 
-                  disabled={saving || !apiKey || !avatarId}
+                  disabled={
+                    saving ||
+                    !avatarId.trim() ||
+                    (!hasExistingApiKey && !apiKey.trim())
+                  }
                   className="w-full"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
