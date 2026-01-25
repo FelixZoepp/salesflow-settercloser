@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import { Lock, ArrowRight, CreditCard, Check } from "lucide-react";
+import { Lock, ArrowRight, CreditCard, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ const SubscriptionRequired = () => {
   const navigate = useNavigate();
   const { subscribed, loading, refresh, openCustomerPortal } = useSubscriptionContext();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already subscribed
   if (!loading && subscribed) {
@@ -30,6 +31,25 @@ const SubscriptionRequired = () => {
     }
   };
 
+  const handleCheckout = async (plan: 'starter' | 'pro' | 'scale') => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan, billingPeriod, origin: window.location.origin }
+      });
+
+      if (error) throw error;
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Fehler beim Checkout. Bitte versuche es erneut.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const features = [
     "Pitchfirst Software – alle Features",
     "1x/Woche Live-Gruppen-Coaching mit Felix Zoepp",
@@ -39,21 +59,21 @@ const SubscriptionRequired = () => {
   ];
 
   const plans = {
-    monthly: {
-      price: "149€",
-      period: "/Monat",
-      link: "https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09",
-      savings: null
+    starter: {
+      monthly: { price: "149€", period: "/Monat" },
+      yearly: { price: "1.490€", period: "/Jahr", savings: "2 Monate gratis" }
     },
-    yearly: {
-      price: "1.490€",
-      period: "/Jahr",
-      link: "https://buy.stripe.com/8x2dR98JocjU1k316igMw0a",
-      savings: "2 Monate gratis"
+    pro: {
+      monthly: { price: "299€", period: "/Monat" },
+      yearly: { price: "2.990€", period: "/Jahr", savings: "2 Monate gratis" }
+    },
+    scale: {
+      monthly: { price: "399€", period: "/Monat" },
+      yearly: { price: "3.990€", period: "/Jahr", savings: "2 Monate gratis" }
     }
   };
 
-  const currentPlan = plans[billingPeriod];
+  const currentPlan = plans.starter[billingPeriod];
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0e27] p-4">
@@ -110,33 +130,49 @@ const SubscriptionRequired = () => {
 
           {/* Price Display */}
           <div className="text-center p-6 rounded-xl border border-primary/30 bg-primary/5">
+            <p className="text-sm text-gray-400 mb-2">Starter Plan</p>
             <div className="flex items-baseline justify-center gap-1">
               <span className="text-4xl font-bold text-white">{currentPlan.price}</span>
               <span className="text-gray-400">{currentPlan.period}</span>
             </div>
-            {currentPlan.savings && (
-              <p className="text-primary text-sm mt-2 font-medium">{currentPlan.savings}</p>
-            )}
             {billingPeriod === 'yearly' && (
-              <p className="text-gray-500 text-xs mt-1">Entspricht 124€/Monat</p>
+              <>
+                <p className="text-primary text-sm mt-2 font-medium">2 Monate gratis</p>
+                <p className="text-gray-500 text-xs mt-1">≙ 124€/Monat</p>
+              </>
             )}
           </div>
 
           <div className="space-y-3">
             <Button 
               size="lg"
-              onClick={() => window.open(currentPlan.link, "_blank")}
+              onClick={() => handleCheckout('starter')}
+              disabled={isLoading}
               className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white"
             >
-              <CreditCard className="mr-2 h-4 w-4" />
-              Jetzt abonnieren
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {isLoading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Lädt...</>
+              ) : (
+                <>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Starter wählen
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/upgrade')}
+              className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
+            >
+              Alle Pakete vergleichen
             </Button>
             
             <Button 
-              variant="outline"
+              variant="ghost"
               onClick={refresh}
-              className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
+              className="w-full text-gray-400 hover:text-white hover:bg-white/5"
             >
               Status aktualisieren
             </Button>
