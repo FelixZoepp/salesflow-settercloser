@@ -157,11 +157,15 @@ export default function EmailComposer({ contact, onSuccess }: EmailComposerProps
           </div>
 
           <div className="space-y-2">
-            <Label>Nachricht (HTML)</Label>
+            <Label>Nachricht</Label>
             <Textarea
               value={bodyHtml}
               onChange={(e) => setBodyHtml(e.target.value)}
-              placeholder="<p>Hallo...</p>"
+              placeholder={`Hallo {{first_name}},
+
+ich hoffe, es geht Ihnen gut...
+
+Mit freundlichen Grüßen`}
               rows={10}
               required
             />
