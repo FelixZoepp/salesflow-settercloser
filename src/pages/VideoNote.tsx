@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeTracking, attachVideoTracking } from "@/lib/leadTracker";
@@ -11,6 +11,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// Declare YouTube IFrame API types
+declare global {
+  interface Window {
+    YT: {
+      Player: new (elementId: string, options: {
+        videoId: string;
+        playerVars?: {
+          autoplay?: number;
+          rel?: number;
+          controls?: number;
+          modestbranding?: number;
+          playsinline?: number;
+        };
+        events?: {
+          onReady?: (event: { target: any }) => void;
+          onStateChange?: (event: { data: number }) => void;
+        };
+      }) => any;
+      PlayerState: {
+        ENDED: number;
+        PLAYING: number;
+        PAUSED: number;
+        BUFFERING: number;
+        CUED: number;
+      };
+    };
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
 
 interface ContactData {
   id: string;
@@ -27,18 +57,21 @@ const isYouTubeUrl = (url: string): boolean => {
 };
 
 // Helper to extract YouTube video ID
-const getYouTubeEmbedUrl = (url: string): string => {
-  let videoId = '';
-  
+const getYouTubeVideoId = (url: string): string => {
   if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+    return url.split('youtu.be/')[1]?.split('?')[0] || '';
   } else if (url.includes('youtube.com/watch')) {
     const urlParams = new URLSearchParams(url.split('?')[1]);
-    videoId = urlParams.get('v') || '';
+    return urlParams.get('v') || '';
   } else if (url.includes('youtube.com/embed/')) {
-    videoId = url.split('embed/')[1]?.split('?')[0] || '';
+    return url.split('embed/')[1]?.split('?')[0] || '';
   }
-  
+  return '';
+};
+
+// Helper to extract YouTube embed URL (kept for compatibility)
+const getYouTubeEmbedUrl = (url: string): string => {
+  const videoId = getYouTubeVideoId(url);
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 };
 
@@ -50,10 +83,76 @@ const VideoNote = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<'intro' | 'pitch'>('intro');
   const [pitchPreloaded, setPitchPreloaded] = useState(false);
-  const [youtubeStarted, setYoutubeStarted] = useState(false);
+  const [youtubeApiReady, setYoutubeApiReady] = useState(false);
+  const [youtubePlayerReady, setYoutubePlayerReady] = useState(false);
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const pitchVideoRef = useRef<HTMLVideoElement | null>(null);
+  const youtubePlayerRef = useRef<any>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
+
+  // Load YouTube IFrame API
+  useEffect(() => {
+    if (window.YT) {
+      setYoutubeApiReady(true);
+      return;
+    }
+
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = () => {
+      setYoutubeApiReady(true);
+    };
+
+    return () => {
+      window.onYouTubeIframeAPIReady = () => {};
+    };
+  }, []);
+
+  // Initialize YouTube player when API is ready and we need it
+  const initYoutubePlayer = useCallback(() => {
+    if (!youtubeApiReady || !contact?.pitch_video_url || !isYouTubeUrl(contact.pitch_video_url)) return;
+    if (youtubePlayerRef.current) return; // Already initialized
+
+    const videoId = getYouTubeVideoId(contact.pitch_video_url);
+    if (!videoId) return;
+
+    console.log('Initializing YouTube player with video ID:', videoId);
+
+    youtubePlayerRef.current = new window.YT.Player('youtube-player', {
+      videoId,
+      playerVars: {
+        autoplay: 0, // Don't autoplay yet - we'll trigger it programmatically
+        rel: 0,
+        controls: 1,
+        modestbranding: 1,
+        playsinline: 1,
+      },
+      events: {
+        onReady: (event: any) => {
+          console.log('YouTube player ready');
+          setYoutubePlayerReady(true);
+          // If intro already ended, start playing immediately
+          if (currentVideo === 'pitch') {
+            event.target.playVideo();
+          }
+        },
+        onStateChange: (event: any) => {
+          console.log('YouTube player state:', event.data);
+        },
+      },
+    });
+  }, [youtubeApiReady, contact?.pitch_video_url, currentVideo]);
+
+  // Start YouTube playback when transitioning to pitch
+  useEffect(() => {
+    if (currentVideo === 'pitch' && youtubePlayerRef.current && youtubePlayerReady) {
+      console.log('Starting YouTube playback after intro');
+      youtubePlayerRef.current.playVideo();
+    }
+  }, [currentVideo, youtubePlayerReady]);
 
   useEffect(() => {
     if (slug) {
@@ -70,7 +169,11 @@ const VideoNote = () => {
   // Preload pitch video when intro starts playing
   useEffect(() => {
     if (!isVideoPlaying || !contact?.pitch_video_url) return;
-    if (isYouTubeUrl(contact.pitch_video_url)) return; // Can't preload YouTube
+    if (isYouTubeUrl(contact.pitch_video_url)) {
+      // For YouTube, initialize the player
+      initYoutubePlayer();
+      return;
+    }
     
     // Create a hidden video element to preload
     const preloadVideo = document.createElement('video');
@@ -86,7 +189,7 @@ const VideoNote = () => {
     return () => {
       preloadVideo.src = '';
     };
-  }, [isVideoPlaying, contact?.pitch_video_url]);
+  }, [isVideoPlaying, contact?.pitch_video_url, initYoutubePlayer]);
 
   useEffect(() => {
     if (!slug || !contact?.video_url) return;
@@ -145,7 +248,8 @@ const VideoNote = () => {
   const handlePlayVideo = () => {
     setIsVideoPlaying(true);
     // If no intro video exists, jump directly to pitch
-    setCurrentVideo(contact?.video_url ? 'intro' : 'pitch');
+    const startWithPitch = !contact?.video_url;
+    setCurrentVideo(startWithPitch ? 'pitch' : 'intro');
     
     // Track video view only when user actively clicks to play
     if (slug) {
@@ -155,30 +259,27 @@ const VideoNote = () => {
         console.error('Video view tracking error:', trackError);
       });
     }
+
+    // Initialize YouTube player on user interaction (crucial for autoplay)
+    if (contact?.pitch_video_url && isYouTubeUrl(contact.pitch_video_url)) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        initYoutubePlayer();
+      }, 100);
+    }
   };
 
   const handleVideoEnded = () => {
     // When intro video ends, play the pitch video if available
     if (currentVideo === 'intro' && contact?.pitch_video_url) {
+      console.log('Intro ended, transitioning to pitch');
       setCurrentVideo('pitch');
+      
+      // If YouTube player is ready, start it
+      if (youtubePlayerRef.current && youtubePlayerReady) {
+        youtubePlayerRef.current.playVideo();
+      }
     }
-  };
-
-  const handleStartYoutube = () => {
-    setYoutubeStarted(true);
-  };
-
-  // Helper to get YouTube video ID
-  const getYouTubeVideoId = (url: string): string => {
-    if (url.includes('youtu.be/')) {
-      return url.split('youtu.be/')[1]?.split('?')[0] || '';
-    } else if (url.includes('youtube.com/watch')) {
-      const urlParams = new URLSearchParams(url.split('?')[1]);
-      return urlParams.get('v') || '';
-    } else if (url.includes('youtube.com/embed/')) {
-      return url.split('embed/')[1]?.split('?')[0] || '';
-    }
-    return '';
   };
 
   const scrollToVideo = () => {
@@ -345,40 +446,12 @@ const VideoNote = () => {
                         </div>
                       )}
                       
-                      {/* YouTube pitch - show thumbnail with play button, then iframe on click */}
+                      {/* YouTube pitch - using IFrame Player API for seamless autoplay */}
                       {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (
-                        <div className="w-full aspect-video relative">
-                          {youtubeStarted ? (
-                            <iframe
-                              src={getYouTubeEmbedUrl(contact.pitch_video_url)}
-                              className="w-full h-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              title="Pitch Video"
-                            />
-                          ) : (
-                            <div 
-                              className="w-full h-full cursor-pointer group relative"
-                              onClick={handleStartYoutube}
-                            >
-                              <img 
-                                src={`https://img.youtube.com/vi/${getYouTubeVideoId(contact.pitch_video_url)}/maxresdefault.jpg`}
-                                alt="Video thumbnail"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src = `https://img.youtube.com/vi/${getYouTubeVideoId(contact.pitch_video_url)}/hqdefault.jpg`;
-                                }}
-                              />
-                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                                <div className="bg-red-600 hover:bg-red-500 rounded-full p-5 transition-all transform group-hover:scale-110 shadow-xl">
-                                  <Play className="w-10 h-10 text-white fill-white" />
-                                </div>
-                              </div>
-                              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                                Klicke zum Abspielen
-                              </div>
-                            </div>
-                          )}
+                        <div 
+                          className={`w-full aspect-video ${currentVideo === 'intro' && contact.video_url ? 'hidden' : ''}`}
+                        >
+                          <div id="youtube-player" className="w-full h-full" />
                         </div>
                       )}
                     </div>
