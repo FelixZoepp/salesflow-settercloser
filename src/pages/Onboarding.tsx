@@ -36,7 +36,8 @@ import {
   Calendar,
   Phone,
   FileCheck,
-  ScrollText
+  ScrollText,
+  Copy
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1041,44 +1042,105 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                   </p>
                 </div>
 
-                {customDomain && (
+                {customDomain.trim() && (
                   <>
-                    {/* DNS Instructions */}
-                    <div className="p-4 bg-muted/50 border rounded-lg space-y-3">
+                    {/* DNS Instructions - Both Options */}
+                    <div className="p-4 bg-muted/50 border rounded-lg space-y-4">
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Globe className="h-4 w-4" />
                         DNS-Einrichtung
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Gehe zu deinem Domain-Anbieter (z.B. IONOS, Strato, GoDaddy) und füge diesen Eintrag hinzu:
+                        Gehe zu deinem Domain-Anbieter (z.B. IONOS, Strato, GoDaddy) und füge <strong>einen</strong> der folgenden Einträge hinzu:
                       </p>
                       
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="p-2 bg-background rounded border">
-                          <p className="text-muted-foreground">Typ</p>
-                          <p className="font-mono font-medium">A</p>
+                      {/* Option 1: A Record */}
+                      <div className="space-y-2 p-3 bg-background rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Option 1: A-Record (empfohlen)</span>
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText("185.158.133.1");
+                              toast.success("IP kopiert!");
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            <span className="text-xs">IP kopieren</span>
+                          </Button>
                         </div>
-                        <div className="p-2 bg-background rounded border">
-                          <p className="text-muted-foreground">Name/Host</p>
-                          <p className="font-mono font-medium">
-                            {customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "").startsWith('www.') 
-                              ? 'www' 
-                              : '@'}
-                          </p>
-                        </div>
-                        <div className="p-2 bg-background rounded border">
-                          <p className="text-muted-foreground">Wert/Ziel</p>
-                          <p className="font-mono font-medium text-primary">76.76.21.21</p>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Typ</p>
+                            <p className="font-mono font-semibold">A</p>
+                          </div>
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Name/Host</p>
+                            <p className="font-mono">
+                              {customDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").includes('.') 
+                                ? customDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").split('.')[0] 
+                                : '@'}
+                            </p>
+                          </div>
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Wert/Ziel</p>
+                            <p className="font-mono text-primary">185.158.133.1</p>
+                          </div>
                         </div>
                       </div>
 
+                      {/* Option 2: CNAME Record */}
+                      <div className="space-y-2 p-3 bg-background rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Option 2: CNAME-Record (Alternative)</span>
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText("cname.lovable.app");
+                              toast.success("CNAME kopiert!");
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            <span className="text-xs">CNAME kopieren</span>
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Typ</p>
+                            <p className="font-mono font-semibold">CNAME</p>
+                          </div>
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Name/Host</p>
+                            <p className="font-mono">
+                              {customDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").includes('.') 
+                                ? customDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").split('.')[0] 
+                                : 'www'}
+                            </p>
+                          </div>
+                          <div className="p-2 bg-muted rounded border">
+                            <p className="text-muted-foreground">Wert/Ziel</p>
+                            <p className="font-mono text-primary">cname.lovable.app</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          ⚠️ CNAME funktioniert nur für Subdomains (z.B. leads.meine-firma.de), nicht für Root-Domains.
+                        </p>
+                      </div>
+
                       <p className="text-xs text-muted-foreground">
-                        Das wars! Die Änderung kann bis zu 24 Stunden dauern. SSL wird automatisch eingerichtet.
+                        Die DNS-Änderung kann bis zu 24–48 Stunden dauern, bis sie aktiv ist. SSL wird automatisch eingerichtet.
                       </p>
                     </div>
 
                     {/* Verify Domain Button */}
                     <Button 
+                      type="button"
                       variant="outline"
                       onClick={handleVerifyDomain} 
                       disabled={domainVerifying}
@@ -1115,7 +1177,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                     <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
                       <p className="text-sm text-muted-foreground mb-1">Deine Leads bekommen dann URLs wie:</p>
                       <code className="text-sm text-primary font-medium">
-                        https://{customDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mueller
+                        https://{customDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "")}/p/max-mueller
                       </code>
                     </div>
                   </>
