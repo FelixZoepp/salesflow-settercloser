@@ -130,7 +130,7 @@ export default function ImportLeads() {
   // Campaign state
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [leadType, setLeadType] = useState<'inbound' | 'outbound'>('inbound');
+  const leadType = 'outbound'; // Import is only for outbound leads
 
   // Load campaigns for current account only
   useEffect(() => {
@@ -380,61 +380,44 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Megaphone className="h-5 w-5" />
-                  Import-Einstellungen
+                  Kampagne auswählen
                 </CardTitle>
                 <CardDescription>
-                  Wählen Sie den Lead-Typ und optional eine Kampagne für die importierten Leads
+                  Jeder importierte Lead muss einer Kampagne zugeordnet werden
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lead-type">Lead-Typ</Label>
-                    <Select
-                      value={leadType}
-                      onValueChange={(value) => setLeadType(value as 'inbound' | 'outbound')}
-                    >
-                      <SelectTrigger id="lead-type">
-                        <SelectValue placeholder="Lead-Typ wählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inbound">Inbound (eingehende Leads)</SelectItem>
-                        <SelectItem value="outbound">Outbound (aktive Akquise)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      {leadType === 'outbound' 
-                        ? 'Outbound-Leads benötigen Vorname + Nachname' 
-                        : 'Inbound-Leads benötigen E-Mail oder Firmenname'}
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="campaign">
-                      Kampagne <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={selectedCampaignId || ''}
-                      onValueChange={(value) => setSelectedCampaignId(value || null)}
-                    >
-                      <SelectTrigger id="campaign" className={!selectedCampaignId ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Kampagne wählen (Pflichtfeld)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {campaigns.map((campaign) => (
+                <div className="space-y-2">
+                  <Label htmlFor="campaign">
+                    Kampagne <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={selectedCampaignId || ''}
+                    onValueChange={(value) => setSelectedCampaignId(value || null)}
+                  >
+                    <SelectTrigger id="campaign" className={!selectedCampaignId ? 'border-destructive' : ''}>
+                      <SelectValue placeholder="Kampagne wählen (Pflichtfeld)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaigns.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          Keine Kampagnen vorhanden
+                        </div>
+                      ) : (
+                        campaigns.map((campaign) => (
                           <SelectItem key={campaign.id} value={campaign.id}>
                             {campaign.name}
                             {campaign.status === 'active' && (
                               <span className="ml-2 text-xs text-green-600">(aktiv)</span>
                             )}
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Jeder Lead muss einer Kampagne zugeordnet werden
-                    </p>
-                  </div>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Outbound-Leads benötigen Vorname + Nachname
+                  </p>
                 </div>
               </CardContent>
             </Card>
