@@ -22,6 +22,10 @@ const PRICE_IDS = {
     monthly: "price_1RV6LtG2AAmJlpyxZvpwDdYW",   // Pro Monthly 299€
     yearly: "price_1RV6MkG2AAmJlpyxc1SZlbKD",    // Pro Yearly 2990€
   },
+  scale: {
+    monthly: "price_1StWgeEaO7RPawTGAOC9JZxj",   // Scale Monthly 399€
+    yearly: "price_1StWggEaO7RPawTGNXYsPtbD",    // Scale Yearly 3990€
+  },
 };
 
 serve(async (req) => {

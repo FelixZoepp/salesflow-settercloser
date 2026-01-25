@@ -14,10 +14,12 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 // Price IDs for each plan
 const PRICE_IDS = {
-  starter_monthly: "price_1Sn4y3EaO7RPawTGUvTQW1Dv", // 149€/month
-  starter_yearly: "price_1Sn50aEaO7RPawTG0lbIuPTF", // 1490€/year
-  pro_monthly: "price_1SnIgeEaO7RPawTGCpWU7Qba", // 299€/month
-  pro_yearly: "price_1SnIhDEaO7RPawTGpG8MMWuU", // 2990€/year
+  starter_monthly: "price_1RUtXVG2AAmJlpyxLVYgkqxM", // 149€/month
+  starter_yearly: "price_1RUtaIG2AAmJlpyxyLY3yMSZ",  // 1490€/year
+  pro_monthly: "price_1RV6LtG2AAmJlpyxZvpwDdYW",    // 299€/month
+  pro_yearly: "price_1RV6MkG2AAmJlpyxc1SZlbKD",     // 2990€/year
+  scale_monthly: "price_1StWgeEaO7RPawTGAOC9JZxj",  // 399€/month
+  scale_yearly: "price_1StWggEaO7RPawTGNXYsPtbD",   // 3990€/year
 };
 
 // Product IDs for plan detection
@@ -26,6 +28,8 @@ const PRODUCT_IDS = {
   starter_yearly: "prod_TkaAeLeq8rEn90",
   pro_monthly: "prod_TkoJ98sfzflYyR",
   pro_yearly: "prod_TkoJ8E0e8l4vwV",
+  scale_monthly: "prod_TrFB2U9xGL68vY",
+  scale_yearly: "prod_TrFB4brZtWtOvX",
 };
 
 serve(async (req) => {
@@ -178,7 +182,7 @@ serve(async (req) => {
     });
 
     // Update internal subscription record
-    const planName = targetPlan === "pro" ? "pro" : "basic";
+    const planName = targetPlan === "scale" ? "scale" : targetPlan === "pro" ? "pro" : "basic";
     await supabaseClient
       .from("subscriptions")
       .update({ 
