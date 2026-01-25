@@ -138,10 +138,21 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
 
   const loadExistingData = async () => {
     try {
-      // Load integration settings
+      // Load integration settings including Twilio credentials
       const { data: integration } = await supabase
         .from("account_integrations")
-        .select("telephony_provider, telephony_timezone, telephony_country, telephony_webhook_verified, telephony_onboarding_completed")
+        .select(`
+          telephony_provider, 
+          telephony_timezone, 
+          telephony_country, 
+          telephony_webhook_verified, 
+          telephony_onboarding_completed,
+          twilio_account_sid,
+          twilio_auth_token,
+          twilio_phone_number,
+          twilio_api_key_sid,
+          twilio_api_key_secret
+        `)
         .eq("account_id", accountId)
         .maybeSingle();
 
@@ -153,6 +164,17 @@ export default function TelephonyOnboarding({ accountId, onComplete }: Props) {
           webhook_verified: integration.telephony_webhook_verified || false,
           onboarding_completed: integration.telephony_onboarding_completed || false,
         });
+
+        // Load existing Twilio credentials
+        if (integration.twilio_account_sid || integration.twilio_auth_token || integration.twilio_phone_number) {
+          setTwilioCredentials({
+            accountSid: integration.twilio_account_sid || "",
+            authToken: integration.twilio_auth_token || "",
+            phoneNumber: integration.twilio_phone_number || "",
+            apiKeySid: integration.twilio_api_key_sid || "",
+            apiKeySecret: integration.twilio_api_key_secret || "",
+          });
+        }
       }
 
       // Load phone numbers
