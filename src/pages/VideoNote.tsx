@@ -50,6 +50,7 @@ const VideoNote = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<'intro' | 'pitch'>('intro');
   const [pitchPreloaded, setPitchPreloaded] = useState(false);
+  const [youtubeStarted, setYoutubeStarted] = useState(false);
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const pitchVideoRef = useRef<HTMLVideoElement | null>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
@@ -161,6 +162,23 @@ const VideoNote = () => {
     if (currentVideo === 'intro' && contact?.pitch_video_url) {
       setCurrentVideo('pitch');
     }
+  };
+
+  const handleStartYoutube = () => {
+    setYoutubeStarted(true);
+  };
+
+  // Helper to get YouTube video ID
+  const getYouTubeVideoId = (url: string): string => {
+    if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1]?.split('?')[0] || '';
+    } else if (url.includes('youtube.com/watch')) {
+      const urlParams = new URLSearchParams(url.split('?')[1]);
+      return urlParams.get('v') || '';
+    } else if (url.includes('youtube.com/embed/')) {
+      return url.split('embed/')[1]?.split('?')[0] || '';
+    }
+    return '';
   };
 
   const scrollToVideo = () => {
@@ -327,16 +345,40 @@ const VideoNote = () => {
                         </div>
                       )}
                       
-                      {/* Layer 2: YouTube pitch (behind intro, always rendered for autoplay) */}
+                      {/* YouTube pitch - show thumbnail with play button, then iframe on click */}
                       {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (
-                        <div className="w-full aspect-video">
-                          <iframe
-                            src={getYouTubeEmbedUrl(contact.pitch_video_url)}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            title="Pitch Video"
-                          />
+                        <div className="w-full aspect-video relative">
+                          {youtubeStarted ? (
+                            <iframe
+                              src={getYouTubeEmbedUrl(contact.pitch_video_url)}
+                              className="w-full h-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              title="Pitch Video"
+                            />
+                          ) : (
+                            <div 
+                              className="w-full h-full cursor-pointer group relative"
+                              onClick={handleStartYoutube}
+                            >
+                              <img 
+                                src={`https://img.youtube.com/vi/${getYouTubeVideoId(contact.pitch_video_url)}/maxresdefault.jpg`}
+                                alt="Video thumbnail"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = `https://img.youtube.com/vi/${getYouTubeVideoId(contact.pitch_video_url)}/hqdefault.jpg`;
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                <div className="bg-red-600 hover:bg-red-500 rounded-full p-5 transition-all transform group-hover:scale-110 shadow-xl">
+                                  <Play className="w-10 h-10 text-white fill-white" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                Klicke zum Abspielen
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
