@@ -1023,23 +1023,40 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
             )}
 
             {/* Step 2: Telefonie-Setup */}
-            {activeStep === 1 && accountId && (
-              <div className="space-y-4">
-                <TelephonyOnboarding 
-                  accountId={accountId} 
-                  onComplete={async () => {
-                    await refresh();
-                    setActiveStep(2);
-                  }} 
-                />
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setActiveStep(2)}
-                  className="w-full"
-                >
-                  Später einrichten
-                </Button>
-              </div>
+            {activeStep === 1 && (
+              <>
+                {accountLoading ? (
+                  <Card className="glass-card">
+                    <CardContent className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </CardContent>
+                  </Card>
+                ) : !accountId ? (
+                  <Card className="glass-card border-destructive/50">
+                    <CardContent className="py-8 text-center">
+                      <p className="text-destructive mb-4">Kein Account gefunden. Bitte melde dich erneut an.</p>
+                      <Button onClick={() => navigate('/auth')}>Zur Anmeldung</Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    <TelephonyOnboarding 
+                      accountId={accountId} 
+                      onComplete={async () => {
+                        await refresh();
+                        setActiveStep(2);
+                      }} 
+                    />
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setActiveStep(2)}
+                      className="w-full"
+                    >
+                      Später einrichten
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Step 3: Custom Domain */}
