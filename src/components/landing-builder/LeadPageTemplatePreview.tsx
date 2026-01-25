@@ -246,9 +246,10 @@ export const defaultTemplate: LeadPageTemplate = {
 
 interface LeadPageTemplatePreviewProps {
   calendarUrl?: string;
+  onSave?: () => void | Promise<void>;
 }
 
-export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreviewProps) => {
+export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplatePreviewProps) => {
   const [template, setTemplate] = useState<LeadPageTemplate>(defaultTemplate);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -537,6 +538,11 @@ export const LeadPageTemplatePreview = ({ calendarUrl }: LeadPageTemplatePreview
       }
 
       toast.success("Vorlage gespeichert!");
+      
+      // Call onSave callback if provided
+      if (onSave) {
+        await onSave();
+      }
     } catch (error: any) {
       console.error("Error saving template:", error);
       toast.error(error.message || "Fehler beim Speichern");

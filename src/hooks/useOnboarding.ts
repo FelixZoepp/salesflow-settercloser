@@ -12,6 +12,7 @@ export interface OnboardingStatus {
     leads: boolean;
     script: boolean;
     landingPage: boolean;
+    leadPageTemplate: boolean;
   };
 }
 
@@ -27,6 +28,7 @@ export const useOnboarding = () => {
       leads: false,
       script: false,
       landingPage: false,
+      leadPageTemplate: false,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -104,7 +106,17 @@ export const useOnboarding = () => {
 
       const landingPageComplete = landingPages && landingPages.length > 0;
 
-      // Calculate current step (now 7 steps total)
+      // Check if there's an active lead page template
+      const { data: leadPageTemplates } = await supabase
+        .from('lead_page_templates')
+        .select('id')
+        .eq('account_id', profile.account_id)
+        .eq('is_active', true)
+        .limit(1);
+
+      const leadPageTemplateComplete = leadPageTemplates && leadPageTemplates.length > 0;
+
+      // Calculate current step (now 8 steps total)
       let currentStep = 0;
       if (heygenComplete) currentStep = 1;
       if (telephonyComplete) currentStep = 2;
@@ -113,8 +125,9 @@ export const useOnboarding = () => {
       if (leadsComplete) currentStep = 5;
       if (scriptComplete) currentStep = 6;
       if (landingPageComplete) currentStep = 7;
+      if (leadPageTemplateComplete) currentStep = 8;
 
-      const isComplete = heygenComplete && telephonyComplete && domainComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete;
+      const isComplete = heygenComplete && telephonyComplete && domainComplete && pitchVideoComplete && leadsComplete && scriptComplete && landingPageComplete && leadPageTemplateComplete;
 
       setStatus({
         isComplete,
@@ -127,6 +140,7 @@ export const useOnboarding = () => {
           leads: leadsComplete,
           script: scriptComplete,
           landingPage: landingPageComplete,
+          leadPageTemplate: leadPageTemplateComplete,
         },
       });
 
@@ -134,7 +148,7 @@ export const useOnboarding = () => {
       if (isComplete && !profile.onboarding_completed) {
         await supabase
           .from('profiles')
-          .update({ onboarding_completed: true, onboarding_step: 7 })
+          .update({ onboarding_completed: true, onboarding_step: 8 })
           .eq('id', user.id);
       }
     } catch (error) {

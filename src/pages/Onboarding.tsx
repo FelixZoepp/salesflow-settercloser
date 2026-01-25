@@ -42,6 +42,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LandingPagePreview } from "@/components/landing-builder/LandingPagePreview";
+import { LeadPageTemplatePreview } from "@/components/landing-builder/LeadPageTemplatePreview";
 import TelephonyOnboarding from "@/components/TelephonyOnboarding";
 
 const STEP_TITLES = [
@@ -51,7 +52,8 @@ const STEP_TITLES = [
   "Pitch-Video hochladen",
   "Leads importieren",
   "Vertriebsskript erstellen",
-  "Landing Page erstellen"
+  "Landing Page erstellen",
+  "Lead-Seiten Vorlage"
 ];
 
 interface LandingPageContent {
@@ -238,7 +240,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       else if (!status.steps.leads) setActiveStep(4);
       else if (!status.steps.script) setActiveStep(5);
       else if (!status.steps.landingPage) setActiveStep(6);
-      else setActiveStep(6);
+      else if (!status.steps.leadPageTemplate) setActiveStep(7);
+      else setActiveStep(7);
     }
   }, [onboardingLoading]);
 
@@ -662,6 +665,11 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
 
       toast.success(publish ? "Landing Page veröffentlicht!" : "Landing Page gespeichert!");
       await refresh();
+      
+      // Navigate to next step (Lead Page Template)
+      if (publish) {
+        setActiveStep(7);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Fehler beim Speichern";
       toast.error(message);
@@ -672,7 +680,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const completedSteps = Object.values(status.steps).filter(Boolean).length;
-  const progressPercent = (completedSteps / 7) * 100;
+  const progressPercent = (completedSteps / 8) * 100;
 
   const AVV_TEXT = `Auftragsverarbeitungsvertrag (Kurzfassung)
 
@@ -835,16 +843,16 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Fortschritt</span>
-              <span className="text-sm text-muted-foreground">{completedSteps} von 7 Schritten</span>
+              <span className="text-sm text-muted-foreground">{completedSteps} von 8 Schritten</span>
             </div>
             <Progress value={progressPercent} className="h-2" />
           </CardContent>
         </Card>
 
         {/* Steps */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
           {STEP_TITLES.map((title, index) => {
-            const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+            const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage', 'leadPageTemplate'] as const;
             const isComplete = status.steps[stepKeys[index]];
             const isActive = activeStep === index;
             
@@ -885,6 +893,7 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
               {activeStep === 4 && <Users className="h-6 w-6 text-primary" />}
               {activeStep === 5 && <FileText className="h-6 w-6 text-primary" />}
               {activeStep === 6 && <Palette className="h-6 w-6 text-primary" />}
+              {activeStep === 7 && <Globe className="h-6 w-6 text-primary" />}
               <div>
                 <CardTitle>Schritt {activeStep + 1}: {STEP_TITLES[activeStep]}</CardTitle>
                 <CardDescription>
@@ -895,10 +904,11 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                   {activeStep === 4 && "Importiere deine Leads per CSV oder manuell"}
                   {activeStep === 5 && "Erstelle ein Skript für deine Vertriebsanrufe"}
                   {activeStep === 6 && "Erstelle eine KI-generierte Landing Page für deine Kampagne"}
+                  {activeStep === 7 && "Passe deine personalisierte Lead-Seiten Vorlage an"}
                 </CardDescription>
               </div>
               {(() => {
-                const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage'] as const;
+                const stepKeys = ['heygen', 'telephony', 'domain', 'pitchVideo', 'leads', 'script', 'landingPage', 'leadPageTemplate'] as const;
                 return status.steps[stepKeys[activeStep]] && (
                   <Badge className="ml-auto bg-green-500/20 text-green-600">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> Abgeschlossen
@@ -1537,6 +1547,37 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                       Nach dem Speichern kannst du die Seite im Landing Page Builder weiter anpassen.
                     </p>
                   </>
+                )}
+              </div>
+            )}
+
+            {/* Step 8: Lead-Seiten Vorlage */}
+            {activeStep === 7 && (
+              <div className="space-y-6">
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Lead-Seiten Vorlage</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Hier kannst du deine personalisierte Lead-Seiten-Vorlage anpassen. Diese Vorlage wird für alle deine Leads verwendet, 
+                    um ihnen eine individuelle Landingpage zu zeigen.
+                  </p>
+                </div>
+
+                <LeadPageTemplatePreview 
+                  calendarUrl={calendarUrl || undefined}
+                  onSave={async () => {
+                    await refresh();
+                    toast.success("Lead-Seiten Vorlage gespeichert!");
+                  }}
+                />
+
+                {status.steps.leadPageTemplate && (
+                  <Button 
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full"
+                  >
+                    Onboarding abschließen
+                    <Rocket className="h-4 w-4 ml-2" />
+                  </Button>
                 )}
               </div>
             )}
