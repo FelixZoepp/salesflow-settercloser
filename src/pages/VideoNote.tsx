@@ -293,40 +293,46 @@ const VideoNote = () => {
                     </div>
                   ) : (
                     <div className="relative">
-                      {/* Intro video - only if it exists */}
+                      {/* Layer 1: Intro video (on top when active) */}
                       {contact.video_url && (
-                        <video
-                          ref={introVideoRef}
-                          key="intro"
-                          src={contact.video_url}
-                          controls
-                          autoPlay={currentVideo === 'intro'}
-                          playsInline
-                          className={`w-full aspect-video ${currentVideo === 'pitch' ? 'hidden' : ''}`}
-                          onEnded={handleVideoEnded}
-                        />
+                        <div 
+                          className={`absolute inset-0 w-full h-full bg-black ${currentVideo === 'pitch' ? 'hidden' : 'z-10'}`}
+                        >
+                          <video
+                            ref={introVideoRef}
+                            key="intro"
+                            src={contact.video_url}
+                            controls
+                            autoPlay={currentVideo === 'intro'}
+                            playsInline
+                            className="w-full h-full"
+                            onEnded={handleVideoEnded}
+                          />
+                        </div>
                       )}
                       
-                      {/* MP4 Pitch video - preload and show after intro */}
+                      {/* Layer 2: Pitch video (behind intro, visible when intro ends) */}
                       {contact.pitch_video_url && !isYouTubeUrl(contact.pitch_video_url) && (
-                        <video
-                          ref={pitchVideoRef}
-                          key="pitch"
-                          src={contact.pitch_video_url}
-                          controls
-                          autoPlay={currentVideo === 'pitch' || !contact.video_url}
-                          playsInline
-                          preload="auto"
-                          className={`w-full aspect-video ${currentVideo === 'intro' && contact.video_url ? 'hidden' : ''}`}
-                        />
+                        <div className="w-full aspect-video">
+                          <video
+                            ref={pitchVideoRef}
+                            key="pitch"
+                            src={contact.pitch_video_url}
+                            controls
+                            autoPlay={currentVideo === 'pitch' || !contact.video_url}
+                            playsInline
+                            preload="auto"
+                            className="w-full h-full"
+                          />
+                        </div>
                       )}
                       
-                      {/* YouTube pitch - render early but hide during intro to enable autoplay */}
-                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && isVideoPlaying && (
-                        <div className={currentVideo === 'intro' && contact.video_url ? 'hidden' : ''}>
+                      {/* Layer 2: YouTube pitch (behind intro, always rendered for autoplay) */}
+                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (
+                        <div className="w-full aspect-video">
                           <iframe
                             src={getYouTubeEmbedUrl(contact.pitch_video_url)}
-                            className="w-full aspect-video"
+                            className="w-full h-full"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                             title="Pitch Video"
