@@ -241,21 +241,64 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     }
   }, [onboardingLoading]);
 
+  // Track if API key exists
+  const [hasExistingApiKey, setHasExistingApiKey] = useState(false);
+
+  // Load existing HeyGen settings
+  useEffect(() => {
+    const loadHeyGenSettings = async () => {
+      if (!accountId) return;
+
+      try {
+        // Check if API key exists
+        const { data: keyData } = await supabase.functions.invoke('check-heygen-key', {
+          body: { accountId },
+        });
+        setHasExistingApiKey(keyData?.hasKey || false);
+
+        // Load avatar/voice IDs
+        const { data: integration } = await supabase
+          .from('account_integrations')
+          .select('heygen_avatar_id, heygen_voice_id')
+          .eq('account_id', accountId)
+          .maybeSingle();
+
+        if (integration) {
+          if (integration.heygen_avatar_id) setAvatarId(integration.heygen_avatar_id);
+          if (integration.heygen_voice_id) setVoiceId(integration.heygen_voice_id);
+        }
+      } catch (error) {
+        console.error('Error loading HeyGen settings:', error);
+      }
+    };
+
+    loadHeyGenSettings();
+  }, [accountId]);
+
   const handleSaveHeyGen = async () => {
     if (!accountId) return;
     
-    if (!apiKey || !avatarId) {
-      toast.error("Bitte API Key und Avatar ID eingeben");
+    // Only require API key if none exists
+    if (!hasExistingApiKey && !apiKey) {
+      toast.error("Bitte API Key eingeben");
+      return;
+    }
+
+    if (!avatarId) {
+      toast.error("Bitte Avatar ID eingeben");
       return;
     }
 
     setSaving(true);
     try {
-      // Save API key via edge function
-      const { error: keyError } = await supabase.functions.invoke('save-heygen-key', {
-        body: { accountId, apiKey },
-      });
-      if (keyError) throw keyError;
+      // Only save API key if provided (new or updating)
+      if (apiKey) {
+        const { error: keyError } = await supabase.functions.invoke('save-heygen-key', {
+          body: { accountId, apiKey },
+        });
+        if (keyError) throw keyError;
+        setHasExistingApiKey(true);
+      }
 
       // Save avatar/voice IDs
       const { error } = await supabase
@@ -831,12 +874,18 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                   <Label htmlFor="apiKey" className="flex items-center gap-2">
                     <Key className="h-4 w-4" />
                     API Key
+                    {hasExistingApiKey && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Gespeichert
+                      </Badge>
+                    )}
                   </Label>
                   <div className="relative">
                     <Input
                       id="apiKey"
                       type={showApiKey ? "text" : "password"}
-                      placeholder="Dein HeyGen API Key"
+                      placeholder={hasExistingApiKey ? "••••••••••••• (bereits gespeichert)" : "Dein HeyGen API Key"}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                     />
@@ -851,15 +900,20 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Finde deinen API Key in den{" "}
-                    <a 
-                      href="https://app.heygen.com/settings?nav=API" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      HeyGen Einstellungen <ExternalLink className="h-3 w-3" />
-                    </a>
+                    {hasExistingApiKey 
+                      ? "Leer lassen um den bestehenden Key zu behalten, oder neuen Key eingeben zum Überschreiben."
+                      : <>
+                          Finde deinen API Key in den{" "}
+                          <a 
+                            href="https://app.heygen.com/settings?nav=API" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            HeyGen Einstellungen <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </>
+                    }
                   </p>
                 </div>
 
