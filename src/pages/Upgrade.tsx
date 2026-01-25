@@ -231,8 +231,11 @@ export default function Upgrade() {
               Wähle das passende Paket für dich
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Alle Pakete mit wöchentlichem Live-Coaching. 12 Monate Laufzeit – monatlich oder jährlich zahlen.
+              Alle Pakete mit wöchentlichem Live-Coaching.
             </p>
+            <div className="mt-4 inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-full text-sm font-medium">
+              📋 12 Monate Mindestlaufzeit – du wählst nur die Zahlungsweise
+            </div>
           </div>
         </div>
 
