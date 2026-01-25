@@ -1253,6 +1253,50 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                       </p>
                     </div>
 
+                    {/* Video Preview */}
+                    {pitchVideoUrl.trim() && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Video-Vorschau
+                        </Label>
+                        <div className="rounded-lg overflow-hidden border bg-muted/50">
+                          {pitchVideoUrl.includes('youtube.com') || pitchVideoUrl.includes('youtu.be') ? (
+                            <iframe
+                              src={pitchVideoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                              className="w-full aspect-video"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : pitchVideoUrl.includes('vimeo.com') ? (
+                            <iframe
+                              src={pitchVideoUrl.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                              className="w-full aspect-video"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : pitchVideoUrl.includes('loom.com') ? (
+                            <iframe
+                              src={pitchVideoUrl.replace('/share/', '/embed/')}
+                              className="w-full aspect-video"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <video
+                              src={pitchVideoUrl.trim()}
+                              controls
+                              className="w-full aspect-video"
+                            >
+                              Dein Browser unterstützt dieses Videoformat nicht.
+                            </video>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Prüfe, ob das Video korrekt abgespielt wird. Falls nicht, überprüfe die URL.
+                        </p>
+                      </div>
+                    )}
+
                     <Button 
                       type="button"
                       onClick={handleSaveCampaign} 
