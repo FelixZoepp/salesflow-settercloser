@@ -28,7 +28,7 @@ export default function ObjectionLibrary() {
   const [loading, setLoading] = useState(true);
   const [editingObjection, setEditingObjection] = useState<Objection | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { canUseLiveObjectionHandling, loading: featureLoading } = useFeatureAccess();
+  const { canUseObjectionLibrary, loading: featureLoading } = useFeatureAccess();
 
   const emptyObjection: Partial<Objection> = {
     title: "",
@@ -38,35 +38,11 @@ export default function ObjectionLibrary() {
     is_active: true,
   };
 
-  // Show upgrade prompt if no access to live objection handling
-  if (!featureLoading && !canUseLiveObjectionHandling) {
-    return (
-      <Layout>
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Brain className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Einwand-Bibliothek</h1>
-              <p className="text-muted-foreground">
-                KI-gestützte Einwandbehandlung
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-center py-12">
-            <UpgradePrompt 
-              featureName="KI Einwandbehandlung"
-              description="Die KI-gestützte Live-Einwandbehandlung ist nur im Pro-Paket verfügbar."
-              className="max-w-md"
-            />
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
   useEffect(() => {
-    fetchObjections();
-  }, []);
+    if (canUseObjectionLibrary) {
+      fetchObjections();
+    }
+  }, [canUseObjectionLibrary]);
 
   const fetchObjections = async () => {
     try {
@@ -155,7 +131,33 @@ export default function ObjectionLibrary() {
     setEditingObjection({ ...editingObjection, keywords });
   };
 
-  if (loading) {
+  // Show upgrade prompt if no access to objection library
+  if (!featureLoading && !canUseObjectionLibrary) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Brain className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Einwand-Bibliothek</h1>
+              <p className="text-muted-foreground">
+                KI-gestützte Einwandbehandlung
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center py-12">
+            <UpgradePrompt 
+              featureName="Einwand-Bibliothek"
+              description="Die Einwand-Bibliothek für KI-gestützte Einwandbehandlung ist nur im Pro-Paket verfügbar."
+              className="max-w-md"
+            />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (loading || featureLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-full">
