@@ -129,7 +129,7 @@ export default function DomainSettings() {
                     variant="ghost" 
                     size="sm" 
                     className="h-6 px-2"
-                    onClick={() => copyToClipboard("185.158.133.1")}
+                    onClick={() => copyToClipboard("76.76.21.21")}
                   >
                     <Copy className="h-3 w-3 mr-1" />
                     <span className="text-xs">IP kopieren</span>
@@ -146,7 +146,7 @@ export default function DomainSettings() {
                   </div>
                   <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary">185.158.133.1</p>
+                    <p className="font-mono text-primary">76.76.21.21</p>
                   </div>
                 </div>
               </div>
@@ -159,7 +159,7 @@ export default function DomainSettings() {
                     variant="ghost" 
                     size="sm" 
                     className="h-6 px-2"
-                    onClick={() => copyToClipboard("cname.lovable.app")}
+                    onClick={() => copyToClipboard("cname.vercel-dns.com")}
                   >
                     <Copy className="h-3 w-3 mr-1" />
                     <span className="text-xs">CNAME kopieren</span>
@@ -176,7 +176,7 @@ export default function DomainSettings() {
                   </div>
                   <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary">cname.lovable.app</p>
+                    <p className="font-mono text-primary">cname.vercel-dns.com</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
