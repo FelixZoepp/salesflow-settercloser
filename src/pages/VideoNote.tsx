@@ -21,6 +21,27 @@ interface ContactData {
   pitch_video_url: string | null;
 }
 
+// Helper to check if URL is YouTube
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+// Helper to extract YouTube video ID
+const getYouTubeEmbedUrl = (url: string): string => {
+  let videoId = '';
+  
+  if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+  } else if (url.includes('youtube.com/watch')) {
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    videoId = urlParams.get('v') || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    videoId = url.split('embed/')[1]?.split('?')[0] || '';
+  }
+  
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+};
+
 const VideoNote = () => {
   const { slug } = useParams<{ slug: string }>();
   const [contact, setContact] = useState<ContactData | null>(null);
@@ -28,7 +49,6 @@ const VideoNote = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<'intro' | 'pitch'>('intro');
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
 
@@ -120,14 +140,6 @@ const VideoNote = () => {
 
   const scrollToVideo = () => {
     document.getElementById('video-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Get the current video URL based on which video is playing
-  const getCurrentVideoUrl = () => {
-    if (currentVideo === 'pitch' && contact?.pitch_video_url) {
-      return contact.pitch_video_url;
-    }
-    return contact?.video_url;
   };
 
   if (loading) {
@@ -239,16 +251,44 @@ const VideoNote = () => {
                         </div>
                       </div>
                     ) : (
-                      <video
-                        ref={videoRef}
-                        key={currentVideo}
-                        src={getCurrentVideoUrl() || ''}
-                        controls
-                        autoPlay
-                        playsInline
-                        className="w-full aspect-video"
-                        onEnded={handleVideoEnded}
-                      />
+                      <>
+                        {/* Show intro video first, then pitch video */}
+                        {currentVideo === 'intro' ? (
+                          <video
+                            ref={videoRef}
+                            key="intro"
+                            src={contact.video_url}
+                            controls
+                            autoPlay
+                            playsInline
+                            className="w-full aspect-video"
+                            onEnded={handleVideoEnded}
+                          />
+                        ) : (
+                          <>
+                            {/* Pitch video - check if YouTube or direct URL */}
+                            {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) ? (
+                              <iframe
+                                src={getYouTubeEmbedUrl(contact.pitch_video_url)}
+                                className="w-full aspect-video"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                title="Pitch Video"
+                              />
+                            ) : (
+                              <video
+                                ref={videoRef}
+                                key="pitch"
+                                src={contact.pitch_video_url || ''}
+                                controls
+                                autoPlay
+                                playsInline
+                                className="w-full aspect-video"
+                              />
+                            )}
+                          </>
+                        )}
+                      </>
                     )}
                   </>
                 ) : (
