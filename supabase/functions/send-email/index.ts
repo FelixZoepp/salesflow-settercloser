@@ -73,17 +73,29 @@ serve(async (req) => {
 
     // Generate tracking ID
     const trackingId = crypto.randomUUID();
-    const baseUrl = supabaseUrl.replace('//', '//').replace('.supabase.co', '.supabase.co');
     
-    // Add tracking pixel and rewrite links
+    // Convert plain text to HTML (preserve line breaks)
+    const convertToHtml = (text: string): string => {
+      // Escape HTML special characters
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      // Convert newlines to <br> and wrap in paragraph
+      return `<div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6;">${escaped.replace(/\n/g, '<br>')}</div>`;
+    };
+    
+    const htmlBody = convertToHtml(bodyHtml);
+    
+    // Add tracking pixel
     const trackingPixel = `<img src="${supabaseUrl}/functions/v1/track-email?t=${trackingId}&e=open" width="1" height="1" style="display:none" />`;
     
-    // Rewrite links for click tracking
-    const trackedHtml = bodyHtml.replace(
-      /href="(https?:\/\/[^"]+)"/g,
-      (match, url) => {
+    // Rewrite links for click tracking (handle plain text URLs)
+    const trackedHtml = htmlBody.replace(
+      /(https?:\/\/[^\s<]+)/g,
+      (url) => {
         const encodedUrl = encodeURIComponent(url);
-        return `href="${supabaseUrl}/functions/v1/track-email?t=${trackingId}&e=click&u=${encodedUrl}"`;
+        return `<a href="${supabaseUrl}/functions/v1/track-email?t=${trackingId}&e=click&u=${encodedUrl}">${url}</a>`;
       }
     ) + trackingPixel;
 

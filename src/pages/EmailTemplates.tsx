@@ -206,16 +206,20 @@ export default function EmailTemplates() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Inhalt (HTML)</Label>
+                  <Label>Inhalt</Label>
                   <Textarea
                     value={formData.body_html}
                     onChange={(e) => setFormData({ ...formData, body_html: e.target.value })}
-                    placeholder="<p>Hallo {{first_name}},</p>..."
+                    placeholder={`Hallo {{first_name}},
+
+ich hoffe, es geht Ihnen gut...
+
+Mit freundlichen Grüßen`}
                     rows={10}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Unterstützt HTML. Variablen: {"{{first_name}}"}, {"{{last_name}}"}, {"{{company}}"}, {"{{position}}"}
+                    Variablen: {"{{first_name}}"}, {"{{last_name}}"}, {"{{company}}"}, {"{{position}}"}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
