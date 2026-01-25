@@ -253,9 +253,12 @@ const VideoNote = () => {
                   </>
                 ) : (
                   <div className="aspect-video bg-slate-800 flex items-center justify-center">
-                    <div className="text-center">
-                      <Play className="w-20 h-20 text-slate-600 mx-auto mb-4" />
-                      <p className="text-slate-500 text-lg">Video wird vorbereitet...</p>
+                    <div className="text-center px-6">
+                      <Play className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                      <p className="text-slate-400 text-lg font-medium mb-2">Video wird vorbereitet...</p>
+                      <p className="text-slate-500 text-sm max-w-md">
+                        Um das personalisierte Video zu sehen, muss eine aktive Kampagne mit Pitch-Video existieren und das Intro-Video generiert worden sein.
+                      </p>
                     </div>
                   </div>
                 )}
