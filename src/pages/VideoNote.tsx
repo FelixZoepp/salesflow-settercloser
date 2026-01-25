@@ -143,7 +143,8 @@ const VideoNote = () => {
 
   const handlePlayVideo = () => {
     setIsVideoPlaying(true);
-    setCurrentVideo('intro');
+    // If no intro video exists, jump directly to pitch
+    setCurrentVideo(contact?.video_url ? 'intro' : 'pitch');
     
     // Track video view only when user actively clicks to play
     if (slug) {
@@ -306,7 +307,7 @@ const VideoNote = () => {
                         />
                       )}
                       
-                      {/* Pitch video - rendered but hidden until intro ends */}
+                      {/* MP4 Pitch video - preload and show after intro */}
                       {contact.pitch_video_url && !isYouTubeUrl(contact.pitch_video_url) && (
                         <video
                           ref={pitchVideoRef}
@@ -320,15 +321,17 @@ const VideoNote = () => {
                         />
                       )}
                       
-                      {/* YouTube pitch - render when pitch is active OR no intro exists */}
-                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (currentVideo === 'pitch' || !contact.video_url) && (
-                        <iframe
-                          src={getYouTubeEmbedUrl(contact.pitch_video_url)}
-                          className="w-full aspect-video"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title="Pitch Video"
-                        />
+                      {/* YouTube pitch - render early but hide during intro to enable autoplay */}
+                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && isVideoPlaying && (
+                        <div className={currentVideo === 'intro' && contact.video_url ? 'hidden' : ''}>
+                          <iframe
+                            src={getYouTubeEmbedUrl(contact.pitch_video_url)}
+                            className="w-full aspect-video"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="Pitch Video"
+                          />
+                        </div>
                       )}
                     </div>
                   )}
