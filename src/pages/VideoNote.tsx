@@ -302,11 +302,11 @@ const VideoNote = () => {
                         />
                       )}
                       
-                      {/* YouTube pitch - preload but hidden until pitch is active */}
-                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && (
+                      {/* YouTube pitch - only render when pitch is active to avoid broken iframe */}
+                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && currentVideo === 'pitch' && (
                         <iframe
-                          src={currentVideo === 'pitch' ? getYouTubeEmbedUrl(contact.pitch_video_url) : undefined}
-                          className={`w-full aspect-video ${currentVideo === 'intro' ? 'hidden' : ''}`}
+                          src={getYouTubeEmbedUrl(contact.pitch_video_url)}
+                          className="w-full aspect-video"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                           title="Pitch Video"
