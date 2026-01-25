@@ -332,9 +332,17 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const handleSaveSip = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast.error("Kein Account gefunden – bitte neu einloggen.");
+      return;
+    }
+
+    const sipServerTrimmed = sipServer.trim();
+    const sipUsernameTrimmed = sipUsername.trim();
+    const sipPasswordTrimmed = sipPassword.trim();
+    const sipDisplayNameTrimmed = sipDisplayName.trim();
     
-    if (!sipServer || !sipUsername || !sipPassword) {
+    if (!sipServerTrimmed || !sipUsernameTrimmed || !sipPasswordTrimmed) {
       toast.error("Bitte alle SIP-Zugangsdaten eingeben");
       return;
     }
@@ -342,7 +350,7 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     setSaving(true);
     try {
       // Clean and format server URL
-      let serverUrl = sipServer.trim();
+      let serverUrl = sipServerTrimmed;
       if (!serverUrl.startsWith('wss://')) {
         serverUrl = 'wss://' + serverUrl.replace(/^https?:\/\//, '');
       }
@@ -353,9 +361,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
           account_id: accountId,
           sip_provider: sipProvider,
           sip_server: serverUrl,
-          sip_username: sipUsername,
-          sip_password_encrypted: btoa(sipPassword),
-          sip_display_name: sipDisplayName || null,
+          sip_username: sipUsernameTrimmed,
+          sip_password_encrypted: btoa(sipPasswordTrimmed),
+          sip_display_name: sipDisplayNameTrimmed || null,
           sip_domain: serverUrl.replace('wss://', '').split('/')[0],
           sip_enabled: true,
           updated_at: new Date().toISOString(),
@@ -367,8 +375,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       await refresh();
       setActiveStep(2);
     } catch (error) {
-      toast.error("Fehler beim Speichern");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Fehler beim Speichern";
+      toast.error(message);
+      console.error('Error saving SIP settings:', error);
     } finally {
       setSaving(false);
     }
@@ -420,9 +429,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const handleSaveDomain = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast.error("Kein Account gefunden – bitte neu einloggen.");
+      return;
+    }
+
+    const customDomainTrimmed = customDomain.trim();
     
-    if (!customDomain) {
+    if (!customDomainTrimmed) {
       toast.error("Bitte Domain eingeben");
       return;
     }
@@ -430,10 +444,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
     setSaving(true);
     try {
       // Clean domain input
-      const cleanDomain = customDomain
+      const cleanDomain = customDomainTrimmed
         .replace(/^https?:\/\//, "")
-        .replace(/\/$/, "")
-        .trim();
+        .replace(/\/$/, "");
 
       const { error } = await supabase
         .from('accounts')
@@ -446,17 +459,24 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       await refresh();
       setActiveStep(3);
     } catch (error) {
-      toast.error("Fehler beim Speichern");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Fehler beim Speichern";
+      toast.error(message);
+      console.error('Error saving domain:', error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleSaveCampaign = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast.error("Kein Account gefunden – bitte neu einloggen.");
+      return;
+    }
+
+    const campaignNameTrimmed = campaignName.trim();
+    const pitchVideoUrlTrimmed = pitchVideoUrl.trim();
     
-    if (!campaignName || !pitchVideoUrl) {
+    if (!campaignNameTrimmed || !pitchVideoUrlTrimmed) {
       toast.error("Bitte Kampagnenname und Video-URL eingeben");
       return;
     }
@@ -474,8 +494,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
         .from('campaigns')
         .insert({
           account_id: accountId,
-          name: campaignName,
-          pitch_video_url: pitchVideoUrl,
+          name: campaignNameTrimmed,
+          pitch_video_url: pitchVideoUrlTrimmed,
           status: 'active',
           // Copy HeyGen settings from account to campaign for video generation
           heygen_avatar_id: integration?.heygen_avatar_id || null,
@@ -488,17 +508,24 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       await refresh();
       setActiveStep(4);
     } catch (error) {
-      toast.error("Fehler beim Erstellen der Kampagne");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Fehler beim Erstellen der Kampagne";
+      toast.error(message);
+      console.error('Error saving campaign:', error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleSaveScript = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast.error("Kein Account gefunden – bitte neu einloggen.");
+      return;
+    }
+
+    const scriptNameTrimmed = scriptName.trim();
+    const scriptContentTrimmed = scriptContent.trim();
     
-    if (!scriptName || !scriptContent) {
+    if (!scriptNameTrimmed || !scriptContentTrimmed) {
       toast.error("Bitte Skriptname und Inhalt eingeben");
       return;
     }
@@ -516,8 +543,8 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
         .from('call_scripts')
         .insert({
           account_id: accountId,
-          name: scriptName,
-          content: scriptContent,
+          name: scriptNameTrimmed,
+          content: scriptContentTrimmed,
           is_active: true,
         });
 
@@ -527,8 +554,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       await refresh();
       setActiveStep(6);
     } catch (error) {
-      toast.error("Fehler beim Erstellen des Skripts");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Fehler beim Erstellen des Skripts";
+      toast.error(message);
+      console.error('Error saving script:', error);
     } finally {
       setSaving(false);
     }
@@ -587,7 +615,10 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
   };
 
   const handleSaveLandingPage = async (publish: boolean = false) => {
-    if (!generatedContent || !landingPageName) {
+    const landingPageNameTrimmed = landingPageName.trim();
+    const calendarUrlTrimmed = calendarUrl.trim();
+    
+    if (!generatedContent || !landingPageNameTrimmed) {
       toast.error("Bitte generiere zuerst eine Landing Page und gib einen Namen ein");
       return;
     }
@@ -598,14 +629,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       if (!user) throw new Error("Nicht angemeldet");
 
       // Save calendar URL to profile if provided
-      if (calendarUrl) {
+      if (calendarUrlTrimmed) {
         await supabase
           .from('profiles')
-          .update({ calendar_url: calendarUrl })
+          .update({ calendar_url: calendarUrlTrimmed })
           .eq('id', user.id);
       }
 
-      const slug = landingPageName
+      const slug = landingPageNameTrimmed
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
@@ -616,14 +647,14 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
         .insert({
           user_id: user.id,
           account_id: accountId,
-          name: landingPageName,
+          name: landingPageNameTrimmed,
           slug,
-          prompt: landingPagePrompt,
+          prompt: landingPagePrompt.trim(),
           content: generatedContent as unknown as Json,
           styles: (generatedStyles || defaultStyles) as unknown as Json,
           status: publish ? 'published' : 'draft',
           published_at: publish ? new Date().toISOString() : null,
-          calendar_url: calendarUrl || null,
+          calendar_url: calendarUrlTrimmed || null,
         });
 
       if (error) throw error;
@@ -631,8 +662,9 @@ Hätten Sie kurz Zeit für ein Gespräch?`);
       toast.success(publish ? "Landing Page veröffentlicht!" : "Landing Page gespeichert!");
       await refresh();
     } catch (error) {
-      console.error(error);
-      toast.error("Fehler beim Speichern");
+      const message = error instanceof Error ? error.message : "Fehler beim Speichern";
+      toast.error(message);
+      console.error('Error saving landing page:', error);
     } finally {
       setSaving(false);
     }
@@ -1090,8 +1122,9 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                 )}
 
                 <Button 
+                  type="button"
                   onClick={handleSaveDomain} 
-                  disabled={saving || !customDomain}
+                  disabled={saving || !customDomain.trim()}
                   className="w-full"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
@@ -1159,8 +1192,9 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                     </div>
 
                     <Button 
+                      type="button"
                       onClick={handleSaveCampaign} 
-                      disabled={saving || !campaignName || !pitchVideoUrl}
+                      disabled={saving || !campaignName.trim() || !pitchVideoUrl.trim()}
                       className="w-full"
                     >
                       {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
@@ -1246,8 +1280,9 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
                 </div>
 
                 <Button 
+                  type="button"
                   onClick={handleSaveScript} 
-                  disabled={saving || !scriptName || !scriptContent}
+                  disabled={saving || !scriptName.trim() || !scriptContent.trim()}
                   className="w-full"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
@@ -1373,16 +1408,18 @@ Der Nutzer stimmt dem Einsatz technischer Unterauftragsverarbeiter (z. B. Hostin
 
                     <div className="grid grid-cols-2 gap-4">
                       <Button 
+                        type="button"
                         variant="outline"
                         onClick={() => handleSaveLandingPage(false)} 
-                        disabled={saving || !landingPageName}
+                        disabled={saving || !landingPageName.trim()}
                       >
                         {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                         Als Entwurf speichern
                       </Button>
                       <Button 
+                        type="button"
                         onClick={() => handleSaveLandingPage(true)} 
-                        disabled={saving || !landingPageName}
+                        disabled={saving || !landingPageName.trim()}
                       >
                         {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                         Veröffentlichen & abschließen
