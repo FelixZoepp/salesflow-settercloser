@@ -47,17 +47,19 @@ export const useOnboarding = () => {
 
       if (!profile?.account_id) return;
 
-      // Check HeyGen integration and SIP settings
+      // Check HeyGen integration and telephony settings
       const { data: integration } = await supabase
         .from('account_integrations')
-        .select('heygen_api_key_id, heygen_avatar_id, sip_enabled, sip_server, sip_username')
+        .select('heygen_api_key_id, heygen_avatar_id, telephony_onboarding_completed, telephony_provider, twilio_account_sid, sip_enabled, sip_server, sip_username')
         .eq('account_id', profile.account_id)
         .maybeSingle();
 
       const heygenComplete = !!(integration?.heygen_api_key_id && integration?.heygen_avatar_id);
 
-      // Check SIP telephony
-      const telephonyComplete = !!(integration?.sip_enabled && integration?.sip_server && integration?.sip_username);
+      // Check telephony - support both Twilio (new) and SIP (legacy)
+      const twilioComplete = !!(integration?.telephony_provider === 'twilio' && integration?.twilio_account_sid);
+      const sipComplete = !!(integration?.sip_enabled && integration?.sip_server && integration?.sip_username);
+      const telephonyComplete = !!(integration?.telephony_onboarding_completed) || twilioComplete || sipComplete;
 
       // Check custom domain
       const { data: account } = await supabase
