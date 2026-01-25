@@ -49,7 +49,9 @@ const VideoNote = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<'intro' | 'pitch'>('intro');
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [pitchPreloaded, setPitchPreloaded] = useState(false);
+  const introVideoRef = useRef<HTMLVideoElement | null>(null);
+  const pitchVideoRef = useRef<HTMLVideoElement | null>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
 
   useEffect(() => {
@@ -64,19 +66,41 @@ const VideoNote = () => {
     return () => cleanup();
   }, [slug, contact?.id]);
 
+  // Preload pitch video when intro starts playing
+  useEffect(() => {
+    if (!isVideoPlaying || !contact?.pitch_video_url) return;
+    if (isYouTubeUrl(contact.pitch_video_url)) return; // Can't preload YouTube
+    
+    // Create a hidden video element to preload
+    const preloadVideo = document.createElement('video');
+    preloadVideo.src = contact.pitch_video_url;
+    preloadVideo.preload = 'auto';
+    preloadVideo.muted = true;
+    preloadVideo.load();
+    
+    preloadVideo.oncanplaythrough = () => {
+      setPitchPreloaded(true);
+    };
+    
+    return () => {
+      preloadVideo.src = '';
+    };
+  }, [isVideoPlaying, contact?.pitch_video_url]);
+
   useEffect(() => {
     if (!slug || !contact?.video_url) return;
-    if (!videoRef.current) return;
+    const currentRef = currentVideo === 'intro' ? introVideoRef.current : pitchVideoRef.current;
+    if (!currentRef) return;
 
     // Re-attach when the video element changes (preview vs. playing)
     videoTrackingCleanupRef.current?.();
-    videoTrackingCleanupRef.current = attachVideoTracking(slug, videoRef.current);
+    videoTrackingCleanupRef.current = attachVideoTracking(slug, currentRef);
 
     return () => {
       videoTrackingCleanupRef.current?.();
       videoTrackingCleanupRef.current = null;
     };
-  }, [slug, contact?.video_url, isVideoPlaying]);
+  }, [slug, contact?.video_url, isVideoPlaying, currentVideo]);
 
   const loadContactAndTrackView = async () => {
     console.log('Loading contact for slug:', slug);
@@ -237,76 +261,76 @@ const VideoNote = () => {
                         className="relative cursor-pointer group"
                         onClick={handlePlayVideo}
                       >
-                        <video
-                          ref={videoRef}
-                          src={contact.video_url}
-                          className="w-full aspect-video object-cover"
-                          muted
-                        />
-                        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-full flex items-center gap-4 transition-all transform group-hover:scale-105 shadow-xl shadow-cyan-500/40 text-lg">
-                            <Play className="w-7 h-7 fill-current" />
-                            Jetzt ansehen
-                          </button>
-                        </div>
+                      <video
+                        ref={introVideoRef}
+                        src={contact.video_url}
+                        className="w-full aspect-video object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-10 py-5 rounded-full flex items-center gap-4 transition-all transform group-hover:scale-105 shadow-xl shadow-cyan-500/40 text-lg">
+                          <Play className="w-7 h-7 fill-current" />
+                          Jetzt ansehen
+                        </button>
                       </div>
-                    ) : (
-                      <>
-                        {/* Show intro video first, then pitch video */}
-                        {currentVideo === 'intro' ? (
-                          <video
-                            ref={videoRef}
-                            key="intro"
-                            src={contact.video_url}
-                            controls
-                            autoPlay
-                            playsInline
-                            className="w-full aspect-video"
-                            onEnded={handleVideoEnded}
-                          />
-                        ) : (
-                          <>
-                            {/* Pitch video - check if YouTube or direct URL */}
-                            {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) ? (
-                              <iframe
-                                src={getYouTubeEmbedUrl(contact.pitch_video_url)}
-                                className="w-full aspect-video"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                title="Pitch Video"
-                              />
-                            ) : (
-                              <video
-                                ref={videoRef}
-                                key="pitch"
-                                src={contact.pitch_video_url || ''}
-                                controls
-                                autoPlay
-                                playsInline
-                                className="w-full aspect-video"
-                              />
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <div className="aspect-video bg-slate-800 flex items-center justify-center">
-                    <div className="text-center px-6">
-                      <Play className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                      <p className="text-slate-400 text-lg font-medium mb-2">Video wird vorbereitet...</p>
-                      <p className="text-slate-500 text-sm max-w-md">
-                        Um das personalisierte Video zu sehen, muss eine aktive Kampagne mit Pitch-Video existieren und das Intro-Video generiert worden sein.
-                      </p>
                     </div>
+                  ) : (
+                    <div className="relative">
+                      {/* Intro video - always rendered but hidden when pitch plays */}
+                      <video
+                        ref={introVideoRef}
+                        key="intro"
+                        src={contact.video_url}
+                        controls
+                        autoPlay={currentVideo === 'intro'}
+                        playsInline
+                        className={`w-full aspect-video ${currentVideo === 'pitch' ? 'hidden' : ''}`}
+                        onEnded={handleVideoEnded}
+                      />
+                      
+                      {/* Pitch video - rendered but hidden until intro ends */}
+                      {contact.pitch_video_url && !isYouTubeUrl(contact.pitch_video_url) && (
+                        <video
+                          ref={pitchVideoRef}
+                          key="pitch"
+                          src={contact.pitch_video_url}
+                          controls
+                          autoPlay={currentVideo === 'pitch'}
+                          playsInline
+                          preload="auto"
+                          className={`w-full aspect-video ${currentVideo === 'intro' ? 'hidden' : ''}`}
+                        />
+                      )}
+                      
+                      {/* YouTube pitch - only show when pitch is active */}
+                      {contact.pitch_video_url && isYouTubeUrl(contact.pitch_video_url) && currentVideo === 'pitch' && (
+                        <iframe
+                          src={getYouTubeEmbedUrl(contact.pitch_video_url)}
+                          className="w-full aspect-video"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="Pitch Video"
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="aspect-video bg-slate-800 flex items-center justify-center">
+                  <div className="text-center px-6">
+                    <Play className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                    <p className="text-slate-400 text-lg font-medium mb-2">Video wird vorbereitet...</p>
+                    <p className="text-slate-500 text-sm max-w-md">
+                      Um das personalisierte Video zu sehen, muss eine aktive Kampagne mit Pitch-Video existieren und das Intro-Video generiert worden sein.
+                    </p>
                   </div>
-                )}
-              </div>
-              
-              <p className="text-center text-slate-400 mt-6 text-base">
-                Nur für dich {contact.first_name}, nimm dir die 2 Minuten und schau kurz rein!!
-              </p>
+                </div>
+              )}
+            </div>
+            
+            <p className="text-center text-slate-400 mt-6 text-base">
+              Nur für dich {contact.first_name}, nimm dir die 2 Minuten und schau kurz rein!!
+            </p>
             </div>
           </div>
         </div>
