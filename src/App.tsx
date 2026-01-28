@@ -42,6 +42,7 @@ import PartnerDashboard from "./pages/PartnerDashboard";
 import Training from "./pages/Training";
 import Partner from "./pages/Partner";
 import LeadPagePreview from "./pages/LeadPagePreview";
+import LeadPagesFeature from "./pages/features/LeadPages";
 
 
 const queryClient = new QueryClient();
@@ -136,6 +137,7 @@ const AppRoutes = () => (
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
     
     <Route path="/partner" element={<Partner />} />
+    <Route path="/features/lead-seiten" element={<LeadPagesFeature />} />
     <Route path="/agb" element={<AGB />} />
     <Route path="/" element={<Landing />} />
     <Route path="/auth" element={<Auth />} />
