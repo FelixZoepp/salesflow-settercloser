@@ -43,6 +43,11 @@ import Training from "./pages/Training";
 import Partner from "./pages/Partner";
 import LeadPagePreview from "./pages/LeadPagePreview";
 import LeadPagesFeature from "./pages/features/LeadPages";
+import KIVideosFeature from "./pages/features/KIVideos";
+import CRMFeature from "./pages/features/CRM";
+import PowerDialerFeature from "./pages/features/PowerDialerPage";
+import LiveEinwandbehandlungFeature from "./pages/features/LiveEinwandbehandlung";
+import KIKonfiguratorFeature from "./pages/features/KIKonfigurator";
 
 
 const queryClient = new QueryClient();
@@ -138,6 +143,11 @@ const AppRoutes = () => (
     
     <Route path="/partner" element={<Partner />} />
     <Route path="/features/lead-seiten" element={<LeadPagesFeature />} />
+    <Route path="/features/ki-videos" element={<KIVideosFeature />} />
+    <Route path="/features/crm" element={<CRMFeature />} />
+    <Route path="/features/power-dialer" element={<PowerDialerFeature />} />
+    <Route path="/features/live-einwandbehandlung" element={<LiveEinwandbehandlungFeature />} />
+    <Route path="/features/ki-konfigurator" element={<KIKonfiguratorFeature />} />
     <Route path="/agb" element={<AGB />} />
     <Route path="/" element={<Landing />} />
     <Route path="/auth" element={<Auth />} />
