@@ -484,8 +484,9 @@ const Landing = () => {
                 {[
                   { icon: Hand, text: "Du führst alle LinkedIn-Aktionen selbst aus" },
                   { icon: Target, text: "Wir zeigen dir genau, was du tun sollst" },
-                  { icon: UserCheck, text: "Limits angepasst an dein Profil-Alter" },
-                  { icon: Lock, text: "Kein Zugriff auf deine Login-Daten" },
+                  { icon: TrendingUp, text: "Dynamische Limits basierend auf Annahmeraten" },
+                  { icon: BarChart3, text: "Kennzahlen-Vorgaben für optimale Performance" },
+                  { icon: UserCheck, text: "Account-Wärme bestimmt tägliche Vernetzungszahl" },
                   { icon: Shield, text: "100% konform mit LinkedIn-Richtlinien" }
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
