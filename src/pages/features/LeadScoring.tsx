@@ -13,7 +13,11 @@ import {
   ScrollText,
   Timer,
   Flame,
-  ThermometerSun
+  ThermometerSun,
+  Phone,
+  PhoneCall,
+  UserCheck,
+  CheckCircle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -260,25 +264,94 @@ const HotLeadAlertMockup = () => (
   </div>
 );
 
+// Perfect Timing Call Mockup
+const PerfectTimingMockup = () => (
+  <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-1">
+    <div className="rounded-xl bg-slate-900/90 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+            <PhoneCall className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">Perfektes Timing</h3>
+            <p className="text-xs text-slate-400">Höhere Erreichbarkeit</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Comparison Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+          <p className="text-xs text-slate-400 mb-2">Kaltakquise (Random)</p>
+          <p className="text-3xl font-bold text-slate-500">~15%</p>
+          <p className="text-xs text-slate-500">Erreichbarkeit</p>
+        </div>
+        <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl p-4 border border-green-500/30">
+          <p className="text-xs text-green-400 mb-2">Mit Echtzeit-Tracking</p>
+          <p className="text-3xl font-bold text-green-400">~65%</p>
+          <p className="text-xs text-green-300">Erreichbarkeit</p>
+        </div>
+      </div>
+
+      {/* Why it works */}
+      <div className="space-y-3">
+        <p className="text-xs text-slate-400 uppercase tracking-wider">Warum funktioniert das?</p>
+        
+        {[
+          { icon: Eye, text: "Lead ist gerade aktiv am Gerät", desc: "Handy oder Laptop in der Hand" },
+          { icon: Clock, text: "Lead hat gerade Zeit", desc: "Sonst würde er nicht auf der Seite sein" },
+          { icon: Flame, text: "Lead ist gedanklich bei dir", desc: "Dein Angebot ist frisch im Kopf" },
+          { icon: CheckCircle, text: "Lead erwartet deinen Anruf", desc: "Hat CTA geklickt oder Video gesehen" }
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/30 border border-white/5">
+            <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+              <item.icon className="h-4 w-4 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">{item.text}</p>
+              <p className="text-xs text-slate-400">{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+            <Phone className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">Michael S. ist JETZT online</p>
+            <p className="text-xs text-green-300">Score 85 • Video gesehen • Seit 3 Min aktiv</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function LeadScoring() {
   return (
     <FeaturePageTemplate
       badge="Intelligentes Lead Scoring"
       badgeIcon={Target}
-      title="Erkenne heiße Leads in Echtzeit"
-      subtitle="Unser intelligentes Scoring-System bewertet jeden Lead automatisch basierend auf seinem Verhalten – Verweildauer, Interaktionen und Engagement."
+      title="Ruf an, wenn der Lead online ist"
+      subtitle="Unser Echtzeit-Tracking zeigt dir, wann deine Leads aktiv sind. Ruf genau dann an, wenn sie am Gerät sind – für bis zu 4x höhere Erreichbarkeit."
       heroImage=""
       heroImageAlt=""
       quickFeatures={[
         {
-          icon: Clock,
-          title: "Verweildauer-Tracking",
-          description: "Je länger ein Lead auf deiner Seite ist, desto höher sein Score"
+          icon: PhoneCall,
+          title: "Perfektes Timing",
+          description: "Ruf an, wenn der Lead gerade aktiv auf deiner Seite ist"
         },
         {
-          icon: MousePointer,
-          title: "Interaktions-Analyse",
-          description: "Klicks, Scrolls und Video-Views werden erfasst"
+          icon: TrendingUp,
+          title: "4x höhere Erreichbarkeit",
+          description: "Von ~15% auf ~65% durch optimales Timing"
         },
         {
           icon: Bell,
@@ -344,13 +417,27 @@ export default function LeadScoring() {
           ],
           mockup: <HotLeadAlertMockup />,
           reversed: true
+        },
+        {
+          badge: "Höhere Erreichbarkeit",
+          badgeIcon: PhoneCall,
+          title: "Ruf an, wenn der Lead",
+          highlightedTitle: "gerade am Gerät ist",
+          description: "Das größte Problem bei Kaltakquise? Niemand geht ran. Mit Echtzeit-Tracking rufst du genau dann an, wenn der Lead aktiv ist. Er hat das Handy in der Hand, dein Angebot im Kopf – und nimmt ab.",
+          features: [
+            { icon: UserCheck, text: "Lead ist gerade aktiv" },
+            { icon: Clock, text: "Lead hat offensichtlich Zeit" },
+            { icon: Flame, text: "Dein Angebot ist frisch im Kopf" },
+            { icon: Phone, text: "Bis zu 4x höhere Erreichbarkeit" }
+          ],
+          mockup: <PerfectTimingMockup />
         }
       ]}
       benefits={[
         {
-          icon: Zap,
-          title: "Perfektes Timing",
-          description: "Ruf an, wenn der Lead gerade aktiv ist und maximales Interesse zeigt"
+          icon: PhoneCall,
+          title: "4x höhere Erreichbarkeit",
+          description: "Von ~15% auf ~65% – weil du anrufst, wenn der Lead am Gerät ist"
         },
         {
           icon: Target,
@@ -360,7 +447,7 @@ export default function LeadScoring() {
         {
           icon: TrendingUp,
           title: "Höhere Conversion",
-          description: "Durch besseres Timing und Priorisierung schließt du mehr Deals ab"
+          description: "Perfektes Timing + warmer Lead = mehr abgeschlossene Deals"
         }
       ]}
     />
