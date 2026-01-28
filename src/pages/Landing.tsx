@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
 import { FeaturesMegaMenu } from "@/components/landing/FeaturesMegaMenu";
+import { UniqueFeatures } from "@/components/landing/UniqueFeatures";
 
 // Lazy load heavy components for better mobile performance
 const SkyBackground = lazy(() => import("@/components/ui/SkyBackground"));
@@ -597,6 +598,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Unique Features Section */}
+      <UniqueFeatures />
 
       {/* Weekly Live Call Section */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1] overflow-hidden">
