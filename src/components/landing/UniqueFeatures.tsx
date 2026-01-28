@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, Eye, Video, Users, Phone, Sparkles, CheckCircle, Play, TrendingUp, Clock, Bell } from "lucide-react";
+import { Mic, Eye, Video, Users, Phone, Sparkles, CheckCircle, Play, Clock, Bell, Calendar, ArrowRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UniqueFeature {
@@ -12,7 +12,7 @@ interface UniqueFeature {
 
 // Mockup Components
 const LiveObjectionMockup = () => (
-  <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+  <div className="bg-[#0d1117] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
     <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
       <div className="w-3 h-3 rounded-full bg-red-500" />
       <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -56,7 +56,7 @@ const LiveObjectionMockup = () => (
 );
 
 const RealtimeTrackingMockup = () => (
-  <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+  <div className="bg-[#0d1117] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
     <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
       <div className="w-3 h-3 rounded-full bg-red-500" />
       <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -101,38 +101,86 @@ const RealtimeTrackingMockup = () => (
   </div>
 );
 
-const AIVideoMockup = () => (
-  <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+// Apple-style Landing Page with embedded video mockup
+const AIVideoLandingMockup = () => (
+  <div className="bg-[#0d1117] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+    {/* Browser Chrome */}
     <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
       <div className="w-3 h-3 rounded-full bg-red-500" />
       <div className="w-3 h-3 rounded-full bg-yellow-500" />
       <div className="w-3 h-3 rounded-full bg-green-500" />
-      <span className="ml-3 text-xs text-gray-500">pitchfirst.io/p/max-mustermann</span>
+      <div className="ml-3 flex-1 bg-white/10 rounded-full px-3 py-1">
+        <span className="text-xs text-gray-400">pitchfirst.io/p/max-mustermann</span>
+      </div>
     </div>
-    <div className="p-6">
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-primary/30 to-purple-500/30 aspect-video flex items-center justify-center mb-4">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
-            <Play className="w-8 h-8 text-white ml-1" />
+    
+    {/* Landing Page Content */}
+    <div className="p-4 space-y-4 bg-gradient-to-b from-[#0d1117] to-[#1a1f2e]">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-primary/30" />
+          <span className="text-xs text-white font-medium">Deine Agentur</span>
+        </div>
+        <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px]">● Live</span>
+      </div>
+      
+      {/* Hero with Video */}
+      <div className="text-center space-y-3">
+        <p className="text-primary text-[10px] font-medium uppercase tracking-wider">Persönlich für dich</p>
+        <h3 className="text-white text-sm font-bold">Hey Max, ich hab dir was aufgenommen...</h3>
+        
+        {/* Small Video Player */}
+        <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-purple-500/20 aspect-video max-w-[200px] mx-auto border border-white/10">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Play className="w-5 h-5 text-white ml-0.5" />
+            </div>
+          </div>
+          <div className="absolute bottom-2 left-2 right-2">
+            <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-primary rounded-full" />
+            </div>
           </div>
         </div>
-        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/50 text-white text-xs">
-          <span className="text-primary font-medium">Hey Max</span>, ich hab dir was aufgenommen...
+        
+        {/* Tracking badges */}
+        <div className="flex justify-center gap-1.5">
+          <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-[8px]">✓ Personalisiert</span>
+          <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[8px]">KI-Video</span>
         </div>
       </div>
-      <div className="flex gap-2">
-        <span className="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs flex items-center gap-1">
-          <CheckCircle className="w-3 h-3" /> Personalisiert
-        </span>
-        <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs">KI-generiert</span>
-        <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400 text-xs">Auto-Tracking</span>
+      
+      {/* Benefits Section */}
+      <div className="space-y-2">
+        {["Mehr Reichweite für dein Business", "Bewährte Strategien", "1:1 Betreuung"].map((text, idx) => (
+          <div key={idx} className="flex items-center gap-2 text-[10px] text-gray-300">
+            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+            {text}
+          </div>
+        ))}
+      </div>
+      
+      {/* CTA */}
+      <button className="w-full py-2.5 rounded-lg bg-gradient-to-r from-primary to-blue-500 text-white text-xs font-medium flex items-center justify-center gap-2">
+        <Calendar className="w-3.5 h-3.5" />
+        Termin buchen
+        <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+      
+      {/* Testimonial */}
+      <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+        <div className="flex gap-0.5 mb-1">
+          {[...Array(5)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />)}
+        </div>
+        <p className="text-[9px] text-gray-400 italic">"Super persönlicher Pitch!"</p>
       </div>
     </div>
   </div>
 );
 
 const CRMPipelineMockup = () => (
-  <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+  <div className="bg-[#0d1117] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
     <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
       <div className="w-3 h-3 rounded-full bg-red-500" />
       <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -146,7 +194,7 @@ const CRMPipelineMockup = () => (
           { stage: "Beratung", count: 5, color: "purple" },
           { stage: "Abschluss", count: 3, color: "green" },
         ].map((stage, idx) => (
-          <div key={idx} className="min-w-[140px] flex-shrink-0">
+          <div key={idx} className="min-w-[130px] flex-shrink-0">
             <div className={cn(
               "px-3 py-2 rounded-t-lg text-xs font-medium flex items-center justify-between",
               stage.color === "blue" && "bg-blue-500/20 text-blue-400",
@@ -156,7 +204,7 @@ const CRMPipelineMockup = () => (
               {stage.stage}
               <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">{stage.count}</span>
             </div>
-            <div className="bg-white/5 rounded-b-lg p-2 space-y-2 min-h-[100px]">
+            <div className="bg-white/5 rounded-b-lg p-2 space-y-2 min-h-[120px]">
               {[1, 2].map((_, cardIdx) => (
                 <div key={cardIdx} className="bg-white/5 rounded p-2 border border-white/10">
                   <p className="text-white text-xs mb-1">Lead #{idx * 2 + cardIdx + 1}</p>
@@ -172,7 +220,7 @@ const CRMPipelineMockup = () => (
 );
 
 const PowerDialerMockup = () => (
-  <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+  <div className="bg-[#0d1117] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
     <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
       <div className="w-3 h-3 rounded-full bg-red-500" />
       <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -192,7 +240,7 @@ const PowerDialerMockup = () => (
       </div>
       
       <div className="flex justify-center gap-4">
-        <button className="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/30 transition-colors">
+        <button className="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
           <Phone className="w-6 h-6 rotate-[135deg]" />
         </button>
         <button className="w-14 h-14 rounded-full bg-green-500 text-white flex items-center justify-center animate-pulse">
@@ -202,7 +250,7 @@ const PowerDialerMockup = () => (
       
       <div className="grid grid-cols-3 gap-2 text-center">
         {["Termin", "Nachfassen", "Kein Interesse"].map((outcome, idx) => (
-          <button key={idx} className="py-2 px-3 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300 hover:bg-white/10 transition-colors">
+          <button key={idx} className="py-2 px-3 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300">
             {outcome}
           </button>
         ))}
@@ -236,7 +284,7 @@ const uniqueFeatures: UniqueFeature[] = [
     icon: Video,
     title: "KI-Video-Landingpages",
     description: "Für jeden Lead wird automatisch eine personalisierte Landingpage mit Video erstellt.",
-    mockup: <AIVideoMockup />
+    mockup: <AIVideoLandingMockup />
   },
   {
     id: "crm",
@@ -259,19 +307,19 @@ export const UniqueFeatures = () => {
   const currentFeature = uniqueFeatures.find(f => f.id === activeFeature)!;
 
   return (
-    <section className="py-20 px-4 md:px-6 relative z-[1]">
+    <section className="py-16 md:py-24 px-4 md:px-6 relative z-[1]">
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white">
             Diese Features gibt es <span className="text-primary italic underline decoration-primary/50 underline-offset-4">nur bei PitchFirst</span>:
           </h2>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        {/* Content Grid - Left: Features, Right: Mockup */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left: Feature List */}
-          <div className="space-y-3">
+          <div className="space-y-2 order-2 lg:order-1">
             {uniqueFeatures.map((feature) => {
               const isActive = activeFeature === feature.id;
               const Icon = feature.icon;
@@ -289,24 +337,26 @@ export const UniqueFeatures = () => {
                 >
                   <div className="flex items-start gap-4">
                     <div className={cn(
-                      "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
+                      "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300",
                       isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
                     )}>
                       <Icon className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className={cn(
-                        "font-semibold mb-1 transition-colors",
+                        "font-semibold text-base md:text-lg transition-colors",
                         isActive ? "text-white" : "text-white/80"
                       )}>
                         {feature.title}
                       </h3>
-                      <p className={cn(
-                        "text-sm transition-all duration-300 overflow-hidden",
-                        isActive ? "text-gray-300 max-h-20 opacity-100" : "text-gray-500 max-h-0 opacity-0 md:max-h-20 md:opacity-100"
+                      <div className={cn(
+                        "overflow-hidden transition-all duration-300",
+                        isActive ? "max-h-24 opacity-100 mt-1" : "max-h-0 opacity-0"
                       )}>
-                        {feature.description}
-                      </p>
+                        <p className="text-sm text-gray-400 leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </div>
                     </div>
                     {isActive && (
                       <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
@@ -318,40 +368,38 @@ export const UniqueFeatures = () => {
           </div>
 
           {/* Right: Mockup with Animation */}
-          <div className="relative lg:sticky lg:top-32">
-            <div className="relative">
-              {/* Glow Effect */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-blue-500/10 to-purple-500/20 rounded-3xl blur-2xl opacity-50" />
-              
-              {/* Mockup Container with Animation */}
-              <div className="relative">
-                {uniqueFeatures.map((feature) => (
-                  <div
-                    key={feature.id}
-                    className={cn(
-                      "transition-all duration-500 ease-out",
-                      activeFeature === feature.id 
-                        ? "opacity-100 translate-y-0 scale-100" 
-                        : "opacity-0 translate-y-4 scale-95 absolute inset-0 pointer-events-none"
-                    )}
-                  >
-                    {feature.mockup}
-                  </div>
-                ))}
-              </div>
+          <div className="relative order-1 lg:order-2">
+            {/* Glow Effect */}
+            <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-blue-500/10 to-purple-500/20 rounded-3xl blur-3xl opacity-40" />
+            
+            {/* Mockup Container */}
+            <div className="relative min-h-[400px] flex items-center justify-center">
+              {uniqueFeatures.map((feature) => (
+                <div
+                  key={feature.id}
+                  className={cn(
+                    "w-full transition-all duration-500 ease-out",
+                    activeFeature === feature.id 
+                      ? "opacity-100 translate-y-0 scale-100 relative" 
+                      : "opacity-0 translate-y-8 scale-95 absolute inset-0 pointer-events-none"
+                  )}
+                >
+                  {feature.mockup}
+                </div>
+              ))}
             </div>
             
-            {/* Feature indicator dots */}
+            {/* Mobile indicator dots */}
             <div className="flex justify-center gap-2 mt-6 lg:hidden">
               {uniqueFeatures.map((feature) => (
                 <button
                   key={feature.id}
                   onClick={() => setActiveFeature(feature.id)}
                   className={cn(
-                    "w-2 h-2 rounded-full transition-all",
+                    "h-2 rounded-full transition-all duration-300",
                     activeFeature === feature.id 
                       ? "bg-primary w-6" 
-                      : "bg-white/30 hover:bg-white/50"
+                      : "bg-white/30 w-2 hover:bg-white/50"
                   )}
                 />
               ))}
