@@ -18,11 +18,10 @@ import {
   Bell,
   Zap,
   Users,
-  TrendingUp
+  TrendingUp,
+  User
 } from "lucide-react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
-import leadPageBuilderScreenshot from "@/assets/lead-page-builder-screenshot.png";
-import leadTrackingDashboard from "@/assets/lead-tracking-dashboard.png";
 
 const LeadPages = () => {
   const navigate = useNavigate();
@@ -44,6 +43,133 @@ const LeadPages = () => {
       description: "Werde informiert wenn Leads aktiv sind"
     }
   ];
+
+  // Apple-style Lead Page Mockup
+  const LeadPageMockup = () => (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/5 to-blue-500/5 p-2">
+      {/* Browser Chrome */}
+      <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <span className="ml-4 text-xs text-gray-500">pitchfirst.io/p/max-mustermann</span>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          {/* Live Indicator */}
+          <div className="flex items-center gap-2">
+            <div className="px-2 py-1 rounded-full bg-green-500/20 border border-green-500/30 flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-green-400 text-xs">Echtzeit aktiv</span>
+            </div>
+          </div>
+          
+          {/* Video Player */}
+          <div className="aspect-video bg-gradient-to-br from-primary/30 to-blue-500/30 rounded-xl relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center">
+                <Play className="h-8 w-8 text-white ml-1" />
+              </div>
+            </div>
+            <div className="absolute bottom-4 left-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/50 flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div className="bg-black/50 backdrop-blur px-3 py-1 rounded-lg">
+                <span className="text-white text-sm">Video für Max</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-white">Hallo Max! 👋</h3>
+            <p className="text-sm text-gray-400">
+              Ich habe dieses Video speziell für dich aufgenommen...
+            </p>
+            <Button className="w-full bg-primary hover:bg-primary/90">
+              Termin vereinbaren
+            </Button>
+          </div>
+          
+          {/* Tracking Events */}
+          <div className="flex flex-wrap gap-2">
+            <span className="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs">✓ Page View</span>
+            <span className="px-2 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-xs">▶ Video gestartet</span>
+            <span className="px-2 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-xs">75% geschaut</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Tracking Dashboard Mockup
+  const TrackingMockup = () => (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/5 to-blue-500/5 p-2">
+      <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <span className="ml-4 text-xs text-gray-500">pitchfirst.io/tracking</span>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          {/* Live Activity */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Live Aktivität</span>
+            </div>
+            <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-green-500/20">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-green-400 text-xs">3 aktiv</span>
+            </div>
+          </div>
+          
+          {/* Activity Feed */}
+          <div className="space-y-2">
+            {[
+              { name: "Max M.", event: "Video 100% geschaut", time: "jetzt", hot: true },
+              { name: "Anna S.", event: "CTA geklickt", time: "vor 2 Min", hot: true },
+              { name: "Peter W.", event: "Seite geöffnet", time: "vor 5 Min", hot: false }
+            ].map((item, idx) => (
+              <div key={idx} className={`p-3 rounded-lg border ${
+                item.hot 
+                  ? 'bg-orange-500/10 border-orange-500/30' 
+                  : 'bg-white/5 border-white/10'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {item.hot && <span className="text-orange-400">🔥</span>}
+                    <span className="text-sm font-medium">{item.name}</span>
+                    <span className="text-xs text-gray-400">{item.event}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{item.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: "Views", value: "247" },
+              { label: "Video", value: "89%" },
+              { label: "Klicks", value: "34" },
+              { label: "Score", value: "78" }
+            ].map((stat, idx) => (
+              <div key={idx} className="bg-white/5 rounded-lg p-2 text-center">
+                <div className="text-lg font-bold text-primary">{stat.value}</div>
+                <div className="text-xs text-gray-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
@@ -77,7 +203,7 @@ const LeadPages = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Centered like LearningSuite */}
+      {/* Hero Section */}
       <section className="pt-32 pb-12 px-4 md:px-6 relative">
         <div className="container mx-auto max-w-5xl text-center">
           <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-2 text-sm uppercase tracking-wider">
@@ -92,17 +218,9 @@ const LeadPages = () => {
             Der perfekte Weg, um Vertrauen aufzubauen und im richtigen Moment anzurufen.
           </p>
 
-          {/* Main Hero Screenshot */}
+          {/* Main Hero Mockup */}
           <div className="relative max-w-4xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5">
-              <img 
-                src={leadPageBuilderScreenshot} 
-                alt="Lead-Seiten Builder" 
-                className="w-full"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+            <LeadPageMockup />
             
             {/* Floating notification */}
             <div className="absolute -bottom-4 right-8 bg-gradient-to-r from-primary to-blue-500 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-pulse">
@@ -139,7 +257,7 @@ const LeadPages = () => {
         <div className="border-t border-white/10" />
       </div>
 
-      {/* Feature Section 1: Tracking - Left Text, Right Image */}
+      {/* Feature Section 1: Tracking */}
       <section className="py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -173,21 +291,13 @@ const LeadPages = () => {
             </div>
 
             <div className="relative">
-              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                <img 
-                  src={leadTrackingDashboard} 
-                  alt="Lead-Tracking Dashboard" 
-                  className="w-full"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
+              <TrackingMockup />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Section 2: Video - Right Text, Left Image */}
+      {/* Feature Section 2: Video */}
       <section className="py-20 px-4 md:px-6 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -244,7 +354,7 @@ const LeadPages = () => {
         </div>
       </section>
 
-      {/* Feature Section 3: KI-Konfigurator - Left Text, Right Visual */}
+      {/* Feature Section 3: KI-Konfigurator */}
       <section className="py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
