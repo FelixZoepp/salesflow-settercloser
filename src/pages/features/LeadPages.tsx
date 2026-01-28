@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft,
@@ -15,12 +14,11 @@ import {
   CheckCircle,
   Play,
   Target,
-  TrendingUp,
-  Users,
-  MessageSquare,
-  Zap,
   Video,
-  Bell
+  Bell,
+  Zap,
+  Users,
+  TrendingUp
 } from "lucide-react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import leadPageBuilderScreenshot from "@/assets/lead-page-builder-screenshot.png";
@@ -29,75 +27,21 @@ import leadTrackingDashboard from "@/assets/lead-tracking-dashboard.png";
 const LeadPages = () => {
   const navigate = useNavigate();
 
-  const trackingFeatures = [
+  const quickFeatures = [
     {
-      icon: Eye,
-      title: "Seitenaufrufe",
-      description: "Erfahre sofort, wenn ein Lead deine Seite öffnet"
-    },
-    {
-      icon: Play,
-      title: "Video-Tracking",
-      description: "Sieh, wie lange das Video angeschaut wurde"
-    },
-    {
-      icon: MousePointer,
-      title: "Click-Tracking",
-      description: "Tracke jeden Button-Klick und CTA"
-    },
-    {
-      icon: Clock,
-      title: "Verweildauer",
-      description: "Miss, wie lange der Lead auf der Seite bleibt"
+      icon: Globe,
+      title: "Personalisierte Seiten",
+      description: "Jeder Lead bekommt seine eigene URL"
     },
     {
       icon: BarChart3,
-      title: "Scroll-Tiefe",
-      description: "Erfahre, wie weit gescrollt wurde"
+      title: "Echtzeit-Tracking",
+      description: "Sieh jede Interaktion live"
     },
     {
-      icon: Target,
-      title: "Lead-Scoring",
-      description: "Automatische Bewertung des Lead-Interesses"
-    }
-  ];
-
-  const benefits = [
-    {
-      icon: TrendingUp,
-      title: "Höhere Terminquote",
-      description: "Rufe an, wenn der Lead gerade aktiv ist – perfektes Timing für 3x mehr Termine"
-    },
-    {
-      icon: Users,
-      title: "Vertrauen aufbauen",
-      description: "Personalisierte Seiten mit Video schaffen Vertrauen noch vor dem ersten Anruf"
-    },
-    {
-      icon: MessageSquare,
-      title: "Bessere Gespräche",
-      description: "Wisse genau, was den Lead interessiert hat – für relevante Gespräche"
-    }
-  ];
-
-  const steps = [
-    {
-      number: "1",
-      title: "Lead importieren",
-      description: "Importiere Leads per CSV oder API. Jeder Lead bekommt automatisch eine eigene URL.",
-      icon: Users
-    },
-    {
-      number: "2",
-      title: "Seite anpassen",
-      description: "Nutze unseren KI-Konfigurator um Texte, Farben und Videos anzupassen – oder lass KI es machen.",
-      icon: Sparkles
-    },
-    {
-      number: "3",
-      title: "Link versenden",
-      description: "Versende den personalisierten Link per LinkedIn, E-Mail oder WhatsApp.",
-      icon: Zap
+      icon: Bell,
+      title: "Sofort-Benachrichtigungen",
+      description: "Werde informiert wenn Leads aktiv sind"
     }
   ];
 
@@ -133,119 +77,103 @@ const LeadPages = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Landing Page Style */}
-      <section className="pt-32 pb-20 px-4 md:px-6 relative">
-        {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/15 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
+      {/* Hero Section - Centered like LearningSuite */}
+      <section className="pt-32 pb-12 px-4 md:px-6 relative">
+        <div className="container mx-auto max-w-5xl text-center">
+          <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-2 text-sm uppercase tracking-wider">
+            Lead-Seiten Erstellung
+          </Badge>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            Personalisierte Lead-Seiten
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-primary/80 mb-12 max-w-3xl mx-auto">
+            Der perfekte Weg, um Vertrauen aufzubauen und im richtigen Moment anzurufen.
+          </p>
 
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text Content */}
-            <div className="space-y-8">
-              <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-2">
-                <Globe className="h-4 w-4 mr-2" />
-                Lead-Seiten Feature
-              </Badge>
-              
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Personalisierte Lead-Seiten
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400 block mt-2">
-                  mit intelligentem Tracking
-                </span>
-              </h1>
-              
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                Erstelle in Sekunden individuelle Landing-Pages für jeden Lead. 
-                Tracke jeden Klick, jedes Video-View und rufe im <span className="text-primary font-semibold">perfekten Moment</span> an.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a 
-                  href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    size="lg"
-                    className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-8 h-14 text-lg w-full sm:w-auto"
-                  >
-                    <Phone className="mr-2 h-5 w-5" />
-                    Jetzt Demo ansehen
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </a>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="flex items-center gap-6 pt-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Keine Kreditkarte nötig</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>In 5 Min. eingerichtet</span>
-                </div>
-              </div>
+          {/* Main Hero Screenshot */}
+          <div className="relative max-w-4xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5">
+              <img 
+                src={leadPageBuilderScreenshot} 
+                alt="Lead-Seiten Builder" 
+                className="w-full"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
-
-            {/* Right: Screenshot */}
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-primary/20">
-                {/* Browser Chrome */}
-                <div className="bg-background/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="bg-white/5 rounded-lg px-4 py-1 text-xs text-muted-foreground">
-                      pitchfirst.app/p/max-mustermann
-                    </div>
-                  </div>
-                </div>
-                <img 
-                  src={leadPageBuilderScreenshot} 
-                  alt="Lead-Seiten Builder" 
-                  className="w-full"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              
-              {/* Floating Badge */}
-              <div className="absolute -bottom-4 -right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-pulse">
-                <Bell className="h-4 w-4" />
-                <span className="text-sm font-medium">Lead aktiv!</span>
-              </div>
+            
+            {/* Floating notification */}
+            <div className="absolute -bottom-4 right-8 bg-gradient-to-r from-primary to-blue-500 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-pulse">
+              <Bell className="h-4 w-4" />
+              <span className="text-sm font-medium">Lead aktiv!</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tracking Dashboard Section */}
-      <section className="py-20 px-4 md:px-6 bg-gradient-to-b from-background to-muted/30">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Screenshot */}
-            <div className="order-2 lg:order-1">
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/20">
-                <div className="bg-background/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="bg-white/5 rounded-lg px-4 py-1 text-xs text-muted-foreground">
-                      Lead-Tracking Dashboard
-                    </div>
-                  </div>
+      {/* Quick Features Row */}
+      <section className="py-12 px-4 md:px-6">
+        <div className="container mx-auto max-w-5xl">
+          <p className="text-center text-sm uppercase tracking-wider text-muted-foreground mb-8">
+            Alle Funktionen die du brauchst für mehr Termine
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {quickFeatures.map((feature, idx) => (
+              <div key={idx} className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="h-6 w-6 text-primary" />
                 </div>
+                <h3 className="font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div className="container mx-auto max-w-4xl px-4">
+        <div className="border-t border-white/10" />
+      </div>
+
+      {/* Feature Section 1: Tracking - Left Text, Right Image */}
+      <section className="py-20 px-4 md:px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Echtzeit-Tracking: Wisse genau was dein Lead macht
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Mit unserem intelligenten Tracking siehst du in Echtzeit, wann ein Lead deine Seite besucht, 
+                wie lange er Videos schaut und auf welche Buttons er klickt. So weißt du immer, wann der 
+                <span className="text-primary font-medium"> perfekte Moment </span> für einen Anruf ist.
+              </p>
+              
+              <div className="grid sm:grid-cols-2 gap-4 pt-4">
+                {[
+                  { icon: Eye, text: "Seitenaufrufe tracken" },
+                  { icon: Play, text: "Video-Watch-Time messen" },
+                  { icon: MousePointer, text: "Klicks erfassen" },
+                  { icon: Clock, text: "Verweildauer analysieren" },
+                  { icon: BarChart3, text: "Scroll-Tiefe messen" },
+                  { icon: Target, text: "Automatisches Lead-Scoring" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-xl">
                 <img 
                   src={leadTrackingDashboard} 
                   alt="Lead-Tracking Dashboard" 
@@ -255,98 +183,165 @@ const LeadPages = () => {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Right: Text Content */}
-            <div className="order-1 lg:order-2 space-y-8">
-              <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-4 py-2">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Echtzeit-Tracking
-              </Badge>
-              
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Wisse genau, 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 block">
-                  was dein Lead macht
-                </span>
+      {/* Feature Section 2: Video - Right Text, Left Image */}
+      <section className="py-20 px-4 md:px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Video Preview Mockup */}
+            <div className="order-2 lg:order-1">
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/5 to-blue-500/5 p-6 md:p-8">
+                <div className="bg-background/80 backdrop-blur-xl rounded-xl border border-white/10 p-6 space-y-4">
+                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-blue-500/20 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent" />
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center z-10">
+                      <Play className="h-8 w-8 text-white ml-1" />
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-foreground text-sm font-medium">
+                      Video für Max Mustermann
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold">Hallo Max! 👋</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Ich habe dieses Video speziell für dich aufgenommen...
+                  </p>
+                  <Button className="w-full bg-primary hover:bg-primary/90">
+                    Termin vereinbaren
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Text */}
+            <div className="order-1 lg:order-2 space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Personalisierte Videos: Baue Vertrauen auf bevor du anrufst
               </h2>
-              
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Jede Interaktion wird in Echtzeit getrackt – du weißt immer, 
-                wann der perfekte Moment für einen Anruf ist. Bekomme <span className="text-blue-400 font-semibold">sofortige Benachrichtigungen</span>, wenn ein Lead aktiv wird.
+                Mit personalisierten Video-Nachrichten sprichst du jeden Lead direkt an. 
+                Das schafft <span className="text-primary font-medium">Vertrauen und Verbindung</span> noch 
+                bevor das erste Telefonat stattfindet – und macht deine Kaltakquise zur Warmakquise.
               </p>
+              
+              <ul className="space-y-3 pt-4">
+                {[
+                  "Automatische Personalisierung mit Lead-Namen",
+                  "Video-Watch-Time Tracking bis zur Sekunde",
+                  "Benachrichtigung wenn Video angesehen wird",
+                  "Höhere Antwortrate durch persönliche Ansprache"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {/* Tracking Features Grid */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                {trackingFeatures.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="h-4 w-4 text-primary" />
+      {/* Feature Section 3: KI-Konfigurator - Left Text, Right Visual */}
+      <section className="py-20 px-4 md:px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold">
+                KI-Konfigurator: Erstelle Seiten in Sekunden
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Unser intelligenter Konfigurator nutzt KI, um deine Lead-Seiten automatisch zu personalisieren. 
+                Beschreibe einfach, was du möchtest, und die KI passt Texte, Farben und Layout für dich an – 
+                <span className="text-primary font-medium"> in wenigen Sekunden</span>.
+              </p>
+              
+              <div className="space-y-4 pt-4">
+                {[
+                  { icon: Sparkles, title: "KI-generierte Texte", desc: "Optimierte Inhalte für deine Zielgruppe" },
+                  { icon: Zap, title: "Schnelle Anpassung", desc: "Ändere alles mit einem Prompt" },
+                  { icon: Video, title: "Video-Integration", desc: "Füge einfach personalisierte Videos hinzu" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-sm">{feature.title}</h4>
-                      <p className="text-xs text-muted-foreground">{feature.description}</p>
+                      <h4 className="font-medium">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Right: Visual representation */}
+            <div className="relative">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-primary/10 via-blue-500/5 to-purple-500/10 p-8 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="font-medium">KI-Konfigurator</span>
+                </div>
+                
+                <div className="bg-background/50 backdrop-blur rounded-xl border border-white/10 p-4">
+                  <p className="text-sm text-muted-foreground mb-3">Dein Prompt:</p>
+                  <p className="text-sm italic">"Erstelle eine Seite für IT-Entscheider mit Fokus auf Effizienz und ROI"</p>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Generiere personalisierte Inhalte...
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  {["Headline", "Texte", "Farben"].map((item, idx) => (
+                    <div key={idx} className="bg-primary/10 rounded-lg p-3 text-center text-sm">
+                      <CheckCircle className="h-4 w-4 text-primary mx-auto mb-1" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it Works */}
-      <section className="py-20 px-4 md:px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 px-4 py-2">
-              <Sparkles className="h-4 w-4 mr-1" />
-              So funktioniert's
-            </Badge>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              In 3 Schritten zur perfekten Lead-Seite
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Starte in wenigen Minuten und beginne sofort damit, deine Leads besser zu verstehen.
-            </p>
-          </div>
-
+      {/* Benefits Section */}
+      <section className="py-20 px-4 md:px-6 bg-muted/30">
+        <div className="container mx-auto max-w-5xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Warum Lead-Seiten funktionieren
+          </h2>
+          <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Verwandle kalte Leads in warme Gespräche
+          </p>
+          
           <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((step, idx) => (
-              <Card key={idx} className="bg-background/50 border-white/10 relative overflow-hidden group hover:border-primary/30 transition-all duration-300">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <CardContent className="pt-8 pb-8 relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 border border-primary/20">
-                    <span className="text-2xl font-bold text-primary">{step.number}</span>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                  <p className="text-muted-foreground">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="py-20 px-4 md:px-6 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-green-500/10 text-green-400 border-green-500/20 px-4 py-2">
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Deine Vorteile
-            </Badge>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Warum Lead-Seiten funktionieren
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {benefits.map((benefit, idx) => (
-              <div key={idx} className="text-center group">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-blue-500/10 flex items-center justify-center mx-auto mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-300">
-                  <benefit.icon className="h-10 w-10 text-primary" />
+            {[
+              {
+                icon: TrendingUp,
+                title: "3x mehr Termine",
+                description: "Rufe an, wenn der Lead gerade aktiv ist – perfektes Timing macht den Unterschied"
+              },
+              {
+                icon: Users,
+                title: "Vertrauen aufbauen",
+                description: "Personalisierte Seiten mit Video schaffen Vertrauen noch vor dem ersten Anruf"
+              },
+              {
+                icon: Target,
+                title: "Bessere Gespräche",
+                description: "Wisse genau, was den Lead interessiert hat – für relevante Gespräche"
+              }
+            ].map((benefit, idx) => (
+              <div key={idx} className="text-center p-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                  <benefit.icon className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
                 <p className="text-muted-foreground">{benefit.description}</p>
@@ -356,114 +351,36 @@ const LeadPages = () => {
         </div>
       </section>
 
-      {/* Video Feature Highlight */}
-      <section className="py-20 px-4 md:px-6">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20 px-4 py-2">
-                <Video className="h-4 w-4 mr-2" />
-                Personalisierte Videos
-              </Badge>
-              
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Videos, die 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 block">
-                  Vertrauen aufbauen
-                </span>
-              </h2>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Füge personalisierte Videos hinzu, die den Lead direkt ansprechen. 
-                Mit unserem <span className="text-purple-400 font-semibold">KI-Konfigurator</span> erstellst du individuelle Seiten in Sekunden.
-              </p>
-
-              <ul className="space-y-4">
-                {[
-                  "Automatische Personalisierung mit Lead-Namen",
-                  "Video-Watch-Time Tracking bis zur Sekunde",
-                  "Benachrichtigung wenn Video angesehen wird",
-                  "Höhere Antwortrate durch persönliche Ansprache"
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    </div>
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Video Preview Mockup */}
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-8 md:p-12">
-                <div className="bg-background/80 backdrop-blur-xl rounded-xl border border-white/10 p-6 space-y-4">
-                  <div className="aspect-video bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center z-10">
-                      <Play className="h-8 w-8 text-white ml-1" />
-                    </div>
-                    <div className="absolute bottom-3 left-3 text-white text-sm font-medium">
-                      Video für Max Mustermann
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold">Hallo Max! 👋</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Ich habe dieses Video speziell für dich aufgenommen...
-                  </p>
-                  <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
-                    Termin vereinbaren
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-blue-500/10 border-primary/20 overflow-hidden relative">
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-60 h-60 bg-primary/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/20 rounded-full blur-3xl" />
-            </div>
-            <CardContent className="p-8 md:p-12 text-center relative z-10">
-              <Badge className="mb-6 bg-white/10 text-white border-white/20 px-4 py-2">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Jetzt starten
-              </Badge>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-                Bereit für mehr Termine?
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Lass uns in einer kurzen Demo zeigen, wie du mit personalisierten Lead-Seiten 
-                deine Terminquote verdreifachen kannst.
-              </p>
-              <a 
-                href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button 
-                  size="lg"
-                  className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-10 h-16 text-lg"
-                >
-                  <Phone className="mr-2 h-6 w-6" />
-                  Kostenlose Demo buchen
-                  <ArrowRight className="ml-2 h-6 w-6" />
-                </Button>
-              </a>
-            </CardContent>
-          </Card>
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Bereit für mehr Termine?
+          </h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            Lass uns in einer kurzen Demo zeigen, wie du mit personalisierten Lead-Seiten 
+            deine Terminquote verdreifachen kannst.
+          </p>
+          <a 
+            href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button 
+              size="lg"
+              className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-10 h-14 text-lg"
+            >
+              <Phone className="mr-2 h-5 w-5" />
+              Kostenlose Demo buchen
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </a>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-8 px-4 md:px-6 border-t border-white/10">
-        <div className="container mx-auto max-w-7xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <img src={pitchfirstLogo} alt="PitchFirst" className="h-6" />
             <div className="flex gap-6 text-sm text-muted-foreground">
