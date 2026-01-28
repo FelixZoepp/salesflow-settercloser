@@ -49,6 +49,7 @@ import PowerDialerFeature from "./pages/features/PowerDialerPage";
 import LiveEinwandbehandlungFeature from "./pages/features/LiveEinwandbehandlung";
 import KIKonfiguratorFeature from "./pages/features/KIKonfigurator";
 import LeadScoringFeature from "./pages/features/LeadScoring";
+import KampagnenFeature from "./pages/features/Kampagnen";
 
 
 const queryClient = new QueryClient();
@@ -150,6 +151,7 @@ const AppRoutes = () => (
     <Route path="/features/live-einwandbehandlung" element={<LiveEinwandbehandlungFeature />} />
     <Route path="/features/ki-konfigurator" element={<KIKonfiguratorFeature />} />
     <Route path="/features/lead-scoring" element={<LeadScoringFeature />} />
+    <Route path="/features/kampagnen" element={<KampagnenFeature />} />
     <Route path="/agb" element={<AGB />} />
     <Route path="/" element={<Landing />} />
     <Route path="/auth" element={<Auth />} />
