@@ -316,10 +316,10 @@ export const UniqueFeatures = () => {
           </h2>
         </div>
 
-        {/* Content Grid - Left: Features, Right: Mockup */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-          {/* Left: Feature List */}
-          <div className="space-y-2 order-2 lg:order-1">
+        {/* Content - Two Column Layout */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          {/* Left: Feature List - 50% width */}
+          <div className="w-full lg:w-1/2 space-y-1.5 order-2 lg:order-1">
             {uniqueFeatures.map((feature) => {
               const isActive = activeFeature === feature.id;
               const Icon = feature.icon;
@@ -329,37 +329,35 @@ export const UniqueFeatures = () => {
                   key={feature.id}
                   onClick={() => setActiveFeature(feature.id)}
                   className={cn(
-                    "w-full text-left p-4 md:p-5 rounded-xl border transition-all duration-300",
+                    "w-full text-left p-3 rounded-lg border transition-all duration-300",
                     isActive 
-                      ? "bg-white/10 border-primary/50 shadow-lg shadow-primary/10" 
+                      ? "bg-white/10 border-primary/50" 
                       : "bg-white/[0.02] border-white/10 hover:bg-white/5 hover:border-white/20"
                   )}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-center gap-3">
                     <div className={cn(
-                      "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300",
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-300",
                       isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
                     )}>
-                      <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                      <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className={cn(
-                        "font-semibold text-base md:text-lg transition-colors",
-                        isActive ? "text-white" : "text-white/80"
+                        "font-medium text-sm transition-colors",
+                        isActive ? "text-white" : "text-white/70"
                       )}>
                         {feature.title}
                       </h3>
-                      <div className={cn(
-                        "overflow-hidden transition-all duration-300",
-                        isActive ? "max-h-24 opacity-100 mt-1" : "max-h-0 opacity-0"
+                      <p className={cn(
+                        "text-xs text-gray-500 mt-0.5 line-clamp-1",
+                        isActive ? "text-gray-400" : ""
                       )}>
-                        <p className="text-sm text-gray-400 leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
+                        {feature.description}
+                      </p>
                     </div>
                     {isActive && (
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
                     )}
                   </div>
                 </button>
@@ -367,13 +365,13 @@ export const UniqueFeatures = () => {
             })}
           </div>
 
-          {/* Right: Mockup with Animation */}
-          <div className="relative order-1 lg:order-2">
+          {/* Right: Mockup - 50% width */}
+          <div className="w-full lg:w-1/2 relative order-1 lg:order-2">
             {/* Glow Effect */}
-            <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-blue-500/10 to-purple-500/20 rounded-3xl blur-3xl opacity-40" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-blue-500/10 to-purple-500/20 rounded-3xl blur-3xl opacity-40" />
             
             {/* Mockup Container */}
-            <div className="relative min-h-[400px] flex items-center justify-center">
+            <div className="relative min-h-[350px] md:min-h-[400px] flex items-center justify-center">
               {uniqueFeatures.map((feature) => (
                 <div
                   key={feature.id}
@@ -381,7 +379,7 @@ export const UniqueFeatures = () => {
                     "w-full transition-all duration-500 ease-out",
                     activeFeature === feature.id 
                       ? "opacity-100 translate-y-0 scale-100 relative" 
-                      : "opacity-0 translate-y-8 scale-95 absolute inset-0 pointer-events-none"
+                      : "opacity-0 translate-y-4 scale-95 absolute inset-0 pointer-events-none"
                   )}
                 >
                   {feature.mockup}
@@ -390,16 +388,16 @@ export const UniqueFeatures = () => {
             </div>
             
             {/* Mobile indicator dots */}
-            <div className="flex justify-center gap-2 mt-6 lg:hidden">
+            <div className="flex justify-center gap-2 mt-4 lg:hidden">
               {uniqueFeatures.map((feature) => (
                 <button
                   key={feature.id}
                   onClick={() => setActiveFeature(feature.id)}
                   className={cn(
-                    "h-2 rounded-full transition-all duration-300",
+                    "h-1.5 rounded-full transition-all duration-300",
                     activeFeature === feature.id 
-                      ? "bg-primary w-6" 
-                      : "bg-white/30 w-2 hover:bg-white/50"
+                      ? "bg-primary w-5" 
+                      : "bg-white/30 w-1.5 hover:bg-white/50"
                   )}
                 />
               ))}
