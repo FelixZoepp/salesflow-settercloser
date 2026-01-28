@@ -81,7 +81,8 @@ const Landing = () => {
       icon: Eye,
       title: "Echtzeit-Tracking",
       description: "Sieh live, wenn ein Lead deine Seite besucht, das Video schaut oder auf den CTA klickt. 80% bessere Erreichbarkeit.",
-      highlight: true
+      highlight: true,
+      link: "/features/lead-seiten"
     },
     {
       icon: BarChart3,
@@ -91,7 +92,8 @@ const Landing = () => {
     {
       icon: Video,
       title: "KI-generierte Video-Landingpages",
-      description: "Für jeden Lead wird automatisch eine personalisierte Landingpage mit Video erstellt."
+      description: "Für jeden Lead wird automatisch eine personalisierte Landingpage mit Video erstellt.",
+      link: "/features/lead-seiten"
     },
     {
       icon: Zap,
@@ -490,14 +492,19 @@ const Landing = () => {
           </div>
           
           <div className="mt-8 text-center">
-            <Button 
-              size="lg" 
-              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white shadow-2xl shadow-green-500/30 px-6 md:px-8 h-12 md:h-14"
+            <a 
+              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Jetzt in 10 Minuten starten
-              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-            </Button>
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white shadow-2xl shadow-green-500/30 px-6 md:px-8 h-12 md:h-14"
+              >
+                Demo buchen
+                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -825,7 +832,8 @@ const Landing = () => {
                   feature.highlight 
                     ? "border-primary/50 shadow-lg shadow-primary/10" 
                     : "border-white/10 hover:border-primary/50"
-                }`}
+                } ${feature.link ? 'cursor-pointer' : ''}`}
+                onClick={() => feature.link && navigate(feature.link)}
               >
                 <CardHeader className="pb-2 md:pb-6">
                   <div className={`mb-3 md:mb-4 h-10 w-10 md:h-14 md:w-14 rounded-lg md:rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform ${
@@ -839,6 +847,11 @@ const Landing = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <CardDescription className="text-sm md:text-base">{feature.description}</CardDescription>
+                  {feature.link && (
+                    <div className="mt-3 flex items-center gap-1 text-primary text-sm font-medium group-hover:gap-2 transition-all">
+                      Mehr erfahren <ArrowRight className="h-4 w-4" />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
