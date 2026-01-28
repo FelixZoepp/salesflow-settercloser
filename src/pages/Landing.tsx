@@ -6,6 +6,7 @@ import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, M
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
+import { FeaturesMegaMenu } from "@/components/landing/FeaturesMegaMenu";
 
 // Lazy load heavy components for better mobile performance
 const SkyBackground = lazy(() => import("@/components/ui/SkyBackground"));
@@ -181,8 +182,8 @@ const Landing = () => {
             <div className="flex items-center">
               <img src={pitchfirstLogo} alt="pitchfirst.io Logo" className="h-8 md:h-10" />
             </div>
-            <div className="hidden md:flex gap-8 text-sm text-white/80">
-              <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <div className="hidden md:flex items-center gap-8 text-sm text-white/80">
+              <FeaturesMegaMenu />
               <a href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</a>
               <a href="#tracking" className="hover:text-white transition-colors">Tracking</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
