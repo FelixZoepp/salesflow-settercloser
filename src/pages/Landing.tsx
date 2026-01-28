@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Shield, Lock, UserCheck, Hand } from "lucide-react";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
@@ -424,6 +424,90 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security Section - Manueller Ansatz */}
+      <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
+        <div className="container mx-auto max-w-6xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-8 md:mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-xs md:text-sm font-medium mb-4">
+              <Shield className="h-4 w-4" />
+              100% LinkedIn-konform
+            </div>
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-white">
+              Keine Automatisierung. <span className="text-green-400">Kein Risiko.</span>
+            </h2>
+            <p className="text-gray-300 text-sm md:text-lg max-w-3xl mx-auto">
+              Anders als andere Tools: PitchFirst ist <strong className="text-white">nicht mit LinkedIn verbunden</strong>. 
+              Du behältst die volle Kontrolle über dein Profil – garantiert ohne Bann-Gefahr.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-8">
+            {/* Left: What we DON'T do */}
+            <div className="rounded-2xl border-2 border-red-500/30 bg-red-500/5 p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <X className="h-6 w-6 text-red-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-red-400">Das machen wir NICHT</h3>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  "Automatische Verbindungsanfragen",
+                  "Bot-gesteuerte Nachrichten",
+                  "Zugriff auf dein LinkedIn-Konto",
+                  "Browser-Plugins oder Extensions",
+                  "Hintergrund-Automatisierung"
+                ].map((text, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <X className="h-5 w-5 text-red-400 flex-shrink-0" />
+                    <span className="text-white text-sm md:text-base">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Right: What we DO */}
+            <div className="rounded-2xl border-2 border-green-500/30 bg-green-500/5 p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-green-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-green-400">Unser sicherer Ansatz</h3>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  { icon: Hand, text: "Du führst alle LinkedIn-Aktionen selbst aus" },
+                  { icon: Target, text: "Wir zeigen dir genau, was du tun sollst" },
+                  { icon: UserCheck, text: "Limits angepasst an dein Profil-Alter" },
+                  { icon: Lock, text: "Kein Zugriff auf deine Login-Daten" },
+                  { icon: Shield, text: "100% konform mit LinkedIn-Richtlinien" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <item.icon className="h-5 w-5 text-green-400 flex-shrink-0" />
+                    <span className="text-white text-sm md:text-base">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom info box */}
+          <div className="rounded-2xl bg-gradient-to-r from-green-500/10 to-primary/10 border border-green-500/20 p-6 md:p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Shield className="h-8 w-8 text-green-400" />
+              <h3 className="text-xl md:text-2xl font-bold text-white">Dein LinkedIn-Profil ist sicher</h3>
+            </div>
+            <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base">
+              PitchFirst ist ein <strong className="text-white">Pipeline-Management-System</strong>, kein LinkedIn-Bot. 
+              Die Software gibt dir vor, was du manuell tun sollst – abgestimmt auf die sicheren Grenzen deines Profils. 
+              Du behältst immer die volle Kontrolle.
+            </p>
           </div>
         </div>
       </section>
