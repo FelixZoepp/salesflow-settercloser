@@ -41,7 +41,7 @@ const featureCategories: FeatureCategory[] = [
     bgColor: "bg-primary/10",
     items: [
       { icon: Globe, title: "Lead-Seiten", description: "Personalisierte Landing Pages", href: "/features/lead-seiten" },
-      { icon: Video, title: "KI-Videos", description: "Automatisch generierte Videos", href: "/features/lead-seiten" },
+      { icon: Video, title: "KI-Videos", description: "Automatisch generierte Videos", href: "/features/ki-videos" },
       { icon: Eye, title: "Echtzeit-Tracking", description: "Live Lead-Aktivitäten", href: "/features/lead-seiten" },
       { icon: BarChart3, title: "Lead-Scoring", description: "Automatische Bewertung", href: "/features/lead-seiten" },
     ]
@@ -52,10 +52,10 @@ const featureCategories: FeatureCategory[] = [
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
     items: [
-      { icon: Users, title: "Kontakt-Management", description: "Alle Leads zentral verwalten" },
-      { icon: LayoutDashboard, title: "Deal-Pipeline", description: "Visuelles Pipeline-Management" },
-      { icon: Phone, title: "Power Dialer", description: "Direkt aus dem CRM anrufen" },
-      { icon: Zap, title: "Automatisierungen", description: "Workflows & Follow-ups" },
+      { icon: Users, title: "Kontakt-Management", description: "Alle Leads zentral verwalten", href: "/features/crm" },
+      { icon: LayoutDashboard, title: "Deal-Pipeline", description: "Visuelles Pipeline-Management", href: "/features/crm" },
+      { icon: Phone, title: "Power Dialer", description: "Direkt aus dem CRM anrufen", href: "/features/power-dialer" },
+      { icon: Zap, title: "Automatisierungen", description: "Workflows & Follow-ups", href: "/features/crm" },
     ]
   },
   {
@@ -64,9 +64,9 @@ const featureCategories: FeatureCategory[] = [
     color: "text-purple-400",
     bgColor: "bg-purple-500/10",
     items: [
-      { icon: Sparkles, title: "KI-Konfigurator", description: "Seiten mit KI erstellen", badge: "NEU" },
-      { icon: Mic, title: "Live-Einwandbehandlung", description: "KI-Coach während des Calls" },
-      { icon: Video, title: "Avatar-Videos", description: "Personalisierte KI-Videos" },
+      { icon: Sparkles, title: "KI-Konfigurator", description: "Seiten mit KI erstellen", badge: "NEU", href: "/features/ki-konfigurator" },
+      { icon: Mic, title: "Live-Einwandbehandlung", description: "KI-Coach während des Calls", href: "/features/live-einwandbehandlung" },
+      { icon: Video, title: "Avatar-Videos", description: "Personalisierte KI-Videos", href: "/features/ki-videos" },
     ]
   },
   {
@@ -75,8 +75,8 @@ const featureCategories: FeatureCategory[] = [
     color: "text-emerald-400",
     bgColor: "bg-emerald-500/10",
     items: [
-      { icon: Shield, title: "DSGVO-konform", description: "Hosting in Deutschland" },
-      { icon: Settings, title: "Integrationen", description: "API & Webhooks" },
+      { icon: Shield, title: "DSGVO-konform", description: "Hosting in Deutschland", href: "/features/crm" },
+      { icon: Settings, title: "Integrationen", description: "API & Webhooks", href: "/features/crm" },
     ]
   }
 ];
