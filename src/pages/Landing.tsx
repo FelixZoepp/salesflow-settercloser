@@ -165,6 +165,10 @@ const Landing = () => {
     {
       question: "Wie personalisiert sind die Landingpages?",
       answer: "Jeder Lead bekommt seine eigene URL mit seinem Namen. Das Video spricht ihn persönlich an. Die Seite ist visuell auf deine Brand angepasst – alles vollautomatisch."
+    },
+    {
+      question: "Wie viel kostet das?",
+      answer: "Wir bieten maßgeschneiderte Pakete je nach Unternehmensgröße und Anforderungen. Buche eine kostenlose Demo unter calendly.com/zoepp-media/vorgesprach-demo-software – dort besprechen wir gemeinsam, welches Paket am besten zu dir passt."
     }
   ];
 
