@@ -105,13 +105,13 @@ export const FeaturesMegaMenu = ({ className }: FeaturesMegaMenuProps) => {
         <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Mega Menu Dropdown */}
+      {/* Mega Menu Dropdown - Centered on screen */}
       {isOpen && (
         <>
           {/* Invisible bridge to prevent menu from closing */}
           <div className="absolute top-full left-0 w-full h-4" />
           
-          <div className="absolute top-[calc(100%+16px)] left-1/2 -translate-x-1/2 w-[800px] bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-6 z-50 animate-fade-in">
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[800px] bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-6 z-50 animate-fade-in">
             {/* Arrow */}
             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-background/95 border-l border-t border-white/10 rotate-45" />
             
