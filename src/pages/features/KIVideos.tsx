@@ -1,51 +1,149 @@
 import { FeaturePageTemplate } from "@/components/landing/FeaturePageTemplate";
-import { Video, Sparkles, Users, Clock, Zap, Target, TrendingUp, CheckCircle, Play, User } from "lucide-react";
+import { Video, Sparkles, Users, Clock, Zap, Target, TrendingUp, CheckCircle, Play, User, ArrowRight, Link2, UserCheck } from "lucide-react";
 
 const KIVideos = () => {
-  // Apple-style Video Generator Mockup
-  const VideoGeneratorMockup = () => (
-    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/5 to-pink-500/5 p-2">
-      {/* Browser Chrome */}
-      <div className="rounded-xl bg-[#0d1117] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span className="ml-4 text-xs text-gray-500">pitchfirst.io/p/max-mustermann</span>
+  // 2-Phase Video Workflow Mockup
+  const VideoWorkflowMockup = () => (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/5 to-pink-500/5 p-4">
+      <div className="space-y-4">
+        {/* Phase 1: Intro */}
+        <div className="bg-[#0d1117] rounded-xl border border-white/10 p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">1</div>
+            <div>
+              <p className="text-white font-medium text-sm">Personalisiertes Intro</p>
+              <p className="text-xs text-gray-500">6-8 Sekunden • KI-generiert</p>
+            </div>
+          </div>
+          <div className="aspect-video bg-gradient-to-br from-primary/30 to-purple-500/30 rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center mx-auto mb-2">
+                  <User className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-white text-sm font-medium">"Hey Max!"</p>
+                <p className="text-white/60 text-xs">Dein Avatar spricht den Lead an</p>
+              </div>
+            </div>
+            <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/50 text-[10px] text-white">
+              0:06
+            </div>
+          </div>
+        </div>
+
+        {/* Connection Arrow */}
+        <div className="flex items-center justify-center gap-2 text-gray-500">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <Link2 className="w-4 h-4 text-primary" />
+          <span className="text-xs text-primary">nahtlos verbunden</span>
+          <Link2 className="w-4 h-4 text-primary" />
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        </div>
+
+        {/* Phase 2: Pitch */}
+        <div className="bg-[#0d1117] rounded-xl border border-white/10 p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">2</div>
+            <div>
+              <p className="text-white font-medium text-sm">Dein Pitch-Video</p>
+              <p className="text-xs text-gray-500">~1 Minute • Einmal aufnehmen</p>
+            </div>
+          </div>
+          <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                <Play className="h-6 w-6 text-white ml-0.5" />
+              </div>
+            </div>
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+              <span className="px-2 py-1 rounded bg-black/50 text-[10px] text-white">Dein Angebot</span>
+              <span className="px-2 py-1 rounded bg-black/50 text-[10px] text-white">1:00</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Result */}
+        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30 p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-400" />
+            <div>
+              <p className="text-green-400 font-medium text-sm">Klares Angebot für den Lead</p>
+              <p className="text-xs text-green-400/70">Persönliche Ansprache + professioneller Pitch = mehr Termine</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Trigger Automation Mockup
+  const AutoTriggerMockup = () => (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4">
+      <div className="bg-[#0d1117] rounded-xl border border-white/10 overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
+          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <span className="ml-3 text-xs text-gray-500">Automatischer Workflow</span>
         </div>
         
         <div className="p-6 space-y-4">
-          {/* Video Player Mockup */}
-          <div className="aspect-video bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-xl relative overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center">
-                <Play className="h-8 w-8 text-white ml-1" />
+          {/* Timeline */}
+          <div className="space-y-4">
+            {/* Step 1 */}
+            <div className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="w-0.5 h-8 bg-gradient-to-b from-blue-500 to-primary" />
               </div>
+              <div className="flex-1 pt-1">
+                <p className="text-white font-medium text-sm">Vernetzung angenommen</p>
+                <p className="text-xs text-gray-500">Lead akzeptiert deine Anfrage auf LinkedIn</p>
+              </div>
+              <span className="text-xs text-blue-400 bg-blue-500/20 px-2 py-1 rounded h-fit">Trigger</span>
             </div>
-            {/* Avatar placeholder */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/50 flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
+
+            {/* Step 2 */}
+            <div className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div className="w-0.5 h-8 bg-gradient-to-b from-primary to-green-500" />
               </div>
-              <div className="bg-black/50 backdrop-blur px-3 py-1 rounded-lg">
-                <span className="text-white text-sm">Dein Avatar spricht...</span>
+              <div className="flex-1 pt-1">
+                <p className="text-white font-medium text-sm">KI generiert Intro-Video</p>
+                <p className="text-xs text-gray-500">6-8 Sek. personalisiert auf den Lead</p>
               </div>
+              <span className="text-xs text-primary bg-primary/20 px-2 py-1 rounded h-fit">Auto</span>
             </div>
-            {/* Progress bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-              <div className="w-1/3 h-full bg-primary" />
+
+            {/* Step 3 */}
+            <div className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
+                  <Video className="w-5 h-5 text-green-400" />
+                </div>
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-white font-medium text-sm">Video bereit zum Versand</p>
+                <p className="text-xs text-gray-500">Intro + Pitch auf der Lead-Seite eingebettet</p>
+              </div>
+              <span className="text-xs text-green-400 bg-green-500/20 px-2 py-1 rounded h-fit">Fertig</span>
             </div>
           </div>
-          
-          {/* Personalization Info */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-            <h3 className="text-xl font-bold text-white">Hallo Max! 👋</h3>
-            <p className="text-sm text-gray-400">
-              Ich habe dieses Video speziell für dich aufgenommen...
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="px-2 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-xs">✓ Name personalisiert</span>
-              <span className="px-2 py-1 rounded-lg bg-pink-500/20 text-pink-400 text-xs">✓ Firma erwähnt</span>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-primary">~30s</p>
+              <p className="text-xs text-gray-500">Generierungszeit</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-green-400">100%</p>
+              <p className="text-xs text-gray-500">Automatisiert</p>
             </div>
           </div>
         </div>
@@ -55,15 +153,15 @@ const KIVideos = () => {
 
   // Batch Generation Mockup
   const BatchGenerationMockup = () => (
-    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-8">
-      <div className="bg-background/80 backdrop-blur-xl rounded-xl border border-white/10 p-6 space-y-4">
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4">
+      <div className="bg-[#0d1117] rounded-xl border border-white/10 p-6 space-y-4">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <div className="font-medium">Video-Generierung</div>
-            <div className="text-sm text-muted-foreground">47 von 100 Videos fertig</div>
+            <div className="font-medium text-white">Video-Generierung</div>
+            <div className="text-sm text-gray-500">47 von 100 Videos fertig</div>
           </div>
         </div>
         
@@ -83,7 +181,7 @@ const KIVideos = () => {
             { name: "Laura Weber", status: "pending" }
           ].map((item, idx) => (
             <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white/5">
-              <span className="text-sm">{item.name}</span>
+              <span className="text-sm text-white">{item.name}</span>
               <span className={`text-xs px-2 py-1 rounded ${
                 item.status === 'done' ? 'bg-green-500/20 text-green-400' :
                 item.status === 'processing' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -110,43 +208,61 @@ const KIVideos = () => {
       quickFeatures={[
         {
           icon: Video,
-          title: "Avatar-Videos",
-          description: "Dein digitaler Zwilling spricht jeden Lead an"
+          title: "2-Phasen-Video",
+          description: "Personalisiertes Intro + dein Pitch-Video"
         },
         {
           icon: Sparkles,
-          title: "KI-Personalisierung",
-          description: "Automatische Anpassung an jeden Lead"
+          title: "Automatische Generierung",
+          description: "Startet sobald Vernetzung angenommen wird"
         },
         {
           icon: Zap,
-          title: "Batch-Generierung",
-          description: "Hunderte Videos in Minuten"
+          title: "Unter 30 Sekunden",
+          description: "KI generiert Intro in Echtzeit"
         }
       ]}
       sections={[
         {
-          title: "Dein Avatar spricht jeden Lead persönlich an",
-          description: "Lade einmalig ein Pitch-Video hoch. Unsere KI erstellt daraus für jeden Lead ein personalisiertes Intro, in dem dein Avatar den Namen des Leads ausspricht. Das Ganze passiert vollautomatisch – du musst nichts mehr tun.",
+          badge: "So funktioniert's",
+          badgeIcon: Video,
+          title: "2 Videos. 1 klares Angebot.",
+          description: "Sobald ein Lead deine Vernetzungsanfrage auf LinkedIn annimmt, generiert die KI automatisch ein 6-8 Sekunden Intro-Video, in dem dein Avatar den Lead persönlich anspricht. Dieses Intro wird nahtlos mit deinem 1-Minuten Pitch-Video verbunden – so entsteht ein klares, personalisiertes Angebot für jeden einzelnen Kontakt.",
           features: [
-            { icon: Users, text: "Persönliche Ansprache mit Namen" },
-            { icon: Video, text: "Lippensynchrone Animation" },
-            { icon: Clock, text: "Video in unter 60 Sekunden" },
-            { icon: Sparkles, text: "Natürliche Stimme & Gestik" }
+            { icon: User, text: "6-8 Sek. personalisiertes Intro" },
+            { icon: Video, text: "~1 Min. Pitch-Video von dir" },
+            { icon: Link2, text: "Nahtlos zusammengeschnitten" },
+            { icon: Target, text: "Klares Angebot für den Lead" }
           ],
-          mockup: <VideoGeneratorMockup />
+          mockup: <VideoWorkflowMockup />
         },
         {
-          title: "Skaliere deine Outreach ohne mehr Zeit zu investieren",
-          description: "Früher hast du für jede personalisierte Nachricht Stunden gebraucht. Mit KI-generierten Videos erreichst du hunderte Leads mit der gleichen persönlichen Note – aber in einem Bruchteil der Zeit.",
+          badge: "Automatisierung",
+          badgeIcon: Zap,
+          title: "Startet automatisch bei Vernetzung",
+          highlightedTitle: "",
+          description: "Du musst nichts mehr manuell anstoßen. Sobald ein Lead deine LinkedIn-Anfrage akzeptiert, startet der Prozess automatisch: Die KI generiert das personalisierte Intro und bindet es auf der Lead-Seite ein. Der Lead kann das Video sofort ansehen.",
+          features: [
+            { icon: UserCheck, text: "Trigger: Vernetzung angenommen" },
+            { icon: Sparkles, text: "KI generiert in ~30 Sekunden" },
+            { icon: CheckCircle, text: "Automatisch auf Lead-Seite" },
+            { icon: Clock, text: "Kein manueller Aufwand" }
+          ],
+          mockup: <AutoTriggerMockup />,
+          reversed: true
+        },
+        {
+          badge: "Skalierung",
+          badgeIcon: TrendingUp,
+          title: "Hunderte Videos, ein Aufwand",
+          description: "Du nimmst einmalig dein Pitch-Video auf. Die KI erledigt den Rest. Egal ob 10 oder 1.000 Leads – jeder bekommt sein persönliches Video ohne zusätzlichen Zeitaufwand für dich.",
           features: [
             { icon: Zap, text: "Batch-Generierung möglich" },
             { icon: Target, text: "Höhere Response-Rate" },
             { icon: TrendingUp, text: "Mehr Termine, weniger Aufwand" },
             { icon: CheckCircle, text: "Volle Kontrolle über Inhalte" }
           ],
-          mockup: <BatchGenerationMockup />,
-          reversed: true
+          mockup: <BatchGenerationMockup />
         }
       ]}
       benefits={[
