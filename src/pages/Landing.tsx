@@ -234,7 +234,8 @@ const Landing = () => {
           </h1>
           
           <p className="text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
-            Outreach-Kampagnen auf LinkedIn mit Pipeline-System
+            Die LinkedIn Outreach Software, die es dir ermöglicht mit der ersten Nachricht bereits Termine zu legen in deiner Zielgruppe. 
+            Mit integriertem CRM, Echtzeit-Benachrichtigung und KI Einwandbehandlung im Call.
           </p>
           
           <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
