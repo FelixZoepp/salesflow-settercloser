@@ -14,7 +14,6 @@ const AIObjectionDemo = lazy(() => import("@/components/landing/AIObjectionDemo"
 const Landing = () => {
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile for performance optimizations
@@ -184,7 +183,6 @@ const Landing = () => {
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</a>
               <a href="#tracking" className="hover:text-white transition-colors">Tracking</a>
-              <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
               <a href="/partner" className="hover:text-white transition-colors">Partner</a>
             </div>
@@ -238,14 +236,6 @@ const Landing = () => {
           </p>
           
           <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
-            <Button 
-              size="lg" 
-              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-4 md:px-8 h-12 md:h-14 text-sm md:text-lg"
-            >
-              Zugang sichern
-              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-            </Button>
             <a 
               href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
               target="_blank"
@@ -253,11 +243,11 @@ const Landing = () => {
             >
               <Button 
                 size="lg" 
-                variant="outline"
-                className="border-white/30 bg-white/10 hover:bg-white/20 text-white px-4 md:px-8 h-12 md:h-14 text-sm md:text-lg"
+                className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
               >
                 <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Demo buchen
+                Demo Termin buchen
+                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </a>
           </div>
@@ -1096,207 +1086,32 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Demo CTA Section (formerly Pricing) */}
       <section id="pricing" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
+        <div className="container mx-auto max-w-3xl scroll-animate scroll-fade-up">
           <div className="text-center mb-8 md:mb-12">
-            <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Preise</p>
+            <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Interesse geweckt?</p>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
-              Wähle dein Paket
+              Lass uns sprechen
             </h2>
-            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2 mb-6">
-              Beide Pakete beinhalten wöchentliches Live-Coaching.
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2 mb-8">
+              Buche ein kostenloses Erstgespräch und wir zeigen dir, wie PitchFirst auch für dich funktioniert.
             </p>
             
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full p-1">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`px-4 md:px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  billingPeriod === 'monthly' 
-                    ? 'bg-primary text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
+            <a 
+              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-8 md:px-12 h-14 md:h-16 text-base md:text-lg"
               >
-                Monatlich
-              </button>
-              <button
-                onClick={() => setBillingPeriod('yearly')}
-                className={`px-4 md:px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                  billingPeriod === 'yearly' 
-                    ? 'bg-primary text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Jährlich
-                <span className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                  -2 Monate
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
-            {/* Starter Plan */}
-            <div className="relative rounded-2xl border-2 border-white/10 bg-white/[0.02] p-6 md:p-8 hover:border-white/20 transition-all">
-              <div className="mb-6">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Starter</h3>
-                <p className="text-gray-400 text-sm">Perfekt für den Einstieg</p>
-              </div>
-              
-              <div className="mb-6">
-                {billingPeriod === 'monthly' ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl md:text-5xl font-bold text-white">149€</span>
-                    <span className="text-gray-400">/Monat</span>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl md:text-5xl font-bold text-white">1.490€</span>
-                      <span className="text-gray-400">/Jahr</span>
-                    </div>
-                    <p className="text-green-400 text-sm mt-1">Spare 298€ (2 Monate gratis)</p>
-                  </div>
-                )}
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                {[
-                  "Pitchfirst Software – Kampagnen & CRM",
-                  "Unbegrenzte KI-Landingpages",
-                  "Echtzeit-Tracking & Lead-Scoring",
-                  "Manuelles Telefonieren (mit Notizen)",
-                  "1x/Woche Live-Gruppen-Coaching",
-                  "Outreach-Videokurs inklusive"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              {/* What's NOT included */}
-              <div className="border-t border-white/10 pt-4 mb-6">
-                <p className="text-gray-500 text-xs mb-2">Nicht enthalten:</p>
-                <ul className="space-y-2">
-                  {[
-                    "KI-Telefonie aus dem Tool",
-                    "KI-Anrufzusammenfassungen",
-                    "KI Live-Einwandbehandlung",
-                    "E-Mail-Vorlagen & Mail-Outreach"
-                  ].map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-gray-500 text-sm">
-                      <X className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <a 
-                href={billingPeriod === 'monthly' 
-                  ? "https://buy.stripe.com/eVq4gz3p4es23sb8yKgMw09" 
-                  : "https://buy.stripe.com/8x2dR98JocjU1k316igMw0a"}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-rewardful
-              >
-                <Button 
-                  size="lg"
-                  className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 h-12 md:h-14"
-                >
-                  Starter wählen
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </a>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="relative rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/10 to-transparent p-6 md:p-8">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                  BELIEBTESTE WAHL
-                </span>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Pro</h3>
-                <p className="text-gray-400 text-sm">Alle KI-Features inklusive</p>
-              </div>
-              
-              <div className="mb-6">
-                {billingPeriod === 'monthly' ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl md:text-5xl font-bold text-white">299€</span>
-                    <span className="text-gray-400">/Monat</span>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl md:text-5xl font-bold text-white">2.990€</span>
-                      <span className="text-gray-400">/Jahr</span>
-                    </div>
-                    <p className="text-green-400 text-sm mt-1">Spare 598€ (2 Monate gratis)</p>
-                  </div>
-                )}
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-start gap-3 text-gray-300 text-sm">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span>Alles aus Starter, plus:</span>
-                </li>
-              </ul>
-              
-              {/* Pro-exclusive features highlighted */}
-              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6">
-                <p className="text-primary text-xs font-semibold mb-3">🚀 Exklusive Pro-Features:</p>
-                <ul className="space-y-2">
-                  {[
-                    "KI-Telefonie direkt aus dem Tool",
-                    "KI-Anrufzusammenfassungen nach jedem Call",
-                    "KI Live-Einwandbehandlung Trainer",
-                    "E-Mail-Vorlagen & Mail-Outreach"
-                  ].map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-white text-sm font-medium">
-                      <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <ul className="space-y-3 mb-6">
-                {[
-                  "1x/Woche Live-Gruppen-Coaching",
-                  "Outreach-Videokurs inklusive"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <a 
-                href={billingPeriod === 'monthly' 
-                  ? "https://buy.stripe.com/bJe3cv3p4fw68Mv9COgMw0b" 
-                  : "https://buy.stripe.com/cNi3cv1gWfw6aUD16igMw0c"}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-rewardful
-              >
-                <Button
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-lg shadow-primary/30 h-12 md:h-14"
-                >
-                  Pro wählen
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </a>
-            </div>
+                <Phone className="mr-2 h-5 w-5" />
+                Demo Termin buchen
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
