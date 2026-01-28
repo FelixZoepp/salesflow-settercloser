@@ -1,16 +1,79 @@
 import { FeaturePageTemplate } from "@/components/landing/FeaturePageTemplate";
-import { Sparkles, Zap, Palette, FileText, Target, TrendingUp, Clock, CheckCircle } from "lucide-react";
-import leadPageBuilderScreenshot from "@/assets/lead-page-builder-screenshot.png";
+import { Sparkles, Zap, Palette, FileText, Target, TrendingUp, Clock, CheckCircle, Wand2 } from "lucide-react";
 
 const KIKonfigurator = () => {
+  // Apple-style AI Configurator Mockup
+  const AIConfiguratorMockup = () => (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/5 to-purple-500/5 p-2">
+      {/* Browser Chrome */}
+      <div className="rounded-xl bg-[#0d1117] overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <span className="ml-4 text-xs text-gray-500">pitchfirst.io/konfigurator</span>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          {/* Prompt Input */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Wand2 className="h-4 w-4" />
+              Beschreibe deine Zielgruppe
+            </div>
+            <div className="bg-black/30 rounded-lg p-3">
+              <p className="text-gray-300 text-sm">
+                "Erstelle eine Seite für IT-Entscheider in mittelständischen Unternehmen. 
+                Fokus auf ROI und Zeitersparnis. Professioneller, aber nicht steifer Ton."
+              </p>
+            </div>
+          </div>
+          
+          {/* Generation Progress */}
+          <div className="bg-gradient-to-r from-primary/20 to-purple-500/20 border border-primary/30 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                <span className="font-medium text-white">KI generiert...</span>
+              </div>
+              <span className="text-sm text-primary">75%</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-3/4 h-full bg-gradient-to-r from-primary to-purple-500" />
+            </div>
+          </div>
+          
+          {/* Generated Elements */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Headline", status: "done", preview: "Mehr Zeit für das Wesentliche" },
+              { label: "Subheadline", status: "done", preview: "Automatisiere dein Outreach" },
+              { label: "CTA Text", status: "processing", preview: "..." },
+              { label: "Farben", status: "pending", preview: "—" }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{item.label}</span>
+                  {item.status === 'done' && <CheckCircle className="h-3 w-3 text-green-400" />}
+                  {item.status === 'processing' && <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />}
+                </div>
+                <div className="text-sm text-white truncate">{item.preview}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <FeaturePageTemplate
       badge="KI-Konfigurator"
       badgeIcon={Sparkles}
       title="Seiten mit KI erstellen"
       subtitle="Beschreibe was du möchtest – die KI erstellt die perfekte Lead-Seite für dich. In Sekunden."
-      heroImage={leadPageBuilderScreenshot}
-      heroImageAlt="KI-Konfigurator Interface"
+      heroImage=""
+      heroImageAlt=""
       quickFeatures={[
         {
           icon: Sparkles,
@@ -38,8 +101,7 @@ const KIKonfigurator = () => {
             { icon: Target, text: "Zielgruppen-Optimierung" },
             { icon: CheckCircle, text: "Volle Kontrolle behalten" }
           ],
-          image: leadPageBuilderScreenshot,
-          imageAlt: "KI-Konfigurator"
+          mockup: <AIConfiguratorMockup />
         },
         {
           title: "Iterieren bis es perfekt ist",

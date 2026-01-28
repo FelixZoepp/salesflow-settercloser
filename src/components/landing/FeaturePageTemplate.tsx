@@ -103,18 +103,20 @@ export const FeaturePageTemplate = ({
             {subtitle}
           </p>
 
-          {/* Hero Screenshot */}
-          <div className="relative max-w-4xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5">
-              <img 
-                src={heroImage} 
-                alt={heroImageAlt}
-                className="w-full"
-                loading="lazy"
-                decoding="async"
-              />
+          {/* Hero Screenshot - only show if image provided */}
+          {heroImage && (
+            <div className="relative max-w-4xl mx-auto">
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5">
+                <img 
+                  src={heroImage} 
+                  alt={heroImageAlt}
+                  className="w-full"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
