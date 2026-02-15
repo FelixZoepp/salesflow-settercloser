@@ -50,7 +50,7 @@ import LiveEinwandbehandlungFeature from "./pages/features/LiveEinwandbehandlung
 import KIKonfiguratorFeature from "./pages/features/KIKonfigurator";
 import LeadScoringFeature from "./pages/features/LeadScoring";
 import KampagnenFeature from "./pages/features/Kampagnen";
-
+import EmailCampaigns from "./pages/EmailCampaigns";
 
 const queryClient = new QueryClient();
 
@@ -181,6 +181,7 @@ const AppRoutes = () => (
     <Route path="/profile" element={<SubscriptionRoute><Profile /></SubscriptionRoute>} />
     <Route path="/billing" element={<SubscriptionRoute><Billing /></SubscriptionRoute>} />
     
+    <Route path="/email-campaigns" element={<SubscriptionRoute><EmailCampaigns /></SubscriptionRoute>} />
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />

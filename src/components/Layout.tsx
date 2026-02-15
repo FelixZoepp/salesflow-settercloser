@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
-  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift
+  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,11 +151,12 @@ const Layout = ({ children }: LayoutProps) => {
       ]
     },
     { 
-      path: "/email-templates", 
+      path: "/email-campaigns", 
       label: "E-Mail", 
       icon: Mail, 
       color: "text-green-400",
       subItems: [
+        { path: "/email-campaigns", label: "Cold Mailing", icon: Send },
         { path: "/email-templates", label: "E-Mail Templates", icon: Mail },
       ]
     },
