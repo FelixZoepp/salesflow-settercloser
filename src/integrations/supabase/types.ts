@@ -1166,6 +1166,50 @@ export type Database = {
           },
         ]
       }
+      enrichment_credits: {
+        Row: {
+          account_id: string
+          created_at: string
+          email_credits_limit: number
+          email_credits_used: number
+          id: string
+          month_year: string
+          phone_credits_limit: number
+          phone_credits_used: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          email_credits_limit?: number
+          email_credits_used?: number
+          id?: string
+          month_year: string
+          phone_credits_limit?: number
+          phone_credits_used?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          email_credits_limit?: number
+          email_credits_used?: number
+          id?: string
+          month_year?: string
+          phone_credits_limit?: number
+          phone_credits_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrichment_credits_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followup_templates: {
         Row: {
           account_id: string | null
@@ -1933,6 +1977,26 @@ export type Database = {
           pitch_video_url: string
           video_url: string
         }[]
+      }
+      get_enrichment_credits: {
+        Args: { p_account_id: string }
+        Returns: {
+          account_id: string
+          created_at: string
+          email_credits_limit: number
+          email_credits_used: number
+          id: string
+          month_year: string
+          phone_credits_limit: number
+          phone_credits_used: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "enrichment_credits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_followup_status: {
         Args: {
