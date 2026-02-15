@@ -113,3 +113,6 @@ verify_jwt = false
 
 [functions.sync-all-tables]
 verify_jwt = true
+
+[functions.enrich-lead]
+verify_jwt = false

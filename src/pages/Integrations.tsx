@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { Loader2, Key, User, Mic, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink, Webhook } from "lucide-react";
 import SmtpSettings from "@/components/SmtpSettings";
 import DomainSettings from "@/components/DomainSettings";
 import SipProviderSettings from "@/components/SipProviderSettings";
@@ -23,6 +23,7 @@ const Integrations = () => {
   const [voiceId, setVoiceId] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [hasExistingKey, setHasExistingKey] = useState(false);
+  const [enrichmentWebhookUrl, setEnrichmentWebhookUrl] = useState("");
 
   // Fetch existing integration settings
   const { data: integration, isLoading } = useQuery({
@@ -65,6 +66,7 @@ const Integrations = () => {
     if (integration) {
       setAvatarId(integration.heygen_avatar_id || "");
       setVoiceId(integration.heygen_voice_id || "");
+      setEnrichmentWebhookUrl((integration as any).enrichment_webhook_url || "");
     }
     if (keyStatus) {
       setHasExistingKey(keyStatus.hasKey);
@@ -94,8 +96,9 @@ const Integrations = () => {
           account_id: accountId,
           heygen_avatar_id: avatarId || null,
           heygen_voice_id: voiceId || null,
+          enrichment_webhook_url: enrichmentWebhookUrl || null,
           updated_at: new Date().toISOString(),
-        }, {
+        } as any, {
           onConflict: 'account_id',
         });
 
@@ -165,6 +168,48 @@ const Integrations = () => {
 
         {/* SIP Provider (BYOC) */}
         <SipProviderSettings />
+
+        {/* Lead Enrichment Webhook */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Webhook className="h-5 w-5 text-primary" />
+              Lead-Anreicherung
+            </CardTitle>
+            <CardDescription>
+              Verbinde einen externen Webhook (z.B. n8n, Make, Zapier) zur automatischen Datenanreicherung deiner Leads
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="enrichmentWebhookUrl">Webhook URL</Label>
+              <Input
+                id="enrichmentWebhookUrl"
+                placeholder="https://dein-webhook.example.com/enrich"
+                value={enrichmentWebhookUrl}
+                onChange={(e) => setEnrichmentWebhookUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Diese URL wird mit den Lead-Daten aufgerufen wenn du „Anreichern" klickst. Das System sendet alle Kontakt- und Firmendaten als JSON und erwartet angereicherte Daten zurück.
+              </p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <p className="text-xs font-medium text-foreground">So funktioniert es:</p>
+              <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-1">
+                <li>Klicke „Anreichern" beim Lead → Webhook wird mit Kontaktdaten aufgerufen</li>
+                <li>Dein Workflow reichert die Daten an (z.B. Apollo, LinkedIn, etc.)</li>
+                <li>Antwort mit angereicherten Daten → Lead wird automatisch aktualisiert</li>
+              </ol>
+            </div>
+            <Button 
+              onClick={() => saveSettings.mutate()}
+              disabled={saveSettings.isPending}
+            >
+              {saveSettings.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Speichern
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* HeyGen Integration */}
         <Card>
