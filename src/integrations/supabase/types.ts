@@ -685,6 +685,7 @@ export type Database = {
         Row: {
           account_id: string
           campaign_id: string | null
+          channels_active: string[] | null
           city: string | null
           company: string | null
           company_id: string | null
@@ -739,6 +740,7 @@ export type Database = {
         Insert: {
           account_id: string
           campaign_id?: string | null
+          channels_active?: string[] | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -795,6 +797,7 @@ export type Database = {
         Update: {
           account_id?: string
           campaign_id?: string | null
+          channels_active?: string[] | null
           city?: string | null
           company?: string | null
           company_id?: string | null
@@ -962,6 +965,206 @@ export type Database = {
             columns: ["setter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaign_leads: {
+        Row: {
+          ab_variant: string | null
+          bounced_at: string | null
+          campaign_id: string
+          clicked_count: number | null
+          contact_id: string
+          created_at: string
+          current_step: number | null
+          id: string
+          last_sent_at: string | null
+          next_send_at: string | null
+          opened_count: number | null
+          replied_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ab_variant?: string | null
+          bounced_at?: string | null
+          campaign_id: string
+          clicked_count?: number | null
+          contact_id: string
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          opened_count?: number | null
+          replied_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ab_variant?: string | null
+          bounced_at?: string | null
+          campaign_id?: string
+          clicked_count?: number | null
+          contact_id?: string
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          opened_count?: number | null
+          replied_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_leads_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_leads_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaign_steps: {
+        Row: {
+          body_text: string
+          campaign_id: string
+          created_at: string
+          delay_days: number
+          id: string
+          step_order: number
+          subject: string
+          total_clicked: number | null
+          total_opened: number | null
+          total_replied: number | null
+          total_sent: number | null
+          updated_at: string
+          variant: string | null
+        }
+        Insert: {
+          body_text: string
+          campaign_id: string
+          created_at?: string
+          delay_days?: number
+          id?: string
+          step_order?: number
+          subject: string
+          total_clicked?: number | null
+          total_opened?: number | null
+          total_replied?: number | null
+          total_sent?: number | null
+          updated_at?: string
+          variant?: string | null
+        }
+        Update: {
+          body_text?: string
+          campaign_id?: string
+          created_at?: string
+          delay_days?: number
+          id?: string
+          step_order?: number
+          subject?: string
+          total_clicked?: number | null
+          total_opened?: number | null
+          total_replied?: number | null
+          total_sent?: number | null
+          updated_at?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_steps_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          account_id: string
+          created_at: string
+          daily_send_limit: number | null
+          description: string | null
+          id: string
+          name: string
+          send_days: string[] | null
+          send_end_hour: number | null
+          send_start_hour: number | null
+          status: string
+          timezone: string | null
+          total_bounced: number | null
+          total_clicked: number | null
+          total_leads: number | null
+          total_opened: number | null
+          total_replied: number | null
+          total_sent: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          daily_send_limit?: number | null
+          description?: string | null
+          id?: string
+          name: string
+          send_days?: string[] | null
+          send_end_hour?: number | null
+          send_start_hour?: number | null
+          status?: string
+          timezone?: string | null
+          total_bounced?: number | null
+          total_clicked?: number | null
+          total_leads?: number | null
+          total_opened?: number | null
+          total_replied?: number | null
+          total_sent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          daily_send_limit?: number | null
+          description?: string | null
+          id?: string
+          name?: string
+          send_days?: string[] | null
+          send_end_hour?: number | null
+          send_start_hour?: number | null
+          status?: string
+          timezone?: string | null
+          total_bounced?: number | null
+          total_clicked?: number | null
+          total_leads?: number | null
+          total_opened?: number | null
+          total_replied?: number | null
+          total_sent?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
