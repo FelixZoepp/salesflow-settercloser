@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          enrichment_webhook_url: string | null
           heygen_api_key_id: string | null
           heygen_avatar_id: string | null
           heygen_voice_id: string | null
@@ -53,6 +54,7 @@ export type Database = {
         Insert: {
           account_id: string
           created_at?: string
+          enrichment_webhook_url?: string | null
           heygen_api_key_id?: string | null
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
@@ -88,6 +90,7 @@ export type Database = {
         Update: {
           account_id?: string
           created_at?: string
+          enrichment_webhook_url?: string | null
           heygen_api_key_id?: string | null
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
