@@ -584,35 +584,37 @@ Stage: ${deal.stage}
                     <p className="text-sm text-muted-foreground/70 mt-1">{contact.position}</p>
                   )}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isEnriching}
-                  onClick={async () => {
-                    setIsEnriching(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke('enrich-lead', {
-                        body: { contact_id: contact.id },
-                      });
-                      if (error) throw error;
-                      if (!data.success) throw new Error(data.error);
-                      if (data.mode === 'sync') {
-                        toast.success(`Lead angereichert: ${data.updated_fields?.length || 0} Felder aktualisiert`);
-                        fetchLeadData();
-                      } else {
-                        toast.success('Enrichment-Anfrage gesendet. Daten werden asynchron aktualisiert.');
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isEnriching}
+                    onClick={async () => {
+                      setIsEnriching(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('enrich-lead', {
+                          body: { contact_id: contact.id },
+                        });
+                        if (error) throw error;
+                        if (!data.success) throw new Error(data.error);
+                        if (data.mode === 'sync') {
+                          toast.success(`Lead angereichert: ${data.updated_fields?.length || 0} Felder aktualisiert`);
+                          fetchLeadData();
+                        } else {
+                          toast.success('Enrichment-Anfrage gesendet. Daten werden asynchron aktualisiert.');
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || 'Fehler beim Anreichern');
+                      } finally {
+                        setIsEnriching(false);
                       }
-                    } catch (err: any) {
-                      toast.error(err.message || 'Fehler beim Anreichern');
-                    } finally {
-                      setIsEnriching(false);
-                    }
-                  }}
-                  className="gap-2"
-                >
-                  {isEnriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  Anreichern
-                </Button>
+                    }}
+                    className="gap-2"
+                  >
+                    {isEnriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Anreichern
+                  </Button>
+                </div>
               </div>
             </div>
 

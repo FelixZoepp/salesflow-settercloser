@@ -13,6 +13,7 @@ import SmtpSettings from "@/components/SmtpSettings";
 import DomainSettings from "@/components/DomainSettings";
 import SipProviderSettings from "@/components/SipProviderSettings";
 import AvvAgreement from "@/components/AvvAgreement";
+import EnrichmentCreditsDisplay from "@/components/EnrichmentCreditsDisplay";
 
 const Integrations = () => {
   const { accountId, loading: accountLoading } = useAccountFilter();
@@ -181,6 +182,9 @@ const Integrations = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Credit Usage Display */}
+            <EnrichmentCreditsDisplay accountId={accountId} />
+
             <div className="space-y-2">
               <Label htmlFor="enrichmentWebhookUrl">Webhook URL</Label>
               <Input
