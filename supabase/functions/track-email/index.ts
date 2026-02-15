@@ -25,15 +25,15 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find email log by tracking ID
+    // Find email log by tracking ID (include contact_id and account_id)
     const { data: emailLog } = await supabase
       .from('email_logs')
-      .select('id, open_count, click_count')
+      .select('id, contact_id, account_id, user_id, open_count, click_count')
       .eq('tracking_id', trackingId)
       .single();
 
     if (emailLog) {
-      // Log tracking event
+      // Log tracking event in email_tracking_events
       await supabase.from('email_tracking_events').insert({
         email_log_id: emailLog.id,
         event_type: eventType,
@@ -60,7 +60,89 @@ serve(async (req) => {
           .eq('id', emailLog.id);
       }
 
-      console.log(`Tracked ${eventType} for email ${emailLog.id}`);
+      // === LEAD ATTRIBUTION: Track in lead_tracking_events for scoring ===
+      if (emailLog.contact_id) {
+        const leadEventType = eventType === 'open' ? 'email_open' : 'email_click';
+
+        // Insert lead tracking event (triggers calculate_lead_score via DB trigger)
+        await supabase.from('lead_tracking_events').insert({
+          contact_id: emailLog.contact_id,
+          account_id: emailLog.account_id,
+          event_type: leadEventType,
+          event_data: {
+            source: 'cold_mailing',
+            tracking_id: trackingId,
+            link_url: redirectUrl ? decodeURIComponent(redirectUrl) : null,
+          },
+        });
+
+        // Update email_campaign_leads counters
+        if (eventType === 'open') {
+          // Find campaign lead entry for this contact and increment opened_count
+          const { data: campaignLeads } = await supabase
+            .from('email_campaign_leads')
+            .select('id, opened_count')
+            .eq('contact_id', emailLog.contact_id)
+            .eq('status', 'active');
+
+          if (campaignLeads && campaignLeads.length > 0) {
+            for (const cl of campaignLeads) {
+              await supabase.from('email_campaign_leads').update({
+                opened_count: (cl.opened_count || 0) + 1,
+                updated_at: new Date().toISOString(),
+              }).eq('id', cl.id);
+            }
+          }
+        } else if (eventType === 'click') {
+          const { data: campaignLeads } = await supabase
+            .from('email_campaign_leads')
+            .select('id, clicked_count')
+            .eq('contact_id', emailLog.contact_id)
+            .eq('status', 'active');
+
+          if (campaignLeads && campaignLeads.length > 0) {
+            for (const cl of campaignLeads) {
+              await supabase.from('email_campaign_leads').update({
+                clicked_count: (cl.clicked_count || 0) + 1,
+                updated_at: new Date().toISOString(),
+              }).eq('id', cl.id);
+            }
+          }
+        }
+
+        // Log as activity for the contact
+        if (emailLog.user_id) {
+          await supabase.from('activities').insert({
+            contact_id: emailLog.contact_id,
+            account_id: emailLog.account_id,
+            user_id: emailLog.user_id,
+            type: 'email',
+            note: eventType === 'open'
+              ? 'Lead hat E-Mail geöffnet'
+              : `Lead hat auf Link geklickt${redirectUrl ? ': ' + decodeURIComponent(redirectUrl) : ''}`,
+            outcome: 'reached',
+          });
+        }
+
+        // Update contact channels_active to include 'email'
+        const { data: contact } = await supabase
+          .from('contacts')
+          .select('channels_active')
+          .eq('id', emailLog.contact_id)
+          .single();
+
+        if (contact) {
+          const channels = contact.channels_active || [];
+          if (!channels.includes('email')) {
+            await supabase.from('contacts').update({
+              channels_active: [...channels, 'email'],
+              updated_at: new Date().toISOString(),
+            }).eq('id', emailLog.contact_id);
+          }
+        }
+      }
+
+      console.log(`Tracked ${eventType} for email ${emailLog.id}, contact ${emailLog.contact_id}`);
     }
 
     // For clicks, redirect to the original URL
@@ -83,7 +165,6 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Tracking error:', error);
-    // Still return pixel/redirect even on error
     return new Response(TRACKING_PIXEL, {
       headers: { 'Content-Type': 'image/gif' },
     });
