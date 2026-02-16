@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useAccountFilter } from "@/hooks/useAccountFilter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronRight, Camera, Loader2, User, Settings, LogOut } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChevronRight, Camera, Loader2, User, Settings, LogOut, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
 
@@ -17,9 +20,29 @@ interface UserProfile {
 
 export default function UserAccountHeader() {
   const navigate = useNavigate();
+  const { accountId } = useAccountFilter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const { data: credits } = useQuery({
+    queryKey: ['enrichment-credits-header', accountId, currentMonth],
+    queryFn: async () => {
+      if (!accountId) return null;
+      const { data } = await supabase
+        .from('enrichment_credits')
+        .select('phone_credits_used, phone_credits_limit, email_credits_used, email_credits_limit')
+        .eq('account_id', accountId)
+        .eq('month_year', currentMonth)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!accountId,
+  });
+
+  const totalUsed = (credits?.phone_credits_used ?? 0) + (credits?.email_credits_used ?? 0);
+  const totalLimit = (credits?.phone_credits_limit ?? 100) + (credits?.email_credits_limit ?? 100);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -139,15 +162,28 @@ export default function UserAccountHeader() {
       <Popover>
         <PopoverTrigger asChild>
           <button className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-colors group">
-            <Avatar className="h-10 w-10 border-2 border-white/10">
-              <AvatarImage src={profile.avatar_url || undefined} alt={profile.name} />
-              <AvatarFallback className="bg-primary/20 text-primary text-sm font-medium">
-                {getInitials(profile.name)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-10 w-10 border-2 border-white/10">
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.name} />
+                <AvatarFallback className="bg-primary/20 text-primary text-sm font-medium">
+                  {getInitials(profile.name)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <div className="flex-1 text-left hidden lg:block min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{profile.email}</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Coins className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] font-medium text-amber-400">{totalLimit - totalUsed}</span>
+                    <span className="text-[10px] text-muted-foreground">Credits</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="text-xs">{totalUsed} / {totalLimit} Credits verbraucht</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors hidden lg:block" />
           </button>
