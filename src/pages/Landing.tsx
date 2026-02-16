@@ -1255,12 +1255,12 @@ const Landing = () => {
                 <div className="text-center md:text-right">
                   <p className="text-primary text-xs md:text-sm mb-1 md:mb-2 uppercase tracking-wider font-medium">Alles in PitchFirst</p>
                   <div className="flex items-baseline gap-2 justify-center md:justify-end">
-                    <span className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">ab 449€</span>
-                    <span className="text-gray-400 text-sm md:text-lg">/Monat</span>
+                    <span className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">&lt; 1/10</span>
+                    <span className="text-gray-400 text-sm md:text-lg">davon</span>
                   </div>
                   <div className="flex items-center gap-1.5 justify-center md:justify-end mt-2">
                     <div className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] md:text-xs font-medium">
-                      Du sparst über 4.000€/Monat
+                      Ein Bruchteil der Kosten – alles inklusive
                     </div>
                   </div>
                 </div>
