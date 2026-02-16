@@ -1192,18 +1192,107 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Demo CTA Section (formerly Pricing) */}
-      <section id="pricing" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
-        <div className="container mx-auto max-w-3xl scroll-animate scroll-fade-up">
-          <div className="text-center mb-8 md:mb-12">
-            <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">Interesse geweckt?</p>
+      {/* Value Comparison Section */}
+      <section id="pricing" className="py-12 md:py-24 px-4 md:px-6 relative z-[1]">
+        <div className="container mx-auto max-w-5xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-8 md:mb-16">
+            <div className="inline-block mb-4 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs md:text-sm font-medium">
+              💰 Dein unfairer Vorteil
+            </div>
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
-              Lass uns sprechen
+              6 Tools in einem –<br />
+              <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 bg-clip-text text-transparent">für 1/10 des Preises</span>
             </h2>
-            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2 mb-8">
-              Buche ein kostenloses Erstgespräch und wir zeigen dir, wie PitchFirst auch für dich funktioniert.
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto px-2">
+              Was du normalerweise mit 6+ Einzeltools zusammenbauen müsstest, bekommst du bei PitchFirst als Komplettlösung.
             </p>
-            
+          </div>
+
+          <div className="grid gap-3 md:gap-4 mb-8 md:mb-12">
+            {[
+              { tool: "Cold E-Mail Outreach System", example: "Instantly, Lemlist, Smartlead", price: "97–497", icon: Mail },
+              { tool: "LinkedIn DM Kampagnen-System", example: "Expandi, Dripify, Waalaxy", price: "79–299", icon: Linkedin },
+              { tool: "Lead-Anreicherung (100 Leads/Mo)", example: "Apollo, Hunter, Dropcontact", price: "49–199", icon: Target },
+              { tool: "KI-Erklärfilm / Personalisiertes Video", example: "HeyGen, Synthesia, Loom", price: "59–399", icon: Video },
+              { tool: "Vollständiges CRM mit Pipeline", example: "HubSpot, Pipedrive, Close", price: "45–150", icon: Users },
+              { tool: "Landing Page Generator", example: "Carrd, Leadpages, Unbounce", price: "29–199", icon: MousePointer },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 md:gap-4 p-3 md:p-5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-colors">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-5 h-5 md:w-6 md:h-6 text-red-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium text-sm md:text-base">{item.tool}</p>
+                  <p className="text-gray-500 text-[10px] md:text-xs truncate">z.B. {item.example}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-red-400 font-bold text-sm md:text-lg line-through decoration-red-400/50">{item.price}€</p>
+                  <p className="text-gray-500 text-[10px] md:text-xs">/Monat</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Total Comparison */}
+          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden mb-8 md:mb-12">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-transparent"></div>
+            <div className="relative border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-10">
+              <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
+                {/* Einzeltools */}
+                <div className="text-center md:text-left">
+                  <p className="text-gray-400 text-xs md:text-sm mb-1 md:mb-2 uppercase tracking-wider">Wenn du alles einzeln kaufst</p>
+                  <div className="flex items-baseline gap-2 justify-center md:justify-start">
+                    <span className="text-3xl md:text-5xl font-bold text-red-400 line-through decoration-2">4.500€+</span>
+                    <span className="text-gray-500 text-sm md:text-lg">/Monat</span>
+                  </div>
+                  <p className="text-gray-500 text-xs md:text-sm mt-2">6 verschiedene Tools, 6 Logins, 6 Rechnungen</p>
+                </div>
+
+                {/* Divider */}
+                <div className="hidden md:block absolute left-1/2 top-6 bottom-6 w-px bg-white/10"></div>
+
+                {/* PitchFirst */}
+                <div className="text-center md:text-right">
+                  <p className="text-primary text-xs md:text-sm mb-1 md:mb-2 uppercase tracking-wider font-medium">Alles in PitchFirst</p>
+                  <div className="flex items-baseline gap-2 justify-center md:justify-end">
+                    <span className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">ab 449€</span>
+                    <span className="text-gray-400 text-sm md:text-lg">/Monat</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 justify-center md:justify-end mt-2">
+                    <div className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] md:text-xs font-medium">
+                      Du sparst über 4.000€/Monat
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* What's Included */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 mb-8 md:mb-12">
+            {[
+              "Cold Mail Sequenzen",
+              "LinkedIn DM Kampagnen",
+              "100 Lead-Anreicherungen/Mo",
+              "KI-Erklärfilm Generator",
+              "CRM mit Setter-Closer Pipeline",
+              "Landing Page Builder",
+              "Echtzeit Lead-Tracking",
+              "KI-Einwandbehandlung",
+              "Power Dialer",
+            ].map((feature, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 md:gap-2 p-2 md:p-3 rounded-lg bg-primary/5 border border-primary/10">
+                <Check className="w-3 h-3 md:w-4 md:h-4 text-primary flex-shrink-0" />
+                <span className="text-white text-[10px] md:text-sm font-medium">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <p className="text-gray-300 text-sm md:text-lg mb-4 md:mb-6">
+              Buche ein kostenloses Erstgespräch und sichere dir den Zugang.
+            </p>
             <a 
               href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
               target="_blank"
