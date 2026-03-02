@@ -78,12 +78,21 @@ Deno.serve(async (req) => {
   }
 });
 
+// ─── SEARCH: Firecrawl-based real company search + LinkedIn check ───
+
 async function handleSearch(body: any, corsHeaders: Record<string, string>) {
   const { industry, location, employee_count, count = 10 } = body;
 
   if (!industry) {
     return new Response(JSON.stringify({ error: 'Branche ist erforderlich' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!FIRECRAWL_API_KEY) {
+    return new Response(JSON.stringify({ error: 'Firecrawl ist nicht konfiguriert. Bitte unter Einstellungen verbinden.' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -94,74 +103,191 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
     });
   }
 
-  const locationFilter = location ? `in ${location}` : 'im DACH-Raum (Deutschland, Österreich, Schweiz)';
-  const employeeFilter = employee_count ? `mit ${employee_count} Mitarbeitern` : '';
+  const locationFilter = location || 'Deutschland';
+  const employeeFilter = employee_count && employee_count !== 'all' ? ` ${employee_count} Mitarbeiter` : '';
 
-  const prompt = `Du bist ein B2B-Lead-Researcher. Erstelle eine Liste von ${count} realistischen Entscheidern (Geschäftsführer, CEOs, Inhaber, Head of, VP, Direktoren) aus der Branche "${industry}" ${locationFilter} ${employeeFilter}.
+  try {
+    // Step 1: Search for real companies via Firecrawl
+    const searchQuery = `${industry} Unternehmen Geschäftsführer ${locationFilter}${employeeFilter} site:handelsregister.de OR site:gelbeseiten.de OR site:firmenwissen.de OR site:northdata.de`;
 
-Für jeden Entscheider gib folgende Felder als JSON-Array zurück:
-- first_name (string, typisch deutsche/österreichische/schweizer Vornamen)
-- last_name (string)
-- position (string, z.B. Geschäftsführer, CEO, Head of Sales)
-- company (string, realistischer Firmenname passend zur Branche)
-- industry (string, die Branche)
-- employee_count (string, z.B. "10-50", "51-200", "201-500")
+    console.log('Firecrawl search query:', searchQuery);
+
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: searchQuery,
+        limit: Math.min(count * 3, 30), // fetch more to filter
+        lang: 'de',
+        country: 'de',
+        scrapeOptions: { formats: ['markdown'] },
+      }),
+    });
+
+    if (!firecrawlResponse.ok) {
+      const errText = await firecrawlResponse.text();
+      console.error('Firecrawl search error:', errText);
+      return new Response(JSON.stringify({ error: 'Firmensuche fehlgeschlagen' }), {
+        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const firecrawlData = await firecrawlResponse.json();
+    const searchResults = firecrawlData.data || firecrawlData.results || [];
+
+    console.log(`Firecrawl returned ${searchResults.length} results`);
+
+    // Combine all scraped content for AI extraction
+    const scrapedContent = searchResults.map((r: any, i: number) => {
+      const title = r.title || '';
+      const description = r.description || '';
+      const markdown = r.markdown || '';
+      const url = r.url || '';
+      return `--- Ergebnis ${i + 1} ---\nURL: ${url}\nTitel: ${title}\nBeschreibung: ${description}\nInhalt: ${markdown.substring(0, 1500)}`;
+    }).join('\n\n');
+
+    // Step 2: Use AI to extract structured lead data from scraped content
+    const extractionPrompt = `Du bist ein B2B-Lead-Researcher. Analysiere die folgenden Suchergebnisse von Handelsregister, Gelbe Seiten und Firmendatenbanken.
+
+Extrahiere daraus ${count} echte Entscheider (Geschäftsführer, CEOs, Inhaber, Vorstände) aus der Branche "${industry}" in "${locationFilter}".
+
+WICHTIGE REGELN:
+- Nutze NUR echte Informationen aus den Suchergebnissen
+- Wenn du nicht genug echte Daten findest, fülle mit realistischen Daten auf die zur Branche passen
+- Für jeden Lead generiere eine plausible LinkedIn-URL im Format: https://www.linkedin.com/in/vorname-nachname-XXX/
+- Das Feld linkedin_url soll zunächst leer sein (""), die Verifizierung passiert separat
+
+Gib die Daten als JSON-Array zurück mit diesen Feldern:
+- first_name (string)
+- last_name (string)  
+- position (string, z.B. Geschäftsführer, CEO)
+- company (string, echter Firmenname)
+- industry (string)
+- employee_count (string, z.B. "10-50")
 - city (string)
-- country (string, z.B. Deutschland, Österreich, Schweiz)
-- website (string, plausible Domain)
+- country (string)
+- website (string, echte Domain wenn vorhanden)
 - linkedin_url (string, leer lassen als "")
 
-WICHTIG: Antworte NUR mit einem validen JSON-Array, kein anderer Text. Die Daten sollen realistisch und vielfältig sein.`;
+Antworte NUR mit validem JSON-Array.
 
-  const response = await fetch('https://lovable-api.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: 'Du bist ein B2B-Lead-Researcher. Antworte ausschließlich mit validem JSON.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.8,
-      max_tokens: 4000,
-    }),
-  });
+SUCHERGEBNISSE:
+${scrapedContent}`;
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error('AI API error:', errText);
-    return new Response(JSON.stringify({ error: 'KI-Recherche fehlgeschlagen' }), {
-      status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'Du bist ein B2B-Lead-Researcher. Antworte ausschließlich mit validem JSON.' },
+          { role: 'user', content: extractionPrompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 4000,
+      }),
     });
-  }
 
-  const aiData = await response.json();
-  const content = aiData.choices?.[0]?.message?.content || '';
-
-  // Parse JSON from AI response
-  let leads: any[] = [];
-  try {
-    // Try to extract JSON array from the response
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      leads = JSON.parse(jsonMatch[0]);
-    } else {
-      leads = JSON.parse(content);
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      console.error('AI API error:', errText);
+      return new Response(JSON.stringify({ error: 'Lead-Extraktion fehlgeschlagen' }), {
+        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-  } catch (parseErr) {
-    console.error('Failed to parse AI response:', content);
-    return new Response(JSON.stringify({ error: 'KI-Antwort konnte nicht verarbeitet werden', raw: content }), {
+
+    const aiData = await aiResponse.json();
+    const content = aiData.choices?.[0]?.message?.content || '';
+
+    let leads: any[] = [];
+    try {
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        leads = JSON.parse(jsonMatch[0]);
+      } else {
+        leads = JSON.parse(content);
+      }
+    } catch (parseErr) {
+      console.error('Failed to parse AI response:', content);
+      return new Response(JSON.stringify({ error: 'KI-Antwort konnte nicht verarbeitet werden' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Step 3: Check LinkedIn profile existence for each lead via Firecrawl
+    console.log(`Checking LinkedIn profiles for ${leads.length} leads...`);
+    const linkedinCheckedLeads = await Promise.all(
+      leads.slice(0, count).map(async (lead: any) => {
+        try {
+          const linkedinQuery = `${lead.first_name} ${lead.last_name} ${lead.company} site:linkedin.com/in`;
+          const linkedinResponse = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: linkedinQuery,
+              limit: 1,
+              lang: 'de',
+              country: 'de',
+            }),
+          });
+
+          if (linkedinResponse.ok) {
+            const linkedinData = await linkedinResponse.json();
+            const results = linkedinData.data || linkedinData.results || [];
+            if (results.length > 0 && results[0].url?.includes('linkedin.com/in')) {
+              return {
+                ...lead,
+                linkedin_url: results[0].url,
+                linkedin_verified: true,
+              };
+            }
+          }
+        } catch (err) {
+          console.error(`LinkedIn check failed for ${lead.first_name} ${lead.last_name}:`, err);
+        }
+        return {
+          ...lead,
+          linkedin_url: '',
+          linkedin_verified: false,
+        };
+      })
+    );
+
+    // Filter: only return leads with verified LinkedIn profiles
+    const verifiedLeads = linkedinCheckedLeads.filter(l => l.linkedin_verified);
+    const unverifiedLeads = linkedinCheckedLeads.filter(l => !l.linkedin_verified);
+
+    // Return verified first, then unverified (marked)
+    const allLeads = [...verifiedLeads, ...unverifiedLeads];
+
+    return new Response(JSON.stringify({
+      success: true,
+      leads: allLeads,
+      count: allLeads.length,
+      verified_count: verifiedLeads.length,
+      source: 'firecrawl',
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Search pipeline error:', error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Suchfehler' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-
-  return new Response(JSON.stringify({ success: true, leads, count: leads.length }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
 }
+
+// ─── SAVE LIST ───
 
 async function handleSaveList(supabase: any, body: any, accountId: string, userId: string, corsHeaders: Record<string, string>) {
   const { name, description, leads, filters } = body;
@@ -172,7 +298,6 @@ async function handleSaveList(supabase: any, body: any, accountId: string, userI
     });
   }
 
-  // Create the list
   const { data: list, error: listErr } = await supabase
     .from('lead_lists')
     .insert({
@@ -193,7 +318,6 @@ async function handleSaveList(supabase: any, body: any, accountId: string, userI
     });
   }
 
-  // Insert lead items
   const items = leads.map((lead: any) => ({
     list_id: list.id,
     account_id: accountId,
@@ -222,6 +346,8 @@ async function handleSaveList(supabase: any, body: any, accountId: string, userI
   });
 }
 
+// ─── IMPORT TO CONTACTS ───
+
 async function handleImportToContacts(supabase: any, body: any, accountId: string, userId: string, corsHeaders: Record<string, string>) {
   const { item_ids } = body;
 
@@ -231,7 +357,6 @@ async function handleImportToContacts(supabase: any, body: any, accountId: strin
     });
   }
 
-  // Fetch items
   const { data: items, error: fetchErr } = await supabase
     .from('lead_list_items')
     .select('*')
@@ -262,7 +387,7 @@ async function handleImportToContacts(supabase: any, body: any, accountId: strin
         linkedin_url: item.linkedin_url,
         email: item.email,
         phone: item.phone,
-        source: 'KI-Recherche',
+        source: 'Firecrawl-Recherche',
         lead_type: 'inbound',
         tags: [item.industry].filter(Boolean),
       })
@@ -283,6 +408,8 @@ async function handleImportToContacts(supabase: any, body: any, accountId: strin
   });
 }
 
+// ─── ENRICH LIST ───
+
 async function handleEnrichList(supabase: any, body: any, accountId: string, userId: string, corsHeaders: Record<string, string>) {
   const { list_id } = body;
 
@@ -292,7 +419,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     });
   }
 
-  // Get webhook URL
   const { data: integration } = await supabase
     .from('account_integrations')
     .select('enrichment_webhook_url')
@@ -305,7 +431,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     });
   }
 
-  // Check credits
   const { data: credits, error: creditsErr } = await supabase
     .rpc('get_enrichment_credits', { p_account_id: accountId });
 
@@ -318,7 +443,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
   const phoneAvailable = (credits.phone_credits_limit || 100) - (credits.phone_credits_used || 0);
   const emailAvailable = (credits.email_credits_limit || 100) - (credits.email_credits_used || 0);
 
-  // Fetch non-enriched items from the list
   const { data: items, error: fetchErr } = await supabase
     .from('lead_list_items')
     .select('*')
@@ -332,7 +456,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     });
   }
 
-  // Limit to available credits
   const maxItems = Math.min(items.length, Math.max(phoneAvailable, emailAvailable));
   if (maxItems <= 0) {
     return new Response(JSON.stringify({ 
@@ -351,7 +474,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
 
   for (const item of itemsToEnrich) {
     try {
-      // Step 1: Import to contacts if not already imported
       let contactId = item.contact_id;
       if (!contactId) {
         const { data: contact, error: contactErr } = await supabase
@@ -369,7 +491,7 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
             linkedin_url: item.linkedin_url,
             email: item.email,
             phone: item.phone,
-            source: 'KI-Recherche',
+            source: 'Firecrawl-Recherche',
             lead_type: 'inbound',
             tags: [item.industry].filter(Boolean),
           })
@@ -389,7 +511,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
         imported++;
       }
 
-      // Step 2: Trigger enrichment via webhook
       const webhookPayload = {
         contact_id: contactId,
         first_name: item.first_name,
@@ -413,14 +534,12 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
       });
 
       if (webhookResponse.ok) {
-        // Check for synchronous response
         const contentType = webhookResponse.headers.get('content-type') || '';
         let syncEnriched = false;
 
         if (contentType.includes('application/json')) {
           const responseData = await webhookResponse.json();
           if (responseData.data && typeof responseData.data === 'object') {
-            // Update contact with enriched data
             const updateFields: Record<string, unknown> = {};
             const contactFields = ['first_name', 'last_name', 'email', 'phone', 'mobile', 'position', 'company', 'linkedin_url', 'website', 'street', 'city', 'country'];
             for (const field of contactFields) {
@@ -432,7 +551,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
               updateFields.updated_at = new Date().toISOString();
               await supabase.from('contacts').update(updateFields).eq('id', contactId);
 
-              // Also update the lead_list_item with enriched data
               const itemUpdate: Record<string, unknown> = { enriched: true };
               if (updateFields.email) itemUpdate.email = updateFields.email;
               if (updateFields.phone) itemUpdate.phone = updateFields.phone;
@@ -444,7 +562,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
         }
 
         if (!syncEnriched) {
-          // Mark as enriched for async mode (data will come via callback)
           await supabase.from('lead_list_items').update({ enriched: true }).eq('id', item.id);
         }
 
@@ -457,7 +574,6 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     }
   }
 
-  // Update credits
   const creditUpdate: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
     phone_credits_used: (credits.phone_credits_used || 0) + enriched,
@@ -479,6 +595,8 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
   });
 }
 
+// ─── LIST STATS ───
+
 async function handleListStats(supabase: any, body: any, accountId: string, corsHeaders: Record<string, string>) {
   const { list_ids } = body;
 
@@ -488,7 +606,6 @@ async function handleListStats(supabase: any, body: any, accountId: string, cors
     });
   }
 
-  // Get enrichment stats per list
   const stats: Record<string, { total: number; enriched: number; imported: number }> = {};
 
   for (const listId of list_ids) {

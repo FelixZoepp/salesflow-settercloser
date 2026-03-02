@@ -29,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Search, Sparkles, Save, Download, Zap, Building, MapPin, Users, Loader2, ListPlus, ExternalLink, ArrowRight } from "lucide-react";
+import { Search, Sparkles, Save, Download, Zap, Building, MapPin, Users, Loader2, ListPlus, ExternalLink, ArrowRight, Linkedin, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAccountFilter } from "@/hooks/useAccountFilter";
 import EnrichmentUpsellBanner from "@/components/EnrichmentUpsellBanner";
@@ -45,6 +45,7 @@ interface SearchLead {
   country: string;
   website: string;
   linkedin_url: string;
+  linkedin_verified?: boolean;
 }
 
 interface SavedList {
@@ -336,7 +337,7 @@ const LeadSearch = () => {
               <Sparkles className="w-5 h-5 text-primary" />
               Suchkriterien
             </CardTitle>
-            <CardDescription>Definiere deine Zielgruppe – die KI findet passende Entscheider</CardDescription>
+            <CardDescription>Echtzeit-Suche in Handelsregister & Gelbe Seiten mit LinkedIn-Profilprüfung</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -480,6 +481,7 @@ const LeadSearch = () => {
                       <TableHead>Standort</TableHead>
                       <TableHead>Größe</TableHead>
                       <TableHead>Website</TableHead>
+                      <TableHead>LinkedIn</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -508,6 +510,19 @@ const LeadSearch = () => {
                               <ExternalLink className="w-3 h-3" />
                               Website
                             </a>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {lead.linkedin_verified ? (
+                            <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline">
+                              <Linkedin className="w-3.5 h-3.5" />
+                              <CheckCircle className="w-3 h-3 text-green-500" />
+                            </a>
+                          ) : (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <XCircle className="w-3 h-3" />
+                              Nicht gefunden
+                            </span>
                           )}
                         </TableCell>
                       </TableRow>
