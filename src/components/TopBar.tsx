@@ -59,7 +59,9 @@ export default function TopBar() {
   const emailUsed = credits?.email_credits_used ?? 0;
   const phoneLimit = credits?.phone_credits_limit ?? 100;
   const emailLimit = credits?.email_credits_limit ?? 100;
-  const totalUsed = phoneUsed + emailUsed;
+  const phoneRemaining = phoneLimit - phoneUsed;
+  const emailRemaining = emailLimit - emailUsed;
+  const totalRemaining = phoneRemaining + emailRemaining;
   const totalLimit = phoneLimit + emailLimit;
 
   return (
@@ -73,14 +75,14 @@ export default function TopBar() {
             <TooltipTrigger asChild>
               <div className="flex items-center gap-2 text-sm text-muted-foreground cursor-default">
                 <Coins className="h-4 w-4 text-amber-400" />
-                <span className="font-medium text-foreground">{totalUsed} / {totalLimit}</span>
+                <span className="font-medium text-foreground">{totalRemaining} / {totalLimit}</span>
                 <span className="text-xs">Credits</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <div className="text-xs space-y-1">
-                <p>📞 Telefon: {phoneUsed} / {phoneLimit}</p>
-                <p>📧 E-Mail: {emailUsed} / {emailLimit}</p>
+                <p>📞 Telefon: {phoneRemaining} / {phoneLimit} übrig</p>
+                <p>📧 E-Mail: {emailRemaining} / {emailLimit} übrig</p>
               </div>
             </TooltipContent>
           </Tooltip>
