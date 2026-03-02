@@ -66,6 +66,10 @@ Deno.serve(async (req) => {
       return await handleEnrichList(supabase, body, profile.account_id, user.id, corsHeaders);
     }
 
+    if (action === 'add_to_list') {
+      return await handleAddToList(supabase, body, profile.account_id, corsHeaders);
+    }
+
     if (action === 'list_stats') {
       return await handleListStats(supabase, body, profile.account_id, corsHeaders);
     }
@@ -445,6 +449,68 @@ async function handleSaveList(supabase: any, body: any, accountId: string, userI
   }
 
   return new Response(JSON.stringify({ success: true, list_id: list.id, count: leads.length }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// ─── ADD TO EXISTING LIST ───
+
+async function handleAddToList(supabase: any, body: any, accountId: string, corsHeaders: Record<string, string>) {
+  const { list_id, leads } = body;
+
+  if (!list_id || !leads?.length) {
+    return new Response(JSON.stringify({ error: 'Liste und Leads sind erforderlich' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Verify list belongs to account
+  const { data: list, error: listErr } = await supabase
+    .from('lead_lists')
+    .select('id, total_leads')
+    .eq('id', list_id)
+    .eq('account_id', accountId)
+    .single();
+
+  if (listErr || !list) {
+    return new Response(JSON.stringify({ error: 'Liste nicht gefunden' }), {
+      status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const items = leads.map((lead: any) => ({
+    list_id: list.id,
+    account_id: accountId,
+    first_name: lead.first_name,
+    last_name: lead.last_name,
+    position: lead.position || null,
+    company: lead.company || null,
+    industry: lead.industry || null,
+    employee_count: lead.employee_count || null,
+    city: lead.city || null,
+    country: lead.country || null,
+    website: lead.website || null,
+    linkedin_url: lead.linkedin_url || null,
+  }));
+
+  const { error: itemsErr } = await supabase
+    .from('lead_list_items')
+    .insert(items);
+
+  if (itemsErr) {
+    console.error('Error inserting items:', itemsErr);
+    return new Response(JSON.stringify({ error: 'Fehler beim Hinzufügen' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Update total_leads count
+  await supabase
+    .from('lead_lists')
+    .update({ total_leads: (list.total_leads || 0) + leads.length })
+    .eq('id', list_id);
+
+  return new Response(JSON.stringify({ success: true, added: leads.length }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
