@@ -20,11 +20,94 @@ const PRODUCT_TO_PLAN: Record<string, string> = {
   "prod_TkoJ8E0e8l4vwV": "pro",        // Pro Yearly
 };
 
+// Credit add-on product IDs
+const CREDIT_PRODUCT_IDS: Record<string, { package: string; extra_credits: number }> = {
+  "prod_U4mZzdPCWNkrJh": { package: "s", extra_credits: 100 },
+  "prod_U4mZNjYKB77XFk": { package: "m", extra_credits: 250 },
+  "prod_U4mZT1S9a9AXTR": { package: "l", extra_credits: 500 },
+};
+
+function isCreditProduct(productId: string): boolean {
+  return productId in CREDIT_PRODUCT_IDS;
+}
+
+async function syncCreditSubscription(
+  supabase: SupabaseClient,
+  stripe: Stripe,
+  subscription: Stripe.Subscription
+) {
+  const productId = subscription.items.data[0]?.price?.product as string;
+  const creditInfo = CREDIT_PRODUCT_IDS[productId];
+  if (!creditInfo) return;
+
+  logStep("Syncing credit subscription", { subscriptionId: subscription.id, package: creditInfo.package });
+
+  const customer = await stripe.customers.retrieve(subscription.customer as string);
+  if (customer.deleted) return;
+  const customerEmail = (customer as Stripe.Customer).email;
+  if (!customerEmail) return;
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, account_id")
+    .eq("email", customerEmail)
+    .limit(1);
+
+  if (!profiles?.length || !profiles[0].account_id) return;
+  const accountId = profiles[0].account_id;
+
+  const isActive = subscription.status === "active" || subscription.status === "trialing";
+
+  // Upsert credit subscription
+  const { error } = await supabase
+    .from("credit_subscriptions")
+    .upsert({
+      account_id: accountId,
+      stripe_subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer as string,
+      package: creditInfo.package,
+      extra_credits: creditInfo.extra_credits,
+      status: isActive ? "active" : subscription.status === "past_due" ? "past_due" : "canceled",
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "account_id" });
+
+  if (error) {
+    logStep("Error upserting credit subscription", { error: error.message });
+    return;
+  }
+
+  // Update enrichment credits limit
+  if (isActive) {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const newLimit = 100 + creditInfo.extra_credits;
+
+    // Ensure row exists
+    await supabase.rpc("get_enrichment_credits", { p_account_id: accountId });
+
+    await supabase
+      .from("enrichment_credits")
+      .update({ phone_credits_limit: newLimit, email_credits_limit: newLimit, updated_at: new Date().toISOString() })
+      .eq("account_id", accountId)
+      .eq("month_year", currentMonth);
+
+    logStep("Credit limits updated", { accountId, newLimit });
+  }
+}
+
 async function syncSubscription(
   supabase: SupabaseClient,
   stripe: Stripe,
   subscription: Stripe.Subscription
 ) {
+  // Skip credit product subscriptions - handled separately
+  const productId = subscription.items.data[0]?.price?.product as string;
+  if (isCreditProduct(productId)) {
+    logStep("Credit product detected, routing to credit sync");
+    await syncCreditSubscription(supabase, stripe, subscription);
+    return;
+  }
+
   logStep("Syncing subscription", { 
     subscriptionId: subscription.id,
     customerId: subscription.customer as string,

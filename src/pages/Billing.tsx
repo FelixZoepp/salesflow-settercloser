@@ -15,11 +15,17 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Coins,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  XCircle,
+  Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 interface Invoice {
   id: string;
@@ -47,24 +53,110 @@ interface Subscription {
   plan_interval: string;
 }
 
+interface CreditSubscription {
+  package: string;
+  extra_credits: number;
+  status: string;
+}
+
+const CREDIT_PACKAGES: Array<{ key: string; label: string; credits: number; price: number; total: number; popular?: boolean }> = [
+  { key: "s", label: "S", credits: 100, price: 100, total: 200 },
+  { key: "m", label: "M", credits: 250, price: 200, total: 350, popular: true },
+  { key: "l", label: "L", credits: 500, price: 350, total: 600 },
+];
+
 const Billing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { subscribed, productId, subscriptionEnd, isTrial, trialEndsAt, openCustomerPortal, refresh: refreshSubscription } = useSubscriptionContext();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [dbSubscription, setDbSubscription] = useState<{plan_name: string; status: string; current_period_end: string | null} | null>(null);
+  const [creditSub, setCreditSub] = useState<CreditSubscription | null>(null);
+  const [creditLoading, setCreditLoading] = useState(false);
 
   useEffect(() => {
     fetchBillingData();
     fetchDbSubscription();
+    fetchCreditStatus();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("credits") === "success") {
+      toast.success("Credits erfolgreich gebucht! Dein Limit wurde erhöht.");
+      fetchCreditStatus();
+    }
+  }, [searchParams]);
+
+  const fetchCreditStatus = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-credits", {
+        body: { action: "status" },
+      });
+      if (!error && data?.creditSubscription) {
+        setCreditSub(data.creditSubscription);
+      } else {
+        setCreditSub(null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch credit status:", err);
+    }
+  };
+
+  const handleCreditAction = async (pkg: string) => {
+    setCreditLoading(true);
+    try {
+      const action = creditSub ? "change" : "subscribe";
+      const { data, error } = await supabase.functions.invoke("manage-credits", {
+        body: { action, package: pkg },
+      });
+
+      if (error) {
+        toast.error("Fehler beim Buchen der Credits");
+        return;
+      }
+
+      if (data?.type === "checkout" && data?.url) {
+        window.open(data.url, "_blank");
+      } else if (data?.type === "changed" || data?.success) {
+        toast.success("Credit-Paket erfolgreich geändert!");
+        fetchCreditStatus();
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      toast.error("Fehler beim Verarbeiten");
+    } finally {
+      setCreditLoading(false);
+    }
+  };
+
+  const handleCancelCredits = async () => {
+    if (!confirm("Möchtest du dein Credit-Paket wirklich kündigen? Deine Limits werden auf 100 zurückgesetzt.")) return;
+    setCreditLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-credits", {
+        body: { action: "cancel" },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Fehler beim Kündigen");
+      } else {
+        toast.success("Credit-Paket gekündigt. Limits wurden zurückgesetzt.");
+        setCreditSub(null);
+        fetchCreditStatus();
+      }
+    } catch {
+      toast.error("Fehler beim Kündigen");
+    } finally {
+      setCreditLoading(false);
+    }
+  };
 
   const fetchDbSubscription = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data, error } = await supabase
         .from('subscriptions')
         .select('plan_name, status, current_period_end')
@@ -73,10 +165,7 @@ const Billing = () => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-
-      if (!error && data) {
-        setDbSubscription(data);
-      }
+      if (!error && data) setDbSubscription(data);
     } catch (err) {
       console.error('Failed to fetch DB subscription:', err);
     }
@@ -86,13 +175,11 @@ const Billing = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('list-invoices');
-      
       if (error) {
         console.error('Error fetching billing data:', error);
         toast.error('Fehler beim Laden der Rechnungen');
         return;
       }
-
       setInvoices(data?.invoices || []);
       setSubscription(data?.subscription || null);
     } catch (err) {
@@ -129,9 +216,7 @@ const Billing = () => {
 
   const handleManageSubscription = async () => {
     const { error } = await openCustomerPortal();
-    if (error) {
-      toast.error("Fehler beim Öffnen des Kundenportals");
-    }
+    if (error) toast.error("Fehler beim Öffnen des Kundenportals");
   };
 
   if (loading) {
@@ -156,7 +241,7 @@ const Billing = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-foreground">Abrechnung</h1>
-                <p className="text-sm text-muted-foreground">Rechnungen und Zahlungsübersicht</p>
+                <p className="text-sm text-muted-foreground">Rechnungen, Abo und Credits verwalten</p>
               </div>
             </div>
             
@@ -176,7 +261,7 @@ const Billing = () => {
             </div>
           </div>
 
-          {/* Subscription Status Card - always show */}
+          {/* Subscription Status Card */}
           <Card className="mb-8 glass-card border-white/10">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -255,17 +340,114 @@ const Billing = () => {
                   <p className="text-foreground">
                     {productId?.startsWith('prod_') ? 'Stripe' : dbSubscription ? 'Manuell vergeben' : isTrial ? 'Trial' : '–'}
                   </p>
-                  {dbSubscription && !productId?.startsWith('prod_') && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Kundenportal erstellt ggf. einen Stripe-Account
-                    </p>
-                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Current Subscription from Stripe (only show if different from DB subscription) */}
+          {/* Credit Packages Section */}
+          <Card className="mb-8 glass-card border-white/10">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Coins className="w-5 h-5 text-yellow-400" />
+                  <div>
+                    <CardTitle className="text-lg">Anreicherungs-Credits</CardTitle>
+                    <CardDescription>
+                      Standard: 100 Credits/Monat (Telefon + E-Mail).
+                      {creditSub ? ` Aktuell: +${creditSub.extra_credits} Extra = ${100 + creditSub.extra_credits} gesamt` : ' Buche Extra-Credits für mehr Anreicherungen.'}
+                    </CardDescription>
+                  </div>
+                </div>
+                {creditSub && (
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Paket {creditSub.package.toUpperCase()} aktiv
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4">
+                {CREDIT_PACKAGES.map((pkg) => {
+                  const isActive = creditSub?.package === pkg.key;
+                  const isUpgrade = creditSub && !isActive && pkg.credits > (creditSub.extra_credits || 0);
+                  const isDowngrade = creditSub && !isActive && pkg.credits < (creditSub.extra_credits || 0);
+
+                  return (
+                    <div
+                      key={pkg.key}
+                      className={`relative rounded-xl border p-5 transition-all ${
+                        isActive 
+                          ? 'border-yellow-500/50 bg-yellow-500/5 ring-1 ring-yellow-500/20' 
+                          : pkg.popular 
+                            ? 'border-primary/30 bg-primary/5' 
+                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                      }`}
+                    >
+                      {pkg.popular && !isActive && (
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                          <Badge className="bg-primary text-primary-foreground text-[10px] px-2">Beliebt</Badge>
+                        </div>
+                      )}
+                      {isActive && (
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                          <Badge className="bg-yellow-500 text-black text-[10px] px-2">Dein Paket</Badge>
+                        </div>
+                      )}
+
+                      <div className="text-center mb-4">
+                        <p className="text-2xl font-bold text-foreground">Paket {pkg.label}</p>
+                        <p className="text-sm text-muted-foreground mt-1">+{pkg.credits} Credits/Monat</p>
+                      </div>
+
+                      <div className="text-center mb-4">
+                        <span className="text-3xl font-bold text-foreground">{pkg.price}€</span>
+                        <span className="text-muted-foreground text-sm">/Monat</span>
+                      </div>
+
+                      <div className="text-center text-xs text-muted-foreground mb-4">
+                        = {pkg.total} Credits gesamt (100 Standard + {pkg.credits} Extra)
+                      </div>
+
+                      {isActive ? (
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                          onClick={handleCancelCredits}
+                          disabled={creditLoading}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Kündigen
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          variant={pkg.popular ? "default" : "outline"}
+                          onClick={() => handleCreditAction(pkg.key)}
+                          disabled={creditLoading}
+                        >
+                          {isUpgrade ? (
+                            <><ArrowUpCircle className="w-4 h-4 mr-2" />Upgraden</>
+                          ) : isDowngrade ? (
+                            <><ArrowDownCircle className="w-4 h-4 mr-2" />Downgraden</>
+                          ) : (
+                            <><Coins className="w-4 h-4 mr-2" />Buchen</>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-4 text-center">
+                Credits gelten für Telefonnummern und E-Mail-Adressen gleichermaßen. Änderungen werden anteilig verrechnet.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Stripe Subscription (if different from DB) */}
           {subscription && !dbSubscription && (
             <Card className="mb-8 glass-card border-white/10">
               <CardHeader>

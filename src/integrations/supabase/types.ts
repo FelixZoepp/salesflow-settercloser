@@ -882,6 +882,53 @@ export type Database = {
           },
         ]
       }
+      credit_subscriptions: {
+        Row: {
+          account_id: string
+          created_at: string
+          current_period_end: string | null
+          extra_credits: number
+          id: string
+          package: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          current_period_end?: string | null
+          extra_credits?: number
+          id?: string
+          package: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          extra_credits?: number
+          id?: string
+          package?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_subscriptions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           account_id: string | null
