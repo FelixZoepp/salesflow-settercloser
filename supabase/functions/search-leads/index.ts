@@ -104,75 +104,114 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
   }
 
   const locationFilter = location || 'Deutschland';
-  const employeeFilter = employee_count && employee_count !== 'all' ? ` ${employee_count} Mitarbeiter` : '';
+  const employeeFilterText = employee_count && employee_count !== 'all' ? ` ${employee_count} Mitarbeiter` : '';
 
   try {
-    // Step 1: Search for real companies via Firecrawl
-    const searchQuery = `${industry} Unternehmen Geschäftsführer ${locationFilter}${employeeFilter} site:handelsregister.de OR site:gelbeseiten.de OR site:firmenwissen.de OR site:northdata.de`;
+    // Step 1: Search for real companies via Firecrawl with multiple diverse queries
+    const queries = [
+      `${industry} Geschäftsführer CEO Inhaber ${locationFilter}${employeeFilterText}`,
+      `${industry} Unternehmen Entscheider ${locationFilter} site:northdata.de OR site:firmenwissen.de`,
+      `${industry} GmbH Geschäftsführung ${locationFilter} site:handelsregister.de OR site:gelbeseiten.de`,
+    ];
 
-    console.log('Firecrawl search query:', searchQuery);
+    console.log('Firecrawl search queries:', queries);
 
-    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: searchQuery,
-        limit: Math.min(count * 3, 30), // fetch more to filter
-        lang: 'de',
-        country: 'de',
-        scrapeOptions: { formats: ['markdown'] },
-      }),
-    });
+    // Run all queries in parallel for diverse results
+    const firecrawlResults = await Promise.all(
+      queries.map(async (query) => {
+        try {
+          const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query,
+              limit: Math.min(count * 2, 20),
+              lang: 'de',
+              country: 'de',
+              scrapeOptions: { formats: ['markdown'] },
+            }),
+          });
+          if (!resp.ok) {
+            console.error('Firecrawl query failed:', await resp.text());
+            return [];
+          }
+          const data = await resp.json();
+          return data.data || data.results || [];
+        } catch (err) {
+          console.error('Firecrawl query error:', err);
+          return [];
+        }
+      })
+    );
 
-    if (!firecrawlResponse.ok) {
-      const errText = await firecrawlResponse.text();
-      console.error('Firecrawl search error:', errText);
-      return new Response(JSON.stringify({ error: 'Firmensuche fehlgeschlagen' }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Deduplicate results by URL
+    const seenUrls = new Set<string>();
+    const allResults: any[] = [];
+    for (const results of firecrawlResults) {
+      for (const r of results) {
+        const url = r.url || '';
+        if (!seenUrls.has(url)) {
+          seenUrls.add(url);
+          allResults.push(r);
+        }
+      }
+    }
+
+    console.log(`Firecrawl returned ${allResults.length} unique results`);
+
+    if (allResults.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        leads: [],
+        count: 0,
+        verified_count: 0,
+        source: 'firecrawl',
+        message: 'Keine Ergebnisse gefunden. Versuche andere Suchkriterien.',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const firecrawlData = await firecrawlResponse.json();
-    const searchResults = firecrawlData.data || firecrawlData.results || [];
-
-    console.log(`Firecrawl returned ${searchResults.length} results`);
-
-    // Combine all scraped content for AI extraction
-    const scrapedContent = searchResults.map((r: any, i: number) => {
+    // Combine scraped content
+    const scrapedContent = allResults.map((r: any, i: number) => {
       const title = r.title || '';
       const description = r.description || '';
       const markdown = r.markdown || '';
       const url = r.url || '';
-      return `--- Ergebnis ${i + 1} ---\nURL: ${url}\nTitel: ${title}\nBeschreibung: ${description}\nInhalt: ${markdown.substring(0, 1500)}`;
+      return `--- Ergebnis ${i + 1} ---\nURL: ${url}\nTitel: ${title}\nBeschreibung: ${description}\nInhalt: ${markdown.substring(0, 2000)}`;
     }).join('\n\n');
 
-    // Step 2: Use AI to extract structured lead data from scraped content
-    const extractionPrompt = `Du bist ein B2B-Lead-Researcher. Analysiere die folgenden Suchergebnisse von Handelsregister, Gelbe Seiten und Firmendatenbanken.
+    // Step 2: Use AI to extract ONLY real data from scraped content
+    const employeeInstruction = employee_count && employee_count !== 'all'
+      ? `\n- WICHTIG: Nur Unternehmen mit ca. ${employee_count} Mitarbeitern. Schätze anhand der Quellen die Größe. Unternehmen die offensichtlich nicht in diese Größe passen, NICHT aufnehmen.`
+      : '';
 
-Extrahiere daraus ${count} echte Entscheider (Geschäftsführer, CEOs, Inhaber, Vorstände) aus der Branche "${industry}" in "${locationFilter}".
+    const extractionPrompt = `Du bist ein B2B-Lead-Researcher. Analysiere die folgenden Suchergebnisse und extrahiere ECHTE Entscheider.
 
-WICHTIGE REGELN:
-- Nutze NUR echte Informationen aus den Suchergebnissen
-- Wenn du nicht genug echte Daten findest, fülle mit realistischen Daten auf die zur Branche passen
-- Für jeden Lead generiere eine plausible LinkedIn-URL im Format: https://www.linkedin.com/in/vorname-nachname-XXX/
-- Das Feld linkedin_url soll zunächst leer sein (""), die Verifizierung passiert separat
+STRIKTE REGELN:
+- Extrahiere NUR Personen und Firmen die TATSÄCHLICH in den Suchergebnissen erwähnt werden
+- ERFINDE KEINE Daten. Wenn ein Feld nicht aus den Quellen ableitbar ist, setze es auf ""
+- Maximal ${count} Leads
+- Nur Branche "${industry}" in "${locationFilter}"${employeeInstruction}
+- Jeder Lead muss einen echten Vor- und Nachnamen und eine echte Firma haben
+- Wenn du weniger als ${count} echte Leads findest, gib nur die echten zurück
 
-Gib die Daten als JSON-Array zurück mit diesen Feldern:
-- first_name (string)
-- last_name (string)  
-- position (string, z.B. Geschäftsführer, CEO)
-- company (string, echter Firmenname)
+Gib ein JSON-Array zurück mit:
+- first_name (string, aus den Quellen)
+- last_name (string, aus den Quellen)
+- position (string, z.B. Geschäftsführer - aus den Quellen)
+- company (string, echter Firmenname aus den Quellen)
 - industry (string)
-- employee_count (string, z.B. "10-50")
-- city (string)
-- country (string)
-- website (string, echte Domain wenn vorhanden)
-- linkedin_url (string, leer lassen als "")
+- employee_count (string, z.B. "10-50" - nur wenn aus Quellen ableitbar, sonst "")
+- city (string, nur wenn aus Quellen ableitbar, sonst "")
+- country (string, "Deutschland" als Standard)
+- website (string, echte Domain aus den Quellen, sonst "")
+- linkedin_url (string, immer "" - wird separat geprüft)
 
-Antworte NUR mit validem JSON-Array.
+Antworte NUR mit validem JSON-Array. Keine Erklärungen.
 
 SUCHERGEBNISSE:
 ${scrapedContent}`;
@@ -186,10 +225,10 @@ ${scrapedContent}`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Du bist ein B2B-Lead-Researcher. Antworte ausschließlich mit validem JSON.' },
+          { role: 'system', content: 'Du bist ein exakter Datenextrahierer. Antworte nur mit validem JSON. Erfinde NIEMALS Daten.' },
           { role: 'user', content: extractionPrompt },
         ],
-        temperature: 0.3,
+        temperature: 0.1,
         max_tokens: 4000,
       }),
     });
@@ -220,12 +259,15 @@ ${scrapedContent}`;
       });
     }
 
+    // Filter out leads without real names
+    leads = leads.filter((l: any) => l.first_name && l.last_name && l.company);
+
     // Step 3: Check LinkedIn profile existence for each lead via Firecrawl
     console.log(`Checking LinkedIn profiles for ${leads.length} leads...`);
     const linkedinCheckedLeads = await Promise.all(
       leads.slice(0, count).map(async (lead: any) => {
         try {
-          const linkedinQuery = `${lead.first_name} ${lead.last_name} ${lead.company} site:linkedin.com/in`;
+          const linkedinQuery = `"${lead.first_name} ${lead.last_name}" "${lead.company}" site:linkedin.com/in`;
           const linkedinResponse = await fetch('https://api.firecrawl.dev/v1/search', {
             method: 'POST',
             headers: {
@@ -234,7 +276,7 @@ ${scrapedContent}`;
             },
             body: JSON.stringify({
               query: linkedinQuery,
-              limit: 1,
+              limit: 3,
               lang: 'de',
               country: 'de',
             }),
@@ -243,10 +285,15 @@ ${scrapedContent}`;
           if (linkedinResponse.ok) {
             const linkedinData = await linkedinResponse.json();
             const results = linkedinData.data || linkedinData.results || [];
-            if (results.length > 0 && results[0].url?.includes('linkedin.com/in')) {
+            // Check if any result is a real LinkedIn profile URL
+            const linkedinResult = results.find((r: any) => {
+              const url = (r.url || '').toLowerCase();
+              return url.includes('linkedin.com/in/') && !url.includes('linkedin.com/in/search');
+            });
+            if (linkedinResult) {
               return {
                 ...lead,
-                linkedin_url: results[0].url,
+                linkedin_url: linkedinResult.url,
                 linkedin_verified: true,
               };
             }
@@ -262,11 +309,9 @@ ${scrapedContent}`;
       })
     );
 
-    // Filter: only return leads with verified LinkedIn profiles
+    // Sort: verified first, then unverified
     const verifiedLeads = linkedinCheckedLeads.filter(l => l.linkedin_verified);
     const unverifiedLeads = linkedinCheckedLeads.filter(l => !l.linkedin_verified);
-
-    // Return verified first, then unverified (marked)
     const allLeads = [...verifiedLeads, ...unverifiedLeads];
 
     return new Response(JSON.stringify({
