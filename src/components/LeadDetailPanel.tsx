@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock, Play, Pause, Download, Sparkles, Loader2 } from "lucide-react";
+import { X, Phone, Calendar, FileText, TrendingUp, Clock, Mic, MicOff, Radio, Video, Eye, Link, Copy, Activity, Mail, Globe, Building2, MapPin, Edit3, Plus, MousePointer, ExternalLink, CheckCircle2, Euro, Save, Send, Lock, Play, Pause, Download, Loader2 } from "lucide-react";
 import CallActivityLogger from "@/components/CallActivityLogger";
 import JourneyTimeline from "@/components/JourneyTimeline";
 import CallHistory from "@/components/CallHistory";
@@ -135,7 +135,7 @@ export default function LeadDetailPanel({ dealId, open, onClose, onUpdate }: Lea
   const [taskDueTime, setTaskDueTime] = useState("");
   const [taskNote, setTaskNote] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [isEnriching, setIsEnriching] = useState(false);
+  
   // Fetch email templates
   const { data: emailTemplates = [] } = useQuery({
     queryKey: ['email-templates-active'],
@@ -585,35 +585,6 @@ Stage: ${deal.stage}
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isEnriching}
-                    onClick={async () => {
-                      setIsEnriching(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke('enrich-lead', {
-                          body: { contact_id: contact.id },
-                        });
-                        if (error) throw error;
-                        if (!data.success) throw new Error(data.error);
-                        if (data.mode === 'sync') {
-                          toast.success(`Lead angereichert: ${data.updated_fields?.length || 0} Felder aktualisiert`);
-                          fetchLeadData();
-                        } else {
-                          toast.success('Enrichment-Anfrage gesendet. Daten werden asynchron aktualisiert.');
-                        }
-                      } catch (err: any) {
-                        toast.error(err.message || 'Fehler beim Anreichern');
-                      } finally {
-                        setIsEnriching(false);
-                      }
-                    }}
-                    className="gap-2"
-                  >
-                    {isEnriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Anreichern
-                  </Button>
                 </div>
               </div>
             </div>
