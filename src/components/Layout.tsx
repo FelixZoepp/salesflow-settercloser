@@ -22,6 +22,7 @@ import {
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import UserAccountHeader from "@/components/UserAccountHeader";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import TopBar from "@/components/TopBar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -351,6 +352,9 @@ const Layout = ({ children }: LayoutProps) => {
             className="h-8 object-contain"
           />
         </header>
+        
+        {/* Desktop Top Bar */}
+        <TopBar />
         
         <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6">
           {children}
