@@ -58,6 +58,14 @@ Deno.serve(async (req) => {
       return await handleImportToContacts(supabase, body, profile.account_id, user.id, corsHeaders);
     }
 
+    if (action === 'enrich_list') {
+      return await handleEnrichList(supabase, body, profile.account_id, user.id, corsHeaders);
+    }
+
+    if (action === 'list_stats') {
+      return await handleListStats(supabase, body, profile.account_id, corsHeaders);
+    }
+
     return new Response(JSON.stringify({ error: 'Unbekannte Aktion' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -271,6 +279,235 @@ async function handleImportToContacts(supabase: any, body: any, accountId: strin
   }
 
   return new Response(JSON.stringify({ success: true, imported }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleEnrichList(supabase: any, body: any, accountId: string, userId: string, corsHeaders: Record<string, string>) {
+  const { list_id } = body;
+
+  if (!list_id) {
+    return new Response(JSON.stringify({ error: 'list_id ist erforderlich' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Get webhook URL
+  const { data: integration } = await supabase
+    .from('account_integrations')
+    .select('enrichment_webhook_url')
+    .eq('account_id', accountId)
+    .single();
+
+  if (!integration?.enrichment_webhook_url) {
+    return new Response(JSON.stringify({ error: 'Kein Enrichment-Webhook konfiguriert. Bitte unter Integrationen einrichten.' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Check credits
+  const { data: credits, error: creditsErr } = await supabase
+    .rpc('get_enrichment_credits', { p_account_id: accountId });
+
+  if (creditsErr || !credits) {
+    return new Response(JSON.stringify({ error: 'Fehler beim Laden der Credits' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const phoneAvailable = (credits.phone_credits_limit || 100) - (credits.phone_credits_used || 0);
+  const emailAvailable = (credits.email_credits_limit || 100) - (credits.email_credits_used || 0);
+
+  // Fetch non-enriched items from the list
+  const { data: items, error: fetchErr } = await supabase
+    .from('lead_list_items')
+    .select('*')
+    .eq('list_id', list_id)
+    .eq('account_id', accountId)
+    .eq('enriched', false);
+
+  if (fetchErr || !items?.length) {
+    return new Response(JSON.stringify({ error: 'Keine Leads zum Anreichern gefunden' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Limit to available credits
+  const maxItems = Math.min(items.length, Math.max(phoneAvailable, emailAvailable));
+  if (maxItems <= 0) {
+    return new Response(JSON.stringify({ 
+      error: 'Kein Credit-Kontingent mehr verfügbar. Bitte Credits aufstocken.',
+      credits: { phone_available: phoneAvailable, email_available: emailAvailable }
+    }), {
+      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const itemsToEnrich = items.slice(0, maxItems);
+  let enriched = 0;
+  let imported = 0;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const callbackUrl = `${supabaseUrl}/functions/v1/enrich-lead`;
+
+  for (const item of itemsToEnrich) {
+    try {
+      // Step 1: Import to contacts if not already imported
+      let contactId = item.contact_id;
+      if (!contactId) {
+        const { data: contact, error: contactErr } = await supabase
+          .from('contacts')
+          .insert({
+            account_id: accountId,
+            owner_user_id: userId,
+            first_name: item.first_name,
+            last_name: item.last_name,
+            position: item.position,
+            company: item.company,
+            city: item.city,
+            country: item.country,
+            website: item.website,
+            linkedin_url: item.linkedin_url,
+            email: item.email,
+            phone: item.phone,
+            source: 'KI-Recherche',
+            lead_type: 'inbound',
+            tags: [item.industry].filter(Boolean),
+          })
+          .select('id')
+          .single();
+
+        if (contactErr || !contact) {
+          console.error(`Failed to import item ${item.id}:`, contactErr);
+          continue;
+        }
+
+        contactId = contact.id;
+        await supabase
+          .from('lead_list_items')
+          .update({ imported: true, contact_id: contactId })
+          .eq('id', item.id);
+        imported++;
+      }
+
+      // Step 2: Trigger enrichment via webhook
+      const webhookPayload = {
+        contact_id: contactId,
+        first_name: item.first_name,
+        last_name: item.last_name,
+        email: item.email,
+        phone: item.phone,
+        position: item.position,
+        company: item.company,
+        linkedin_url: item.linkedin_url,
+        website: item.website,
+        city: item.city,
+        country: item.country,
+        callback_url: callbackUrl,
+        account_id: accountId,
+      };
+
+      const webhookResponse = await fetch(integration.enrichment_webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookPayload),
+      });
+
+      if (webhookResponse.ok) {
+        // Check for synchronous response
+        const contentType = webhookResponse.headers.get('content-type') || '';
+        let syncEnriched = false;
+
+        if (contentType.includes('application/json')) {
+          const responseData = await webhookResponse.json();
+          if (responseData.data && typeof responseData.data === 'object') {
+            // Update contact with enriched data
+            const updateFields: Record<string, unknown> = {};
+            const contactFields = ['first_name', 'last_name', 'email', 'phone', 'mobile', 'position', 'company', 'linkedin_url', 'website', 'street', 'city', 'country'];
+            for (const field of contactFields) {
+              if (responseData.data[field] !== undefined && responseData.data[field] !== null) {
+                updateFields[field] = responseData.data[field];
+              }
+            }
+            if (Object.keys(updateFields).length > 0) {
+              updateFields.updated_at = new Date().toISOString();
+              await supabase.from('contacts').update(updateFields).eq('id', contactId);
+
+              // Also update the lead_list_item with enriched data
+              const itemUpdate: Record<string, unknown> = { enriched: true };
+              if (updateFields.email) itemUpdate.email = updateFields.email;
+              if (updateFields.phone) itemUpdate.phone = updateFields.phone;
+              await supabase.from('lead_list_items').update(itemUpdate).eq('id', item.id);
+
+              syncEnriched = true;
+            }
+          }
+        }
+
+        if (!syncEnriched) {
+          // Mark as enriched for async mode (data will come via callback)
+          await supabase.from('lead_list_items').update({ enriched: true }).eq('id', item.id);
+        }
+
+        enriched++;
+      } else {
+        console.error(`Webhook error for item ${item.id}: ${webhookResponse.status}`);
+      }
+    } catch (err) {
+      console.error(`Enrich error for item ${item.id}:`, err);
+    }
+  }
+
+  // Update credits
+  const creditUpdate: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+    phone_credits_used: (credits.phone_credits_used || 0) + enriched,
+    email_credits_used: (credits.email_credits_used || 0) + enriched,
+  };
+  await supabase.from('enrichment_credits').update(creditUpdate).eq('id', credits.id);
+
+  return new Response(JSON.stringify({ 
+    success: true, 
+    enriched, 
+    imported,
+    total: itemsToEnrich.length,
+    remaining_credits: {
+      phone: Math.max(0, phoneAvailable - enriched),
+      email: Math.max(0, emailAvailable - enriched),
+    }
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleListStats(supabase: any, body: any, accountId: string, corsHeaders: Record<string, string>) {
+  const { list_ids } = body;
+
+  if (!list_ids?.length) {
+    return new Response(JSON.stringify({ error: 'list_ids erforderlich' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Get enrichment stats per list
+  const stats: Record<string, { total: number; enriched: number; imported: number }> = {};
+
+  for (const listId of list_ids) {
+    const { data: items } = await supabase
+      .from('lead_list_items')
+      .select('enriched, imported')
+      .eq('list_id', listId)
+      .eq('account_id', accountId);
+
+    if (items) {
+      stats[listId] = {
+        total: items.length,
+        enriched: items.filter((i: any) => i.enriched).length,
+        imported: items.filter((i: any) => i.imported).length,
+      };
+    }
+  }
+
+  return new Response(JSON.stringify({ success: true, stats }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

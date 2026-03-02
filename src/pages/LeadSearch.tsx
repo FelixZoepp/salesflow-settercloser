@@ -56,6 +56,12 @@ interface SavedList {
   created_at: string;
 }
 
+interface ListStats {
+  total: number;
+  enriched: number;
+  imported: number;
+}
+
 const INDUSTRIES = [
   "Software & IT",
   "E-Commerce",
@@ -113,6 +119,8 @@ const LeadSearch = () => {
   // Saved lists
   const [savedLists, setSavedLists] = useState<SavedList[]>([]);
   const [loadingLists, setLoadingLists] = useState(true);
+  const [listStats, setListStats] = useState<Record<string, ListStats>>({});
+  const [enrichingListId, setEnrichingListId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSavedLists();
@@ -124,9 +132,49 @@ const LeadSearch = () => {
         .from('lead_lists')
         .select('*')
         .order('created_at', { ascending: false });
-      if (!error) setSavedLists((data as SavedList[]) || []);
+      if (!error && data) {
+        setSavedLists((data as SavedList[]) || []);
+        // Fetch stats for all lists
+        if (data.length > 0) {
+          fetchListStats(data.map((l: any) => l.id));
+        }
+      }
     } catch { /* ignore */ }
     setLoadingLists(false);
+  };
+
+  const fetchListStats = async (listIds: string[]) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('search-leads', {
+        body: { action: 'list_stats', list_ids: listIds },
+      });
+      if (!error && data?.stats) {
+        setListStats(data.stats);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const handleEnrichList = async (listId: string) => {
+    setEnrichingListId(listId);
+    try {
+      const { data, error } = await supabase.functions.invoke('search-leads', {
+        body: { action: 'enrich_list', list_id: listId },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(`${data.enriched} von ${data.total} Leads angereichert${data.imported > 0 ? `, ${data.imported} neu importiert` : ''}`);
+        fetchSavedLists();
+      } else {
+        toast.error(data?.error || 'Fehler bei der Anreicherung');
+      }
+    } catch (err: any) {
+      console.error('Enrich error:', err);
+      toast.error('Fehler bei der Anreicherung');
+    } finally {
+      setEnrichingListId(null);
+    }
   };
 
   const handleSearch = async () => {
@@ -482,7 +530,10 @@ const LeadSearch = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedLists.map(list => (
+                {savedLists.map(list => {
+                  const stats = listStats[list.id];
+                  const enrichedPct = stats ? Math.round((stats.enriched / stats.total) * 100) : 0;
+                  return (
                   <div key={list.id} className="rounded-lg border border-border p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
@@ -493,6 +544,33 @@ const LeadSearch = () => {
                       </div>
                       <Badge variant="secondary">{list.total_leads} Leads</Badge>
                     </div>
+
+                    {/* Enrichment Stats */}
+                    {stats && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Angereichert</span>
+                          <span className="font-medium text-foreground">{stats.enriched}/{stats.total} ({enrichedPct}%)</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-primary rounded-full h-2 transition-all duration-300" 
+                            style={{ width: `${enrichedPct}%` }}
+                          />
+                        </div>
+                        <div className="flex gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Download className="w-3 h-3" />
+                            {stats.imported} importiert
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Zap className="w-3 h-3 text-primary" />
+                            {stats.enriched} angereichert
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="text-xs text-muted-foreground">
                       {list.search_filters?.industry && <span>Branche: {list.search_filters.industry}</span>}
                       {list.search_filters?.location && <span> • {list.search_filters.location}</span>}
@@ -510,17 +588,33 @@ const LeadSearch = () => {
                       <Button
                         size="sm"
                         className="flex-1"
-                        onClick={() => navigate('/contacts')}
+                        onClick={() => handleEnrichList(list.id)}
+                        disabled={enrichingListId === list.id || (stats?.enriched === stats?.total && stats?.total > 0)}
                       >
-                        <Zap className="w-3.5 h-3.5 mr-1" />
-                        Anreichern
+                        {enrichingListId === list.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                            Anreichern...
+                          </>
+                        ) : stats?.enriched === stats?.total && stats?.total > 0 ? (
+                          <>
+                            <Zap className="w-3.5 h-3.5 mr-1" />
+                            Vollständig
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-3.5 h-3.5 mr-1" />
+                            Anreichern
+                          </>
+                        )}
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Erstellt am {new Date(list.created_at).toLocaleDateString('de-DE')}
                     </p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
