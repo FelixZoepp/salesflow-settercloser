@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAccountFilter } from "@/hooks/useAccountFilter";
-import EnrichmentUpsellBanner from "@/components/EnrichmentUpsellBanner";
+
 
 interface SearchLead {
   first_name: string;
@@ -391,7 +391,7 @@ const LeadSearch = () => {
           </div>
         </div>
 
-        <EnrichmentUpsellBanner />
+        
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
