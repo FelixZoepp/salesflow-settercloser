@@ -111,11 +111,11 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
   const employeeFilterText = employee_count && employee_count !== 'all' ? ` ${employee_count} Mitarbeiter` : '';
 
   try {
-    // Step 1: Search for real companies via Firecrawl with multiple diverse queries
+    // Step 1: Search for PEOPLE profiles via Firecrawl – focus on linkedin.com/in/ personal profiles
     const queries = [
-      `${industry} Geschäftsführer CEO Inhaber ${locationFilter}${employeeFilterText}`,
-      `${industry} Unternehmen Entscheider ${locationFilter} site:northdata.de OR site:firmenwissen.de`,
-      `${industry} GmbH Geschäftsführung ${locationFilter} site:handelsregister.de OR site:gelbeseiten.de`,
+      `${industry} Geschäftsführer CEO Inhaber ${locationFilter}${employeeFilterText} site:linkedin.com/in`,
+      `${industry} Entscheider Managing Director ${locationFilter} site:linkedin.com/in`,
+      `${industry} Gründer Founder ${locationFilter}${employeeFilterText} site:linkedin.com/in`,
     ];
 
     console.log('Firecrawl search queries:', queries);
@@ -150,12 +150,16 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
       })
     );
 
-    // Deduplicate results by URL
+    // Deduplicate results by URL – only keep linkedin.com/in/ personal profiles
     const seenUrls = new Set<string>();
     const allResults: any[] = [];
     for (const results of firecrawlResults) {
       for (const r of results) {
-        const url = r.url || '';
+        const url = (r.url || '').toLowerCase();
+        // Skip company pages, search pages, job pages, and non-profile URLs
+        if (url.includes('linkedin.com/company') || url.includes('/search') || url.includes('/jobs') || url.includes('/posts')) {
+          continue;
+        }
         if (!seenUrls.has(url)) {
           seenUrls.add(url);
           allResults.push(r);
@@ -191,15 +195,17 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
       ? `\n- WICHTIG: Nur Unternehmen mit ca. ${employee_count} Mitarbeitern. Schätze anhand der Quellen die Größe. Unternehmen die offensichtlich nicht in diese Größe passen, NICHT aufnehmen.`
       : '';
 
-    const extractionPrompt = `Du bist ein B2B-Lead-Researcher. Analysiere die folgenden Suchergebnisse und extrahiere ECHTE Entscheider.
+    const extractionPrompt = `Du bist ein B2B-Lead-Researcher. Analysiere die folgenden LinkedIn-Profil-Suchergebnisse und extrahiere ECHTE Personen (keine Unternehmen!).
 
 STRIKTE REGELN:
-- Extrahiere NUR Personen und Firmen die TATSÄCHLICH in den Suchergebnissen erwähnt werden
+- Extrahiere NUR PERSONEN die TATSÄCHLICH in den Suchergebnissen erwähnt werden – KEINE Unternehmensseiten
+- Die Ergebnisse stammen von LinkedIn-Personenprofilen (linkedin.com/in/) – extrahiere Name, Position und Firma daraus
 - ERFINDE KEINE Daten. Wenn ein Feld nicht aus den Quellen ableitbar ist, setze es auf ""
 - Maximal ${count} Leads
 - Nur Branche "${industry}" in "${locationFilter}"${employeeInstruction}
 - Jeder Lead muss einen echten Vor- und Nachnamen und eine echte Firma haben
 - Wenn du weniger als ${count} echte Leads findest, gib nur die echten zurück
+- Wenn eine LinkedIn-URL (linkedin.com/in/...) direkt im Ergebnis steht, übernimm sie in linkedin_url
 
 Gib ein JSON-Array zurück mit:
 - first_name (string, aus den Quellen)
@@ -211,7 +217,7 @@ Gib ein JSON-Array zurück mit:
 - city (string, nur wenn aus Quellen ableitbar, sonst "")
 - country (string, "Deutschland" als Standard)
 - website (string, echte Domain aus den Quellen, sonst "")
-- linkedin_url (string, immer "" - wird separat geprüft)
+- linkedin_url (string, die LinkedIn-Profil-URL aus dem Ergebnis falls vorhanden, sonst "")
 
 Antworte NUR mit validem JSON-Array. Keine Erklärungen.
 
