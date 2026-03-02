@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
-  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send
+  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,6 +123,7 @@ const Layout = ({ children }: LayoutProps) => {
       subItems: [
         { path: "/campaigns", label: "Alle Kampagnen", icon: Megaphone },
         { path: "/contacts", label: "Kontakte", icon: Users },
+        { path: "/lead-search", label: "Lead-Recherche", icon: Search },
         { path: "/import-leads", label: "Leads importieren", icon: FolderOpen },
         { path: "/landing-pages", label: "Lead-Seiten", icon: Globe },
         { path: "/video-note", label: "Video-Nachrichten", icon: Video },

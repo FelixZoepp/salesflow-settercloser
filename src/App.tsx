@@ -51,6 +51,7 @@ import KIKonfiguratorFeature from "./pages/features/KIKonfigurator";
 import LeadScoringFeature from "./pages/features/LeadScoring";
 import KampagnenFeature from "./pages/features/Kampagnen";
 import EmailCampaigns from "./pages/EmailCampaigns";
+import LeadSearch from "./pages/LeadSearch";
 
 const queryClient = new QueryClient();
 
@@ -166,6 +167,7 @@ const AppRoutes = () => (
     <Route path="/contacts" element={<SubscriptionRoute><Contacts /></SubscriptionRoute>} />
     <Route path="/campaigns" element={<SubscriptionRoute><Campaigns /></SubscriptionRoute>} />
     <Route path="/import-leads" element={<SubscriptionRoute><ImportLeads /></SubscriptionRoute>} />
+    <Route path="/lead-search" element={<SubscriptionRoute><LeadSearch /></SubscriptionRoute>} />
     <Route path="/api-keys" element={<SubscriptionRoute><ApiKeys /></SubscriptionRoute>} />
     <Route path="/call-script" element={<SubscriptionRoute><CallScript /></SubscriptionRoute>} />
     <Route path="/objections" element={<SubscriptionRoute><ObjectionLibrary /></SubscriptionRoute>} />

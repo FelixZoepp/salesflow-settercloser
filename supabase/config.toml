@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.manage-credits]
 verify_jwt = true
+
+[functions.search-leads]
+verify_jwt = false
