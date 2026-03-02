@@ -55,14 +55,9 @@ export default function TopBar() {
     enabled: !!accountId,
   });
 
-  const phoneUsed = credits?.phone_credits_used ?? 0;
-  const emailUsed = credits?.email_credits_used ?? 0;
-  const phoneLimit = credits?.phone_credits_limit ?? 100;
-  const emailLimit = credits?.email_credits_limit ?? 100;
-  const phoneRemaining = phoneLimit - phoneUsed;
-  const emailRemaining = emailLimit - emailUsed;
-  const totalRemaining = phoneRemaining + emailRemaining;
-  const totalLimit = phoneLimit + emailLimit;
+  const creditsUsed = credits?.phone_credits_used ?? 0;
+  const creditsLimit = credits?.phone_credits_limit ?? 100;
+  const creditsRemaining = creditsLimit - creditsUsed;
 
   return (
     <div className="hidden md:flex items-center justify-between h-14 px-6 border-b border-border/50 bg-background/60 backdrop-blur-sm shrink-0">
@@ -75,15 +70,12 @@ export default function TopBar() {
             <TooltipTrigger asChild>
               <div className="flex items-center gap-2 text-sm cursor-default">
                 <Coins className="h-4 w-4 text-amber-400" />
-                <span className="font-medium text-foreground">{totalRemaining}</span>
+                <span className="font-medium text-foreground">{creditsRemaining}</span>
                 <span className="text-xs text-muted-foreground">Credits</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <div className="text-xs space-y-1">
-                <p>📞 Telefon: {phoneRemaining} übrig</p>
-                <p>📧 E-Mail: {emailRemaining} übrig</p>
-              </div>
+              <p className="text-xs">{creditsRemaining} von {creditsLimit} Credits übrig</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
