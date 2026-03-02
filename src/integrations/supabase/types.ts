@@ -1629,6 +1629,145 @@ export type Database = {
           },
         ]
       }
+      lead_list_items: {
+        Row: {
+          account_id: string
+          city: string | null
+          company: string | null
+          contact_id: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          employee_count: string | null
+          enriched: boolean | null
+          first_name: string
+          id: string
+          imported: boolean | null
+          industry: string | null
+          last_name: string
+          linkedin_url: string | null
+          list_id: string
+          phone: string | null
+          position: string | null
+          website: string | null
+        }
+        Insert: {
+          account_id: string
+          city?: string | null
+          company?: string | null
+          contact_id?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          employee_count?: string | null
+          enriched?: boolean | null
+          first_name: string
+          id?: string
+          imported?: boolean | null
+          industry?: string | null
+          last_name: string
+          linkedin_url?: string | null
+          list_id: string
+          phone?: string | null
+          position?: string | null
+          website?: string | null
+        }
+        Update: {
+          account_id?: string
+          city?: string | null
+          company?: string | null
+          contact_id?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          employee_count?: string | null
+          enriched?: boolean | null
+          first_name?: string
+          id?: string
+          imported?: boolean | null
+          industry?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          list_id?: string
+          phone?: string | null
+          position?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_list_items_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_list_items_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_list_items_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lead_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_lists: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          search_filters: Json | null
+          total_leads: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          search_filters?: Json | null
+          total_leads?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          search_filters?: Json | null
+          total_leads?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_lists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_page_templates: {
         Row: {
           accent_color: string | null
