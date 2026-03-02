@@ -176,18 +176,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if credits are available (phone + email each count as 1 credit)
-    const phoneUsed = credits.phone_credits_used || 0;
-    const emailUsed = credits.email_credits_used || 0;
-    const phoneLimit = credits.phone_credits_limit || 100;
-    const emailLimit = credits.email_credits_limit || 100;
+    // Check if credits are available (unified pool)
+    const creditsUsed = credits.phone_credits_used || 0;
+    const creditsLimit = credits.phone_credits_limit || 100;
 
-    if (phoneUsed >= phoneLimit && emailUsed >= emailLimit) {
+    if (creditsUsed >= creditsLimit) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Monatliches Credit-Limit erreicht (${phoneLimit} Telefon, ${emailLimit} E-Mail). Credits werden am 1. des nächsten Monats zurückgesetzt.`,
-          credits: { phone_used: phoneUsed, phone_limit: phoneLimit, email_used: emailUsed, email_limit: emailLimit }
+          error: `Monatliches Credit-Limit erreicht (${creditsLimit} Credits). Credits werden am 1. des nächsten Monats zurückgesetzt.`,
+          credits: { used: creditsUsed, limit: creditsLimit }
         }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -291,16 +289,11 @@ Deno.serve(async (req) => {
             .update(updateFields)
             .eq('id', contact_id);
 
-          // Decrement credits based on what was enriched
-          const hasPhone = !!updateFields.phone || !!updateFields.mobile;
-          const hasEmail = !!updateFields.email;
-          const creditUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
-          if (hasPhone) creditUpdate.phone_credits_used = (credits.phone_credits_used || 0) + 1;
-          if (hasEmail) creditUpdate.email_credits_used = (credits.email_credits_used || 0) + 1;
-          if (!hasPhone && !hasEmail) {
-            // Count as 1 phone credit for general enrichment
-            creditUpdate.phone_credits_used = (credits.phone_credits_used || 0) + 1;
-          }
+          // Deduct 1 credit for successful enrichment
+          const creditUpdate = { 
+            updated_at: new Date().toISOString(),
+            phone_credits_used: (credits.phone_credits_used || 0) + 1,
+          };
           await supabase.from('enrichment_credits').update(creditUpdate).eq('id', credits.id);
 
           console.log(`Synchronously enriched contact ${contact_id} with ${Object.keys(updateFields).length} fields`);
@@ -313,13 +306,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // For async mode, decrement 1 credit upfront
-    const creditUpdate: Record<string, unknown> = { 
-      updated_at: new Date().toISOString(),
-      phone_credits_used: (credits.phone_credits_used || 0) + 1,
-      email_credits_used: (credits.email_credits_used || 0) + 1,
-    };
-    await supabase.from('enrichment_credits').update(creditUpdate).eq('id', credits.id);
+    // Async mode: do NOT deduct credits upfront – credits only on success via callback
+    // The callback mode doesn't currently deduct credits, so we skip here
 
     return new Response(
       JSON.stringify({ success: true, mode: 'async', message: 'Enrichment-Anfrage gesendet. Daten werden asynchron aktualisiert.' }),

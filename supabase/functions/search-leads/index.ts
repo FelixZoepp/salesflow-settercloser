@@ -609,8 +609,9 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     });
   }
 
-  const phoneAvailable = (credits.phone_credits_limit || 100) - (credits.phone_credits_used || 0);
-  const emailAvailable = (credits.email_credits_limit || 100) - (credits.email_credits_used || 0);
+  const creditsUsed = credits.phone_credits_used || 0;
+  const creditsLimit = credits.phone_credits_limit || 100;
+  const creditsAvailable = creditsLimit - creditsUsed;
 
   const { data: items, error: fetchErr } = await supabase
     .from('lead_list_items')
@@ -625,11 +626,11 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     });
   }
 
-  const maxItems = Math.min(items.length, Math.max(phoneAvailable, emailAvailable));
+  const maxItems = Math.min(items.length, creditsAvailable);
   if (maxItems <= 0) {
     return new Response(JSON.stringify({ 
       error: 'Kein Credit-Kontingent mehr verfügbar. Bitte Credits aufstocken.',
-      credits: { phone_available: phoneAvailable, email_available: emailAvailable }
+      credits: { available: creditsAvailable }
     }), {
       status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -743,10 +744,10 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     }
   }
 
+  // Only deduct credits for successfully enriched leads
   const creditUpdate: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
     phone_credits_used: (credits.phone_credits_used || 0) + enriched,
-    email_credits_used: (credits.email_credits_used || 0) + enriched,
   };
   await supabase.from('enrichment_credits').update(creditUpdate).eq('id', credits.id);
 
@@ -755,10 +756,7 @@ async function handleEnrichList(supabase: any, body: any, accountId: string, use
     enriched, 
     imported,
     total: itemsToEnrich.length,
-    remaining_credits: {
-      phone: Math.max(0, phoneAvailable - enriched),
-      email: Math.max(0, emailAvailable - enriched),
-    }
+    remaining_credits: Math.max(0, creditsAvailable - enriched),
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
