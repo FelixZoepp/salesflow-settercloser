@@ -108,7 +108,7 @@ const LeadSearch = () => {
   // Results
   const [leads, setLeads] = useState<SearchLead[]>([]);
   const [searching, setSearching] = useState(false);
-  const [verifyingLinkedin, setVerifyingLinkedin] = useState(false);
+  // removed verifyingLinkedin – verification now happens server-side
   const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
 
   // Save dialog
@@ -175,33 +175,6 @@ const LeadSearch = () => {
     }
   };
 
-  const verifyLinkedinBatch = async (leadsToVerify: SearchLead[], startIdx: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('search-leads', {
-        body: {
-          action: 'verify_linkedin',
-          leads: leadsToVerify,
-        },
-      });
-      if (!error && data?.results) {
-        setLeads(prev => {
-          const updated = [...prev];
-          for (const r of data.results) {
-            const globalIdx = startIdx + r.index;
-            if (globalIdx < updated.length) {
-              updated[globalIdx] = {
-                ...updated[globalIdx],
-                linkedin_url: r.linkedin_url || updated[globalIdx].linkedin_url,
-                linkedin_verified: r.linkedin_verified,
-              };
-            }
-          }
-          return updated;
-        });
-      }
-    } catch { /* ignore */ }
-  };
-
   const handleSearch = async () => {
     const searchIndustry = industry === "custom" ? customIndustry : industry;
     if (!searchIndustry.trim()) {
@@ -211,7 +184,6 @@ const LeadSearch = () => {
     setSearching(true);
     setLeads([]);
     setSelectedLeads(new Set());
-    setVerifyingLinkedin(false);
     try {
       const { data, error } = await supabase.functions.invoke('search-leads', {
         body: {
@@ -225,22 +197,11 @@ const LeadSearch = () => {
       if (error) throw error;
       if (data?.leads && data.leads.length > 0) {
         setLeads(data.leads);
-        toast.success(`${data.leads.length} Entscheider gefunden – LinkedIn wird geprüft...`);
-
-        // Start async LinkedIn verification in batches of 5
-        setVerifyingLinkedin(true);
-        const allLeads = data.leads as SearchLead[];
-        const batchSize = 5;
-        for (let i = 0; i < allLeads.length; i += batchSize) {
-          const batch = allLeads.slice(i, i + batchSize);
-          await verifyLinkedinBatch(batch, i);
-        }
-        setVerifyingLinkedin(false);
-        toast.success("LinkedIn-Prüfung abgeschlossen");
+        toast.success(`${data.leads.length} Entscheider mit LinkedIn-Profil gefunden`);
       } else if (data?.error) {
         toast.error(data.error);
       } else {
-        toast.info("Keine Ergebnisse gefunden");
+        toast.info("Keine Ergebnisse mit LinkedIn-Profil gefunden");
       }
     } catch (err: any) {
       console.error('Search error:', err);
@@ -506,18 +467,10 @@ const LeadSearch = () => {
                 <p className="text-sm text-muted-foreground">
                   {leads.length} Entscheider in {companyList.length} Unternehmen
                 </p>
-                {verifyingLinkedin && (
-                  <Badge variant="outline" className="text-xs gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    LinkedIn prüfen...
-                  </Badge>
-                )}
-                {!verifyingLinkedin && leads.some(l => l.linkedin_verified) && (
-                  <Badge variant="secondary" className="text-xs gap-1">
-                    <Linkedin className="w-3 h-3" />
-                    {leads.filter(l => l.linkedin_verified).length}/{leads.length} verifiziert
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Linkedin className="w-3 h-3" />
+                  Alle mit LinkedIn verifiziert
+                </Badge>
                 <div className="flex items-center gap-2">
                   {selectedLeads.size > 0 && (
                     <span className="text-xs text-muted-foreground">{selectedLeads.size} ausgewählt</span>
@@ -553,8 +506,8 @@ const LeadSearch = () => {
                   </div>
                 </div>
                 <div className="text-center">
-                  <p className="font-medium text-foreground">KI recherchiert Unternehmen...</p>
-                  <p className="text-sm text-muted-foreground mt-1">Suche in Handelsregister, Gelbe Seiten & LinkedIn</p>
+                  <p className="font-medium text-foreground">KI recherchiert & prüft LinkedIn...</p>
+                  <p className="text-sm text-muted-foreground mt-1">Nur Leads mit bestätigtem LinkedIn-Profil werden angezeigt</p>
                 </div>
               </div>
             )}
