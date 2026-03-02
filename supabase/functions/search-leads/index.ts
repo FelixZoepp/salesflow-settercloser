@@ -116,7 +116,7 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
 
     console.log('Firecrawl search queries:', queries);
 
-    // Run all queries in parallel for diverse results
+    // Run all queries in parallel - NO scrapeOptions for speed
     const firecrawlResults = await Promise.all(
       queries.map(async (query) => {
         try {
@@ -131,7 +131,6 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
               limit: Math.min(count * 2, 20),
               lang: 'de',
               country: 'de',
-              scrapeOptions: { formats: ['markdown'] },
             }),
           });
           if (!resp.ok) {
@@ -179,9 +178,8 @@ async function handleSearch(body: any, corsHeaders: Record<string, string>) {
     const scrapedContent = allResults.map((r: any, i: number) => {
       const title = r.title || '';
       const description = r.description || '';
-      const markdown = r.markdown || '';
       const url = r.url || '';
-      return `--- Ergebnis ${i + 1} ---\nURL: ${url}\nTitel: ${title}\nBeschreibung: ${description}\nInhalt: ${markdown.substring(0, 2000)}`;
+      return `--- Ergebnis ${i + 1} ---\nURL: ${url}\nTitel: ${title}\nBeschreibung: ${description}`;
     }).join('\n\n');
 
     // Step 2: Use AI to extract ONLY real data from scraped content
@@ -262,63 +260,20 @@ ${scrapedContent}`;
     // Filter out leads without real names
     leads = leads.filter((l: any) => l.first_name && l.last_name && l.company);
 
-    // Step 3: Check LinkedIn profile existence for each lead via Firecrawl
-    console.log(`Checking LinkedIn profiles for ${leads.length} leads...`);
-    const linkedinCheckedLeads = await Promise.all(
-      leads.slice(0, count).map(async (lead: any) => {
-        try {
-          const linkedinQuery = `"${lead.first_name} ${lead.last_name}" "${lead.company}" site:linkedin.com/in`;
-          const linkedinResponse = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: linkedinQuery,
-              limit: 3,
-              lang: 'de',
-              country: 'de',
-            }),
-          });
+    console.log(`Extracted ${leads.length} leads from AI`);
 
-          if (linkedinResponse.ok) {
-            const linkedinData = await linkedinResponse.json();
-            const results = linkedinData.data || linkedinData.results || [];
-            // Check if any result is a real LinkedIn profile URL
-            const linkedinResult = results.find((r: any) => {
-              const url = (r.url || '').toLowerCase();
-              return url.includes('linkedin.com/in/') && !url.includes('linkedin.com/in/search');
-            });
-            if (linkedinResult) {
-              return {
-                ...lead,
-                linkedin_url: linkedinResult.url,
-                linkedin_verified: true,
-              };
-            }
-          }
-        } catch (err) {
-          console.error(`LinkedIn check failed for ${lead.first_name} ${lead.last_name}:`, err);
-        }
-        return {
-          ...lead,
-          linkedin_url: '',
-          linkedin_verified: false,
-        };
-      })
-    );
-
-    // Sort: verified first, then unverified
-    const verifiedLeads = linkedinCheckedLeads.filter(l => l.linkedin_verified);
-    const unverifiedLeads = linkedinCheckedLeads.filter(l => !l.linkedin_verified);
-    const allLeads = [...verifiedLeads, ...unverifiedLeads];
+    // Return leads directly without slow LinkedIn checks
+    const allLeads = leads.slice(0, count).map((lead: any) => ({
+      ...lead,
+      linkedin_url: lead.linkedin_url || '',
+      linkedin_verified: false,
+    }));
 
     return new Response(JSON.stringify({
       success: true,
       leads: allLeads,
       count: allLeads.length,
-      verified_count: verifiedLeads.length,
+      verified_count: 0,
       source: 'firecrawl',
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
