@@ -164,30 +164,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check enrichment credits
-    const currentMonth = new Date().toISOString().slice(0, 7); // '2026-02'
-    let { data: credits } = await supabase
-      .from('enrichment_credits')
-      .select('*')
-      .eq('account_id', profile.account_id)
-      .eq('month_year', currentMonth)
-      .single();
+    // Check enrichment credits (uses DB function with rollover logic)
+    const { data: credits, error: creditsErr } = await supabase
+      .rpc('get_enrichment_credits', { p_account_id: profile.account_id });
 
-    if (!credits) {
-      // Create credits record for this month
-      const { data: newCredits, error: createErr } = await supabase
-        .from('enrichment_credits')
-        .insert({ account_id: profile.account_id, month_year: currentMonth })
-        .select()
-        .single();
-      if (createErr) {
-        console.error('Error creating credits:', createErr);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Fehler beim Erstellen der Credits' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      credits = newCredits;
+    if (creditsErr || !credits) {
+      console.error('Error fetching credits:', creditsErr);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Fehler beim Laden der Credits' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Check if credits are available (phone + email each count as 1 credit)
