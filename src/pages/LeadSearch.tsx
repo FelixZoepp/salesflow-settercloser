@@ -679,13 +679,21 @@ const LeadSearch = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                Zum Profil
+                                Webseite anschauen
                               </a>
                             </Button>
                           )}
-                          <Button size="sm" className="text-xs h-8">
-                            Kontaktieren
-                          </Button>
+                          {group.leads[0]?.linkedin_url && (
+                            <Button size="sm" className="text-xs h-8" asChild>
+                              <a
+                                href={group.leads[0].linkedin_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Profil anschauen
+                              </a>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
