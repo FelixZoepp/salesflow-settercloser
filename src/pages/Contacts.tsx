@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil } from "lucide-react";
+import EnrichmentUpsellBanner from "@/components/EnrichmentUpsellBanner";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -397,6 +398,9 @@ const Contacts = () => {
             className="pl-10"
           />
         </div>
+
+        {/* Enrichment Upsell */}
+        <EnrichmentUpsellBanner />
 
         {/* Contacts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -37,7 +37,7 @@ const EnrichmentCreditsDisplay = ({ accountId }: EnrichmentCreditsDisplayProps) 
     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Credits – {monthLabel}</p>
-        <span className="text-xs text-muted-foreground">Monatlich 100 / Typ</span>
+        <span className="text-xs text-muted-foreground">Rollover aktiv ✓</span>
       </div>
 
       <div className="space-y-2">

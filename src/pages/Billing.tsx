@@ -354,7 +354,7 @@ const Billing = () => {
                   <div>
                     <CardTitle className="text-lg">Anreicherungs-Credits</CardTitle>
                     <CardDescription>
-                      Standard: 100 Credits/Monat (Telefon + E-Mail).
+                      Standard: 100 Credits/Monat (Telefon + E-Mail). Ungenutzte Credits werden automatisch übertragen!
                       {creditSub ? ` Aktuell: +${creditSub.extra_credits} Extra = ${100 + creditSub.extra_credits} gesamt` : ' Buche Extra-Credits für mehr Anreicherungen.'}
                     </CardDescription>
                   </div>
