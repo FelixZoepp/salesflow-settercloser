@@ -73,16 +73,16 @@ export default function TopBar() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground cursor-default">
+              <div className="flex items-center gap-2 text-sm cursor-default">
                 <Coins className="h-4 w-4 text-amber-400" />
-                <span className="font-medium text-foreground">{totalRemaining} / {totalLimit}</span>
-                <span className="text-xs">Credits</span>
+                <span className="font-medium text-foreground">{totalRemaining}</span>
+                <span className="text-xs text-muted-foreground">Credits</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <div className="text-xs space-y-1">
-                <p>📞 Telefon: {phoneRemaining} / {phoneLimit} übrig</p>
-                <p>📧 E-Mail: {emailRemaining} / {emailLimit} übrig</p>
+                <p>📞 Telefon: {phoneRemaining} übrig</p>
+                <p>📧 E-Mail: {emailRemaining} übrig</p>
               </div>
             </TooltipContent>
           </Tooltip>
