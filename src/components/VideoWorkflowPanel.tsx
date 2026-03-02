@@ -4,17 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   Video, 
-  Play, 
   CheckCircle2, 
-  AlertCircle, 
   Loader2, 
-  Upload,
   Link,
   Users,
-  Sparkles
+  Sparkles,
+  ExternalLink,
+  Copy
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,20 +23,9 @@ interface VideoWorkflowPanelProps {
   campaignName: string;
 }
 
-type VideoStatus = 'pending' | 'generating_intro' | 'merging' | 'uploading' | 'ready' | 'error';
-
-const statusConfig: Record<VideoStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Ausstehend', color: 'bg-muted text-muted-foreground', icon: <Video className="h-3 w-3" /> },
-  generating_intro: { label: 'Intro wird generiert', color: 'bg-blue-500/20 text-blue-400', icon: <Loader2 className="h-3 w-3 animate-spin" /> },
-  merging: { label: 'Videos werden zusammengefügt', color: 'bg-yellow-500/20 text-yellow-400', icon: <Loader2 className="h-3 w-3 animate-spin" /> },
-  uploading: { label: 'Upload läuft', color: 'bg-purple-500/20 text-purple-400', icon: <Upload className="h-3 w-3" /> },
-  ready: { label: 'Bereit', color: 'bg-green-500/20 text-green-400', icon: <CheckCircle2 className="h-3 w-3" /> },
-  error: { label: 'Fehler', color: 'bg-destructive/20 text-destructive', icon: <AlertCircle className="h-3 w-3" /> },
-};
-
 export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPanelProps) => {
   const queryClient = useQueryClient();
-  const [pitchVideoUrl, setPitchVideoUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
 
   // Fetch campaign settings
   const { data: campaign } = useQuery({
@@ -46,7 +33,7 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
     queryFn: async () => {
       const { data, error } = await supabase
         .from('campaigns')
-        .select('pitch_video_url, heygen_avatar_id, heygen_voice_id')
+        .select('pitch_video_url')
         .eq('id', campaignId)
         .single();
       
@@ -55,24 +42,23 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
     },
   });
 
-  // Fetch contacts with video status
-  const { data: contacts, isLoading } = useQuery({
-    queryKey: ['campaign-video-contacts', campaignId],
+  // Fetch outbound lead count
+  const { data: leadCount } = useQuery({
+    queryKey: ['campaign-lead-count', campaignId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name, company, video_status, video_url, video_error, video_generated_at, slug')
+        .select('id', { count: 'exact', head: true })
         .eq('campaign_id', campaignId)
-        .eq('lead_type', 'outbound')
-        .order('first_name');
+        .eq('lead_type', 'outbound');
       
       if (error) throw error;
-      return data;
+      return count || 0;
     },
   });
 
-  // Update pitch video URL
-  const updatePitchUrl = useMutation({
+  // Update video URL
+  const updateVideoUrl = useMutation({
     mutationFn: async (url: string) => {
       const { error } = await supabase
         .from('campaigns')
@@ -82,7 +68,7 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Pitch-Video URL gespeichert');
+      toast.success('Erklärvideo URL gespeichert');
       queryClient.invalidateQueries({ queryKey: ['campaign-settings', campaignId] });
     },
     onError: () => {
@@ -90,91 +76,16 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
     },
   });
 
-  // Generate video for a contact
-  const generateVideo = useMutation({
-    mutationFn: async (contact: { id: string; first_name: string }) => {
-      const { data, error } = await supabase.functions.invoke('generate-heygen-video', {
-        body: {
-          contactId: contact.id,
-          firstName: contact.first_name,
-          avatarId: campaign?.heygen_avatar_id,
-          voiceId: campaign?.heygen_voice_id,
-        },
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Video-Generierung gestartet');
-      queryClient.invalidateQueries({ queryKey: ['campaign-video-contacts', campaignId] });
-    },
-    onError: (error) => {
-      toast.error('Fehler beim Starten der Video-Generierung');
-      console.error(error);
-    },
-  });
+  const apiEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-campaign-video`;
 
-  // Generate videos for ALL pending contacts
-  const generateAllVideos = useMutation({
-    mutationFn: async () => {
-      const pendingContacts = contacts?.filter(c => c.video_status === 'pending') || [];
-      const totalPending = pendingContacts.length;
-      
-      if (totalPending === 0) {
-        throw new Error('Keine ausstehenden Leads');
-      }
-
-      // Process all contacts in batches of 10 with delay
-      const batchSize = 10;
-      let processed = 0;
-      
-      for (let i = 0; i < pendingContacts.length; i += batchSize) {
-        const batch = pendingContacts.slice(i, i + batchSize);
-        
-        // Process batch in parallel
-        await Promise.all(
-          batch.map(contact =>
-            supabase.functions.invoke('generate-heygen-video', {
-              body: {
-                contactId: contact.id,
-                firstName: contact.first_name,
-                avatarId: campaign?.heygen_avatar_id,
-                voiceId: campaign?.heygen_voice_id,
-              },
-            })
-          )
-        );
-        
-        processed += batch.length;
-        toast.info(`${processed}/${totalPending} Videos gestartet...`);
-        
-        // Delay between batches to avoid rate limiting
-        if (i + batchSize < pendingContacts.length) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
-      
-      return { total: totalPending };
-    },
-    onSuccess: (data) => {
-      toast.success(`Alle ${data?.total} Videos werden generiert!`);
-      queryClient.invalidateQueries({ queryKey: ['campaign-video-contacts', campaignId] });
-    },
-    onError: (error) => {
-      toast.error(`Fehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
-    },
-  });
-
-  const stats = {
-    total: contacts?.length || 0,
-    pending: contacts?.filter(c => c.video_status === 'pending').length || 0,
-    generating: contacts?.filter(c => ['generating_intro', 'merging', 'uploading'].includes(c.video_status || '')).length || 0,
-    ready: contacts?.filter(c => c.video_status === 'ready').length || 0,
-    error: contacts?.filter(c => c.video_status === 'error').length || 0,
+  const copyApiExample = () => {
+    const example = JSON.stringify({
+      campaign_id: campaignId,
+      video_url: "https://example.com/erklaervideo.mp4"
+    }, null, 2);
+    navigator.clipboard.writeText(example);
+    toast.success('API-Beispiel kopiert');
   };
-
-  const progress = stats.total > 0 ? Math.round((stats.ready / stats.total) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -183,176 +94,140 @@ export const VideoWorkflowPanel = ({ campaignId, campaignName }: VideoWorkflowPa
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Video-Workflow
+            KI-Erklärvideo
           </CardTitle>
           <CardDescription>
-            Personalisierte Videos für {campaignName}
+            Erklärvideo für die Kampagne „{campaignName}"
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Pitch Video URL */}
+          {/* Current Status */}
+          <div className="flex items-center gap-3 p-4 rounded-lg border border-border/50 bg-background/50">
+            {campaign?.pitch_video_url ? (
+              <>
+                <CheckCircle2 className="h-5 w-5 text-green-400" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Erklärvideo ist aktiv</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[400px]">{campaign.pitch_video_url}</p>
+                </div>
+                <Badge className="bg-green-500/20 text-green-400">Aktiv</Badge>
+              </>
+            ) : (
+              <>
+                <Video className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Kein Erklärvideo hinterlegt</p>
+                  <p className="text-xs text-muted-foreground">Hinterlege eine URL oder nutze den API-Endpunkt</p>
+                </div>
+                <Badge className="bg-muted text-muted-foreground">Ausstehend</Badge>
+              </>
+            )}
+          </div>
+
+          {/* Manual URL Input */}
           <div className="space-y-2">
-            <Label>Standard Pitch-Video URL (2min)</Label>
+            <Label>Erklärvideo URL</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="https://youtube.com/... oder https://vimeo.com/..."
-                value={pitchVideoUrl || campaign?.pitch_video_url || ''}
-                onChange={(e) => setPitchVideoUrl(e.target.value)}
+                placeholder="https://example.com/erklaervideo.mp4"
+                value={videoUrl || campaign?.pitch_video_url || ''}
+                onChange={(e) => setVideoUrl(e.target.value)}
               />
               <Button 
-                onClick={() => updatePitchUrl.mutate(pitchVideoUrl)}
-                disabled={updatePitchUrl.isPending}
+                onClick={() => updateVideoUrl.mutate(videoUrl)}
+                disabled={updateVideoUrl.isPending || !videoUrl}
               >
-                {updatePitchUrl.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Speichern'}
+                {updateVideoUrl.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Speichern'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              YouTube, Vimeo, Loom oder direkte MP4-URL
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-6 pt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{leadCount} Leads sehen dieses Video</span>
+            </div>
+            {campaign?.pitch_video_url && (
+              <a 
+                href={campaign.pitch_video_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-primary hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Video ansehen
+              </a>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Integration */}
+      <Card className="border-border/50 bg-card/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Link className="h-4 w-4" />
+            API für externen Workflow
+          </CardTitle>
+          <CardDescription>
+            Nutze diesen Endpunkt um das Erklärvideo via Make.com, n8n oder eigenem Workflow zu setzen
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Endpunkt (POST)</Label>
+            <div className="flex gap-2">
+              <Input 
+                value={apiEndpoint}
+                readOnly 
+                className="font-mono text-xs"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(apiEndpoint);
+                  toast.success('URL kopiert');
+                }}
+              >
+                <Copy className="h-3 w-3" />
               </Button>
             </div>
           </div>
 
-          {/* Progress Stats */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Fortschritt</span>
-              <span className="font-medium">{stats.ready} / {stats.total} Videos fertig</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-            
-            <div className="grid grid-cols-4 gap-4 pt-2">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-muted-foreground">{stats.pending}</div>
-                <div className="text-xs text-muted-foreground">Ausstehend</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">{stats.generating}</div>
-                <div className="text-xs text-muted-foreground">In Bearbeitung</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">{stats.ready}</div>
-                <div className="text-xs text-muted-foreground">Fertig</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-destructive">{stats.error}</div>
-                <div className="text-xs text-muted-foreground">Fehler</div>
-              </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Request Body (JSON)</Label>
+            <div className="relative">
+              <pre className="bg-background/80 border border-border/50 rounded-lg p-4 text-xs font-mono overflow-x-auto">
+{`{
+  "campaign_id": "${campaignId}",
+  "video_url": "https://..."
+}`}
+              </pre>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute top-2 right-2"
+                onClick={copyApiExample}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3">
-            <Button 
-              onClick={() => generateAllVideos.mutate()}
-              disabled={generateAllVideos.isPending || stats.pending === 0 || !campaign?.pitch_video_url}
-              className="w-full"
-              size="lg"
-            >
-              {generateAllVideos.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Play className="h-4 w-4 mr-2" />
-              )}
-              Alle {stats.pending} Videos generieren
-            </Button>
-            
-            {stats.pending > 0 && (
-              <p className="text-xs text-muted-foreground text-center">
-                Geschätzte Kosten: ~${((stats.pending * 6 / 60) * 1).toFixed(2)} - ${((stats.pending * 6 / 60) * 2).toFixed(2)} bei HeyGen
-                <br />
-                <span className="text-yellow-500">(6 Sek. × {stats.pending} Leads = {(stats.pending * 6 / 60).toFixed(1)} Min.)</span>
-              </p>
-            )}
-          </div>
-
-          {!campaign?.pitch_video_url && (
-            <p className="text-sm text-yellow-500">
-              ⚠️ Bitte zuerst das Pitch-Video URL eintragen
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Header</Label>
+            <p className="text-xs font-mono text-muted-foreground">
+              x-api-key: <span className="text-foreground">dein_api_key</span>
             </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Lead Video Status List */}
-      <Card className="border-border/50 bg-card/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Lead Video Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {contacts?.map((contact) => {
-                const status = (contact.video_status as VideoStatus) || 'pending';
-                const config = statusConfig[status];
-                
-                return (
-                  <div 
-                    key={contact.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-background/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="font-medium">
-                          {contact.first_name} {contact.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {contact.company}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${config.color} flex items-center gap-1`}>
-                        {config.icon}
-                        {config.label}
-                      </Badge>
-                      
-                      {status === 'ready' && contact.slug && (
-                        <Button variant="ghost" size="sm" asChild>
-                          <a 
-                            href={`/p/${contact.slug}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                          >
-                            <Link className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
-                      
-                      {status === 'pending' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => generateVideo.mutate({ 
-                            id: contact.id, 
-                            first_name: contact.first_name 
-                          })}
-                          disabled={generateVideo.isPending}
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      )}
-                      
-                      {status === 'error' && contact.video_error && (
-                        <span className="text-xs text-destructive max-w-[150px] truncate" title={contact.video_error}>
-                          {contact.video_error}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {(!contacts || contacts.length === 0) && (
-                <div className="text-center py-8 text-muted-foreground">
-                  Keine Outbound-Leads in dieser Kampagne
-                </div>
-              )}
-            </div>
-          )}
+            <p className="text-xs text-muted-foreground mt-2">
+              API-Keys kannst du unter <span className="text-primary">Einstellungen → API-Keys</span> erstellen.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
