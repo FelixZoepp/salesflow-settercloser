@@ -50,6 +50,10 @@ Deno.serve(async (req) => {
       return await handleSearch(body, corsHeaders);
     }
 
+    if (action === 'verify_linkedin') {
+      return await handleVerifyLinkedin(body, corsHeaders);
+    }
+
     if (action === 'save_list') {
       return await handleSaveList(supabase, body, profile.account_id, user.id, corsHeaders);
     }
@@ -285,6 +289,60 @@ ${scrapedContent}`;
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
+}
+
+// ─── VERIFY LINKEDIN (async, per-lead) ───
+
+async function handleVerifyLinkedin(body: any, corsHeaders: Record<string, string>) {
+  const { leads } = body;
+  if (!leads?.length) {
+    return new Response(JSON.stringify({ error: 'Keine Leads angegeben' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!FIRECRAWL_API_KEY) {
+    return new Response(JSON.stringify({ error: 'Firecrawl nicht konfiguriert' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Check up to 5 leads at a time to stay within timeout
+  const batch = leads.slice(0, 5);
+  const results = await Promise.all(
+    batch.map(async (lead: any, idx: number) => {
+      try {
+        const query = `"${lead.first_name} ${lead.last_name}" "${lead.company}" site:linkedin.com/in`;
+        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, limit: 3, lang: 'de', country: 'de' }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const results = data.data || data.results || [];
+          const match = results.find((r: any) => {
+            const url = (r.url || '').toLowerCase();
+            return url.includes('linkedin.com/in/') && !url.includes('/search');
+          });
+          if (match) {
+            return { index: idx, linkedin_url: match.url, linkedin_verified: true };
+          }
+        }
+      } catch (err) {
+        console.error(`LinkedIn check failed for ${lead.first_name} ${lead.last_name}:`, err);
+      }
+      return { index: idx, linkedin_url: '', linkedin_verified: false };
+    })
+  );
+
+  return new Response(JSON.stringify({ success: true, results }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 // ─── SAVE LIST ───
