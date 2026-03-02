@@ -1,4 +1,9 @@
 import { useLocation } from "react-router-dom";
+import { useAccountFilter } from "@/hooks/useAccountFilter";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Coins } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -31,12 +36,56 @@ const pageTitles: Record<string, string> = {
 export default function TopBar() {
   const location = useLocation();
   const pageTitle = pageTitles[location.pathname] || "";
+  const { accountId } = useAccountFilter();
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  const { data: credits } = useQuery({
+    queryKey: ['enrichment-credits', accountId, currentMonth],
+    queryFn: async () => {
+      if (!accountId) return null;
+      const { data, error } = await supabase
+        .from('enrichment_credits')
+        .select('*')
+        .eq('account_id', accountId)
+        .eq('month_year', currentMonth)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!accountId,
+  });
+
+  const phoneUsed = credits?.phone_credits_used ?? 0;
+  const emailUsed = credits?.email_credits_used ?? 0;
+  const phoneLimit = credits?.phone_credits_limit ?? 100;
+  const emailLimit = credits?.email_credits_limit ?? 100;
+  const totalUsed = phoneUsed + emailUsed;
+  const totalLimit = phoneLimit + emailLimit;
 
   return (
     <div className="hidden md:flex items-center justify-between h-14 px-6 border-b border-border/50 bg-background/60 backdrop-blur-sm shrink-0">
       <div className="text-sm font-medium text-muted-foreground">
         {pageTitle}
       </div>
+      {accountId && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground cursor-default">
+                <Coins className="h-4 w-4 text-amber-400" />
+                <span className="font-medium text-foreground">{totalUsed} / {totalLimit}</span>
+                <span className="text-xs">Credits</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <div className="text-xs space-y-1">
+                <p>📞 Telefon: {phoneUsed} / {phoneLimit}</p>
+                <p>📧 E-Mail: {emailUsed} / {emailLimit}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 }
