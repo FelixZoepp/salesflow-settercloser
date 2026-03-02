@@ -264,20 +264,59 @@ ${scrapedContent}`;
     // Filter out leads without real names
     leads = leads.filter((l: any) => l.first_name && l.last_name && l.company);
 
-    console.log(`Extracted ${leads.length} leads from AI`);
+    console.log(`Extracted ${leads.length} leads from AI, now verifying LinkedIn...`);
 
-    // Return leads directly without slow LinkedIn checks
-    const allLeads = leads.slice(0, count).map((lead: any) => ({
-      ...lead,
-      linkedin_url: lead.linkedin_url || '',
-      linkedin_verified: false,
-    }));
+    // Step 3: Verify LinkedIn for ALL leads before returning – only keep leads with a confirmed profile
+    const verifiedLeads: any[] = [];
+    const batchSize = 5;
+    const leadsToCheck = leads.slice(0, Math.max(count * 3, leads.length)); // check more than needed to fill quota
+
+    for (let i = 0; i < leadsToCheck.length && verifiedLeads.length < count; i += batchSize) {
+      const batch = leadsToCheck.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(async (lead: any) => {
+          try {
+            const query = `"${lead.first_name} ${lead.last_name}" "${lead.company}" site:linkedin.com/in`;
+            const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ query, limit: 3, lang: 'de', country: 'de' }),
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              const results = data.data || data.results || [];
+              const match = results.find((r: any) => {
+                const url = (r.url || '').toLowerCase();
+                return url.includes('linkedin.com/in/') && !url.includes('/search');
+              });
+              if (match) {
+                return { ...lead, linkedin_url: match.url, linkedin_verified: true };
+              }
+            }
+          } catch (err) {
+            console.error(`LinkedIn check failed for ${lead.first_name} ${lead.last_name}:`, err);
+          }
+          return null; // no LinkedIn = excluded
+        })
+      );
+
+      for (const result of batchResults) {
+        if (result && verifiedLeads.length < count) {
+          verifiedLeads.push(result);
+        }
+      }
+    }
+
+    console.log(`${verifiedLeads.length} leads with verified LinkedIn profiles`);
 
     return new Response(JSON.stringify({
       success: true,
-      leads: allLeads,
-      count: allLeads.length,
-      verified_count: 0,
+      leads: verifiedLeads,
+      count: verifiedLeads.length,
+      verified_count: verifiedLeads.length,
       source: 'firecrawl',
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
