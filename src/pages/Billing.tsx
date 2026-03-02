@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { 
@@ -368,80 +369,46 @@ const Billing = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                {CREDIT_PACKAGES.map((pkg) => {
-                  const isActive = creditSub?.package === pkg.key;
-                  const isUpgrade = creditSub && !isActive && pkg.credits > (creditSub.extra_credits || 0);
-                  const isDowngrade = creditSub && !isActive && pkg.credits < (creditSub.extra_credits || 0);
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+                <div className="flex-1 w-full sm:max-w-xs space-y-2">
+                  <label className="text-sm font-medium text-foreground">Credit-Paket wählen</label>
+                  <Select
+                    value={creditSub?.package || ""}
+                    onValueChange={(val) => {
+                      if (val && val !== creditSub?.package) {
+                        handleCreditAction(val);
+                      }
+                    }}
+                    disabled={creditLoading}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Paket auswählen…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CREDIT_PACKAGES.map((pkg) => (
+                        <SelectItem key={pkg.key} value={pkg.key}>
+                          Paket {pkg.label} — +{pkg.credits} Credits/Monat — {pkg.price}€/Monat (= {pkg.total} gesamt)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  return (
-                    <div
-                      key={pkg.key}
-                      className={`relative rounded-xl border p-5 transition-all ${
-                        isActive 
-                          ? 'border-yellow-500/50 bg-yellow-500/5 ring-1 ring-yellow-500/20' 
-                          : pkg.popular 
-                            ? 'border-primary/30 bg-primary/5' 
-                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
-                      }`}
-                    >
-                      {pkg.popular && !isActive && (
-                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-primary text-primary-foreground text-[10px] px-2">Beliebt</Badge>
-                        </div>
-                      )}
-                      {isActive && (
-                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-yellow-500 text-black text-[10px] px-2">Dein Paket</Badge>
-                        </div>
-                      )}
-
-                      <div className="text-center mb-4">
-                        <p className="text-2xl font-bold text-foreground">Paket {pkg.label}</p>
-                        <p className="text-sm text-muted-foreground mt-1">+{pkg.credits} Credits/Monat</p>
-                      </div>
-
-                      <div className="text-center mb-4">
-                        <span className="text-3xl font-bold text-foreground">{pkg.price}€</span>
-                        <span className="text-muted-foreground text-sm">/Monat</span>
-                      </div>
-
-                      <div className="text-center text-xs text-muted-foreground mb-4">
-                        = {pkg.total} Credits gesamt (100 Standard + {pkg.credits} Extra)
-                      </div>
-
-                      {isActive ? (
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
-                          onClick={handleCancelCredits}
-                          disabled={creditLoading}
-                        >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Kündigen
-                        </Button>
-                      ) : (
-                        <Button
-                          className="w-full"
-                          variant={pkg.popular ? "default" : "outline"}
-                          onClick={() => handleCreditAction(pkg.key)}
-                          disabled={creditLoading}
-                        >
-                          {isUpgrade ? (
-                            <><ArrowUpCircle className="w-4 h-4 mr-2" />Upgraden</>
-                          ) : isDowngrade ? (
-                            <><ArrowDownCircle className="w-4 h-4 mr-2" />Downgraden</>
-                          ) : (
-                            <><Coins className="w-4 h-4 mr-2" />Buchen</>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
+                {creditSub && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                    onClick={handleCancelCredits}
+                    disabled={creditLoading}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Paket kündigen
+                  </Button>
+                )}
               </div>
-              
-              <p className="text-xs text-muted-foreground mt-4 text-center">
+
+              <p className="text-xs text-muted-foreground mt-4">
                 Credits gelten für Telefonnummern und E-Mail-Adressen gleichermaßen. Änderungen werden anteilig verrechnet.
               </p>
             </CardContent>
