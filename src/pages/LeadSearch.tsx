@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,16 +20,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { toast } from "sonner";
-import { Search, Sparkles, Save, Download, Zap, Building, MapPin, Users, Loader2, ListPlus, ExternalLink, ArrowRight, Linkedin, CheckCircle, XCircle } from "lucide-react";
+import {
+  Search, Sparkles, Save, Download, Zap, Building2, MapPin, Users,
+  Loader2, ListPlus, ExternalLink, Linkedin, CheckCircle, XCircle,
+  Globe, Mail, Tag, ChevronRight, SlidersHorizontal, Monitor,
+  Megaphone, Briefcase, Banknote, Heart, Factory, Car, Truck,
+  Leaf, UtensilsCrossed, GraduationCap, Newspaper, Phone as PhoneIcon,
+  Shield, Wrench, ShoppingBag, FlaskConical, Hash
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAccountFilter } from "@/hooks/useAccountFilter";
 import EnrichmentUpsellBanner from "@/components/EnrichmentUpsellBanner";
@@ -64,26 +63,26 @@ interface ListStats {
 }
 
 const INDUSTRIES = [
-  "Software & IT",
-  "E-Commerce",
-  "Marketing & Werbung",
-  "Beratung & Consulting",
-  "Finanzdienstleistungen",
-  "Immobilien",
-  "Gesundheitswesen",
-  "Maschinenbau",
-  "Automotive",
-  "Logistik & Transport",
-  "Energie & Umwelt",
-  "Lebensmittel & Gastronomie",
-  "Bildung & Coaching",
-  "Medien & Verlag",
-  "Telekommunikation",
-  "Versicherungen",
-  "Personaldienstleistung",
-  "Handwerk & Bau",
-  "Einzelhandel",
-  "Pharma & Chemie",
+  { value: "Software & IT", label: "Software & IT", icon: Monitor },
+  { value: "E-Commerce", label: "E-Commerce", icon: ShoppingBag },
+  { value: "Marketing & Werbung", label: "Marketing & Werbung", icon: Megaphone },
+  { value: "Beratung & Consulting", label: "Beratung & Consulting", icon: Briefcase },
+  { value: "Finanzdienstleistungen", label: "Finanzdienstleistungen", icon: Banknote },
+  { value: "Immobilien", label: "Immobilien", icon: Building2 },
+  { value: "Gesundheitswesen", label: "Gesundheitswesen", icon: Heart },
+  { value: "Maschinenbau", label: "Maschinenbau", icon: Factory },
+  { value: "Automotive", label: "Automotive", icon: Car },
+  { value: "Logistik & Transport", label: "Logistik & Transport", icon: Truck },
+  { value: "Energie & Umwelt", label: "Energie & Umwelt", icon: Leaf },
+  { value: "Lebensmittel & Gastronomie", label: "Lebensmittel & Gastronomie", icon: UtensilsCrossed },
+  { value: "Bildung & Coaching", label: "Bildung & Coaching", icon: GraduationCap },
+  { value: "Medien & Verlag", label: "Medien & Verlag", icon: Newspaper },
+  { value: "Telekommunikation", label: "Telekommunikation", icon: PhoneIcon },
+  { value: "Versicherungen", label: "Versicherungen", icon: Shield },
+  { value: "Personaldienstleistung", label: "Personaldienstleistung", icon: Users },
+  { value: "Handwerk & Bau", label: "Handwerk & Bau", icon: Wrench },
+  { value: "Einzelhandel", label: "Einzelhandel", icon: ShoppingBag },
+  { value: "Pharma & Chemie", label: "Pharma & Chemie", icon: FlaskConical },
 ];
 
 const EMPLOYEE_COUNTS = [
@@ -135,7 +134,6 @@ const LeadSearch = () => {
         .order('created_at', { ascending: false });
       if (!error && data) {
         setSavedLists((data as SavedList[]) || []);
-        // Fetch stats for all lists
         if (data.length > 0) {
           fetchListStats(data.map((l: any) => l.id));
         }
@@ -161,9 +159,7 @@ const LeadSearch = () => {
       const { data, error } = await supabase.functions.invoke('search-leads', {
         body: { action: 'enrich_list', list_id: listId },
       });
-
       if (error) throw error;
-
       if (data?.success) {
         toast.success(`${data.enriched} von ${data.total} Leads angereichert${data.imported > 0 ? `, ${data.imported} neu importiert` : ''}`);
         fetchSavedLists();
@@ -184,11 +180,9 @@ const LeadSearch = () => {
       toast.error("Bitte wähle eine Branche aus");
       return;
     }
-
     setSearching(true);
     setLeads([]);
     setSelectedLeads(new Set());
-
     try {
       const { data, error } = await supabase.functions.invoke('search-leads', {
         body: {
@@ -199,9 +193,7 @@ const LeadSearch = () => {
           count: parseInt(resultCount),
         },
       });
-
       if (error) throw error;
-
       if (data?.leads) {
         setLeads(data.leads);
         toast.success(`${data.leads.length} Entscheider gefunden`);
@@ -236,16 +228,13 @@ const LeadSearch = () => {
       toast.error("Bitte gib einen Listennamen ein");
       return;
     }
-
     const leadsToSave = selectedLeads.size > 0
       ? Array.from(selectedLeads).map(i => leads[i])
       : leads;
-
     if (leadsToSave.length === 0) {
       toast.error("Keine Leads zum Speichern");
       return;
     }
-
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke('search-leads', {
@@ -261,9 +250,7 @@ const LeadSearch = () => {
           },
         },
       });
-
       if (error) throw error;
-
       if (data?.success) {
         toast.success(`Liste "${listName}" mit ${leadsToSave.length} Leads gespeichert`);
         setSaveDialogOpen(false);
@@ -282,27 +269,22 @@ const LeadSearch = () => {
 
   const handleImportSelected = async (listId: string) => {
     try {
-      // Get items from this list
       const { data: items, error } = await supabase
         .from('lead_list_items')
         .select('id')
         .eq('list_id', listId)
         .eq('imported', false);
-
       if (error || !items?.length) {
         toast.error("Keine neuen Leads zum Importieren");
         return;
       }
-
       const { data, error: importErr } = await supabase.functions.invoke('search-leads', {
         body: {
           action: 'import_to_contacts',
           item_ids: items.map(i => i.id),
         },
       });
-
       if (importErr) throw importErr;
-
       if (data?.success) {
         toast.success(`${data.imported} Leads als Kontakte importiert`);
         fetchSavedLists();
@@ -312,141 +294,180 @@ const LeadSearch = () => {
     }
   };
 
+  // Group leads by company for card display
+  const companyGroups = leads.reduce<Record<string, { company: string; industry: string; city: string; country: string; website: string; employee_count: string; leads: (SearchLead & { idx: number })[] }>>((acc, lead, idx) => {
+    const key = lead.company || `unknown-${idx}`;
+    if (!acc[key]) {
+      acc[key] = {
+        company: lead.company,
+        industry: lead.industry,
+        city: lead.city,
+        country: lead.country,
+        website: lead.website,
+        employee_count: lead.employee_count,
+        leads: [],
+      };
+    }
+    acc[key].leads.push({ ...lead, idx });
+    return acc;
+  }, {});
+
+  const companyList = Object.values(companyGroups);
+
   return (
     <Layout>
-      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Search className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Lead-Recherche</h1>
-              <p className="text-sm text-muted-foreground">KI-gestützte Suche nach Entscheidern</p>
-            </div>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Search Bar */}
+        <div className="flex flex-col items-center gap-4 pt-2 pb-4">
+          <h1 className="text-2xl font-bold text-foreground">Finde passende Unternehmen & Entscheider</h1>
+          <div className="w-full max-w-2xl relative">
+            <Input
+              value={industry === "custom" ? customIndustry : (industry || "")}
+              onChange={(e) => {
+                setIndustry("custom");
+                setCustomIndustry(e.target.value);
+              }}
+              placeholder="Branche oder Unternehmen suchen..."
+              className="h-12 pl-5 pr-14 text-base rounded-full border-primary/30 bg-background shadow-sm"
+            />
+            <Button
+              size="icon"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full h-9 w-9"
+              onClick={handleSearch}
+              disabled={searching}
+            >
+              {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            </Button>
           </div>
         </div>
 
         <EnrichmentUpsellBanner />
 
-        {/* Search Filters */}
-        <Card className="border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Suchkriterien
-            </CardTitle>
-            <CardDescription>Echtzeit-Suche in Handelsregister & Gelbe Seiten mit LinkedIn-Profilprüfung</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Industry */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <Building className="w-3.5 h-3.5" />
-                  Branche *
-                </Label>
-                <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Branche wählen..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDUSTRIES.map(ind => (
-                      <SelectItem key={ind} value={ind}>{ind}</SelectItem>
-                    ))}
-                    <SelectItem value="custom">Eigene Branche eingeben...</SelectItem>
-                  </SelectContent>
-                </Select>
-                {industry === "custom" && (
-                  <Input
-                    value={customIndustry}
-                    onChange={(e) => setCustomIndustry(e.target.value)}
-                    placeholder="z.B. Biotechnologie"
-                    className="mt-2"
-                  />
-                )}
-              </div>
+        <div className="flex gap-6">
+          {/* Sidebar Filters */}
+          <aside className="hidden md:block w-64 shrink-0 space-y-5">
+            {/* Branche / Kategorie */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-foreground">Kategorie</Label>
+              <Select value={industry} onValueChange={(v) => { setIndustry(v); if (v !== "custom") setCustomIndustry(""); }}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Alle Kategorien" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="all">Alle Kategorien</SelectItem>
+                  {INDUSTRIES.map(ind => {
+                    const Icon = ind.icon;
+                    return (
+                      <SelectItem key={ind.value} value={ind.value}>
+                        <span className="flex items-center gap-2">
+                          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                          {ind.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                  <SelectItem value="custom">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-muted-foreground shrink-0" />
+                      Eigene Branche...
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {industry === "custom" && (
+                <Input
+                  value={customIndustry}
+                  onChange={(e) => setCustomIndustry(e.target.value)}
+                  placeholder="z.B. Biotechnologie"
+                  className="mt-1"
+                />
+              )}
+            </div>
 
-              {/* Location */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  Standort
-                </Label>
+            {/* Standort */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-foreground">Standort</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="z.B. München, Österreich..."
+                  placeholder="z.B. München"
+                  className="pl-9 bg-background"
                 />
-              </div>
-
-              {/* Employee Count */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
-                  Mitarbeiteranzahl
-                </Label>
-                <Select value={employeeCount} onValueChange={setEmployeeCount}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Größen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Größen</SelectItem>
-                    {EMPLOYEE_COUNTS.map(ec => (
-                      <SelectItem key={ec.value} value={ec.value}>{ec.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Result Count */}
-              <div className="space-y-2">
-                <Label>Anzahl Ergebnisse</Label>
-                <Select value={resultCount} onValueChange={setResultCount}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5 Leads</SelectItem>
-                    <SelectItem value="10">10 Leads</SelectItem>
-                    <SelectItem value="20">20 Leads</SelectItem>
-                    <SelectItem value="30">30 Leads</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
+            {/* Mitarbeiter */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-foreground">Mitarbeiteranzahl</Label>
+              <Select value={employeeCount} onValueChange={setEmployeeCount}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Alle Größen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Größen</SelectItem>
+                  {EMPLOYEE_COUNTS.map(ec => (
+                    <SelectItem key={ec.value} value={ec.value}>
+                      <span className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                        {ec.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Ergebnisse */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-foreground">Anzahl Ergebnisse</Label>
+              <Select value={resultCount} onValueChange={setResultCount}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 Leads</SelectItem>
+                  <SelectItem value="10">10 Leads</SelectItem>
+                  <SelectItem value="20">20 Leads</SelectItem>
+                  <SelectItem value="30">30 Leads</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Search Button */}
             <Button
               onClick={handleSearch}
               disabled={searching}
-              className="mt-4 w-full md:w-auto"
+              className="w-full"
               size="lg"
             >
               {searching ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  KI recherchiert...
+                  Recherchiert...
                 </>
               ) : (
                 <>
                   <Search className="w-4 h-4 mr-2" />
-                  Entscheider suchen
+                  Suchen
                 </>
               )}
             </Button>
-          </CardContent>
-        </Card>
+          </aside>
 
-        {/* Results */}
-        {leads.length > 0 && (
-          <Card className="border-border">
-            <CardHeader className="pb-3">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 space-y-4">
+            {/* Results Header */}
+            {leads.length > 0 && (
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">
-                  {leads.length} Entscheider gefunden
-                </CardTitle>
-                <div className="flex gap-2">
+                <p className="text-sm text-muted-foreground">
+                  {leads.length} Entscheider in {companyList.length} Unternehmen
+                </p>
+                <div className="flex items-center gap-2">
+                  {selectedLeads.size > 0 && (
+                    <span className="text-xs text-muted-foreground">{selectedLeads.size} ausgewählt</span>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -455,185 +476,232 @@ const LeadSearch = () => {
                       setSaveDialogOpen(true);
                     }}
                   >
-                    <Save className="w-4 h-4 mr-1" />
+                    <Save className="w-3.5 h-3.5 mr-1.5" />
                     Liste speichern
                   </Button>
+                  <div className="flex items-center gap-1">
+                    <Checkbox
+                      checked={selectedLeads.size === leads.length && leads.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                    <span className="text-xs text-muted-foreground">Alle</span>
+                  </div>
                 </div>
               </div>
-              {selectedLeads.size > 0 && (
-                <p className="text-sm text-muted-foreground">{selectedLeads.size} ausgewählt</p>
-              )}
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10">
-                        <Checkbox
-                          checked={selectedLeads.size === leads.length && leads.length > 0}
-                          onCheckedChange={toggleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Position</TableHead>
-                      <TableHead>Unternehmen</TableHead>
-                      <TableHead>Standort</TableHead>
-                      <TableHead>Größe</TableHead>
-                      <TableHead>Website</TableHead>
-                      <TableHead>LinkedIn</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leads.map((lead, idx) => (
-                      <TableRow key={idx} className={selectedLeads.has(idx) ? 'bg-primary/5' : ''}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedLeads.has(idx)}
-                            onCheckedChange={() => toggleSelect(idx)}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {lead.first_name} {lead.last_name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{lead.position}</TableCell>
-                        <TableCell>{lead.company}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {[lead.city, lead.country].filter(Boolean).join(', ')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">{lead.employee_count}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {lead.website && (
-                            <a href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1">
-                              <ExternalLink className="w-3 h-3" />
-                              Website
-                            </a>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {lead.linkedin_verified ? (
-                            <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline">
-                              <Linkedin className="w-3.5 h-3.5" />
-                              <CheckCircle className="w-3 h-3 text-green-500" />
-                            </a>
-                          ) : (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <XCircle className="w-3 h-3" />
-                              Nicht gefunden
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
 
-        {/* Saved Lists */}
-        {savedLists.length > 0 && (
-          <Card className="border-border">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <ListPlus className="w-5 h-5" />
-                Gespeicherte Listen
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedLists.map(list => {
-                  const stats = listStats[list.id];
-                  const enrichedPct = stats ? Math.round((stats.enriched / stats.total) * 100) : 0;
-                  return (
-                  <div key={list.id} className="rounded-lg border border-border p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium text-foreground">{list.name}</h4>
-                        {list.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{list.description}</p>
-                        )}
-                      </div>
-                      <Badge variant="secondary">{list.total_leads} Leads</Badge>
-                    </div>
-
-                    {/* Enrichment Stats */}
-                    {stats && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Angereichert</span>
-                          <span className="font-medium text-foreground">{stats.enriched}/{stats.total} ({enrichedPct}%)</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div 
-                            className="bg-primary rounded-full h-2 transition-all duration-300" 
-                            style={{ width: `${enrichedPct}%` }}
-                          />
-                        </div>
-                        <div className="flex gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Download className="w-3 h-3" />
-                            {stats.imported} importiert
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Zap className="w-3 h-3 text-primary" />
-                            {stats.enriched} angereichert
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="text-xs text-muted-foreground">
-                      {list.search_filters?.industry && <span>Branche: {list.search_filters.industry}</span>}
-                      {list.search_filters?.location && <span> • {list.search_filters.location}</span>}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleImportSelected(list.id)}
-                      >
-                        <Download className="w-3.5 h-3.5 mr-1" />
-                        Importieren
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleEnrichList(list.id)}
-                        disabled={enrichingListId === list.id || (stats?.enriched === stats?.total && stats?.total > 0)}
-                      >
-                        {enrichingListId === list.id ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                            Anreichern...
-                          </>
-                        ) : stats?.enriched === stats?.total && stats?.total > 0 ? (
-                          <>
-                            <Zap className="w-3.5 h-3.5 mr-1" />
-                            Vollständig
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="w-3.5 h-3.5 mr-1" />
-                            Anreichern
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Erstellt am {new Date(list.created_at).toLocaleDateString('de-DE')}
-                    </p>
+            {/* Searching state */}
+            {searching && (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
                   </div>
-                  );
-                })}
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-foreground">KI recherchiert Unternehmen...</p>
+                  <p className="text-sm text-muted-foreground mt-1">Suche in Handelsregister, Gelbe Seiten & LinkedIn</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+
+            {/* Empty state */}
+            {!searching && leads.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                  <Search className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Starte deine Recherche</p>
+                  <p className="text-sm text-muted-foreground mt-1">Wähle Filter links und klicke auf Suchen</p>
+                </div>
+              </div>
+            )}
+
+            {/* Company Cards */}
+            {!searching && companyList.map((group, gIdx) => (
+              <Card key={gIdx} className="border-border overflow-hidden hover:border-primary/30 transition-colors">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    {/* Company Avatar */}
+                    <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center shrink-0 border border-border">
+                      <Building2 className="w-6 h-6 text-muted-foreground" />
+                    </div>
+
+                    {/* Company Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground truncate">{group.company}</h3>
+                          <p className="text-sm text-muted-foreground mt-0.5">{group.industry}</p>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0 text-xs">
+                          <Users className="w-3 h-3 mr-1" />
+                          {group.employee_count}
+                        </Badge>
+                      </div>
+
+                      {/* Meta row */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                        {(group.city || group.country) && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {[group.city, group.country].filter(Boolean).join(', ')}
+                          </span>
+                        )}
+                        {group.website && (
+                          <a
+                            href={group.website.startsWith('http') ? group.website : `https://${group.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-primary transition-colors"
+                          >
+                            <Globe className="w-3 h-3" />
+                            {group.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* People in this company */}
+                      <div className="mt-3 border-t border-border/50 pt-3 space-y-2">
+                        {group.leads.map((lead) => (
+                          <div key={lead.idx} className="flex items-center justify-between gap-2 group/lead">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Checkbox
+                                checked={selectedLeads.has(lead.idx)}
+                                onCheckedChange={() => toggleSelect(lead.idx)}
+                              />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {lead.first_name} {lead.last_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">{lead.position}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {lead.linkedin_verified ? (
+                                <a
+                                  href={lead.linkedin_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 transition-colors"
+                                >
+                                  <Linkedin className="w-3.5 h-3.5" />
+                                  <CheckCircle className="w-3 h-3 text-green-500" />
+                                </a>
+                              ) : (
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <XCircle className="w-3 h-3" />
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom actions */}
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      {group.industry && (
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <Tag className="w-3 h-3" />
+                          {group.industry}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {group.website && (
+                        <Button variant="ghost" size="sm" className="text-xs h-8" asChild>
+                          <a
+                            href={group.website.startsWith('http') ? group.website : `https://${group.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Zum Profil
+                          </a>
+                        </Button>
+                      )}
+                      <Button size="sm" className="text-xs h-8">
+                        Kontaktieren
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Saved Lists */}
+            {savedLists.length > 0 && (
+              <div className="mt-8 space-y-4">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <ListPlus className="w-5 h-5" />
+                  Gespeicherte Listen
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {savedLists.map(list => {
+                    const stats = listStats[list.id];
+                    const enrichedPct = stats ? Math.round((stats.enriched / stats.total) * 100) : 0;
+                    return (
+                      <Card key={list.id} className="border-border">
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium text-foreground">{list.name}</h4>
+                              {list.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{list.description}</p>
+                              )}
+                            </div>
+                            <Badge variant="secondary">{list.total_leads} Leads</Badge>
+                          </div>
+                          {stats && (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">Angereichert</span>
+                                <span className="font-medium text-foreground">{stats.enriched}/{stats.total} ({enrichedPct}%)</span>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-1.5">
+                                <div className="bg-primary rounded-full h-1.5 transition-all duration-300" style={{ width: `${enrichedPct}%` }} />
+                              </div>
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            {list.search_filters?.industry && <span>Branche: {list.search_filters.industry}</span>}
+                            {list.search_filters?.location && <span> • {list.search_filters.location}</span>}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1" onClick={() => handleImportSelected(list.id)}>
+                              <Download className="w-3.5 h-3.5 mr-1" />
+                              Importieren
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleEnrichList(list.id)}
+                              disabled={enrichingListId === list.id || (stats?.enriched === stats?.total && stats?.total > 0)}
+                            >
+                              {enrichingListId === list.id ? (
+                                <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />Anreichern...</>
+                              ) : stats?.enriched === stats?.total && stats?.total > 0 ? (
+                                <><Zap className="w-3.5 h-3.5 mr-1" />Vollständig</>
+                              ) : (
+                                <><Zap className="w-3.5 h-3.5 mr-1" />Anreichern</>
+                              )}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Erstellt am {new Date(list.created_at).toLocaleDateString('de-DE')}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Save Dialog */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
@@ -644,19 +712,11 @@ const LeadSearch = () => {
             <div className="space-y-4 mt-2">
               <div className="space-y-2">
                 <Label>Listenname *</Label>
-                <Input
-                  value={listName}
-                  onChange={(e) => setListName(e.target.value)}
-                  placeholder="z.B. IT-Entscheider München"
-                />
+                <Input value={listName} onChange={(e) => setListName(e.target.value)} placeholder="z.B. IT-Entscheider München" />
               </div>
               <div className="space-y-2">
                 <Label>Beschreibung</Label>
-                <Input
-                  value={listDescription}
-                  onChange={(e) => setListDescription(e.target.value)}
-                  placeholder="Optional..."
-                />
+                <Input value={listDescription} onChange={(e) => setListDescription(e.target.value)} placeholder="Optional..." />
               </div>
               <p className="text-sm text-muted-foreground">
                 {selectedLeads.size > 0
