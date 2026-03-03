@@ -305,9 +305,15 @@ const Landing = () => {
                     <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded bg-purple-500/20 text-purple-400 text-[10px] md:text-xs">75% geschaut</span>
                   </div>
                 </div>
-                <div className="w-full md:w-72 h-36 md:h-48 rounded-lg md:rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/20 flex items-center justify-center">
-                    <Play className="h-6 w-6 md:h-8 md:w-8 text-white ml-0.5 md:ml-1" />
+                <div className="w-full md:w-80 rounded-lg md:rounded-xl overflow-hidden border border-white/10">
+                  <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+                    <iframe
+                      src="https://fast.wistia.net/embed/iframe/jocwqh1ose?seo=true&videoFoam=false"
+                      title="Demo Video"
+                      allow="autoplay; fullscreen"
+                      frameBorder="0"
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
                   </div>
                 </div>
               </div>
