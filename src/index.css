@@ -425,3 +425,13 @@
   opacity: 1;
   transform: translateX(0);
 }
+
+/* Logo ticker animation */
+@keyframes scroll-logos {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll-logos {
+  animation: scroll-logos 25s linear infinite;
+}

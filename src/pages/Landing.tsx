@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Shield, Lock, UserCheck, Hand } from "lucide-react";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
+import crmDashboardScreenshot from "@/assets/crm-dashboard-screenshot.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
 import { FeaturesMegaMenu } from "@/components/landing/FeaturesMegaMenu";
 import { UniqueFeatures } from "@/components/landing/UniqueFeatures";
@@ -213,7 +214,7 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-28 md:pt-36 pb-16 md:pb-28 px-4 md:px-6 overflow-hidden">
+      <section className="relative pt-28 md:pt-40 pb-12 md:pb-20 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <Suspense fallback={<div className="hero-gradient-layer" aria-hidden />}>
             <SkyBackground 
@@ -223,64 +224,119 @@ const Landing = () => {
             />
           </Suspense>
         </div>
-        <div className="container mx-auto text-center max-w-5xl relative z-[1]">
-          <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium">
-            <Sparkles className="inline h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
-            LinkedIn Outreach mit KI-Landingpages
-          </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 text-white leading-tight">
-            Outreach-Kampagnen auf LinkedIn<br />
-            <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent italic">
-              mit Pipeline-System
-            </span>
-          </h1>
-          
-          <p className="text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
-            Die LinkedIn Outreach Software, die es dir ermöglicht mit der ersten Nachricht bereits Termine zu legen in deiner Zielgruppe. 
-            Mit integriertem CRM, Echtzeit-Benachrichtigung und KI Einwandbehandlung im Call.
-          </p>
-          
-          <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
-            <a 
-              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
-              >
-                <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Zugang sichern
-                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-            </a>
-            <a href="#demo-video">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/10 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
-              >
-                <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Demo Video ansehen
-              </Button>
-            </a>
-          </div>
+        <div className="container mx-auto max-w-6xl relative z-[1]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Value Proposition */}
+            <div className="text-left">
+              <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium uppercase tracking-wider">
+                Von den Machern von pitchfirst.io
+              </div>
+              
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-[1.1]">
+                Das einfachste CRM am Markt.{" "}
+                <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Perfekt für Setter-Closer-Prinzip.
+                </span>
+              </h1>
+              
+              <div className="space-y-3 md:space-y-4 mb-8">
+                {[
+                  "Intelligentes Pipeline-System mit Setter-Closer-Prinzip",
+                  "Effizienter Vertrieb mit unserem intelligenten CRM-System",
+                  "Mehr Umsatz durch klare KPIs und Optimierungspotenziale",
+                ].map((point, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className="mt-0.5 h-5 w-5 md:h-6 md:w-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                    </div>
+                    <span className="text-gray-300 text-sm md:text-base lg:text-lg">{point}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-3 md:gap-4 flex-wrap">
+                <a 
+                  href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-8 h-12 md:h-14 text-sm md:text-lg rounded-xl"
+                  >
+                    Jetzt Zugang sichern
+                    <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+                  </Button>
+                </a>
+                <a href="#demo-video">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10 px-6 md:px-8 h-12 md:h-14 text-sm md:text-lg"
+                  >
+                    <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                    Demo-Video ansehen
+                  </Button>
+                </a>
+              </div>
+            </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto text-white px-2">
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">80%</div>
-              <div className="text-xs md:text-sm text-gray-400">Bessere Erreichbarkeit</div>
+            {/* Right: Product Screenshot Mockup */}
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-lg lg:max-w-xl">
+                {/* Laptop frame */}
+                <div className="relative rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] p-1 shadow-2xl shadow-primary/10">
+                  <img 
+                    src={crmDashboardScreenshot}
+                    alt="pitchfirst.io CRM Dashboard"
+                    className="rounded-lg w-full"
+                  />
+                </div>
+                {/* Floating Power Dialer card */}
+                <div className="absolute -right-4 md:-right-8 top-4 md:top-8 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-3 md:p-4 border border-white/20 max-w-[160px] md:max-w-[200px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <span className="text-xs md:text-sm font-semibold text-gray-900">Power Dialer aktiv</span>
+                  </div>
+                  <div className="text-[10px] md:text-xs text-gray-500">Nächster Anruf in 3s...</div>
+                </div>
+                {/* Floating notification */}
+                <div className="absolute -left-4 md:-left-8 bottom-8 md:bottom-12 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-3 md:p-4 border border-white/20 max-w-[180px] md:max-w-[220px]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs md:text-sm font-semibold text-gray-900">Hot Lead!</span>
+                  </div>
+                  <div className="text-[10px] md:text-xs text-gray-500">Thomas M. hat dein Video angesehen</div>
+                </div>
+                {/* Glow effect */}
+                <div className="absolute -inset-4 bg-primary/5 rounded-2xl blur-2xl -z-10" />
+              </div>
             </div>
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">Live</div>
-              <div className="text-xs md:text-sm text-gray-400">KI-Einwandtrainer</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">CRM</div>
-              <div className="text-xs md:text-sm text-gray-400">Alles integriert</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Bar - Logo Ticker */}
+      <section className="relative z-[1] py-8 md:py-12 border-t border-b border-white/5 bg-white/[0.02] overflow-hidden">
+        <div className="container mx-auto max-w-6xl px-4 md:px-6">
+          <p className="text-center text-white font-semibold text-base md:text-lg mb-6 md:mb-8">
+            80+ Unternehmen arbeiten bereits mit pitchfirst.io
+          </p>
+          <div className="relative overflow-hidden">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-[#0a0e27] to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-[#0a0e27] to-transparent z-10" />
+            {/* Scrolling logos */}
+            <div className="flex animate-scroll-logos gap-12 md:gap-16 items-center">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex gap-12 md:gap-16 items-center shrink-0">
+                  {["Bildungsfabrik", "BNBPro", "Golden Voice Academy", "FairFamily", "Bruder", "Baulig", "Hoffmann Productions"].map((name, idx) => (
+                    <div key={idx} className="text-white/40 text-sm md:text-base font-semibold whitespace-nowrap tracking-wider uppercase">
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
