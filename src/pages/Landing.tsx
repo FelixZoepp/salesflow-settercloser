@@ -233,14 +233,10 @@ const Landing = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left: Value Proposition */}
             <div className="text-left">
-              <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium uppercase tracking-wider">
-                Von den Machern von pitchfirst.io
-              </div>
-              
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-[1.1]">
-                Das einfachste CRM am Markt.{" "}
+                Das beste Outreach-System für Agenturen.{" "}
                 <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Perfekt für Setter-Closer-Prinzip.
+                  Kunden zum richtigen Zeitpunkt anrufen.
                 </span>
               </h1>
               
