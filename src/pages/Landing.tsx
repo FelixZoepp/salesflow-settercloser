@@ -233,24 +233,24 @@ const Landing = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left: Value Proposition */}
             <div className="text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-[1.1]">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white leading-[1.15]">
                 Das beste Outreach-System für Agenturen.{" "}
                 <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Kunden zum richtigen Zeitpunkt anrufen.
                 </span>
               </h1>
               
-              <div className="space-y-3 md:space-y-4 mb-8">
+              <div className="space-y-2.5 mb-6">
                 {[
-                  "Intelligentes Pipeline-System mit Setter-Closer-Prinzip",
-                  "Effizienter Vertrieb mit unserem intelligenten CRM-System",
-                  "Mehr Umsatz durch klare KPIs und Optimierungspotenziale",
+                  "KI Einwandbehandlungs-Trainer für deinen Vertrieb",
+                  "Intelligentes Pipeline-System verschiebt heiße Leads",
+                  "Alle Kennzahlen für Outreach auf einen Blick",
                 ].map((point, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="mt-0.5 h-5 w-5 md:h-6 md:w-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                  <div key={idx} className="flex items-start gap-2.5">
+                    <div className="mt-0.5 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3 w-3 text-primary" />
                     </div>
-                    <span className="text-gray-300 text-sm md:text-base lg:text-lg">{point}</span>
+                    <span className="text-gray-300 text-sm md:text-base">{point}</span>
                   </div>
                 ))}
               </div>
