@@ -347,7 +347,65 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Demo Video Section */}
+      {/* Integrations Section */}
+      <section className="relative z-[1] py-16 md:py-24 px-4 md:px-6 overflow-hidden">
+        <div className="container mx-auto max-w-5xl">
+          <h2 className="text-center text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
+            Integriert mit allen <span className="text-primary">Plattformen</span> und
+          </h2>
+          <h2 className="text-center text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-12 md:mb-16">
+            <span className="text-primary">Apps</span>, die du benötigst
+          </h2>
+          
+          <div className="relative flex items-center justify-center py-8">
+            {/* Scrolling logos row */}
+            <div className="relative w-full overflow-hidden">
+              {/* Fade edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-[#0a0e27] to-transparent z-10" />
+              <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-[#0a0e27] to-transparent z-10" />
+              
+              <div className="flex animate-scroll-integrations items-center gap-6 md:gap-8">
+                {[...Array(3)].map((_, setIdx) => (
+                  <div key={setIdx} className="flex items-center gap-6 md:gap-8 shrink-0">
+                    {[
+                      { icon: "📊", label: "Google Sheets" },
+                      { icon: "💬", label: "Slack" },
+                      { icon: "📋", label: "Trello" },
+                      { icon: "⚡", label: "Zapier" },
+                    ].map((app, idx) => (
+                      <div key={idx} className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl md:text-2xl shrink-0 hover:bg-white/10 transition-colors">
+                        {app.icon}
+                      </div>
+                    ))}
+                    
+                    {/* Center: pitchfirst logo with glow - only in first set */}
+                    {setIdx === 0 && (
+                      <div className="relative shrink-0 mx-2 md:mx-4">
+                        <div className="absolute inset-0 bg-primary/30 rounded-2xl blur-xl scale-150" />
+                        <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-2xl shadow-primary/40 flex items-center justify-center border border-white/20">
+                          <img src={pitchfirstLogo} alt="pitchfirst.io" className="h-8 md:h-10 w-auto brightness-0" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {[
+                      { icon: "📧", label: "Gmail" },
+                      { icon: "📅", label: "Calendly" },
+                      { icon: "🔗", label: "LinkedIn" },
+                      { icon: "📞", label: "Twilio" },
+                    ].map((app, idx) => (
+                      <div key={`r-${idx}`} className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl md:text-2xl shrink-0 hover:bg-white/10 transition-colors">
+                        {app.icon}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="demo-video" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
         <div className="container mx-auto max-w-4xl scroll-animate scroll-fade-up">
           <div className="text-center mb-6 md:mb-10">
