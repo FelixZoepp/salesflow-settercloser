@@ -7,6 +7,11 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import crmDashboardScreenshot from "@/assets/crm-dashboard-screenshot.png";
 import felixLiveCallImage from "@/assets/felix-live-call.jpg";
+import logoTga from "@/assets/logos/tga.png";
+import logoIklaro from "@/assets/logos/iklaro.png";
+import logoOkTraining from "@/assets/logos/ok-training.png";
+import logoRueschMedia from "@/assets/logos/ruesch-media.png";
+import logoSinnSystem from "@/assets/logos/sinn-system.png";
 import { FeaturesMegaMenu } from "@/components/landing/FeaturesMegaMenu";
 import { UniqueFeatures } from "@/components/landing/UniqueFeatures";
 
@@ -330,10 +335,14 @@ const Landing = () => {
             <div className="flex animate-scroll-logos gap-12 md:gap-16 items-center">
               {[...Array(2)].map((_, setIdx) => (
                 <div key={setIdx} className="flex gap-12 md:gap-16 items-center shrink-0">
-                  {["Bildungsfabrik", "BNBPro", "Golden Voice Academy", "FairFamily", "Bruder", "Baulig", "Hoffmann Productions"].map((name, idx) => (
-                    <div key={idx} className="text-white/40 text-sm md:text-base font-semibold whitespace-nowrap tracking-wider uppercase">
-                      {name}
-                    </div>
+                  {[
+                    { src: logoTga, alt: "TGA" },
+                    { src: logoIklaro, alt: "iKlaro" },
+                    { src: logoOkTraining, alt: "OK Training & Consulting" },
+                    { src: logoRueschMedia, alt: "Ruesch Media" },
+                    { src: logoSinnSystem, alt: "Sinn + System" },
+                  ].map((logo, idx) => (
+                    <img key={idx} src={logo.src} alt={logo.alt} className="h-8 md:h-10 w-auto opacity-60 brightness-0 invert" />
                   ))}
                 </div>
               ))}
