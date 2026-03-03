@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Shield, Lock, UserCheck, Hand } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Shield, Lock, UserCheck, Hand, Calendar } from "lucide-react";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import crmDashboardScreenshot from "@/assets/crm-dashboard-screenshot.png";
@@ -347,7 +347,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Integrations Section */}
+      {/* Integrations Hub Section */}
       <section className="relative z-[1] py-16 md:py-24 px-4 md:px-6 overflow-hidden">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-center text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
@@ -357,54 +357,72 @@ const Landing = () => {
             <span className="text-primary">Apps</span>, die du benötigst
           </h2>
           
-          <div className="relative flex items-center justify-center py-8">
-            {/* Scrolling logos row */}
-            <div className="relative w-full overflow-hidden">
-              {/* Fade edges */}
-              <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-[#0a0e27] to-transparent z-10" />
-              <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-[#0a0e27] to-transparent z-10" />
-              
-              <div className="flex animate-scroll-integrations items-center gap-6 md:gap-8">
-                {[...Array(3)].map((_, setIdx) => (
-                  <div key={setIdx} className="flex items-center gap-6 md:gap-8 shrink-0">
-                    {[
-                      { icon: "📊", label: "Google Sheets" },
-                      { icon: "💬", label: "Slack" },
-                      { icon: "📋", label: "Trello" },
-                      { icon: "⚡", label: "Zapier" },
-                    ].map((app, idx) => (
-                      <div key={idx} className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl md:text-2xl shrink-0 hover:bg-white/10 transition-colors">
-                        {app.icon}
-                      </div>
-                    ))}
-                    
-                    {/* Center: pitchfirst logo with glow - only in first set */}
-                    {setIdx === 0 && (
-                      <div className="relative shrink-0 mx-2 md:mx-4">
-                        <div className="absolute inset-0 bg-primary/30 rounded-2xl blur-xl scale-150" />
-                        <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-2xl shadow-primary/40 flex items-center justify-center border border-white/20">
-                          <img src={pitchfirstLogo} alt="pitchfirst.io" className="h-8 md:h-10 w-auto brightness-0" />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {[
-                      { icon: "📧", label: "Gmail" },
-                      { icon: "📅", label: "Calendly" },
-                      { icon: "🔗", label: "LinkedIn" },
-                      { icon: "📞", label: "Twilio" },
-                    ].map((app, idx) => (
-                      <div key={`r-${idx}`} className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl md:text-2xl shrink-0 hover:bg-white/10 transition-colors">
-                        {app.icon}
-                      </div>
-                    ))}
-                  </div>
-                ))}
+          {/* Spider Web Hub */}
+          <div className="relative w-full max-w-xl md:max-w-2xl mx-auto aspect-square">
+            {/* SVG connection lines */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 500" fill="none">
+              {[
+                { x: 250, y: 80 },
+                { x: 410, y: 130 },
+                { x: 450, y: 280 },
+                { x: 390, y: 420 },
+                { x: 250, y: 450 },
+                { x: 110, y: 420 },
+                { x: 50, y: 280 },
+                { x: 90, y: 130 },
+              ].map((pos, i) => (
+                <line key={i} x1="250" y1="250" x2={pos.x} y2={pos.y} stroke="url(#lineGrad)" strokeWidth="1" opacity="0.4" />
+              ))}
+              <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="hsl(217, 91%, 60%)" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="hsl(217, 91%, 60%)" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* Center: pitchfirst logo */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="absolute inset-0 bg-primary/25 rounded-3xl blur-2xl scale-[2]" />
+              <div className="absolute inset-0 bg-primary/15 rounded-full blur-3xl scale-[3] animate-pulse-glow" />
+              <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl bg-white shadow-2xl shadow-primary/50 flex items-center justify-center border border-white/30">
+                <img src={pitchfirstLogo} alt="pitchfirst.io" className="h-10 md:h-14 w-auto brightness-0" />
               </div>
             </div>
+
+            {/* Orbiting integration nodes */}
+            {[
+              { name: "LinkedIn", icon: Linkedin, color: "text-blue-500", angle: 90, r: 42 },
+              { name: "Calendly", icon: Calendar, color: "text-blue-400", angle: 45, r: 42 },
+              { name: "Google Sheets", icon: BarChart3, color: "text-green-500", angle: 0, r: 42 },
+              { name: "Slack", icon: MessageSquare, color: "text-purple-500", angle: 315, r: 42 },
+              { name: "Zapier", icon: Zap, color: "text-orange-500", angle: 270, r: 42 },
+              { name: "Twilio", icon: Phone, color: "text-red-500", angle: 225, r: 42 },
+              { name: "Gmail", icon: Mail, color: "text-red-400", angle: 180, r: 42 },
+              { name: "HubSpot", icon: Target, color: "text-orange-400", angle: 135, r: 42 },
+            ].map((app, idx) => {
+              const rad = (app.angle * Math.PI) / 180;
+              const x = 50 + app.r * Math.cos(rad);
+              const y = 50 - app.r * Math.sin(rad);
+              return (
+                <div
+                  key={idx}
+                  className="absolute z-10 -translate-x-1/2 -translate-y-1/2 group"
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                >
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex flex-col items-center justify-center gap-1 transition-all hover:bg-white/10 hover:scale-110 hover:border-primary/30">
+                    <app.icon className={`h-5 w-5 md:h-6 md:w-6 ${app.color}`} />
+                  </div>
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] md:text-xs text-white/50 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {app.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
+
 
       <section id="demo-video" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
         <div className="container mx-auto max-w-4xl scroll-animate scroll-fade-up">
