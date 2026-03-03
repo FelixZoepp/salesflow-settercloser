@@ -435,3 +435,12 @@
 .animate-scroll-logos {
   animation: scroll-logos 25s linear infinite;
 }
+
+@keyframes scroll-integrations {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
+.animate-scroll-integrations {
+  animation: scroll-integrations 30s linear infinite;
+}
