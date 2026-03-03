@@ -212,7 +212,7 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Two Column */}
+      {/* Hero Section */}
       <section className="relative pt-28 md:pt-36 pb-16 md:pb-28 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <Suspense fallback={<div className="hero-gradient-layer" aria-hidden />}>
@@ -223,80 +223,96 @@ const Landing = () => {
             />
           </Suspense>
         </div>
-        <div className="container mx-auto max-w-7xl relative z-[1]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            {/* Left - Value Proposition */}
-            <div className="text-left">
-              <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium">
-                <Sparkles className="inline h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
-                LinkedIn Outreach mit KI-Landingpages
-              </div>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-white leading-tight">
-                Outreach-Kampagnen auf LinkedIn<br />
-                <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent italic">
-                  mit Pipeline-System
-                </span>
-              </h1>
-              
-              <p className="text-base md:text-lg lg:text-xl text-gray-300 mb-6 md:mb-8 max-w-xl">
-                Die LinkedIn Outreach Software, die es dir ermöglicht mit der ersten Nachricht bereits Termine zu legen in deiner Zielgruppe. 
-                Mit integriertem CRM, Echtzeit-Benachrichtigung und KI Einwandbehandlung im Call.
-              </p>
-              
-              <div className="flex gap-3 md:gap-4 flex-wrap mb-8 md:mb-10">
-                <a 
-                  href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
-                  >
-                    <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    Demo Termin buchen
-                    <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-                  </Button>
-                </a>
-              </div>
+        <div className="container mx-auto text-center max-w-5xl relative z-[1]">
+          <div className="inline-block mb-4 md:mb-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs md:text-sm font-medium">
+            <Sparkles className="inline h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
+            LinkedIn Outreach mit KI-Landingpages
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 text-white leading-tight">
+            Outreach-Kampagnen auf LinkedIn<br />
+            <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent italic">
+              mit Pipeline-System
+            </span>
+          </h1>
+          
+          <p className="text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
+            Die LinkedIn Outreach Software, die es dir ermöglicht mit der ersten Nachricht bereits Termine zu legen in deiner Zielgruppe. 
+            Mit integriertem CRM, Echtzeit-Benachrichtigung und KI Einwandbehandlung im Call.
+          </p>
+          
+          <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12 px-2">
+            <a 
+              href="https://calendly.com/zoepp-media/vorgesprach-demo-software"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-primary to-blue-500 hover:opacity-90 text-white shadow-2xl shadow-primary/50 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
+              >
+                <Phone className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Zugang sichern
+                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </a>
+            <a href="#demo-video">
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 px-6 md:px-10 h-12 md:h-14 text-sm md:text-lg"
+              >
+                <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Demo Video ansehen
+              </Button>
+            </a>
+          </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-md text-white">
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">80%</div>
-                  <div className="text-xs md:text-sm text-gray-400">Bessere Erreichbarkeit</div>
-                </div>
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">Live</div>
-                  <div className="text-xs md:text-sm text-gray-400">KI-Einwandtrainer</div>
-                </div>
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">CRM</div>
-                  <div className="text-xs md:text-sm text-gray-400">Alles integriert</div>
-                </div>
-              </div>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto text-white px-2">
+            <div>
+              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">80%</div>
+              <div className="text-xs md:text-sm text-gray-400">Bessere Erreichbarkeit</div>
             </div>
-
-            {/* Right - Demo Video */}
-            <div className="relative">
-              <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-1.5 md:p-2 shadow-2xl shadow-primary/10">
-                <div className="rounded-lg md:rounded-xl overflow-hidden">
-                  <div style={{ position: 'relative', paddingTop: '56.25%' }}>
-                    <iframe
-                      src="https://fast.wistia.net/embed/iframe/jocwqh1ose?seo=true&videoFoam=false"
-                      title="Demo Video"
-                      allow="autoplay; fullscreen"
-                      frameBorder="0"
-                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Decorative glow behind video */}
-              <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl -z-10" />
+            <div>
+              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">Live</div>
+              <div className="text-xs md:text-sm text-gray-400">KI-Einwandtrainer</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-4xl font-bold text-primary mb-1 md:mb-2">CRM</div>
+              <div className="text-xs md:text-sm text-gray-400">Alles integriert</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Video Section */}
+      <section id="demo-video" className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">
+        <div className="container mx-auto max-w-4xl scroll-animate scroll-fade-up">
+          <div className="text-center mb-6 md:mb-10">
+            <p className="text-primary text-xs md:text-sm font-medium mb-2 md:mb-4">So funktioniert pitchfirst.io</p>
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 text-white">
+              Sieh es dir in Aktion an
+            </h2>
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">
+              In diesem kurzen Demo-Video zeigen wir dir, wie du mit pitchfirst.io mehr Termine auf LinkedIn legst.
+            </p>
+          </div>
+          <div className="relative rounded-xl md:rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-1.5 md:p-2 shadow-2xl shadow-primary/10">
+            <div className="rounded-lg md:rounded-xl overflow-hidden">
+              <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+                <iframe
+                  src="https://fast.wistia.net/embed/iframe/jocwqh1ose?seo=true&videoFoam=false"
+                  title="Demo Video"
+                  allow="autoplay; fullscreen"
+                  frameBorder="0"
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
+            </div>
+          </div>
+          {/* Decorative glow */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[60%] h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
         </div>
       </section>
 
