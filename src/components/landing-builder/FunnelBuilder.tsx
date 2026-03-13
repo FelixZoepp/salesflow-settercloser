@@ -384,13 +384,20 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
               <div style={{ width: 0, height: 0, borderLeft: "22px solid " + theme.accent, borderTop: "13px solid transparent", borderBottom: "13px solid transparent", marginLeft: 4 }}/>
             </div>
           </div>
-          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>KI Erklärfilm für {replaceVars("{{lead.company}}")}</div>
+          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>KI Erklärfilm für {replaceVarsForDisplay("{{lead.company}}")}</div>
         </div>
       </div>;
-    case "button":
+    case "button": {
+      const btnStyle: React.CSSProperties = { background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s", display: "inline-block", textAlign: "center" as const };
+      if (editable) {
+        return <div style={{ textAlign: "center" }}>
+          <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={btnStyle} blockId={block.id} isSelected={!!isSelected} />
+        </div>;
+      }
       return <div style={{ textAlign: "center" }}>
-        <button style={{ background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s" }}>{replaceVars(s.text)}</button>
+        <button style={btnStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />
       </div>;
+    }
     case "form":
       return <div style={{ maxWidth: 400, margin: "0 auto" }}>
         {(s.fields || []).map((f: any, i: number) => (
