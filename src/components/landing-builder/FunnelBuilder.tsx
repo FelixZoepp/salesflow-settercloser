@@ -999,8 +999,8 @@ export default function FunnelBuilder() {
                   </div>
                 )}
                 <BlockPreview block={block} theme={theme} previewMode={previewMode} onUpdate={updateBlock} isSelected={selectedBlockId === block.id} />
-              </div>
-            ))}
+              </div>;
+            })}
 
             <div onClick={() => setLeftPanel("blocks")} style={{ border: "2px dashed #ffffff15", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent + "55"; e.currentTarget.style.background = theme.accent + "08"; }}
