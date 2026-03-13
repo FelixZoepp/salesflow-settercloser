@@ -988,7 +988,7 @@ export default function FunnelBuilder() {
                     <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ff6b6b88" }}><Icons.Trash /></div>
                   </div>
                 )}
-                <BlockPreview block={block} theme={theme} previewMode={previewMode} />
+                <BlockPreview block={block} theme={theme} previewMode={previewMode} onUpdate={updateBlock} isSelected={selectedBlockId === block.id} />
               </div>
             ))}
 
