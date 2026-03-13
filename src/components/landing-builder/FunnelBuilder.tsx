@@ -436,7 +436,7 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
     case "calendar":
       return <div style={{ background: "#ffffff08", borderRadius: 12, height: mobile ? 300 : (s.height || 500), display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #ffffff11", flexDirection: "column", gap: 8 }}>
         <Icons.Calendar />
-        <div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVars(s.calendarUrl)}</div>
+        <div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
       </div>;
     case "logo":
       return <div style={{ textAlign: "center" }}>
