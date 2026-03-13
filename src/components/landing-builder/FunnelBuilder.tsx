@@ -567,21 +567,29 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
     switch (block.type) {
       case "heading":
         return <>
+          <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.Text />
+            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+          </div>
           <VarBtn field="text" />
-          <TextInput label="Text" value={s.text} onChange={v => update("text", v)} multiline />
+          <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
           <SelectInput label="Ebene" value={s.level} onChange={v => update("level", v)} options={[{ value: "h1", label: "H1 — Groß" }, { value: "h2", label: "H2 — Mittel" }, { value: "h3", label: "H3 — Klein" }]} />
           <SelectInput label="Ausrichtung" value={s.align} onChange={v => update("align", v)} options={[{ value: "left", label: "Links" }, { value: "center", label: "Mitte" }, { value: "right", label: "Rechts" }]} />
           <NumberInput label="Schriftgröße" value={s.fontSize} onChange={v => update("fontSize", v)} min={16} max={64} unit="px" />
-          <ColorInput label="Farbe" value={s.color} onChange={v => update("color", v)} />
+          <ColorInput label="Grundfarbe" value={s.color} onChange={v => update("color", v)} />
         </>;
       case "text":
         return <>
+          <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.Text />
+            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+          </div>
           <VarBtn field="text" />
-          <TextInput label="Text" value={s.text} onChange={v => update("text", v)} multiline />
+          <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
           <SelectInput label="Ausrichtung" value={s.align} onChange={v => update("align", v)} options={[{ value: "left", label: "Links" }, { value: "center", label: "Mitte" }, { value: "right", label: "Rechts" }]} />
           <NumberInput label="Schriftgröße" value={s.fontSize} onChange={v => update("fontSize", v)} min={12} max={28} unit="px" />
           <NumberInput label="Zeilenhöhe" value={s.lineHeight} onChange={v => update("lineHeight", v)} min={1} max={2.5} step={0.1} />
-          <ColorInput label="Farbe" value={s.color} onChange={v => update("color", v)} />
+          <ColorInput label="Grundfarbe" value={s.color} onChange={v => update("color", v)} />
         </>;
       case "image":
         return <>
