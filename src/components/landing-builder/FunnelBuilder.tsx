@@ -871,9 +871,7 @@ export default function FunnelBuilder() {
       {/* === TOP BAR === */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 52, background: "#0d0d14", borderBottom: "1px solid #ffffff0d", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", zIndex: 50 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.03em" }}>
-            <span style={{ color: "#6C5CE7" }}>pitch</span><span style={{ color: "#fff" }}>first</span><span style={{ color: "#ffffff44" }}>.io</span>
-          </div>
+          <img src={pitchfirstLogo} alt="pitchfirst.io" style={{ height: 28, objectFit: "contain" }} />
           <div style={{ width: 1, height: 24, background: "#ffffff11" }} />
           <div style={{ fontSize: 13, color: "#ffffff88", fontWeight: 500 }}>{pageSettings.name}</div>
         </div>
