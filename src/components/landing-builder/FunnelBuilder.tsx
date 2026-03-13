@@ -426,7 +426,7 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       </div>;
     case "quiz":
       return <div>
-        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }}>{replaceVarsForDisplay(s.question)}</p>
+        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.question) }} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 400, margin: "0 auto" }}>
           {(s.options || []).map((opt: string, i: number) => (
             <div key={i} style={{ padding: "14px 16px", borderRadius: 12, border: `2px solid ${theme.accent}33`, background: "#ffffff06", textAlign: "center", fontSize: 14, color: "#fff", cursor: "pointer", fontWeight: 500, transition: "all 0.15s" }}>{opt}</div>
