@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 
 // ============================================================
 // PITCHFIRST.IO — FUNNEL / LEAD PAGE BUILDER
