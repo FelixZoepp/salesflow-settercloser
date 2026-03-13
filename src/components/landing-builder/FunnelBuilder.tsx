@@ -147,7 +147,7 @@ function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Them
     if (typeof str !== "string") return str;
     let result = str;
     VARIABLES.forEach(v => {
-      result = result.replaceAll(v.key, v.example);
+      result = result.split(v.key).join(v.example);
     });
     return result;
   };
