@@ -971,11 +971,13 @@ export default function FunnelBuilder() {
           )}
 
           <div style={{ padding: pageSettings.padding || 24, display: "flex", flexDirection: "column", gap: pageSettings.blockGap || 20, maxWidth: pageSettings.maxWidth || 480, margin: "0 auto" }}>
-            {blocks.map((block, idx) => (
-              <div key={block.id}
+            {blocks.map((block, idx) => {
+              const isTextBlock = ["heading", "text", "button"].includes(block.type);
+              const isEditing = selectedBlockId === block.id && isTextBlock;
+              return <div key={block.id}
                 onClick={() => { setSelectedBlockId(block.id); setRightPanel("settings"); }}
-                draggable
-                onDragStart={() => handleDragStart(idx)}
+                draggable={!isEditing}
+                onDragStart={() => !isEditing && handleDragStart(idx)}
                 onDragOver={e => handleDragOver(e, idx)}
                 onDrop={() => handleDrop(idx)}
                 style={{
