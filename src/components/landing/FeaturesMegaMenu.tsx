@@ -88,7 +88,7 @@ interface FeaturesMegaMenuProps {
 export const FeaturesMegaMenu = ({ className }: FeaturesMegaMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {

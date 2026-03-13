@@ -63,7 +63,7 @@ export default function SoftphoneDialog({
   const twilioClientRef = useRef<TwilioClient | null>(null);
   const sipClientRef = useRef<SipClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const callTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callStartTimeRef = useRef<Date | null>(null);
   
   // Recording refs
