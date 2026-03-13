@@ -40,6 +40,12 @@ const Icons: Record<string, React.FC> = {
   Undo: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>,
   Redo: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
   Save: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  Bold: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>,
+  Italic: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>,
+  ColorText: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20h16"/><path d="M9.5 4h5L18 16H6z"/></svg>,
+  AlignLeft: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>,
+  AlignCenter: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>,
+  AlignRight: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>,
 };
 
 // --- TYPES ---
@@ -141,31 +147,233 @@ const THEMES: Theme[] = [
 let blockIdCounter = 100;
 const newId = () => `blk_${++blockIdCounter}_${Date.now()}`;
 
+// --- FLOATING RICH TEXT TOOLBAR ---
+const TOOLBAR_COLORS = ["#ffffff", "#6C5CE7", "#00d2ff", "#ff6b6b", "#00b894", "#fd79a8", "#fdcb6e", "#e17055"];
+
+function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkSelection = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        setPos(null);
+        setShowColorPicker(false);
+        return;
+      }
+      // Only show if selection is inside our container
+      const range = sel.getRangeAt(0);
+      if (!containerRef.current?.contains(range.commonAncestorContainer)) {
+        setPos(null);
+        return;
+      }
+      const rect = range.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.top - containerRect.top - 44,
+        left: rect.left - containerRect.left + rect.width / 2,
+      });
+    };
+    document.addEventListener("selectionchange", checkSelection);
+    return () => document.removeEventListener("selectionchange", checkSelection);
+  }, [containerRef]);
+
+  const execCmd = (cmd: string, value?: string) => {
+    document.execCommand(cmd, false, value);
+    // Re-focus to keep selection
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      range.collapse(false);
+    }
+  };
+
+  const isActive = (cmd: string) => document.queryCommandState(cmd);
+
+  if (!pos) return null;
+
+  return (
+    <div ref={toolbarRef} style={{
+      position: "absolute",
+      top: pos.top,
+      left: pos.left,
+      transform: "translateX(-50%)",
+      zIndex: 200,
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      background: "#1a1a2e",
+      borderRadius: 10,
+      padding: "4px 4px",
+      boxShadow: "0 8px 32px #000000aa, 0 0 0 1px #ffffff15",
+      backdropFilter: "blur(12px)",
+      animation: "fadeIn 0.12s ease",
+    }}
+      onMouseDown={e => e.preventDefault()} // Prevent toolbar clicks from losing selection
+    >
+      <ToolbarBtn icon={<Icons.Bold />} active={isActive("bold")} onClick={() => execCmd("bold")} tooltip="Fett" />
+      <ToolbarBtn icon={<Icons.Italic />} active={isActive("italic")} onClick={() => execCmd("italic")} tooltip="Kursiv" />
+      <div style={{ width: 1, height: 20, background: "#ffffff15", margin: "0 3px" }} />
+      <div style={{ position: "relative" }}>
+        <ToolbarBtn icon={<Icons.ColorText />} active={showColorPicker} onClick={() => setShowColorPicker(!showColorPicker)} tooltip="Farbe" />
+        {showColorPicker && (
+          <div style={{
+            position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
+            marginTop: 6, background: "#1a1a2e", borderRadius: 10, padding: 8,
+            boxShadow: "0 8px 24px #00000088", border: "1px solid #ffffff15",
+            display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, minWidth: 120,
+          }} onMouseDown={e => e.preventDefault()}>
+            {TOOLBAR_COLORS.map(c => (
+              <div key={c} onClick={() => { execCmd("foreColor", c); setShowColorPicker(false); }}
+                style={{ width: 24, height: 24, borderRadius: 6, background: c, cursor: "pointer", border: "2px solid #ffffff22", transition: "transform 0.1s" }}
+                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.2)")}
+                onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+              />
+            ))}
+            <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
+              <input type="color" onChange={e => { execCmd("foreColor", e.target.value); setShowColorPicker(false); }}
+                style={{ width: "100%", height: 24, border: "none", borderRadius: 6, cursor: "pointer", background: "none" }} />
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{ width: 1, height: 20, background: "#ffffff15", margin: "0 3px" }} />
+      <ToolbarBtn icon={<Icons.AlignLeft />} onClick={() => execCmd("justifyLeft")} tooltip="Links" />
+      <ToolbarBtn icon={<Icons.AlignCenter />} onClick={() => execCmd("justifyCenter")} tooltip="Mitte" />
+      <ToolbarBtn icon={<Icons.AlignRight />} onClick={() => execCmd("justifyRight")} tooltip="Rechts" />
+    </div>
+  );
+}
+
+function ToolbarBtn({ icon, active, onClick, tooltip }: { icon: React.ReactNode; active?: boolean; onClick: () => void; tooltip?: string }) {
+  return (
+    <div onClick={onClick} title={tooltip} style={{
+      padding: "5px 7px", borderRadius: 6, cursor: "pointer",
+      background: active ? "#6C5CE733" : "transparent",
+      color: active ? "#6C5CE7" : "#ffffffaa",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      transition: "all 0.1s",
+    }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#ffffff11"; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+    >{icon}</div>
+  );
+}
+
+// --- INLINE EDITABLE ---
+function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: {
+  html: string;
+  onChange: (html: string) => void;
+  style: React.CSSProperties;
+  tag?: string;
+  blockId: string;
+  isSelected: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lastHtml = useRef(html);
+
+  // Sync external changes (only if content actually differs to avoid cursor jump)
+  useEffect(() => {
+    if (ref.current && ref.current.innerHTML !== html && !ref.current.contains(document.activeElement)) {
+      ref.current.innerHTML = html;
+      lastHtml.current = html;
+    }
+  }, [html]);
+
+  const handleInput = useCallback(() => {
+    if (ref.current) {
+      const newHtml = ref.current.innerHTML;
+      if (newHtml !== lastHtml.current) {
+        lastHtml.current = newHtml;
+        onChange(newHtml);
+      }
+    }
+  }, [onChange]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Allow formatting shortcuts
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === "b") { e.preventDefault(); document.execCommand("bold"); }
+      if (e.key === "i") { e.preventDefault(); document.execCommand("italic"); }
+    }
+    // Prevent enter creating new blocks, just insert <br>
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      document.execCommand("insertLineBreak");
+    }
+  }, []);
+
+  const Tag = (tag || "div") as any;
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      {isSelected && <FloatingToolbar containerRef={containerRef} />}
+      <Tag
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
+        onBlur={handleInput}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        dangerouslySetInnerHTML={{ __html: html }}
+        style={{
+          ...style,
+          outline: "none",
+          cursor: "text",
+          minHeight: "1em",
+        }}
+      />
+    </div>
+  );
+}
+
 // --- BLOCK RENDERER (Preview) ---
-function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Theme & { accent: string }; previewMode: string }) {
-  const replaceVars = (str: any): string => {
+function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { block: Block; theme: Theme & { accent: string }; previewMode: string; onUpdate?: (block: Block) => void; isSelected?: boolean }) {
+  const replaceVarsForDisplay = (str: any): string => {
     if (typeof str !== "string") return str;
     let result = str;
     VARIABLES.forEach(v => {
-      result = result.split(v.key).join(v.example);
+      // Replace variables but preserve HTML tags
+      result = result.split(v.key).join(`<span style="color:${theme.accent};opacity:0.7">${v.example}</span>`);
     });
     return result;
   };
 
+  const updateSetting = (key: string, value: any) => {
+    if (onUpdate) {
+      onUpdate({ ...block, settings: { ...block.settings, [key]: value } });
+    }
+  };
+
   const s = block.settings;
   const mobile = previewMode === "mobile";
+  const editable = isSelected && onUpdate;
 
   switch (block.type) {
     case "heading": {
-      const Tag = (s.level || "h1") as keyof JSX.IntrinsicElements;
       const sizes: Record<string, number> = { h1: mobile ? 26 : s.fontSize || 32, h2: mobile ? 22 : (s.fontSize || 28), h3: mobile ? 18 : (s.fontSize || 22) };
-      return <Tag style={{ fontSize: sizes[Tag as string] || 32, fontWeight: 800, color: s.color || "#fff", textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" }}>{replaceVars(s.text)}</Tag>;
+      const level = s.level || "h1";
+      const headingStyle: React.CSSProperties = { fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || "#fff", textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" };
+      if (editable) {
+        return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={headingStyle} tag={level} blockId={block.id} isSelected={!!isSelected} />;
+      }
+      const Tag = level as keyof JSX.IntrinsicElements;
+      return <Tag style={headingStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
     }
-    case "text":
-      return <p style={{ fontSize: mobile ? 14 : (s.fontSize || 16), color: s.color || "#ffffffcc", textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>{replaceVars(s.text)}</p>;
+    case "text": {
+      const textStyle: React.CSSProperties = { fontSize: mobile ? 14 : (s.fontSize || 16), color: s.color || "#ffffffcc", textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" };
+      if (editable) {
+        return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={textStyle} tag="p" blockId={block.id} isSelected={!!isSelected} />;
+      }
+      return <p style={textStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
+    }
     case "image":
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", width: s.width || "100%" }}>
-        {s.src ? <img src={replaceVars(s.src)} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> : 
+        {s.src ? <img src={s.src} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> : 
         <div style={{ background: "#ffffff11", height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff44", fontSize: 14 }}>Bild hier einfügen</div>}
       </div>;
     case "video":
@@ -176,13 +384,20 @@ function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Them
               <div style={{ width: 0, height: 0, borderLeft: "22px solid " + theme.accent, borderTop: "13px solid transparent", borderBottom: "13px solid transparent", marginLeft: 4 }}/>
             </div>
           </div>
-          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>KI Erklärfilm für {replaceVars("{{lead.company}}")}</div>
+          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>KI Erklärfilm für {replaceVarsForDisplay("{{lead.company}}")}</div>
         </div>
       </div>;
-    case "button":
+    case "button": {
+      const btnStyle: React.CSSProperties = { background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s", display: "inline-block", textAlign: "center" as const };
+      if (editable) {
+        return <div style={{ textAlign: "center" }}>
+          <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={btnStyle} blockId={block.id} isSelected={!!isSelected} />
+        </div>;
+      }
       return <div style={{ textAlign: "center" }}>
-        <button style={{ background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s" }}>{replaceVars(s.text)}</button>
+        <button style={btnStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />
       </div>;
+    }
     case "form":
       return <div style={{ maxWidth: 400, margin: "0 auto" }}>
         {(s.fields || []).map((f: any, i: number) => (
@@ -200,7 +415,7 @@ function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Them
     case "testimonial":
       return <div style={{ background: "#ffffff08", borderRadius: 16, padding: mobile ? 20 : 28, border: "1px solid #ffffff11" }}>
         <div style={{ color: theme.accent, fontSize: 20, marginBottom: 8 }}>{"★".repeat(s.rating || 5)}</div>
-        <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }}>"{replaceVars(s.quote)}"</p>
+        <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }} dangerouslySetInnerHTML={{ __html: `"${replaceVarsForDisplay(s.quote)}"` }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>{(s.author || "A")[0]}</div>
           <div>
@@ -211,7 +426,7 @@ function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Them
       </div>;
     case "quiz":
       return <div>
-        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }}>{replaceVars(s.question)}</p>
+        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.question) }} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 400, margin: "0 auto" }}>
           {(s.options || []).map((opt: string, i: number) => (
             <div key={i} style={{ padding: "14px 16px", borderRadius: 12, border: `2px solid ${theme.accent}33`, background: "#ffffff06", textAlign: "center", fontSize: 14, color: "#fff", cursor: "pointer", fontWeight: 500, transition: "all 0.15s" }}>{opt}</div>
@@ -221,7 +436,7 @@ function BlockPreview({ block, theme, previewMode }: { block: Block; theme: Them
     case "calendar":
       return <div style={{ background: "#ffffff08", borderRadius: 12, height: mobile ? 300 : (s.height || 500), display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #ffffff11", flexDirection: "column", gap: 8 }}>
         <Icons.Calendar />
-        <div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVars(s.calendarUrl)}</div>
+        <div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
       </div>;
     case "logo":
       return <div style={{ textAlign: "center" }}>
@@ -352,21 +567,29 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
     switch (block.type) {
       case "heading":
         return <>
+          <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.Text />
+            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+          </div>
           <VarBtn field="text" />
-          <TextInput label="Text" value={s.text} onChange={v => update("text", v)} multiline />
+          <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
           <SelectInput label="Ebene" value={s.level} onChange={v => update("level", v)} options={[{ value: "h1", label: "H1 — Groß" }, { value: "h2", label: "H2 — Mittel" }, { value: "h3", label: "H3 — Klein" }]} />
           <SelectInput label="Ausrichtung" value={s.align} onChange={v => update("align", v)} options={[{ value: "left", label: "Links" }, { value: "center", label: "Mitte" }, { value: "right", label: "Rechts" }]} />
           <NumberInput label="Schriftgröße" value={s.fontSize} onChange={v => update("fontSize", v)} min={16} max={64} unit="px" />
-          <ColorInput label="Farbe" value={s.color} onChange={v => update("color", v)} />
+          <ColorInput label="Grundfarbe" value={s.color} onChange={v => update("color", v)} />
         </>;
       case "text":
         return <>
+          <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.Text />
+            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+          </div>
           <VarBtn field="text" />
-          <TextInput label="Text" value={s.text} onChange={v => update("text", v)} multiline />
+          <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
           <SelectInput label="Ausrichtung" value={s.align} onChange={v => update("align", v)} options={[{ value: "left", label: "Links" }, { value: "center", label: "Mitte" }, { value: "right", label: "Rechts" }]} />
           <NumberInput label="Schriftgröße" value={s.fontSize} onChange={v => update("fontSize", v)} min={12} max={28} unit="px" />
           <NumberInput label="Zeilenhöhe" value={s.lineHeight} onChange={v => update("lineHeight", v)} min={1} max={2.5} step={0.1} />
-          <ColorInput label="Farbe" value={s.color} onChange={v => update("color", v)} />
+          <ColorInput label="Grundfarbe" value={s.color} onChange={v => update("color", v)} />
         </>;
       case "image":
         return <>
@@ -748,11 +971,13 @@ export default function FunnelBuilder() {
           )}
 
           <div style={{ padding: pageSettings.padding || 24, display: "flex", flexDirection: "column", gap: pageSettings.blockGap || 20, maxWidth: pageSettings.maxWidth || 480, margin: "0 auto" }}>
-            {blocks.map((block, idx) => (
-              <div key={block.id}
+            {blocks.map((block, idx) => {
+              const isTextBlock = ["heading", "text", "button"].includes(block.type);
+              const isEditing = selectedBlockId === block.id && isTextBlock;
+              return <div key={block.id}
                 onClick={() => { setSelectedBlockId(block.id); setRightPanel("settings"); }}
-                draggable
-                onDragStart={() => handleDragStart(idx)}
+                draggable={!isEditing}
+                onDragStart={() => !isEditing && handleDragStart(idx)}
                 onDragOver={e => handleDragOver(e, idx)}
                 onDrop={() => handleDrop(idx)}
                 style={{
@@ -773,9 +998,9 @@ export default function FunnelBuilder() {
                     <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ff6b6b88" }}><Icons.Trash /></div>
                   </div>
                 )}
-                <BlockPreview block={block} theme={theme} previewMode={previewMode} />
-              </div>
-            ))}
+                <BlockPreview block={block} theme={theme} previewMode={previewMode} onUpdate={updateBlock} isSelected={selectedBlockId === block.id} />
+              </div>;
+            })}
 
             <div onClick={() => setLeftPanel("blocks")} style={{ border: "2px dashed #ffffff15", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent + "55"; e.currentTarget.style.background = theme.accent + "08"; }}
