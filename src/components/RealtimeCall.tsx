@@ -37,7 +37,7 @@ const RealtimeCall: React.FC<RealtimeCallProps> = ({
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [microphoneStatus, setMicrophoneStatus] = useState<MicrophoneStatus>('checking');
   const chatRef = useRef<RealtimeChat | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const { canUseCallSummaries, canUseLiveObjectionHandling } = useFeatureAccess();
 

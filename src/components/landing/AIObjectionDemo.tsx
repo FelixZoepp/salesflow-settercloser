@@ -34,7 +34,7 @@ export const AIObjectionDemo = () => {
     if (!isCallActive) return;
 
     const scenario = objectionScenarios[currentScenario];
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
 
     const runAnimation = async () => {
       // Phase 1: Speaking - type out transcript
