@@ -415,7 +415,7 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
     case "testimonial":
       return <div style={{ background: "#ffffff08", borderRadius: 16, padding: mobile ? 20 : 28, border: "1px solid #ffffff11" }}>
         <div style={{ color: theme.accent, fontSize: 20, marginBottom: 8 }}>{"★".repeat(s.rating || 5)}</div>
-        <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }}>"{replaceVarsForDisplay(s.quote)}"</p>
+        <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }} dangerouslySetInnerHTML={{ __html: `"${replaceVarsForDisplay(s.quote)}"` }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>{(s.author || "A")[0]}</div>
           <div>
