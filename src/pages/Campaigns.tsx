@@ -326,13 +326,13 @@ const Campaigns = () => {
                       </p>
                       <Select
                         value={newCampaign.landing_page_id}
-                        onValueChange={(value) => setNewCampaign({ ...newCampaign, landing_page_id: value })}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, landing_page_id: value === "none" ? "" : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Lead Page auswählen..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Keine Lead Page</SelectItem>
+                          <SelectItem value="none">Keine Lead Page</SelectItem>
                           {landingPages.map((lp) => (
                             <SelectItem key={lp.id} value={lp.id}>
                               {lp.name} {lp.status === "published" ? "✓" : "(Entwurf)"}
