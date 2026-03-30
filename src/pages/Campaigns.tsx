@@ -332,7 +332,7 @@ const Campaigns = () => {
                           <SelectValue placeholder="Lead Page auswählen..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Keine Lead Page</SelectItem>
+                          <SelectItem value="none">Keine Lead Page</SelectItem>
                           {landingPages.map((lp) => (
                             <SelectItem key={lp.id} value={lp.id}>
                               {lp.name} {lp.status === "published" ? "✓" : "(Entwurf)"}
