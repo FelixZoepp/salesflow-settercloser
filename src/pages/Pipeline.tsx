@@ -24,12 +24,13 @@ interface Deal {
   amount_eur: number;
   due_date: string | null;
   next_action: string | null;
-  contacts: { 
-    first_name: string; 
-    last_name: string; 
-    phone: string | null; 
-    mobile: string | null; 
-    lead_score?: number; 
+  contacts: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone: string | null;
+    mobile: string | null;
+    lead_score?: number;
     campaign_id?: string;
     personalized_url?: string | null;
     video_status?: string | null;
@@ -62,6 +63,7 @@ const Pipeline = () => {
   const [softphoneContact, setSoftphoneContact] = useState<{
     phone: string;
     name: string;
+    contactId: string;
     dealId: string;
   } | null>(null);
 
@@ -78,6 +80,7 @@ const Pipeline = () => {
     setSoftphoneContact({
       phone: phoneNumber,
       name: `${contact.first_name} ${contact.last_name}`,
+      contactId: contact.id,
       dealId: deal.id
     });
     setSoftphoneOpen(true);
@@ -132,7 +135,7 @@ const Pipeline = () => {
         .from('deals')
         .select(`
           *,
-          contacts (first_name, last_name, phone, mobile, lead_score, campaign_id, personalized_url, video_status),
+          contacts (id, first_name, last_name, phone, mobile, lead_score, campaign_id, personalized_url, video_status),
           setter:setter_id (name),
           closer:closer_id (name)
         `)
@@ -370,6 +373,7 @@ const Pipeline = () => {
           }}
           phoneNumber={softphoneContact?.phone || ""}
           contactName={softphoneContact?.name || ""}
+          contactId={softphoneContact?.contactId}
           dealId={softphoneContact?.dealId}
         />
       </div>

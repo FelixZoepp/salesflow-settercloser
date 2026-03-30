@@ -3,20 +3,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2, Circle, FileText, Brain } from "lucide-react";
+import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, User, Clock, AlertCircle, Loader2, Circle, FileText, Brain, ScrollText, ChevronDown, ChevronUp, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TwilioClient, TwilioClientCallbacks } from "@/lib/twilioClient";
 import { SipClient, SipClientConfig, SipClientCallbacks } from "@/lib/sipClient";
-import LiveObjectionPanel from "./LiveObjectionPanel";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useAITrainer } from "@/hooks/useAITrainer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SoftphoneDialogProps {
   open: boolean;
   onClose: () => void;
   phoneNumber: string;
   contactName: string;
+  contactId?: string;
   dealId?: string;
+}
+
+interface LeadData {
+  first_name: string;
+  last_name: string;
+  company: string | null;
+  position: string | null;
+  email: string | null;
+  industry: string | null;
+  city: string | null;
 }
 
 type CallStatus = 'idle' | 'connecting' | 'registering' | 'dialing' | 'ringing' | 'connected' | 'ended' | 'error';
@@ -39,14 +51,15 @@ interface CallSummary {
   sentiment: 'positive' | 'neutral' | 'negative';
 }
 
-export default function SoftphoneDialog({ 
-  open, 
-  onClose, 
-  phoneNumber, 
+export default function SoftphoneDialog({
+  open,
+  onClose,
+  phoneNumber,
   contactName,
-  dealId 
+  contactId,
+  dealId
 }: SoftphoneDialogProps) {
-  const { canUseCallSummaries } = useFeatureAccess();
+  const { canUseCallSummaries, canUseLiveObjectionHandling } = useFeatureAccess();
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -59,7 +72,15 @@ export default function SoftphoneDialog({
   const [callSessionId, setCallSessionId] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [useTwilio, setUseTwilio] = useState(false);
-  
+  const [leadData, setLeadData] = useState<LeadData | null>(null);
+  const [callScript, setCallScript] = useState<string>("");
+  const [systemContext, setSystemContext] = useState<string>("");
+  const [showScript, setShowScript] = useState(true);
+  const [showAIPanel, setShowAIPanel] = useState(true);
+
+  // AI Trainer for live objection handling
+  const aiTrainer = useAITrainer();
+
   const twilioClientRef = useRef<TwilioClient | null>(null);
   const sipClientRef = useRef<SipClient | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -72,19 +93,90 @@ export default function SoftphoneDialog({
   const audioContextRef = useRef<AudioContext | null>(null);
   const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
 
-  // Load SIP settings
+  // Load SIP settings + lead data + call script
   useEffect(() => {
     if (open) {
       loadSipSettings();
+      loadLeadAndScript();
     }
-  }, [open]);
+  }, [open, contactId]);
+
+  // Start/stop AI trainer when call connects/ends
+  useEffect(() => {
+    if (callStatus === 'connected' && canUseLiveObjectionHandling && !aiTrainer.isActive) {
+      const leadCtx = leadData
+        ? `Lead: ${leadData.first_name} ${leadData.last_name}, Firma: ${leadData.company || 'unbekannt'}, Position: ${leadData.position || 'unbekannt'}, Branche: ${leadData.industry || 'unbekannt'}, Stadt: ${leadData.city || 'unbekannt'}`
+        : `Lead: ${contactName}`;
+      aiTrainer.startTrainer(systemContext || 'Du bist ein Sales-Coach. Erkenne Einwände und gib konkrete Antwortvorschläge auf Deutsch.', leadCtx);
+    }
+    if ((callStatus === 'ended' || callStatus === 'error') && aiTrainer.isActive) {
+      aiTrainer.stopTrainer();
+    }
+  }, [callStatus]);
 
   // Cleanup on unmount or close
   useEffect(() => {
     return () => {
       cleanup();
+      if (aiTrainer.isActive) aiTrainer.stopTrainer();
     };
   }, []);
+
+  const loadLeadAndScript = async () => {
+    try {
+      // Load lead data
+      if (contactId) {
+        const { data: contact } = await supabase
+          .from('contacts')
+          .select('first_name, last_name, company, position, email, city')
+          .eq('id', contactId)
+          .single();
+        if (contact) setLeadData({ ...contact, industry: null } as LeadData);
+      }
+
+      // Load active call script
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('account_id').eq('id', user.id).single();
+      if (!profile?.account_id) return;
+
+      const { data: script } = await supabase
+        .from('call_scripts')
+        .select('content, system_context')
+        .eq('account_id', profile.account_id)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (script) {
+        setSystemContext(script.system_context || '');
+        // Personalize script with lead data
+        let personalizedScript = script.content || '';
+        const ld = leadData;
+        const userName = user.user_metadata?.full_name || user.email || '';
+        personalizedScript = personalizedScript
+          .replace(/\{\{first_name\}\}/gi, ld?.first_name || contactName.split(' ')[0] || '')
+          .replace(/\{\{last_name\}\}/gi, ld?.last_name || contactName.split(' ').slice(1).join(' ') || '')
+          .replace(/\{\{company_name\}\}/gi, ld?.company || '')
+          .replace(/\{\{company\}\}/gi, ld?.company || '')
+          .replace(/\{\{position\}\}/gi, ld?.position || '')
+          .replace(/\{\{industry\}\}/gi, ld?.industry || '')
+          .replace(/\{\{city\}\}/gi, ld?.city || '')
+          .replace(/\{\{user_name\}\}/gi, userName)
+          .replace(/\{\{phone\}\}/gi, phoneNumber || '');
+        setCallScript(personalizedScript);
+      }
+    } catch (err) {
+      console.error('Error loading lead/script:', err);
+    }
+  };
+
+  // Re-personalize script when leadData loads
+  useEffect(() => {
+    if (leadData && callScript) {
+      loadLeadAndScript();
+    }
+  }, [leadData?.first_name]);
 
   // Start call when dialog opens and settings are loaded
   useEffect(() => {
@@ -714,11 +806,99 @@ export default function SoftphoneDialog({
             </div>
           )}
 
-          {/* Live Objection Handling */}
-          <LiveObjectionPanel 
-            isCallActive={callStatus === 'connected'} 
-            remoteStream={remoteStream}
-          />
+          {/* Personalized Call Script */}
+          {callScript && (callStatus === 'connected' || callStatus === 'ringing' || callStatus === 'dialing') && (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <div
+                className="flex items-center justify-between px-3 py-2 bg-muted/50 cursor-pointer"
+                onClick={() => setShowScript(!showScript)}
+              >
+                <div className="flex items-center gap-2">
+                  <ScrollText className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Gesprächsleitfaden</span>
+                  {leadData && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {leadData.first_name} {leadData.last_name}
+                    </Badge>
+                  )}
+                </div>
+                {showScript ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </div>
+              {showScript && (
+                <ScrollArea className="max-h-48">
+                  <div className="p-3 text-sm whitespace-pre-wrap leading-relaxed">
+                    {callScript}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+          )}
+
+          {/* Live AI Objection Handling */}
+          {canUseLiveObjectionHandling && (callStatus === 'connected' || aiTrainer.objections.length > 0) && (
+            <div className="rounded-lg border border-primary/20 overflow-hidden">
+              <div
+                className="flex items-center justify-between px-3 py-2 bg-primary/5 cursor-pointer"
+                onClick={() => setShowAIPanel(!showAIPanel)}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className={`w-4 h-4 ${aiTrainer.isActive ? 'text-green-500 animate-pulse' : 'text-muted-foreground'}`} />
+                  <span className="text-sm font-medium">KI-Einwandbehandlung</span>
+                  {aiTrainer.objections.length > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      {aiTrainer.objections.length}
+                    </Badge>
+                  )}
+                  <span className={`text-[10px] ${aiTrainer.status === 'listening' ? 'text-green-500' : aiTrainer.status === 'analyzing' ? 'text-purple-500' : 'text-muted-foreground'}`}>
+                    {aiTrainer.status === 'listening' ? '● Hört zu' : aiTrainer.status === 'analyzing' ? '● Analysiert' : aiTrainer.status === 'transcribing' ? '● Transkribiert' : aiTrainer.status === 'connecting' ? '● Verbinde...' : ''}
+                  </span>
+                </div>
+                {showAIPanel ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </div>
+              {showAIPanel && (
+                <div className="p-3">
+                  {aiTrainer.error && (
+                    <div className="mb-2 p-2 bg-destructive/10 rounded text-xs text-destructive flex items-center gap-2">
+                      <AlertCircle className="w-3 h-3" />
+                      {aiTrainer.error}
+                    </div>
+                  )}
+                  {aiTrainer.objections.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Lightbulb className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">KI hört zu und erkennt Einwände...</p>
+                      <p className="text-[10px] mt-1 opacity-60">Antwortvorschläge erscheinen hier automatisch</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="max-h-56">
+                      <div className="space-y-3">
+                        {aiTrainer.objections.map((obj, idx) => (
+                          <div key={idx} className="rounded-lg border border-border p-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                                Einwand erkannt
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(obj.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground italic mb-2">"{obj.objection}"</p>
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-md p-2.5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <Lightbulb className="w-3 h-3 text-green-600" />
+                                <span className="text-[10px] font-semibold text-green-600">Sag das:</span>
+                              </div>
+                              <p className="text-sm text-foreground leading-relaxed">{obj.response}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Processing Status */}
           {processingStatus !== 'idle' && processingStatus !== 'error' && (
