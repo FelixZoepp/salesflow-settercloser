@@ -73,27 +73,8 @@ serve(async (req) => {
     }
 
     const memberRole = role || "setter";
+    const origin = req.headers.get("origin") || supabaseUrl;
     console.log(`Inviting ${email} as ${memberRole} to account ${callerProfile.account_id}`);
-
-    // Check if user already exists
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === email);
-
-    if (existingUser) {
-      // Check if already in same account
-      const { data: existingProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("account_id")
-        .eq("id", existingUser.id)
-        .single();
-
-      if (existingProfile?.account_id === callerProfile.account_id) {
-        return new Response(
-          JSON.stringify({ error: "Nutzer ist bereits in deinem Team" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
 
     // Create invitation record
     const invitationToken = crypto.randomUUID();
@@ -105,7 +86,7 @@ serve(async (req) => {
         created_by: callerUser.id,
         email_hint: email,
         role: memberRole,
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .select()
       .single();
@@ -118,56 +99,56 @@ serve(async (req) => {
       );
     }
 
-    // Create auth user with invite link (password reset flow)
-    // The user will receive an email to set their password
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { name, invited_by: callerUser.id },
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find((u: any) => u.email === email);
+
+    if (existingUser) {
+      // User already exists - just update their profile to join this account
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          account_id: callerProfile.account_id,
+          role: memberRole,
+          invited_via: invitation.id,
+          trial_ends_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .eq("id", existingUser.id);
+
+      await supabaseAdmin
+        .from("invitations")
+        .update({ used_at: new Date().toISOString(), used_by: existingUser.id })
+        .eq("id", invitation.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `${email} wurde deinem Team hinzugefügt. Der Nutzer kann sich mit seinem bestehenden Passwort einloggen.`,
+          existing_user: true,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // New user - use inviteUserByEmail which sends an automatic email
+    // The user receives an email with a link to set their password
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: { name, invited_by: callerUser.id },
+      redirectTo: `${origin}/auth`,
     });
 
-    if (authError) {
-      // If user already exists, just update their profile
-      if (authError.message.includes("already been registered")) {
-        if (existingUser) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              account_id: callerProfile.account_id,
-              role: memberRole,
-              invited_via: invitation.id,
-              trial_ends_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString(), // 10 years
-            })
-            .eq("id", existingUser.id);
-
-          // Mark invitation as used
-          await supabaseAdmin
-            .from("invitations")
-            .update({ used_at: new Date().toISOString(), used_by: existingUser.id })
-            .eq("id", invitation.id);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              message: `${email} wurde deinem Team hinzugefügt. Der Nutzer kann sich mit seinem bestehenden Passwort einloggen.`,
-              existing_user: true,
-            }),
-            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-
-      console.error("Auth error:", authError);
+    if (inviteError) {
+      console.error("Invite error:", inviteError);
       return new Response(
-        JSON.stringify({ error: `Fehler: ${authError.message}` }),
+        JSON.stringify({ error: `Fehler beim Einladen: ${inviteError.message}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = authData.user.id;
-    console.log(`Auth user created: ${userId}`);
+    const userId = inviteData.user.id;
+    console.log(`User invited via email: ${userId}`);
 
-    // Update profile: assign to inviter's account, set trial for free access
+    // Update profile: assign to inviter's account with free access
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -176,7 +157,7 @@ serve(async (req) => {
         role: memberRole,
         invited_via: invitation.id,
         onboarding_completed: true,
-        trial_ends_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString(), // 10 years = effectively permanent
+        trial_ends_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq("id", userId);
 
@@ -190,25 +171,12 @@ serve(async (req) => {
       .update({ used_at: new Date().toISOString(), used_by: userId })
       .eq("id", invitation.id);
 
-    // Send password reset email so user can set their password
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: {
-        redirectTo: `${req.headers.get("origin") || supabaseUrl}/auth`,
-      },
-    });
-
-    if (resetError) {
-      console.error("Reset email error:", resetError);
-    }
-
-    console.log(`Team member ${email} invited successfully to account ${callerProfile.account_id}`);
+    console.log(`Team member ${email} invited successfully`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Einladung an ${email} gesendet! Der Nutzer kann sich jetzt ein Passwort setzen und einloggen.`,
+        message: `Einladung an ${email} gesendet! Der Nutzer erhält eine E-Mail um ein Passwort festzulegen.`,
         user_id: userId,
         invitation_id: invitation.id,
       }),
