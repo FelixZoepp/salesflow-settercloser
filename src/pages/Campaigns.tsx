@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin, UserPlus } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin, UserPlus, Globe } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -32,6 +32,14 @@ interface Campaign {
   end_date: string | null;
   created_at: string;
   account_id: string | null;
+  landing_page_id?: string | null;
+}
+
+interface LandingPageOption {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
 }
 
 interface CampaignStats {
@@ -50,6 +58,7 @@ const Campaigns = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
+  const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     description: "",
@@ -59,11 +68,32 @@ const Campaigns = () => {
     linkedin_was_banned: false,
     max_daily_connections: 15,
     max_daily_messages: 10,
+    landing_page_id: "",
   });
 
   useEffect(() => {
     fetchCampaigns();
+    fetchLandingPages();
   }, []);
+
+  const fetchLandingPages = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+      if (!profile?.account_id) return;
+
+      const { data } = await supabase
+        .from("landing_pages")
+        .select("id, name, slug, status")
+        .eq("account_id", profile.account_id)
+        .order("updated_at", { ascending: false });
+
+      setLandingPages((data || []) as LandingPageOption[]);
+    } catch (err) {
+      console.error("Error fetching landing pages:", err);
+    }
+  };
 
   useEffect(() => {
     if (selectedCampaign) {
@@ -138,7 +168,7 @@ const Campaigns = () => {
         .eq("id", user.id)
         .single();
 
-      const { error } = await supabase.from("campaigns").insert({
+      const insertData: any = {
         name: newCampaign.name,
         description: newCampaign.description || null,
         status: newCampaign.status,
@@ -148,21 +178,26 @@ const Campaigns = () => {
         linkedin_was_banned: newCampaign.linkedin_was_banned,
         max_daily_connections: newCampaign.max_daily_connections,
         max_daily_messages: newCampaign.max_daily_messages,
-      });
+      };
+      if (newCampaign.landing_page_id) {
+        insertData.landing_page_id = newCampaign.landing_page_id;
+      }
+      const { error } = await supabase.from("campaigns").insert(insertData);
 
       if (error) throw error;
 
       toast.success("Kampagne erstellt");
       setIsCreateDialogOpen(false);
-      setNewCampaign({ 
-        name: "", 
-        description: "", 
+      setNewCampaign({
+        name: "",
+        description: "",
         status: "draft",
         linkedin_profile_age: "",
         linkedin_currently_active: false,
         linkedin_was_banned: false,
         max_daily_connections: 15,
         max_daily_messages: 10,
+        landing_page_id: "",
       });
       fetchCampaigns();
     } catch (error: any) {
@@ -280,6 +315,36 @@ const Campaigns = () => {
                           <SelectItem value="active">Aktiv</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <Globe className="w-4 h-4" />
+                        Lead Page verknüpfen
+                      </Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Für jeden Lead wird automatisch eine personalisierte URL mit Tracking generiert
+                      </p>
+                      <Select
+                        value={newCampaign.landing_page_id}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, landing_page_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Lead Page auswählen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Keine Lead Page</SelectItem>
+                          {landingPages.map((lp) => (
+                            <SelectItem key={lp.id} value={lp.id}>
+                              {lp.name} {lp.status === "published" ? "✓" : "(Entwurf)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {landingPages.length === 0 && (
+                        <p className="text-xs text-amber-500 mt-1">
+                          Noch keine Lead Pages vorhanden. Erstelle zuerst eine unter "Lead Pages".
+                        </p>
+                      )}
                     </div>
                   </div>
 

@@ -98,6 +98,38 @@ interface CampaignWorkflowProps {
   campaignName: string;
 }
 
+// --- URL GENERATION HELPER ---
+function generateLeadSlug(firstName: string, lastName: string, company: string | null): string {
+  const base = [firstName, lastName, company]
+    .filter(Boolean)
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9äöüß-]/g, "")
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${base}-${rand}`;
+}
+
+function buildPersonalizedUrl(
+  landingPageSlug: string,
+  contact: { id: string; first_name: string; last_name: string; company: string | null; position: string | null; email: string | null; phone: string | null; },
+  trackingId: string
+): string {
+  const origin = window.location.origin;
+  const params = new URLSearchParams();
+  if (contact.first_name) params.set("fn", contact.first_name);
+  if (contact.last_name) params.set("ln", contact.last_name);
+  if (contact.company) params.set("co", contact.company);
+  if (contact.position) params.set("pos", contact.position);
+  if (contact.email) params.set("email", contact.email);
+  params.set("cid", contact.id);
+  params.set("tid", trackingId);
+  return `${origin}/lp/${landingPageSlug}?${params.toString()}`;
+}
+
 const STATUS_LABELS: Record<WorkflowStatus, string> = {
   'neu': 'Neu',
   'bereit_fuer_vernetzung': 'Bereit für Vernetzung',
@@ -128,9 +160,78 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [linkedInInput, setLinkedInInput] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
+  const [landingPageSlug, setLandingPageSlug] = useState<string | null>(null);
+  const [generatingUrls, setGeneratingUrls] = useState(false);
   const MAX_DAILY_MESSAGES = 10;
   const MAX_DAILY_CONNECTIONS = 15;
   const MAX_DAILY_FOLLOWUPS = 20;
+
+  // Fetch linked landing page slug
+  useEffect(() => {
+    const fetchLandingPage = async () => {
+      // Get campaign's landing_page_id
+      const { data: campaign } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("id", campaignId)
+        .single();
+
+      const lpId = (campaign as any)?.landing_page_id;
+      if (lpId) {
+        const { data: lp } = await supabase
+          .from("landing_pages")
+          .select("slug")
+          .eq("id", lpId)
+          .single();
+        if (lp?.slug) setLandingPageSlug(lp.slug);
+      }
+    };
+    fetchLandingPage();
+  }, [campaignId]);
+
+  // Generate personalized URLs for contacts that don't have one
+  const generateUrlsForContacts = async (contactsToProcess?: WorkflowContact[]) => {
+    if (!landingPageSlug) {
+      toast.error("Keine Lead Page mit dieser Kampagne verknüpft. Verknüpfe zuerst eine Lead Page in den Kampagnen-Einstellungen.");
+      return;
+    }
+
+    setGeneratingUrls(true);
+    try {
+      const targets = contactsToProcess || contacts.filter(c => !c.personalized_url);
+      if (targets.length === 0) {
+        toast.info("Alle Leads haben bereits eine personalisierte URL");
+        setGeneratingUrls(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (const contact of targets) {
+        const slug = generateLeadSlug(contact.first_name, contact.last_name, contact.company);
+        const trackingId = `trk_${contact.id.slice(0, 8)}`;
+        const url = buildPersonalizedUrl(landingPageSlug, contact, trackingId);
+
+        const { error } = await supabase
+          .from("contacts")
+          .update({
+            slug,
+            personalized_url: url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", contact.id);
+
+        if (!error) successCount++;
+      }
+
+      toast.success(`${successCount} personalisierte URLs generiert`);
+      fetchContacts();
+    } catch (err) {
+      console.error("Error generating URLs:", err);
+      toast.error("Fehler beim Generieren der URLs");
+    } finally {
+      setGeneratingUrls(false);
+    }
+  };
 
   const fetchContacts = async () => {
     setLoading(true);
@@ -456,13 +557,40 @@ LG`
         owner_user_id: user.id,
       }));
 
-      const { error } = await supabase
+      const { data: insertedContacts, error } = await supabase
         .from('contacts')
-        .insert(leadsToInsert);
+        .insert(leadsToInsert)
+        .select('id, first_name, last_name, company, position, email, phone');
 
       if (error) throw error;
 
       toast.success(`${leads.length} Leads importiert und bereit für Vernetzung`);
+
+      // Auto-generate personalized URLs if landing page is linked
+      if (landingPageSlug && insertedContacts && insertedContacts.length > 0) {
+        let urlCount = 0;
+        for (const contact of insertedContacts) {
+          const slug = generateLeadSlug(contact.first_name || '', contact.last_name || '', contact.company);
+          const trackingId = `trk_${contact.id.slice(0, 8)}`;
+          const url = buildPersonalizedUrl(landingPageSlug, {
+            id: contact.id,
+            first_name: contact.first_name || '',
+            last_name: contact.last_name || '',
+            company: contact.company,
+            position: contact.position,
+            email: contact.email,
+            phone: contact.phone,
+          }, trackingId);
+
+          await supabase
+            .from('contacts')
+            .update({ slug, personalized_url: url, updated_at: new Date().toISOString() })
+            .eq('id', contact.id);
+          urlCount++;
+        }
+        toast.success(`${urlCount} personalisierte Tracking-URLs generiert`);
+      }
+
       setImportText("");
       setIsImportDialogOpen(false);
       fetchContacts();
@@ -619,6 +747,18 @@ LG`
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-lg font-medium">Daily Workflow für {campaignName}</h3>
         <div className="flex items-center gap-2">
+          {/* Generate URLs Button */}
+          {landingPageSlug && (
+            <Button
+              variant="outline"
+              onClick={() => generateUrlsForContacts()}
+              disabled={generatingUrls}
+              className="gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              {generatingUrls ? "Generiere..." : `URLs generieren (${contacts.filter(c => !c.personalized_url).length})`}
+            </Button>
+          )}
           {/* Templates Dialog */}
           <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
             <DialogTrigger asChild>
