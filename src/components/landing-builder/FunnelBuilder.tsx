@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ============================================================
-// PITCHFIRST.IO — FUNNEL / LEAD PAGE BUILDER
-// Perspective-style drag-and-drop builder with variable system
+// FUNNEL / LEAD PAGE BUILDER
+// Perspective-style drag-and-drop builder with slides + variables
 // ============================================================
 
 // --- ICON COMPONENTS ---
@@ -47,47 +48,26 @@ const Icons: Record<string, React.FC> = {
   AlignLeft: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>,
   AlignCenter: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>,
   AlignRight: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>,
+  ArrowLeft: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+  Slide: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
+  Globe: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
 };
 
 // --- TYPES ---
-interface Variable {
-  key: string;
-  label: string;
-  example: string;
-}
-
-interface BlockTemplate {
-  type: string;
-  label: string;
-  icon: string;
-  defaults: Record<string, any>;
-}
-
-interface Block {
-  id: string;
-  type: string;
-  settings: Record<string, any>;
-}
-
-interface Theme {
-  name: string;
-  bg: string;
-  accent: string;
-  text: string;
-}
-
+interface Variable { key: string; label: string; example: string; }
+interface BlockTemplate { type: string; label: string; icon: string; defaults: Record<string, any>; }
+interface Block { id: string; type: string; settings: Record<string, any>; }
+interface Theme { name: string; bg: string; accent: string; text: string; }
+interface Slide { id: string; name: string; blocks: Block[]; }
 interface PageSettings {
-  name: string;
-  slug: string;
-  customDomain: string;
-  favicon: string;
-  metaTitle: string;
-  metaDescription: string;
-  theme: number;
-  accentOverride: string;
-  maxWidth: number;
-  blockGap: number;
-  padding: number;
+  name: string; slug: string; customDomain: string; favicon: string;
+  metaTitle: string; metaDescription: string; theme: number; accentOverride: string;
+  maxWidth: number; blockGap: number; padding: number;
+}
+
+interface FunnelBuilderProps {
+  pageId: string;
+  onClose: () => void;
 }
 
 // --- VARIABLE SYSTEM ---
@@ -103,7 +83,7 @@ const VARIABLES: Variable[] = [
   { key: "{{lead.linkedinUrl}}", label: "LinkedIn URL", example: "linkedin.com/in/max" },
   { key: "{{lead.customField1}}", label: "Custom Field 1", example: "Wert 1" },
   { key: "{{sender.name}}", label: "Absender Name", example: "Anna Schmidt" },
-  { key: "{{sender.company}}", label: "Absender Firma", example: "pitchfirst Agency" },
+  { key: "{{sender.company}}", label: "Absender Firma", example: "Meine Agency" },
   { key: "{{sender.calendarLink}}", label: "Kalender Link", example: "https://cal.com/anna" },
   { key: "{{tracking.id}}", label: "Tracking ID", example: "trk_abc123" },
   { key: "{{tracking.utm_source}}", label: "UTM Source", example: "linkedin" },
@@ -147,6 +127,7 @@ const THEMES: Theme[] = [
 
 let blockIdCounter = 100;
 const newId = () => `blk_${++blockIdCounter}_${Date.now()}`;
+const newSlideId = () => `slide_${++blockIdCounter}_${Date.now()}`;
 
 // --- FLOATING RICH TEXT TOOLBAR ---
 const TOOLBAR_COLORS = ["#ffffff", "#6C5CE7", "#00d2ff", "#ff6b6b", "#00b894", "#fd79a8", "#fdcb6e", "#e17055"];
@@ -159,83 +140,36 @@ function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLD
   useEffect(() => {
     const checkSelection = () => {
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || !sel.rangeCount) {
-        setPos(null);
-        setShowColorPicker(false);
-        return;
-      }
-      // Only show if selection is inside our container
+      if (!sel || sel.isCollapsed || !sel.rangeCount) { setPos(null); setShowColorPicker(false); return; }
       const range = sel.getRangeAt(0);
-      if (!containerRef.current?.contains(range.commonAncestorContainer)) {
-        setPos(null);
-        return;
-      }
+      if (!containerRef.current?.contains(range.commonAncestorContainer)) { setPos(null); return; }
       const rect = range.getBoundingClientRect();
       const containerRect = containerRef.current.getBoundingClientRect();
-      setPos({
-        top: rect.top - containerRect.top - 44,
-        left: rect.left - containerRect.left + rect.width / 2,
-      });
+      setPos({ top: rect.top - containerRect.top - 44, left: rect.left - containerRect.left + rect.width / 2 });
     };
     document.addEventListener("selectionchange", checkSelection);
     return () => document.removeEventListener("selectionchange", checkSelection);
   }, [containerRef]);
 
-  const execCmd = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    // Re-focus to keep selection
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount) {
-      const range = sel.getRangeAt(0);
-      range.collapse(false);
-    }
-  };
-
+  const execCmd = (cmd: string, value?: string) => { document.execCommand(cmd, false, value); };
   const isActive = (cmd: string) => document.queryCommandState(cmd);
-
   if (!pos) return null;
 
   return (
-    <div ref={toolbarRef} style={{
-      position: "absolute",
-      top: pos.top,
-      left: pos.left,
-      transform: "translateX(-50%)",
-      zIndex: 200,
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-      background: "#1a1a2e",
-      borderRadius: 10,
-      padding: "4px 4px",
-      boxShadow: "0 8px 32px #000000aa, 0 0 0 1px #ffffff15",
-      backdropFilter: "blur(12px)",
-      animation: "fadeIn 0.12s ease",
-    }}
-      onMouseDown={e => e.preventDefault()} // Prevent toolbar clicks from losing selection
-    >
+    <div ref={toolbarRef} style={{ position: "absolute", top: pos.top, left: pos.left, transform: "translateX(-50%)", zIndex: 200, display: "flex", alignItems: "center", gap: 1, background: "#1a1a2e", borderRadius: 10, padding: "4px 4px", boxShadow: "0 8px 32px #000000aa, 0 0 0 1px #ffffff15", backdropFilter: "blur(12px)", animation: "fadeIn 0.12s ease" }} onMouseDown={e => e.preventDefault()}>
       <ToolbarBtn icon={<Icons.Bold />} active={isActive("bold")} onClick={() => execCmd("bold")} tooltip="Fett" />
       <ToolbarBtn icon={<Icons.Italic />} active={isActive("italic")} onClick={() => execCmd("italic")} tooltip="Kursiv" />
       <div style={{ width: 1, height: 20, background: "#ffffff15", margin: "0 3px" }} />
       <div style={{ position: "relative" }}>
         <ToolbarBtn icon={<Icons.ColorText />} active={showColorPicker} onClick={() => setShowColorPicker(!showColorPicker)} tooltip="Farbe" />
         {showColorPicker && (
-          <div style={{
-            position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
-            marginTop: 6, background: "#1a1a2e", borderRadius: 10, padding: 8,
-            boxShadow: "0 8px 24px #00000088", border: "1px solid #ffffff15",
-            display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, minWidth: 120,
-          }} onMouseDown={e => e.preventDefault()}>
+          <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 6, background: "#1a1a2e", borderRadius: 10, padding: 8, boxShadow: "0 8px 24px #00000088", border: "1px solid #ffffff15", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, minWidth: 120 }} onMouseDown={e => e.preventDefault()}>
             {TOOLBAR_COLORS.map(c => (
-              <div key={c} onClick={() => { execCmd("foreColor", c); setShowColorPicker(false); }}
-                style={{ width: 24, height: 24, borderRadius: 6, background: c, cursor: "pointer", border: "2px solid #ffffff22", transition: "transform 0.1s" }}
-                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.2)")}
-                onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
-              />
+              <div key={c} onClick={() => { execCmd("foreColor", c); setShowColorPicker(false); }} style={{ width: 24, height: 24, borderRadius: 6, background: c, cursor: "pointer", border: "2px solid #ffffff22", transition: "transform 0.1s" }}
+                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.2)")} onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")} />
             ))}
             <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
-              <input type="color" onChange={e => { execCmd("foreColor", e.target.value); setShowColorPicker(false); }}
-                style={{ width: "100%", height: 24, border: "none", borderRadius: 6, cursor: "pointer", background: "none" }} />
+              <input type="color" onChange={e => { execCmd("foreColor", e.target.value); setShowColorPicker(false); }} style={{ width: "100%", height: 24, border: "none", borderRadius: 6, cursor: "pointer", background: "none" }} />
             </div>
           </div>
         )}
@@ -250,33 +184,19 @@ function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLD
 
 function ToolbarBtn({ icon, active, onClick, tooltip }: { icon: React.ReactNode; active?: boolean; onClick: () => void; tooltip?: string }) {
   return (
-    <div onClick={onClick} title={tooltip} style={{
-      padding: "5px 7px", borderRadius: 6, cursor: "pointer",
-      background: active ? "#6C5CE733" : "transparent",
-      color: active ? "#6C5CE7" : "#ffffffaa",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      transition: "all 0.1s",
-    }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#ffffff11"; }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
-    >{icon}</div>
+    <div onClick={onClick} title={tooltip} style={{ padding: "5px 7px", borderRadius: 6, cursor: "pointer", background: active ? "#6C5CE733" : "transparent", color: active ? "#6C5CE7" : "#ffffffaa", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.1s" }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#ffffff11"; }} onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}>
+      {icon}
+    </div>
   );
 }
 
 // --- INLINE EDITABLE ---
-function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: {
-  html: string;
-  onChange: (html: string) => void;
-  style: React.CSSProperties;
-  tag?: string;
-  blockId: string;
-  isSelected: boolean;
-}) {
+function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: { html: string; onChange: (html: string) => void; style: React.CSSProperties; tag?: string; blockId: string; isSelected: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastHtml = useRef(html);
 
-  // Sync external changes (only if content actually differs to avoid cursor jump)
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== html && !ref.current.contains(document.activeElement)) {
       ref.current.innerHTML = html;
@@ -287,69 +207,38 @@ function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: {
   const handleInput = useCallback(() => {
     if (ref.current) {
       const newHtml = ref.current.innerHTML;
-      if (newHtml !== lastHtml.current) {
-        lastHtml.current = newHtml;
-        onChange(newHtml);
-      }
+      if (newHtml !== lastHtml.current) { lastHtml.current = newHtml; onChange(newHtml); }
     }
   }, [onChange]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Allow formatting shortcuts
     if (e.metaKey || e.ctrlKey) {
       if (e.key === "b") { e.preventDefault(); document.execCommand("bold"); }
       if (e.key === "i") { e.preventDefault(); document.execCommand("italic"); }
     }
-    // Prevent enter creating new blocks, just insert <br>
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      document.execCommand("insertLineBreak");
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.execCommand("insertLineBreak"); }
   }, []);
 
   const Tag = (tag || "div") as any;
-
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
       {isSelected && <FloatingToolbar containerRef={containerRef} />}
-      <Tag
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        onBlur={handleInput}
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        dangerouslySetInnerHTML={{ __html: html }}
-        style={{
-          ...style,
-          outline: "none",
-          cursor: "text",
-          minHeight: "1em",
-        }}
-      />
+      <Tag ref={ref} contentEditable suppressContentEditableWarning onInput={handleInput} onKeyDown={handleKeyDown} onBlur={handleInput}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()} dangerouslySetInnerHTML={{ __html: html }}
+        style={{ ...style, outline: "none", cursor: "text", minHeight: "1em" }} />
     </div>
   );
 }
 
-// --- BLOCK RENDERER (Preview) ---
+// --- BLOCK RENDERER ---
 function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { block: Block; theme: Theme & { accent: string }; previewMode: string; onUpdate?: (block: Block) => void; isSelected?: boolean }) {
   const replaceVarsForDisplay = (str: any): string => {
     if (typeof str !== "string") return str;
     let result = str;
-    VARIABLES.forEach(v => {
-      // Replace variables but preserve HTML tags
-      result = result.split(v.key).join(`<span style="color:${theme.accent};opacity:0.7">${v.example}</span>`);
-    });
+    VARIABLES.forEach(v => { result = result.split(v.key).join(`<span style="color:${theme.accent};opacity:0.7">${v.example}</span>`); });
     return result;
   };
-
-  const updateSetting = (key: string, value: any) => {
-    if (onUpdate) {
-      onUpdate({ ...block, settings: { ...block.settings, [key]: value } });
-    }
-  };
-
+  const updateSetting = (key: string, value: any) => { if (onUpdate) onUpdate({ ...block, settings: { ...block.settings, [key]: value } }); };
   const s = block.settings;
   const mobile = previewMode === "mobile";
   const editable = isSelected && onUpdate;
@@ -359,22 +248,18 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       const sizes: Record<string, number> = { h1: mobile ? 26 : s.fontSize || 32, h2: mobile ? 22 : (s.fontSize || 28), h3: mobile ? 18 : (s.fontSize || 22) };
       const level = s.level || "h1";
       const headingStyle: React.CSSProperties = { fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || "#fff", textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" };
-      if (editable) {
-        return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={headingStyle} tag={level} blockId={block.id} isSelected={!!isSelected} />;
-      }
+      if (editable) return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={headingStyle} tag={level} blockId={block.id} isSelected={!!isSelected} />;
       const Tag = level as keyof JSX.IntrinsicElements;
       return <Tag style={headingStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
     }
     case "text": {
       const textStyle: React.CSSProperties = { fontSize: mobile ? 14 : (s.fontSize || 16), color: s.color || "#ffffffcc", textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" };
-      if (editable) {
-        return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={textStyle} tag="p" blockId={block.id} isSelected={!!isSelected} />;
-      }
+      if (editable) return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={textStyle} tag="p" blockId={block.id} isSelected={!!isSelected} />;
       return <p style={textStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
     }
     case "image":
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", width: s.width || "100%" }}>
-        {s.src ? <img src={s.src} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> : 
+        {s.src ? <img src={s.src} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> :
         <div style={{ background: "#ffffff11", height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff44", fontSize: 14 }}>Bild hier einfügen</div>}
       </div>;
     case "video":
@@ -390,14 +275,8 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       </div>;
     case "button": {
       const btnStyle: React.CSSProperties = { background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s", display: "inline-block", textAlign: "center" as const };
-      if (editable) {
-        return <div style={{ textAlign: "center" }}>
-          <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={btnStyle} blockId={block.id} isSelected={!!isSelected} />
-        </div>;
-      }
-      return <div style={{ textAlign: "center" }}>
-        <button style={btnStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />
-      </div>;
+      if (editable) return <div style={{ textAlign: "center" }}><InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={btnStyle} blockId={block.id} isSelected={!!isSelected} /></div>;
+      return <div style={{ textAlign: "center" }}><button style={btnStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} /></div>;
     }
     case "form":
       return <div style={{ maxWidth: 400, margin: "0 auto" }}>
@@ -409,20 +288,15 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
         ))}
         <button style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: s.submitColor || theme.accent, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 8 }}>{s.submitText || "Absenden"}</button>
       </div>;
-    case "spacer":
-      return <div style={{ height: s.height || 40 }} />;
-    case "divider":
-      return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || "#ffffff22"}` }} /></div>;
+    case "spacer": return <div style={{ height: s.height || 40 }} />;
+    case "divider": return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || "#ffffff22"}` }} /></div>;
     case "testimonial":
       return <div style={{ background: "#ffffff08", borderRadius: 16, padding: mobile ? 20 : 28, border: "1px solid #ffffff11" }}>
         <div style={{ color: theme.accent, fontSize: 20, marginBottom: 8 }}>{"★".repeat(s.rating || 5)}</div>
         <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }} dangerouslySetInnerHTML={{ __html: `"${replaceVarsForDisplay(s.quote)}"` }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>{(s.author || "A")[0]}</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{s.author}</div>
-            <div style={{ fontSize: 12, color: "#ffffff66" }}>{s.role}</div>
-          </div>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{s.author}</div><div style={{ fontSize: 12, color: "#ffffff66" }}>{s.role}</div></div>
         </div>
       </div>;
     case "quiz":
@@ -436,8 +310,7 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       </div>;
     case "calendar":
       return <div style={{ background: "#ffffff08", borderRadius: 12, height: mobile ? 300 : (s.height || 500), display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #ffffff11", flexDirection: "column", gap: 8 }}>
-        <Icons.Calendar />
-        <div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
+        <Icons.Calendar /><div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
       </div>;
     case "logo":
       return <div style={{ textAlign: "center" }}>
@@ -531,12 +404,8 @@ function VariablePicker({ onInsert, onClose }: { onInsert: (key: string) => void
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {filtered.map(v => (
         <div key={v.key} onClick={() => { onInsert(v.key); onClose(); }} style={{ padding: "8px 12px", borderRadius: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "background 0.15s" }}
-          onMouseEnter={e => (e.currentTarget.style.background = "#ffffff11")}
-          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#ffffffcc" }}>{v.label}</div>
-            <div style={{ fontSize: 11, color: "#6C5CE7", fontFamily: "monospace" }}>{v.key}</div>
-          </div>
+          onMouseEnter={e => (e.currentTarget.style.background = "#ffffff11")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+          <div><div style={{ fontSize: 12, fontWeight: 600, color: "#ffffffcc" }}>{v.label}</div><div style={{ fontSize: 11, color: "#6C5CE7", fontFamily: "monospace" }}>{v.key}</div></div>
           <div style={{ fontSize: 11, color: "#ffffff44" }}>{v.example}</div>
         </div>
       ))}
@@ -550,14 +419,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
   const [varTarget, setVarTarget] = useState<string | null>(null);
   const s = block.settings;
   const update = (key: string, val: any) => onChange({ ...block, settings: { ...s, [key]: val } });
-
-  const insertVar = (varKey: string) => {
-    if (varTarget) {
-      const cur = s[varTarget] || "";
-      update(varTarget, cur + varKey);
-    }
-  };
-
+  const insertVar = (varKey: string) => { if (varTarget) update(varTarget, (s[varTarget] || "") + varKey); };
   const VarBtn = ({ field }: { field: string }) => (
     <div onClick={() => { setVarTarget(field); setShowVarPicker(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, color: "#6C5CE7", background: "#6C5CE722", padding: "2px 8px", borderRadius: 20, marginBottom: 4, fontWeight: 600 }}>
       <Icons.Variable /> Variable
@@ -569,8 +431,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
       case "heading":
         return <>
           <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-            <Icons.Text />
-            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+            <Icons.Text /><span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
           </div>
           <VarBtn field="text" />
           <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
@@ -582,8 +443,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
       case "text":
         return <>
           <div style={{ background: "#6C5CE711", border: "1px solid #6C5CE733", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-            <Icons.Text />
-            <span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
+            <Icons.Text /><span style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600 }}>Klicke den Text in der Vorschau zum Bearbeiten</span>
           </div>
           <VarBtn field="text" />
           <TextInput label="Text (Fallback)" value={s.text} onChange={v => update("text", v)} multiline />
@@ -641,8 +501,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
             <div onClick={() => update("fields", [...(s.fields || []), { label: "Neues Feld", type: "text", placeholder: "", required: false }])} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "#6C5CE7", fontSize: 12, fontWeight: 600, padding: "8px 0" }}><Icons.Plus /> Feld hinzufügen</div>
           </div>
         </>;
-      case "spacer":
-        return <NumberInput label="Höhe" value={s.height} onChange={v => update("height", v)} min={8} max={200} unit="px" />;
+      case "spacer": return <NumberInput label="Höhe" value={s.height} onChange={v => update("height", v)} min={8} max={200} unit="px" />;
       case "divider":
         return <>
           <ColorInput label="Farbe" value={s.color} onChange={v => update("color", v)} />
@@ -702,8 +561,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Zahl" value={s.number} onChange={v => update("number", v)} />
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />
         </>;
-      default:
-        return <div style={{ color: "#ffffff44", fontSize: 13 }}>Keine Einstellungen verfügbar.</div>;
+      default: return <div style={{ color: "#ffffff44", fontSize: 13 }}>Keine Einstellungen verfügbar.</div>;
     }
   })();
 
@@ -715,9 +573,9 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
 
 // --- TRACKING LINK GENERATOR ---
 function TrackingLinkPanel({ pageSettings }: { pageSettings: PageSettings }) {
-  const baseUrl = pageSettings.customDomain || "https://go.pitchfirst.io";
-  const exampleLink = `${baseUrl}/p/${pageSettings.slug || "mein-funnel"}?tid={{tracking.id}}&utm_source={{tracking.utm_source}}&utm_campaign={{tracking.utm_campaign}}&fn={{lead.firstName}}&ln={{lead.lastName}}&co={{lead.company}}`;
-  const resolvedLink = `${baseUrl}/p/${pageSettings.slug || "mein-funnel"}?tid=trk_abc123&utm_source=linkedin&utm_campaign=q1_outreach&fn=Max&ln=Mustermann&co=Acme+GmbH`;
+  const baseUrl = pageSettings.customDomain || window.location.origin;
+  const exampleLink = `${baseUrl}/lp/${pageSettings.slug || "mein-funnel"}?tid={{tracking.id}}&utm_source={{tracking.utm_source}}&fn={{lead.firstName}}&co={{lead.company}}`;
+  const resolvedLink = `${baseUrl}/lp/${pageSettings.slug || "mein-funnel"}?tid=trk_abc123&utm_source=linkedin&fn=Max&co=Acme+GmbH`;
 
   return <div style={{ padding: 16 }}>
     <h4 style={{ margin: "0 0 12px 0", fontSize: 14, color: "#fff", fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}><Icons.Link /> Tracking Link</h4>
@@ -732,8 +590,8 @@ function TrackingLinkPanel({ pageSettings }: { pageSettings: PageSettings }) {
     <div style={{ background: "#6C5CE711", borderRadius: 8, padding: 12, border: "1px solid #6C5CE722" }}>
       <div style={{ fontSize: 11, color: "#6C5CE7", fontWeight: 600, marginBottom: 6 }}>Tracking Capabilities</div>
       <div style={{ fontSize: 11, color: "#ffffff88", lineHeight: 1.8 }}>
-        ✓ Page View Tracking &nbsp; ✓ Time on Page &nbsp; ✓ Video Watch % &nbsp; ✓ CTA Klicks<br/>
-        ✓ Form Submissions &nbsp; ✓ Quiz Antworten &nbsp; ✓ Scroll Depth &nbsp; ✓ UTM Parameter
+        Page View Tracking &bull; Time on Page &bull; Video Watch % &bull; CTA Klicks<br/>
+        Form Submissions &bull; Quiz Antworten &bull; Scroll Depth &bull; UTM Parameter
       </div>
     </div>
   </div>;
@@ -746,15 +604,15 @@ function PageSettingsPanel({ pageSettings, onChange }: { pageSettings: PageSetti
     <h4 style={{ margin: "0 0 16px 0", fontSize: 14, color: "#fff", fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}><Icons.Settings /> Seiten-Einstellungen</h4>
     <TextInput label="Seitenname" value={pageSettings.name} onChange={v => update("name", v)} />
     <TextInput label="URL Slug" value={pageSettings.slug} onChange={v => update("slug", v)} placeholder="mein-funnel" />
-    <TextInput label="Custom Domain" value={pageSettings.customDomain} onChange={v => update("customDomain", v)} placeholder="https://go.pitchfirst.io" />
-    <TextInput label="Favicon URL" value={(pageSettings as any).favicon} onChange={v => update("favicon", v)} />
-    <TextInput label="Meta Title" value={(pageSettings as any).metaTitle} onChange={v => update("metaTitle", v)} />
-    <TextInput label="Meta Description" value={(pageSettings as any).metaDescription} onChange={v => update("metaDescription", v)} multiline />
+    <TextInput label="Custom Domain" value={pageSettings.customDomain} onChange={v => update("customDomain", v)} placeholder="https://meine-domain.de" />
+    <TextInput label="Favicon URL" value={pageSettings.favicon} onChange={v => update("favicon", v)} />
+    <TextInput label="Meta Title" value={pageSettings.metaTitle} onChange={v => update("metaTitle", v)} />
+    <TextInput label="Meta Description" value={pageSettings.metaDescription} onChange={v => update("metaDescription", v)} multiline />
     <div style={{ marginTop: 16 }}>
       <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 8 }}>Design Theme</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {THEMES.map((t, i) => (
-          <div key={i} onClick={() => { update("theme", i); }} style={{ padding: 10, borderRadius: 10, background: t.bg, cursor: "pointer", border: pageSettings.theme === i ? `2px solid ${t.accent}` : "2px solid transparent", textAlign: "center", transition: "all 0.15s" }}>
+          <div key={i} onClick={() => update("theme", i)} style={{ padding: 10, borderRadius: 10, background: t.bg, cursor: "pointer", border: pageSettings.theme === i ? `2px solid ${t.accent}` : "2px solid transparent", textAlign: "center", transition: "all 0.15s" }}>
             <div style={{ width: 16, height: 16, borderRadius: "50%", background: t.accent, margin: "0 auto 6px" }} />
             <div style={{ fontSize: 10, color: t.text, fontWeight: 600 }}>{t.name}</div>
           </div>
@@ -772,110 +630,286 @@ function PageSettingsPanel({ pageSettings, onChange }: { pageSettings: PageSetti
   </div>;
 }
 
-// --- MAIN BUILDER COMPONENT ---
-export default function FunnelBuilder() {
-  const [blocks, setBlocks] = useState<Block[]>([
-    { id: newId(), type: "spacer", settings: { height: 32 } },
-    { id: newId(), type: "logo", settings: { ...BLOCK_TEMPLATES.logo.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 24 } },
-    { id: newId(), type: "heading", settings: { ...BLOCK_TEMPLATES.heading.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 8 } },
-    { id: newId(), type: "text", settings: { ...BLOCK_TEMPLATES.text.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 24 } },
-    { id: newId(), type: "video", settings: { ...BLOCK_TEMPLATES.video.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 24 } },
-    { id: newId(), type: "button", settings: { ...BLOCK_TEMPLATES.button.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 32 } },
-    { id: newId(), type: "testimonial", settings: { ...BLOCK_TEMPLATES.testimonial.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 20 } },
-    { id: newId(), type: "timer", settings: { ...BLOCK_TEMPLATES.timer.defaults } },
-    { id: newId(), type: "spacer", settings: { height: 32 } },
-  ]);
-
+// ================================================================
+// MAIN BUILDER COMPONENT
+// ================================================================
+export default function FunnelBuilder({ pageId, onClose }: FunnelBuilderProps) {
+  // --- STATE ---
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [activeSlideIdx, setActiveSlideIdx] = useState(0);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState("mobile");
   const [leftPanel, setLeftPanel] = useState("blocks");
   const [rightPanel, setRightPanel] = useState("settings");
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [pageStatus, setPageStatus] = useState<string>("draft");
+  const [pageSlug, setPageSlug] = useState("");
   const [pageSettings, setPageSettings] = useState<PageSettings>({
-    name: "Lead Seite — Outreach Q1",
-    slug: "demo-outreach",
-    customDomain: "https://go.pitchfirst.io",
-    favicon: "",
-    metaTitle: "Personalisierte Lösung für {{lead.company}}",
-    metaDescription: "{{lead.firstName}}, wir haben etwas Besonderes für {{lead.company}} vorbereitet.",
-    theme: 0,
-    accentOverride: "",
-    maxWidth: 480,
-    blockGap: 20,
-    padding: 24,
+    name: "", slug: "", customDomain: "", favicon: "",
+    metaTitle: "", metaDescription: "", theme: 0, accentOverride: "",
+    maxWidth: 480, blockGap: 20, padding: 24,
   });
 
-  const theme = {
-    ...THEMES[pageSettings.theme || 0],
-    accent: pageSettings.accentOverride || THEMES[pageSettings.theme || 0].accent,
+  const theme = { ...THEMES[pageSettings.theme || 0], accent: pageSettings.accentOverride || THEMES[pageSettings.theme || 0].accent };
+  const activeSlide = slides[activeSlideIdx] || null;
+  const blocks = activeSlide?.blocks || [];
+  const selectedBlock = blocks.find(b => b.id === selectedBlockId) || null;
+
+  // --- LOAD PAGE FROM SUPABASE ---
+  useEffect(() => {
+    loadPage();
+  }, [pageId]);
+
+  const loadPage = async () => {
+    setLoadingPage(true);
+    try {
+      const { data, error } = await supabase
+        .from("landing_pages")
+        .select("*")
+        .eq("id", pageId)
+        .single();
+
+      if (error || !data) { toast.error("Seite nicht gefunden"); onClose(); return; }
+
+      setPageStatus(data.status || "draft");
+      setPageSlug(data.slug || "");
+
+      const content = data.content as any;
+
+      if (content?.slides) {
+        // New format: slides-based
+        setSlides(content.slides);
+        if (content.settings) setPageSettings(content.settings);
+      } else if (content?.blocks || Array.isArray(content)) {
+        // Legacy: flat blocks array
+        const legacyBlocks = content?.blocks || content;
+        setSlides([{ id: "slide_1", name: "Startseite", blocks: Array.isArray(legacyBlocks) ? legacyBlocks : [] }]);
+        setPageSettings(prev => ({ ...prev, name: data.name || prev.name, slug: data.slug || prev.slug }));
+      } else {
+        // Empty page - create default slide
+        setSlides([{
+          id: "slide_1", name: "Startseite",
+          blocks: [
+            { id: newId(), type: "spacer", settings: { height: 32 } },
+            { id: newId(), type: "heading", settings: { ...BLOCK_TEMPLATES.heading.defaults } },
+            { id: newId(), type: "spacer", settings: { height: 8 } },
+            { id: newId(), type: "text", settings: { ...BLOCK_TEMPLATES.text.defaults } },
+            { id: newId(), type: "spacer", settings: { height: 24 } },
+            { id: newId(), type: "button", settings: { ...BLOCK_TEMPLATES.button.defaults } },
+          ],
+        }]);
+        setPageSettings(prev => ({ ...prev, name: data.name || "Neue Seite", slug: data.slug || "" }));
+      }
+    } catch (err) {
+      console.error("Error loading page:", err);
+      toast.error("Fehler beim Laden");
+      onClose();
+    } finally {
+      setLoadingPage(false);
+    }
   };
 
-  const selectedBlock = blocks.find(b => b.id === selectedBlockId) || null;
+  // --- SAVE TO SUPABASE ---
+  const savePage = async () => {
+    setSaving(true);
+    try {
+      const content = { slides, settings: pageSettings };
+      const { error } = await supabase
+        .from("landing_pages")
+        .update({
+          name: pageSettings.name,
+          slug: pageSettings.slug,
+          content: content as any,
+          meta_title: pageSettings.metaTitle || pageSettings.name,
+          meta_description: pageSettings.metaDescription || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", pageId);
+
+      if (error) {
+        if (error.code === "23505") { toast.error("Dieser URL Slug wird bereits verwendet"); return; }
+        throw error;
+      }
+      setPageSlug(pageSettings.slug);
+      toast.success("Gespeichert!");
+    } catch (err) {
+      console.error("Error saving:", err);
+      toast.error("Fehler beim Speichern");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- PUBLISH / UNPUBLISH ---
+  const togglePublish = async () => {
+    setPublishing(true);
+    try {
+      // Always save first
+      const content = { slides, settings: pageSettings };
+      const newStatus = pageStatus === "published" ? "draft" : "published";
+      const { error } = await supabase
+        .from("landing_pages")
+        .update({
+          name: pageSettings.name,
+          slug: pageSettings.slug,
+          content: content as any,
+          status: newStatus,
+          published_at: newStatus === "published" ? new Date().toISOString() : null,
+          meta_title: pageSettings.metaTitle || pageSettings.name,
+          meta_description: pageSettings.metaDescription || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", pageId);
+
+      if (error) throw error;
+      setPageStatus(newStatus);
+      setPageSlug(pageSettings.slug);
+      toast.success(newStatus === "published" ? "Seite veröffentlicht!" : "Seite deaktiviert");
+    } catch (err) {
+      console.error("Error publishing:", err);
+      toast.error("Fehler beim Veröffentlichen");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  // --- SLIDE MANAGEMENT ---
+  const addSlide = () => {
+    const ns: Slide = {
+      id: newSlideId(),
+      name: `Slide ${slides.length + 1}`,
+      blocks: [
+        { id: newId(), type: "spacer", settings: { height: 32 } },
+        { id: newId(), type: "heading", settings: { text: "Neuer Slide", level: "h1", align: "center", color: "#ffffff", fontSize: 32 } },
+        { id: newId(), type: "spacer", settings: { height: 24 } },
+      ],
+    };
+    setSlides([...slides, ns]);
+    setActiveSlideIdx(slides.length);
+    setSelectedBlockId(null);
+  };
+
+  const deleteSlide = (idx: number) => {
+    if (slides.length <= 1) { toast.error("Mindestens ein Slide erforderlich"); return; }
+    const ns = slides.filter((_, i) => i !== idx);
+    setSlides(ns);
+    if (activeSlideIdx >= ns.length) setActiveSlideIdx(ns.length - 1);
+    setSelectedBlockId(null);
+  };
+
+  const renameSlide = (idx: number, name: string) => {
+    const ns = [...slides];
+    ns[idx] = { ...ns[idx], name };
+    setSlides(ns);
+  };
+
+  const moveSlide = (idx: number, dir: number) => {
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= slides.length) return;
+    const ns = [...slides];
+    [ns[idx], ns[targetIdx]] = [ns[targetIdx], ns[idx]];
+    setSlides(ns);
+    setActiveSlideIdx(targetIdx);
+  };
+
+  const duplicateSlide = (idx: number) => {
+    const original = slides[idx];
+    const ns: Slide = {
+      id: newSlideId(),
+      name: `${original.name} (Kopie)`,
+      blocks: original.blocks.map(b => ({ ...b, id: newId(), settings: { ...b.settings } })),
+    };
+    const updated = [...slides];
+    updated.splice(idx + 1, 0, ns);
+    setSlides(updated);
+    setActiveSlideIdx(idx + 1);
+  };
+
+  // --- BLOCK MANAGEMENT (within active slide) ---
+  const updateBlocks = (newBlocks: Block[]) => {
+    const ns = [...slides];
+    ns[activeSlideIdx] = { ...ns[activeSlideIdx], blocks: newBlocks };
+    setSlides(ns);
+  };
 
   const addBlock = (type: string) => {
     const tpl = BLOCK_TEMPLATES[type];
     const nb: Block = { id: newId(), type, settings: { ...tpl.defaults } };
     const idx = selectedBlockId ? blocks.findIndex(b => b.id === selectedBlockId) + 1 : blocks.length;
-    const nb2 = [...blocks];
-    nb2.splice(idx, 0, nb);
-    setBlocks(nb2);
+    const newBlocks = [...blocks];
+    newBlocks.splice(idx, 0, nb);
+    updateBlocks(newBlocks);
     setSelectedBlockId(nb.id);
   };
 
-  const updateBlock = (updated: Block) => {
-    setBlocks(blocks.map(b => b.id === updated.id ? updated : b));
-  };
-
-  const deleteBlock = (id: string) => {
-    setBlocks(blocks.filter(b => b.id !== id));
-    if (selectedBlockId === id) setSelectedBlockId(null);
-  };
-
+  const updateBlock = (updated: Block) => { updateBlocks(blocks.map(b => b.id === updated.id ? updated : b)); };
+  const deleteBlock = (id: string) => { updateBlocks(blocks.filter(b => b.id !== id)); if (selectedBlockId === id) setSelectedBlockId(null); };
   const duplicateBlock = (id: string) => {
     const idx = blocks.findIndex(b => b.id === id);
     const dup = { ...blocks[idx], id: newId(), settings: { ...blocks[idx].settings } };
-    const nb = [...blocks];
-    nb.splice(idx + 1, 0, dup);
-    setBlocks(nb);
+    const nb = [...blocks]; nb.splice(idx + 1, 0, dup);
+    updateBlocks(nb);
   };
-
   const moveBlock = (id: string, dir: number) => {
     const idx = blocks.findIndex(b => b.id === id);
     if ((dir === -1 && idx === 0) || (dir === 1 && idx === blocks.length - 1)) return;
-    const nb = [...blocks];
-    [nb[idx], nb[idx + dir]] = [nb[idx + dir], nb[idx]];
-    setBlocks(nb);
+    const nb = [...blocks]; [nb[idx], nb[idx + dir]] = [nb[idx + dir], nb[idx]];
+    updateBlocks(nb);
   };
 
   const handleDragStart = (idx: number) => setDraggedIdx(idx);
   const handleDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); setDragOverIdx(idx); };
   const handleDrop = (idx: number) => {
     if (draggedIdx === null || draggedIdx === idx) { setDraggedIdx(null); setDragOverIdx(null); return; }
-    const nb = [...blocks];
-    const [moved] = nb.splice(draggedIdx, 1);
-    nb.splice(idx, 0, moved);
-    setBlocks(nb);
-    setDraggedIdx(null);
-    setDragOverIdx(null);
+    const nb = [...blocks]; const [moved] = nb.splice(draggedIdx, 1); nb.splice(idx, 0, moved);
+    updateBlocks(nb); setDraggedIdx(null); setDragOverIdx(null);
   };
 
+  // --- Keyboard shortcuts ---
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); savePage(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [slides, pageSettings]);
+
+  // --- LOADING STATE ---
+  if (loadingPage) {
+    return (
+      <div style={{ display: "flex", height: "100vh", background: "#08080d", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 40, height: 40, border: "3px solid #6C5CE744", borderTopColor: "#6C5CE7", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <div style={{ fontSize: 14, color: "#ffffff88" }}>Seite wird geladen...</div>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 64px)", background: "#08080d", fontFamily: "'Satoshi', 'DM Sans', 'Inter', system-ui, sans-serif", color: "#fff", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#08080d", fontFamily: "'Satoshi', 'DM Sans', 'Inter', system-ui, sans-serif", color: "#fff", overflow: "hidden", position: "fixed", inset: 0, zIndex: 100 }}>
       {/* === TOP BAR === */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 52, background: "#0d0d14", borderBottom: "1px solid #ffffff0d", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", zIndex: 50 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <img src={pitchfirstLogo} alt="pitchfirst.io" style={{ height: 28, objectFit: "contain" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 52, background: "#0d0d14", borderBottom: "1px solid #ffffff0d", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", zIndex: 50 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div onClick={onClose} style={{ cursor: "pointer", color: "#ffffff88", display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, transition: "background 0.15s" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#ffffff11")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            <Icons.ArrowLeft /> <span style={{ fontSize: 13, fontWeight: 500 }}>Zurück</span>
+          </div>
           <div style={{ width: 1, height: 24, background: "#ffffff11" }} />
-          <div style={{ fontSize: 13, color: "#ffffff88", fontWeight: 500 }}>{pageSettings.name}</div>
+          <div style={{ fontSize: 13, color: "#ffffff88", fontWeight: 500 }}>{pageSettings.name || "Unbenannt"}</div>
+          {pageStatus === "published" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#00b894", background: "#00b89422", padding: "2px 8px", borderRadius: 20, fontWeight: 600 }}>
+              <Icons.Globe /> Live
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Preview mode toggle */}
           <div style={{ display: "flex", background: "#ffffff08", borderRadius: 8, padding: 2, gap: 2 }}>
             {([["mobile", Icons.Phone], ["desktop", Icons.Desktop]] as [string, React.FC][]).map(([mode, Icon]) => (
               <div key={mode} onClick={() => setPreviewMode(mode)} style={{ padding: "6px 12px", borderRadius: 6, cursor: "pointer", background: previewMode === mode ? "#6C5CE733" : "transparent", color: previewMode === mode ? "#6C5CE7" : "#ffffff55", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, transition: "all 0.15s" }}>
@@ -884,30 +918,35 @@ export default function FunnelBuilder() {
             ))}
           </div>
           <div style={{ width: 1, height: 24, background: "#ffffff11", margin: "0 4px" }} />
-          <div style={{ display: "flex", gap: 4 }}>
-            <button style={{ padding: "7px 10px", borderRadius: 6, border: "none", background: "#ffffff08", color: "#ffffff66", cursor: "pointer", display: "flex", alignItems: "center" }}><Icons.Undo /></button>
-            <button style={{ padding: "7px 10px", borderRadius: 6, border: "none", background: "#ffffff08", color: "#ffffff66", cursor: "pointer", display: "flex", alignItems: "center" }}><Icons.Redo /></button>
-          </div>
-          <button style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#6C5CE7", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 2px 12px #6C5CE744" }}>
-            <Icons.Eye /> Vorschau
+          {/* Preview button */}
+          {pageStatus === "published" && pageSlug && (
+            <button onClick={() => window.open(`/lp/${pageSlug}`, "_blank")} style={{ padding: "7px 12px", borderRadius: 8, border: "none", background: "#ffffff08", color: "#ffffffaa", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icons.Eye /> Ansehen
+            </button>
+          )}
+          {/* Save button */}
+          <button onClick={savePage} disabled={saving} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#6C5CE7", color: "#fff", cursor: saving ? "wait" : "pointer", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 2px 12px #6C5CE744", opacity: saving ? 0.7 : 1 }}>
+            <Icons.Save /> {saving ? "..." : "Speichern"}
           </button>
-          <button style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#00b894", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 2px 12px #00b89444" }}>
-            <Icons.Save /> Speichern
+          {/* Publish button */}
+          <button onClick={togglePublish} disabled={publishing} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: pageStatus === "published" ? "#ffffff15" : "#00b894", color: "#fff", cursor: publishing ? "wait" : "pointer", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, boxShadow: pageStatus === "published" ? "none" : "0 2px 12px #00b89444", opacity: publishing ? 0.7 : 1 }}>
+            <Icons.Globe /> {publishing ? "..." : pageStatus === "published" ? "Deaktivieren" : "Veröffentlichen"}
           </button>
         </div>
       </div>
 
-      {/* === LEFT SIDEBAR: Block Palette === */}
+      {/* === LEFT SIDEBAR === */}
       <div style={{ width: 260, background: "#0d0d14", borderRight: "1px solid #ffffff0d", marginTop: 52, display: "flex", flexDirection: "column", flexShrink: 0 }}>
         <div style={{ display: "flex", borderBottom: "1px solid #ffffff0d" }}>
-          {([["blocks", "Blöcke", Icons.Plus], ["layers", "Ebenen", Icons.Layers], ["pages", "Seiten", Icons.Settings]] as [string, string, React.FC][]).map(([key, label, Icon]) => (
-            <div key={key} onClick={() => { setLeftPanel(key); if (key === "pages") setRightPanel("page"); }} style={{ flex: 1, padding: "10px 0", textAlign: "center", cursor: "pointer", fontSize: 11, fontWeight: 600, color: leftPanel === key ? "#6C5CE7" : "#ffffff55", borderBottom: leftPanel === key ? "2px solid #6C5CE7" : "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, transition: "all 0.15s" }}>
+          {([["blocks", "Blöcke", Icons.Plus], ["layers", "Ebenen", Icons.Layers], ["slides", "Slides", Icons.Slide]] as [string, string, React.FC][]).map(([key, label, Icon]) => (
+            <div key={key} onClick={() => setLeftPanel(key)} style={{ flex: 1, padding: "10px 0", textAlign: "center", cursor: "pointer", fontSize: 11, fontWeight: 600, color: leftPanel === key ? "#6C5CE7" : "#ffffff55", borderBottom: leftPanel === key ? "2px solid #6C5CE7" : "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, transition: "all 0.15s" }}>
               <Icon /> {label}
             </div>
           ))}
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+          {/* Block palette */}
           {leftPanel === "blocks" && BLOCK_CATEGORIES.map(cat => (
             <div key={cat.name} style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 10, color: "#ffffff44", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 4 }}>{cat.name}</div>
@@ -926,6 +965,7 @@ export default function FunnelBuilder() {
             </div>
           ))}
 
+          {/* Layers panel */}
           {leftPanel === "layers" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {blocks.map((block, idx) => {
@@ -939,84 +979,142 @@ export default function FunnelBuilder() {
                   <div style={{ fontSize: 12, color: selectedBlockId === block.id ? "#fff" : "#ffffff88", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {tpl?.label || block.type}
                   </div>
-                  <div style={{ display: "flex", gap: 2 }}>
-                    <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ color: "#ffffff33", cursor: "pointer", padding: 2 }}><Icons.Trash /></div>
-                  </div>
+                  <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ color: "#ffffff33", cursor: "pointer", padding: 2 }}><Icons.Trash /></div>
                 </div>;
               })}
             </div>
           )}
 
-          {leftPanel === "pages" && <PageSettingsPanel pageSettings={pageSettings} onChange={setPageSettings} />}
+          {/* Slides panel */}
+          {leftPanel === "slides" && (
+            <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {slides.map((slide, idx) => (
+                  <div key={slide.id} onClick={() => { setActiveSlideIdx(idx); setSelectedBlockId(null); }}
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", background: activeSlideIdx === idx ? "#6C5CE722" : "#ffffff06", border: activeSlideIdx === idx ? "1px solid #6C5CE744" : "1px solid #ffffff0a", transition: "all 0.15s" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 6, background: activeSlideIdx === idx ? "#6C5CE7" : "#ffffff15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: activeSlideIdx === idx ? "#fff" : "#ffffff66" }}>
+                          {idx + 1}
+                        </div>
+                        <input
+                          value={slide.name}
+                          onChange={e => renameSlide(idx, e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          style={{ background: "transparent", border: "none", color: activeSlideIdx === idx ? "#fff" : "#ffffffaa", fontSize: 12, fontWeight: 600, outline: "none", width: 120 }}
+                        />
+                      </div>
+                      <div style={{ display: "flex", gap: 2 }}>
+                        <div onClick={e => { e.stopPropagation(); moveSlide(idx, -1); }} style={{ cursor: "pointer", color: "#ffffff33", padding: 2 }}><Icons.Up /></div>
+                        <div onClick={e => { e.stopPropagation(); moveSlide(idx, 1); }} style={{ cursor: "pointer", color: "#ffffff33", padding: 2 }}><Icons.Down /></div>
+                        <div onClick={e => { e.stopPropagation(); duplicateSlide(idx); }} style={{ cursor: "pointer", color: "#ffffff33", padding: 2 }}><Icons.Copy /></div>
+                        <div onClick={e => { e.stopPropagation(); deleteSlide(idx); }} style={{ cursor: "pointer", color: "#ff6b6b66", padding: 2 }}><Icons.Trash /></div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#ffffff44", marginTop: 4 }}>
+                      {slide.blocks.length} Blöcke
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div onClick={addSlide} style={{ marginTop: 8, padding: "10px 12px", borderRadius: 8, border: "2px dashed #ffffff15", cursor: "pointer", textAlign: "center", fontSize: 12, color: "#ffffff55", fontWeight: 600, transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#6C5CE755"; e.currentTarget.style.color = "#6C5CE7"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#ffffff15"; e.currentTarget.style.color = "#ffffff55"; }}>
+                + Neuer Slide
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* === CENTER: Live Preview === */}
-      <div style={{ flex: 1, marginTop: 52, display: "flex", justifyContent: "center", alignItems: "flex-start", overflowY: "auto", padding: "24px 0", background: "#08080d" }}>
-        <div style={{
-          width: previewMode === "mobile" ? 390 : Math.min(pageSettings.maxWidth + 80, 720),
-          minHeight: previewMode === "mobile" ? 760 : 600,
-          background: theme.bg,
-          borderRadius: previewMode === "mobile" ? 40 : 12,
-          boxShadow: "0 0 0 1px #ffffff0d, 0 20px 60px #00000066",
-          position: "relative",
-          overflow: "hidden",
-          transition: "width 0.3s ease",
-        }}>
-          {previewMode === "mobile" && (
-            <div style={{ position: "relative", height: 48, display: "flex", justifyContent: "center", paddingTop: 8 }}>
-              <div style={{ width: 120, height: 28, background: "#000", borderRadius: 20 }} />
-            </div>
-          )}
-
-          <div style={{ padding: pageSettings.padding || 24, display: "flex", flexDirection: "column", gap: pageSettings.blockGap || 20, maxWidth: pageSettings.maxWidth || 480, margin: "0 auto" }}>
-            {blocks.map((block, idx) => {
-              const isTextBlock = ["heading", "text", "button"].includes(block.type);
-              const isEditing = selectedBlockId === block.id && isTextBlock;
-              return <div key={block.id}
-                onClick={() => { setSelectedBlockId(block.id); setRightPanel("settings"); }}
-                draggable={!isEditing}
-                onDragStart={() => !isEditing && handleDragStart(idx)}
-                onDragOver={e => handleDragOver(e, idx)}
-                onDrop={() => handleDrop(idx)}
-                style={{
-                  position: "relative",
-                  borderRadius: 8,
-                  outline: selectedBlockId === block.id ? `2px solid ${theme.accent}` : "2px solid transparent",
-                  outlineOffset: 4,
-                  cursor: "pointer",
-                  transition: "outline-color 0.15s",
-                  opacity: draggedIdx === idx ? 0.4 : 1,
-                  ...(dragOverIdx === idx && draggedIdx !== idx ? { borderTop: `2px solid ${theme.accent}` } : {}),
-                }}>
-                {selectedBlockId === block.id && (
-                  <div style={{ position: "absolute", top: -32, right: 0, display: "flex", gap: 2, background: "#1a1a2e", borderRadius: 8, padding: 3, boxShadow: "0 4px 12px #00000044", zIndex: 10, border: "1px solid #ffffff11" }}>
-                    <div onClick={e => { e.stopPropagation(); moveBlock(block.id, -1); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Up /></div>
-                    <div onClick={e => { e.stopPropagation(); moveBlock(block.id, 1); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Down /></div>
-                    <div onClick={e => { e.stopPropagation(); duplicateBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Copy /></div>
-                    <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ff6b6b88" }}><Icons.Trash /></div>
-                  </div>
-                )}
-                <BlockPreview block={block} theme={theme} previewMode={previewMode} onUpdate={updateBlock} isSelected={selectedBlockId === block.id} />
-              </div>;
-            })}
-
-            <div onClick={() => setLeftPanel("blocks")} style={{ border: "2px dashed #ffffff15", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent + "55"; e.currentTarget.style.background = theme.accent + "08"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#ffffff15"; e.currentTarget.style.background = "transparent"; }}>
-              <div style={{ color: "#ffffff44", fontSize: 13 }}>+ Block hinzufügen</div>
-            </div>
+      <div style={{ flex: 1, marginTop: 52, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Slide tabs bar */}
+        {slides.length > 1 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 16px", background: "#0a0a10", borderBottom: "1px solid #ffffff0d", overflowX: "auto" }}>
+            {slides.map((slide, idx) => (
+              <div key={slide.id} onClick={() => { setActiveSlideIdx(idx); setSelectedBlockId(null); }}
+                style={{ padding: "6px 14px", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, color: activeSlideIdx === idx ? "#fff" : "#ffffff55", background: activeSlideIdx === idx ? "#6C5CE733" : "transparent", border: activeSlideIdx === idx ? "1px solid #6C5CE744" : "1px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", flexShrink: 0 }}>
+                {slide.name}
+              </div>
+            ))}
           </div>
+        )}
 
-          {previewMode === "mobile" && (
-            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
-              <div style={{ width: 120, height: 4, background: "#ffffff22", borderRadius: 2 }} />
+        {/* Preview area */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflowY: "auto", padding: "24px 0", background: "#08080d" }}>
+          <div style={{
+            width: previewMode === "mobile" ? 390 : Math.min(pageSettings.maxWidth + 80, 720),
+            minHeight: previewMode === "mobile" ? 760 : 600,
+            background: theme.bg,
+            borderRadius: previewMode === "mobile" ? 40 : 12,
+            boxShadow: "0 0 0 1px #ffffff0d, 0 20px 60px #00000066",
+            position: "relative",
+            overflow: "hidden",
+            transition: "width 0.3s ease",
+          }}>
+            {previewMode === "mobile" && (
+              <div style={{ position: "relative", height: 48, display: "flex", justifyContent: "center", paddingTop: 8 }}>
+                <div style={{ width: 120, height: 28, background: "#000", borderRadius: 20 }} />
+              </div>
+            )}
+
+            <div style={{ padding: pageSettings.padding || 24, display: "flex", flexDirection: "column", gap: pageSettings.blockGap || 20, maxWidth: pageSettings.maxWidth || 480, margin: "0 auto" }}>
+              {blocks.map((block, idx) => {
+                const isTextBlock = ["heading", "text", "button"].includes(block.type);
+                const isEditing = selectedBlockId === block.id && isTextBlock;
+                return <div key={block.id}
+                  onClick={() => { setSelectedBlockId(block.id); setRightPanel("settings"); }}
+                  draggable={!isEditing}
+                  onDragStart={() => !isEditing && handleDragStart(idx)}
+                  onDragOver={e => handleDragOver(e, idx)}
+                  onDrop={() => handleDrop(idx)}
+                  style={{
+                    position: "relative", borderRadius: 8,
+                    outline: selectedBlockId === block.id ? `2px solid ${theme.accent}` : "2px solid transparent",
+                    outlineOffset: 4, cursor: "pointer", transition: "outline-color 0.15s",
+                    opacity: draggedIdx === idx ? 0.4 : 1,
+                    ...(dragOverIdx === idx && draggedIdx !== idx ? { borderTop: `2px solid ${theme.accent}` } : {}),
+                  }}>
+                  {selectedBlockId === block.id && (
+                    <div style={{ position: "absolute", top: -32, right: 0, display: "flex", gap: 2, background: "#1a1a2e", borderRadius: 8, padding: 3, boxShadow: "0 4px 12px #00000044", zIndex: 10, border: "1px solid #ffffff11" }}>
+                      <div onClick={e => { e.stopPropagation(); moveBlock(block.id, -1); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Up /></div>
+                      <div onClick={e => { e.stopPropagation(); moveBlock(block.id, 1); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Down /></div>
+                      <div onClick={e => { e.stopPropagation(); duplicateBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ffffff66" }}><Icons.Copy /></div>
+                      <div onClick={e => { e.stopPropagation(); deleteBlock(block.id); }} style={{ padding: "4px 6px", borderRadius: 4, cursor: "pointer", color: "#ff6b6b88" }}><Icons.Trash /></div>
+                    </div>
+                  )}
+                  <BlockPreview block={block} theme={theme} previewMode={previewMode} onUpdate={updateBlock} isSelected={selectedBlockId === block.id} />
+                </div>;
+              })}
+
+              <div onClick={() => setLeftPanel("blocks")} style={{ border: "2px dashed #ffffff15", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent + "55"; e.currentTarget.style.background = theme.accent + "08"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#ffffff15"; e.currentTarget.style.background = "transparent"; }}>
+                <div style={{ color: "#ffffff44", fontSize: 13 }}>+ Block hinzufügen</div>
+              </div>
             </div>
-          )}
+
+            {/* Slide navigation dots (perspective-style) */}
+            {slides.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "16px 0 12px" }}>
+                {slides.map((_, idx) => (
+                  <div key={idx} onClick={() => { setActiveSlideIdx(idx); setSelectedBlockId(null); }}
+                    style={{ width: activeSlideIdx === idx ? 24 : 8, height: 8, borderRadius: 4, background: activeSlideIdx === idx ? theme.accent : "#ffffff33", cursor: "pointer", transition: "all 0.2s" }} />
+                ))}
+              </div>
+            )}
+
+            {previewMode === "mobile" && (
+              <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
+                <div style={{ width: 120, height: 4, background: "#ffffff22", borderRadius: 2 }} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* === RIGHT SIDEBAR: Settings === */}
+      {/* === RIGHT SIDEBAR === */}
       <div style={{ width: 300, background: "#0d0d14", borderLeft: "1px solid #ffffff0d", marginTop: 52, display: "flex", flexDirection: "column", flexShrink: 0 }}>
         <div style={{ display: "flex", borderBottom: "1px solid #ffffff0d" }}>
           {([["settings", "Block", Icons.Settings], ["tracking", "Tracking", Icons.Link], ["page", "Seite", Icons.Paint]] as [string, string, React.FC][]).map(([key, label, Icon]) => (
@@ -1051,6 +1149,8 @@ export default function FunnelBuilder() {
       <style>{`
         input::placeholder, textarea::placeholder { color: #ffffff33; }
         select option { background: #0d0d14; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
