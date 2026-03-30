@@ -561,6 +561,7 @@ export type Database = {
           heygen_avatar_id: string | null
           heygen_voice_id: string | null
           id: string
+          landing_page_id: string | null
           linkedin_currently_active: boolean | null
           linkedin_profile_age: string | null
           linkedin_was_banned: boolean | null
@@ -583,6 +584,7 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          landing_page_id?: string | null
           linkedin_currently_active?: boolean | null
           linkedin_profile_age?: string | null
           linkedin_was_banned?: boolean | null
@@ -605,6 +607,7 @@ export type Database = {
           heygen_avatar_id?: string | null
           heygen_voice_id?: string | null
           id?: string
+          landing_page_id?: string | null
           linkedin_currently_active?: boolean | null
           linkedin_profile_age?: string | null
           linkedin_was_banned?: boolean | null
@@ -684,6 +687,7 @@ export type Database = {
       contacts: {
         Row: {
           account_id: string
+          appointment_booked_at: string | null
           campaign_id: string | null
           channels_active: string[] | null
           city: string | null
@@ -717,6 +721,7 @@ export type Database = {
           personalized_url: string | null
           phone: string | null
           position: string | null
+          positive_reply_at: string | null
           responded_at: string | null
           slug: string | null
           source: string | null
@@ -739,6 +744,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          appointment_booked_at?: string | null
           campaign_id?: string | null
           channels_active?: string[] | null
           city?: string | null
@@ -774,6 +780,7 @@ export type Database = {
           personalized_url?: string | null
           phone?: string | null
           position?: string | null
+          positive_reply_at?: string | null
           responded_at?: string | null
           slug?: string | null
           source?: string | null
@@ -796,6 +803,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          appointment_booked_at?: string | null
           campaign_id?: string | null
           channels_active?: string[] | null
           city?: string | null
@@ -831,6 +839,7 @@ export type Database = {
           personalized_url?: string | null
           phone?: string | null
           position?: string | null
+          positive_reply_at?: string | null
           responded_at?: string | null
           slug?: string | null
           source?: string | null
@@ -2461,6 +2470,8 @@ export type Database = {
         | "fu3_gesendet"
         | "reagiert_warm"
         | "abgeschlossen"
+        | "positiv_geantwortet"
+        | "termin_gebucht"
       outreach_status: "offen" | "gesendet" | "follow_up" | "geschlossen"
       task_related_type: "deal" | "contact"
       task_status: "open" | "done"
@@ -2654,6 +2665,8 @@ export const Constants = {
         "fu3_gesendet",
         "reagiert_warm",
         "abgeschlossen",
+        "positiv_geantwortet",
+        "termin_gebucht",
       ],
       outreach_status: ["offen", "gesendet", "follow_up", "geschlossen"],
       task_related_type: ["deal", "contact"],
