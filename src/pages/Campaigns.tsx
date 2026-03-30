@@ -326,7 +326,7 @@ const Campaigns = () => {
                       </p>
                       <Select
                         value={newCampaign.landing_page_id}
-                        onValueChange={(value) => setNewCampaign({ ...newCampaign, landing_page_id: value })}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, landing_page_id: value === "none" ? "" : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Lead Page auswählen..." />
