@@ -105,19 +105,22 @@ export function CampaignComparison() {
         const fu2_gesendet = countStatus('fu2_gesendet');
         const fu3_gesendet = countStatus('fu3_gesendet');
         const reagiert_warm = countStatus('reagiert_warm');
+        const positiv_geantwortet = countStatus('positiv_geantwortet');
+        const termin_gebucht = countStatus('termin_gebucht');
         const abgeschlossen = countStatus('abgeschlossen');
 
-        const connectionsSent = vernetzung_ausstehend + vernetzung_angenommen + 
-          erstnachricht_gesendet + fu1_gesendet + fu2_gesendet + 
-          fu3_gesendet + reagiert_warm + abgeschlossen;
-        
-        const connectionsAccepted = vernetzung_angenommen + erstnachricht_gesendet + 
-          fu1_gesendet + fu2_gesendet + fu3_gesendet + reagiert_warm + abgeschlossen;
-        
-        const messagesSent = erstnachricht_gesendet + fu1_gesendet + 
-          fu2_gesendet + fu3_gesendet + reagiert_warm + abgeschlossen;
-        
-        const warmLeads = reagiert_warm + abgeschlossen;
+        const connectionsSent = vernetzung_ausstehend + vernetzung_angenommen +
+          erstnachricht_gesendet + fu1_gesendet + fu2_gesendet +
+          fu3_gesendet + reagiert_warm + positiv_geantwortet + termin_gebucht + abgeschlossen;
+
+        const connectionsAccepted = vernetzung_angenommen + erstnachricht_gesendet +
+          fu1_gesendet + fu2_gesendet + fu3_gesendet +
+          reagiert_warm + positiv_geantwortet + termin_gebucht + abgeschlossen;
+
+        const messagesSent = erstnachricht_gesendet + fu1_gesendet +
+          fu2_gesendet + fu3_gesendet + reagiert_warm + positiv_geantwortet + termin_gebucht + abgeschlossen;
+
+        const warmLeads = reagiert_warm + positiv_geantwortet + termin_gebucht + abgeschlossen;
 
         const acceptanceRate = connectionsSent > 0 ? (connectionsAccepted / connectionsSent) * 100 : 0;
         const responseRate = messagesSent > 0 ? (warmLeads / messagesSent) * 100 : 0;

@@ -38,7 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 
-type WorkflowStatus = 
+type WorkflowStatus =
   | 'neu'
   | 'bereit_fuer_vernetzung'
   | 'vernetzung_ausstehend'
@@ -49,6 +49,8 @@ type WorkflowStatus =
   | 'fu2_gesendet'
   | 'fu3_gesendet'
   | 'reagiert_warm'
+  | 'positiv_geantwortet'
+  | 'termin_gebucht'
   | 'abgeschlossen';
 
 interface WorkflowContact {
@@ -140,7 +142,9 @@ const STATUS_LABELS: Record<WorkflowStatus, string> = {
   'fu1_gesendet': 'FU 1 gesendet',
   'fu2_gesendet': 'FU 2 gesendet',
   'fu3_gesendet': 'FU 3 gesendet',
-  'reagiert_warm': 'Reagiert / Warm',
+  'reagiert_warm': 'Geantwortet',
+  'positiv_geantwortet': 'Positiv geantwortet',
+  'termin_gebucht': 'Termin gebucht',
   'abgeschlossen': 'Abgeschlossen'
 };
 
@@ -650,6 +654,8 @@ LG`
   });
 
   const warmLeads = contacts.filter(c => c.workflow_status === 'reagiert_warm');
+  const positiveReplies = contacts.filter(c => c.workflow_status === 'positiv_geantwortet');
+  const appointmentsBooked = contacts.filter(c => c.workflow_status === 'termin_gebucht');
   
   // Calculate acceptance rate over last 7+ days
   const sevenDaysAgo = new Date();
@@ -1044,28 +1050,118 @@ LG`
         </Alert>
       )}
 
-      {/* Warm Leads Alert */}
+      {/* Warm Leads Alert - Geantwortet, needs action */}
       {warmLeads.length > 0 && (
         <Card className="border-destructive bg-destructive/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Flame className="h-5 w-5 text-destructive" />
-              {warmLeads.length} warme Leads - Jetzt handeln!
+              {warmLeads.length} Leads haben geantwortet - Jetzt qualifizieren!
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-48">
+              <div className="space-y-2">
+                {warmLeads.map(contact => (
+                  <ContactCard
+                    key={contact.id}
+                    contact={contact}
+                    actions={
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => updateStatus(contact.id, 'positiv_geantwortet', 'positive_reply_at')}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          Positiv
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateStatus(contact.id, 'abgeschlossen')}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Negativ
+                        </Button>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Positive Replies - Ready for appointment booking */}
+      {positiveReplies.length > 0 && (
+        <Card className="border-green-500 bg-green-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              {positiveReplies.length} positive Antworten - Termin buchen!
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-48">
+              <div className="space-y-2">
+                {positiveReplies.map(contact => (
+                  <ContactCard
+                    key={contact.id}
+                    contact={contact}
+                    actions={
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => updateStatus(contact.id, 'termin_gebucht', 'appointment_booked_at')}
+                        >
+                          <Clock className="h-4 w-4 mr-1" />
+                          Termin gebucht
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateStatus(contact.id, 'abgeschlossen')}
+                        >
+                          Abschließen
+                        </Button>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Appointments Booked - Close the deal */}
+      {appointmentsBooked.length > 0 && (
+        <Card className="border-blue-500 bg-blue-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-500" />
+              {appointmentsBooked.length} Termine gebucht
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-32">
               <div className="space-y-2">
-                {warmLeads.map(contact => (
-                  <ContactCard 
-                    key={contact.id} 
+                {appointmentsBooked.map(contact => (
+                  <ContactCard
+                    key={contact.id}
                     contact={contact}
                     actions={
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
+                        variant="default"
                         onClick={() => updateStatus(contact.id, 'abgeschlossen')}
                       >
-                        Als bearbeitet markieren
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        Abgeschlossen
                       </Button>
                     }
                   />
