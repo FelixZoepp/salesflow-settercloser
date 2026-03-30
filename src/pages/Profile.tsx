@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
 import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus } from "lucide-react";
+import TeamInvite from "@/components/TeamInvite";
 
 interface ProfileData {
   id: string;
@@ -341,6 +342,9 @@ const Profile = () => {
             Änderungen speichern
           </Button>
         </div>
+
+        {/* Team Management */}
+        <TeamInvite />
       </div>
     </Layout>
   );
