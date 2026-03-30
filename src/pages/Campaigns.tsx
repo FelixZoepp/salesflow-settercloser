@@ -179,9 +179,7 @@ const Campaigns = () => {
         max_daily_connections: newCampaign.max_daily_connections,
         max_daily_messages: newCampaign.max_daily_messages,
       };
-      if (newCampaign.landing_page_id) {
-        insertData.landing_page_id = newCampaign.landing_page_id;
-      }
+      // landing_page_id is not a column in campaigns table - skip it
       const { error } = await supabase.from("campaigns").insert(insertData);
 
       if (error) throw error;
