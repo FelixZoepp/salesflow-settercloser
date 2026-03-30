@@ -208,6 +208,26 @@ const PublicLandingPage = () => {
     }
   };
 
+  // Track video play
+  const handleVideoPlay = async () => {
+    const trackingId = searchParams.get("tid");
+    const contactId = searchParams.get("cid");
+    if (trackingId && pageData?.account_id && contactId) {
+      await supabase.from("lead_tracking_events").insert({
+        account_id: pageData.account_id,
+        contact_id: contactId,
+        event_type: "video_play",
+        event_data: { page_id: pageData.id, tracking_id: trackingId } as any,
+      });
+      // Also mark contact as viewed
+      await supabase.from("contacts").update({
+        viewed: true,
+        viewed_at: new Date().toISOString(),
+        view_count: (pageData.view_count || 0) + 1,
+      }).eq("id", contactId);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
@@ -256,6 +276,7 @@ const PublicLandingPage = () => {
               calendarUrl={calendarUrl}
               onQuizSelect={() => handleQuizSelect(activeSlideIdx)}
               onFormSubmit={handleFormSubmit}
+              onVideoPlay={handleVideoPlay}
             />
           ))}
         </div>
@@ -315,7 +336,7 @@ const PublicLandingPage = () => {
 
 // --- PUBLIC BLOCK RENDERER ---
 function PublicBlock({
-  block, theme, replaceVars, calendarUrl, onQuizSelect, onFormSubmit,
+  block, theme, replaceVars, calendarUrl, onQuizSelect, onFormSubmit, onVideoPlay,
 }: {
   block: Block;
   theme: Theme & { accent: string };
@@ -323,6 +344,7 @@ function PublicBlock({
   calendarUrl: string | null;
   onQuizSelect: () => void;
   onFormSubmit: (e: React.FormEvent, fields: any[]) => void;
+  onVideoPlay: () => void;
 }) {
   const s = block.settings;
   const isMobile = window.innerWidth < 640;
@@ -347,6 +369,9 @@ function PublicBlock({
 
     case "video": {
       const videoSrc = replaceVars(s.src);
+      const [videoPlayed, setVideoPlayed] = useState(false);
+      const trackPlay = () => { if (!videoPlayed) { setVideoPlayed(true); onVideoPlay(); } };
+
       if (!videoSrc) {
         return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", background: "#000", position: "relative" }}>
           <div style={{ paddingTop: "56.25%", position: "relative" }}>
@@ -356,28 +381,28 @@ function PublicBlock({
           </div>
         </div>;
       }
-      // YouTube / Vimeo / Loom embed
+      // YouTube / Vimeo / Loom embed - track on first interaction
       if (videoSrc.includes("youtube.com") || videoSrc.includes("youtu.be")) {
-        const videoId = videoSrc.includes("youtu.be") ? videoSrc.split("/").pop() : new URL(videoSrc).searchParams.get("v");
-        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
-          <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=${s.autoplay ? 1 : 0}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; encrypted-media" allowFullScreen />
+        const videoId = videoSrc.includes("youtu.be") ? videoSrc.split("/").pop() : (() => { try { return new URL(videoSrc).searchParams.get("v"); } catch { return videoSrc.split("v=")[1]?.split("&")[0]; } })();
+        return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+          <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=${s.autoplay ? 1 : 0}&enablejsapi=1`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; encrypted-media" allowFullScreen />
         </div>;
       }
       if (videoSrc.includes("vimeo.com")) {
         const vimeoId = videoSrc.split("/").pop();
-        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+        return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
           <iframe src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${s.autoplay ? 1 : 0}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; fullscreen" allowFullScreen />
         </div>;
       }
       if (videoSrc.includes("loom.com")) {
         const loomId = videoSrc.split("/share/").pop()?.split("?")[0];
-        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+        return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
           <iframe src={`https://www.loom.com/embed/${loomId}?autoplay=${s.autoplay ? 1 : 0}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; fullscreen" allowFullScreen />
         </div>;
       }
-      // Direct video
+      // Direct video - track on play event
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden" }}>
-        <video src={videoSrc} poster={replaceVars(s.posterSrc)} controls={s.controls !== false} autoPlay={s.autoplay} playsInline style={{ width: "100%", display: "block" }} />
+        <video src={videoSrc} poster={replaceVars(s.posterSrc)} controls={s.controls !== false} autoPlay={s.autoplay} playsInline onPlay={trackPlay} style={{ width: "100%", display: "block" }} />
       </div>;
     }
 

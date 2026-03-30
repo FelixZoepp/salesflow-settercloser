@@ -118,7 +118,8 @@ function generateLeadSlug(firstName: string, lastName: string, company: string |
 function buildPersonalizedUrl(
   landingPageSlug: string,
   contact: { id: string; first_name: string; last_name: string; company: string | null; position: string | null; email: string | null; phone: string | null; },
-  trackingId: string
+  trackingId: string,
+  pitchVideoUrl?: string | null
 ): string {
   const origin = window.location.origin;
   const params = new URLSearchParams();
@@ -127,6 +128,7 @@ function buildPersonalizedUrl(
   if (contact.company) params.set("co", contact.company);
   if (contact.position) params.set("pos", contact.position);
   if (contact.email) params.set("email", contact.email);
+  if (pitchVideoUrl) params.set("video", pitchVideoUrl);
   params.set("cid", contact.id);
   params.set("tid", trackingId);
   return `${origin}/lp/${landingPageSlug}?${params.toString()}`;
@@ -165,6 +167,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
   const [landingPageSlug, setLandingPageSlug] = useState<string | null>(null);
+  const [pitchVideoUrl, setPitchVideoUrl] = useState<string | null>(null);
   const [generatingUrls, setGeneratingUrls] = useState(false);
   const MAX_DAILY_MESSAGES = 10;
   const MAX_DAILY_CONNECTIONS = 15;
@@ -179,6 +182,9 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         .select("*")
         .eq("id", campaignId)
         .single();
+
+      // Store pitch video URL
+      if (campaign?.pitch_video_url) setPitchVideoUrl(campaign.pitch_video_url);
 
       const lpId = (campaign as any)?.landing_page_id;
       if (lpId) {
@@ -213,7 +219,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
       for (const contact of targets) {
         const slug = generateLeadSlug(contact.first_name, contact.last_name, contact.company);
         const trackingId = `trk_${contact.id.slice(0, 8)}`;
-        const url = buildPersonalizedUrl(landingPageSlug, contact, trackingId);
+        const url = buildPersonalizedUrl(landingPageSlug, contact, trackingId, pitchVideoUrl);
 
         const { error } = await supabase
           .from("contacts")

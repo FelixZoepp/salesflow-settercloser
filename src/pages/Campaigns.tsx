@@ -69,6 +69,7 @@ const Campaigns = () => {
     max_daily_connections: 15,
     max_daily_messages: 10,
     landing_page_id: "",
+    pitch_video_url: "",
   });
 
   useEffect(() => {
@@ -178,8 +179,8 @@ const Campaigns = () => {
         linkedin_was_banned: newCampaign.linkedin_was_banned,
         max_daily_connections: newCampaign.max_daily_connections,
         max_daily_messages: newCampaign.max_daily_messages,
+        pitch_video_url: newCampaign.pitch_video_url || null,
       };
-      // landing_page_id is not a column in campaigns table - skip it
       const { error } = await supabase.from("campaigns").insert(insertData);
 
       if (error) throw error;
@@ -196,6 +197,7 @@ const Campaigns = () => {
         max_daily_connections: 15,
         max_daily_messages: 10,
         landing_page_id: "",
+        pitch_video_url: "",
       });
       fetchCampaigns();
     } catch (error: any) {
@@ -344,6 +346,22 @@ const Campaigns = () => {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Pitch Video URL */}
+                  <div className="border-t border-border pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Video className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">Pitch Video</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      YouTube, Vimeo oder Loom Link — wird automatisch auf der Lead Page eingebettet und Video-Views getrackt
+                    </p>
+                    <Input
+                      placeholder="https://youtube.com/watch?v=... oder https://vimeo.com/..."
+                      value={newCampaign.pitch_video_url}
+                      onChange={(e) => setNewCampaign({ ...newCampaign, pitch_video_url: e.target.value })}
+                    />
                   </div>
 
                   {/* LinkedIn Profile Assessment */}
