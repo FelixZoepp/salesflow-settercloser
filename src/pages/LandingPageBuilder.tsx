@@ -529,6 +529,7 @@ const LandingPageBuilder = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </Layout>
   );
 };
 
