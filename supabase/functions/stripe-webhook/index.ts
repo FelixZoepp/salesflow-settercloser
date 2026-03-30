@@ -206,8 +206,8 @@ async function syncSubscription(
 
   // Determine plan from product
   const priceId = subscription.items.data[0]?.price?.id;
-  const productId = subscription.items.data[0]?.price?.product as string;
-  const planName = PRODUCT_TO_PLAN[productId] || "basic";
+  const detailProductId = subscription.items.data[0]?.price?.product as string;
+  const planName = PRODUCT_TO_PLAN[detailProductId] || "basic";
   
   // Determine billing interval
   const interval = subscription.items.data[0]?.price?.recurring?.interval;
