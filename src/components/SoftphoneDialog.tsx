@@ -79,6 +79,8 @@ export default function SoftphoneDialog({
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [engagementEvents, setEngagementEvents] = useState<any[]>([]);
   const [showEngagement, setShowEngagement] = useState(true);
+  const [callNote, setCallNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   // AI Trainer for live objection handling
   const aiTrainer = useAITrainer();
@@ -1017,6 +1019,54 @@ export default function SoftphoneDialog({
                     ))}
                   </ul>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Call Notes - shown after call ends */}
+          {(callStatus === 'ended' || callStatus === 'error') && contactId && (
+            <div className="space-y-2 p-3 rounded-lg bg-muted/50 border">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Gesprächsnotiz
+              </label>
+              <textarea
+                placeholder="Was wurde besprochen? Nächste Schritte..."
+                value={callNote}
+                onChange={(e) => setCallNote(e.target.value)}
+                rows={3}
+                className="w-full p-2 rounded-md border bg-background text-sm resize-none"
+              />
+              {callNote.trim() && (
+                <Button
+                  size="sm"
+                  disabled={savingNote}
+                  onClick={async () => {
+                    setSavingNote(true);
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+                      const { data: profile } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+                      await supabase.from("activities").insert({
+                        contact_id: contactId,
+                        user_id: user.id,
+                        type: "note" as any,
+                        note: callNote.trim(),
+                        timestamp: new Date().toISOString(),
+                        account_id: profile?.account_id,
+                      });
+                      toast.success("Notiz gespeichert");
+                      setCallNote("");
+                    } catch {
+                      toast.error("Fehler beim Speichern");
+                    } finally {
+                      setSavingNote(false);
+                    }
+                  }}
+                >
+                  {savingNote ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <FileText className="w-3 h-3 mr-1" />}
+                  Notiz speichern
+                </Button>
               )}
             </div>
           )}

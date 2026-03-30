@@ -10,6 +10,7 @@ import { Info, Save, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import TemplateLibrary from "@/components/TemplateLibrary";
 
 interface CallScript {
   id: string;
@@ -231,6 +232,8 @@ Beispiel:
             </CardContent>
           </Card>
         )}
+        {/* Template Library */}
+        <TemplateLibrary />
       </div>
     </Layout>
   );

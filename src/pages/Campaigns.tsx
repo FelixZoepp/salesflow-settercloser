@@ -221,6 +221,55 @@ const Campaigns = () => {
     }
   };
 
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editCampaign, setEditCampaign] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    pitch_video_url: string;
+    landing_page_id: string;
+    max_daily_connections: number;
+    max_daily_messages: number;
+  } | null>(null);
+
+  const openEditDialog = (campaign: Campaign) => {
+    setEditCampaign({
+      id: campaign.id,
+      name: campaign.name,
+      description: campaign.description || "",
+      pitch_video_url: (campaign as any).pitch_video_url || "",
+      landing_page_id: (campaign as any).landing_page_id || "",
+      max_daily_connections: (campaign as any).max_daily_connections || 15,
+      max_daily_messages: (campaign as any).max_daily_messages || 10,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const saveEditCampaign = async () => {
+    if (!editCampaign) return;
+    try {
+      const updateData: any = {
+        name: editCampaign.name,
+        description: editCampaign.description || null,
+        pitch_video_url: editCampaign.pitch_video_url || null,
+        max_daily_connections: editCampaign.max_daily_connections,
+        max_daily_messages: editCampaign.max_daily_messages,
+      };
+      const { error } = await supabase.from("campaigns").update(updateData).eq("id", editCampaign.id);
+      if (error) throw error;
+      toast.success("Kampagne aktualisiert");
+      setIsEditDialogOpen(false);
+      setEditCampaign(null);
+      fetchCampaigns();
+      if (selectedCampaign?.id === editCampaign.id) {
+        setSelectedCampaign({ ...selectedCampaign, name: editCampaign.name, description: editCampaign.description });
+      }
+    } catch (error: any) {
+      console.error("Error updating campaign:", error);
+      toast.error("Fehler beim Aktualisieren");
+    }
+  };
+
   const updateCampaignStatus = async (id: string, status: string) => {
     try {
       const { error } = await supabase.from("campaigns").update({ status }).eq("id", id);
@@ -559,6 +608,9 @@ const Campaigns = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEditDialog(selectedCampaign)}>
+                                <Edit className="w-4 h-4 mr-2" /> Bearbeiten
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => updateCampaignStatus(selectedCampaign.id, "active")}>
                                 <Play className="w-4 h-4 mr-2" /> Aktivieren
                               </DropdownMenuItem>
@@ -770,6 +822,9 @@ const Campaigns = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditDialog(campaign)}>
+                                  <Edit className="w-4 h-4 mr-2" /> Bearbeiten
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateCampaignStatus(campaign.id, "active")}>
                                   <Play className="w-4 h-4 mr-2" /> Aktivieren
                                 </DropdownMenuItem>
@@ -799,6 +854,68 @@ const Campaigns = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Edit Campaign Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kampagne bearbeiten</DialogTitle>
+          </DialogHeader>
+          {editCampaign && (
+            <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editCampaign.name}
+                  onChange={(e) => setEditCampaign({ ...editCampaign, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Beschreibung</Label>
+                <Textarea
+                  value={editCampaign.description}
+                  onChange={(e) => setEditCampaign({ ...editCampaign, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Video className="w-4 h-4" /> Pitch Video URL
+                </Label>
+                <Input
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={editCampaign.pitch_video_url}
+                  onChange={(e) => setEditCampaign({ ...editCampaign, pitch_video_url: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Max. Vernetzungen/Tag</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    max={50}
+                    value={editCampaign.max_daily_connections}
+                    onChange={(e) => setEditCampaign({ ...editCampaign, max_daily_connections: parseInt(e.target.value) || 15 })}
+                  />
+                </div>
+                <div>
+                  <Label>Max. Nachrichten/Tag</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    max={30}
+                    value={editCampaign.max_daily_messages}
+                    onChange={(e) => setEditCampaign({ ...editCampaign, max_daily_messages: parseInt(e.target.value) || 10 })}
+                  />
+                </div>
+              </div>
+              <Button onClick={saveEditCampaign} disabled={!editCampaign.name} className="w-full">
+                Speichern
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

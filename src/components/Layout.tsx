@@ -16,6 +16,7 @@ import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import SoftphoneDialog from "@/components/SoftphoneDialog";
 import { useLeadOnlineStatus } from "@/hooks/useLeadOnlineStatus";
+import { useFollowupReminders } from "@/hooks/useFollowupReminders";
 import {
   HoverCard,
   HoverCardContent,
@@ -74,6 +75,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   useHotLeadNotifications({ onHotLeadCall: handleHotLeadCall });
   const { onlineLeads } = useLeadOnlineStatus();
+  useFollowupReminders();
   const { openCustomerPortal } = useSubscriptionContext();
   useEffect(() => {
     checkSuperAdmin();

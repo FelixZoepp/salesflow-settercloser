@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -44,6 +44,9 @@ interface Contact {
   lead_type: 'inbound' | 'outbound' | null;
   position: string | null;
   linkedin_url: string | null;
+  lead_score: number | null;
+  campaign_id: string | null;
+  workflow_status: string | null;
 }
 
 interface EditingContact {
@@ -67,6 +70,13 @@ const Contacts = () => {
   const [creating, setCreating] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
+  const [filterLeadType, setFilterLeadType] = useState<string>("all");
+  const [filterViewed, setFilterViewed] = useState<string>("all");
+  const [filterScoreMin, setFilterScoreMin] = useState<string>("all");
+  const [filterTag, setFilterTag] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   
   // Form state
   const [formData, setFormData] = useState({
@@ -86,7 +96,7 @@ const Contacts = () => {
 
   useEffect(() => {
     filterContacts();
-  }, [searchQuery, contacts]);
+  }, [searchQuery, contacts, filterLeadType, filterViewed, filterScoreMin, filterTag]);
 
   const fetchContacts = async () => {
     try {
@@ -106,19 +116,88 @@ const Contacts = () => {
   };
 
   const filterContacts = () => {
-    if (!searchQuery) {
-      setFilteredContacts(contacts);
-      return;
+    let filtered = [...contacts];
+
+    // Text search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.first_name.toLowerCase().includes(query) ||
+        c.last_name.toLowerCase().includes(query) ||
+        c.company?.toLowerCase().includes(query) ||
+        c.email?.toLowerCase().includes(query) ||
+        c.position?.toLowerCase().includes(query) ||
+        c.tags?.some(t => t.toLowerCase().includes(query))
+      );
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = contacts.filter(contact =>
-      contact.first_name.toLowerCase().includes(query) ||
-      contact.last_name.toLowerCase().includes(query) ||
-      contact.company?.toLowerCase().includes(query) ||
-      contact.email?.toLowerCase().includes(query)
-    );
+    // Lead type filter
+    if (filterLeadType !== "all") {
+      filtered = filtered.filter(c => c.lead_type === filterLeadType);
+    }
+
+    // Viewed filter
+    if (filterViewed === "viewed") {
+      filtered = filtered.filter(c => c.viewed === true);
+    } else if (filterViewed === "not_viewed") {
+      filtered = filtered.filter(c => !c.viewed);
+    }
+
+    // Score filter
+    if (filterScoreMin === "hot") {
+      filtered = filtered.filter(c => (c.lead_score || 0) >= 70);
+    } else if (filterScoreMin === "warm") {
+      filtered = filtered.filter(c => (c.lead_score || 0) >= 30);
+    } else if (filterScoreMin === "cold") {
+      filtered = filtered.filter(c => (c.lead_score || 0) < 30);
+    }
+
+    // Tag filter
+    if (filterTag !== "all") {
+      filtered = filtered.filter(c => c.tags?.includes(filterTag));
+    }
+
     setFilteredContacts(filtered);
+  };
+
+  // Get all unique tags across contacts
+  const allTags = [...new Set(contacts.flatMap(c => c.tags || []))].sort();
+
+  // Bulk add tag to selected contacts
+  const bulkAddTag = async (tag: string) => {
+    if (!tag.trim() || selectedContacts.size === 0) return;
+    try {
+      for (const contactId of selectedContacts) {
+        const contact = contacts.find(c => c.id === contactId);
+        if (!contact) continue;
+        const existingTags = contact.tags || [];
+        if (existingTags.includes(tag.trim())) continue;
+        await supabase
+          .from("contacts")
+          .update({ tags: [...existingTags, tag.trim()] })
+          .eq("id", contactId);
+      }
+      toast.success(`Tag "${tag}" zu ${selectedContacts.size} Kontakten hinzugefügt`);
+      setSelectedContacts(new Set());
+      setTagInput("");
+      fetchContacts();
+    } catch {
+      toast.error("Fehler beim Taggen");
+    }
+  };
+
+  const toggleSelectContact = (id: string) => {
+    const next = new Set(selectedContacts);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedContacts(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedContacts.size === filteredContacts.length) {
+      setSelectedContacts(new Set());
+    } else {
+      setSelectedContacts(new Set(filteredContacts.map(c => c.id)));
+    }
   };
 
   const handleCreateContact = async () => {
@@ -387,31 +466,132 @@ const Contacts = () => {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Kontakte durchsuchen..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search + Filters */}
+        <div className="mb-4 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Name, Firma, E-Mail, Tags durchsuchen..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant={showFilters ? "secondary" : "outline"} onClick={() => setShowFilters(!showFilters)} className="gap-2">
+              <Filter className="w-4 h-4" />
+              Filter
+              {(filterLeadType !== "all" || filterViewed !== "all" || filterScoreMin !== "all" || filterTag !== "all") && (
+                <Badge variant="destructive" className="text-[10px] h-4 w-4 p-0 flex items-center justify-center">!</Badge>
+              )}
+            </Button>
+          </div>
+
+          {showFilters && (
+            <div className="flex flex-wrap gap-3 p-3 rounded-lg bg-muted/50 border">
+              <Select value={filterLeadType} onValueChange={setFilterLeadType}>
+                <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Lead-Typ" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Typen</SelectItem>
+                  <SelectItem value="outbound">Outbound</SelectItem>
+                  <SelectItem value="inbound">Inbound</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterViewed} onValueChange={setFilterViewed}>
+                <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Gesehen" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle</SelectItem>
+                  <SelectItem value="viewed">Seite angesehen</SelectItem>
+                  <SelectItem value="not_viewed">Nicht angesehen</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterScoreMin} onValueChange={setFilterScoreMin}>
+                <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Score" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Scores</SelectItem>
+                  <SelectItem value="hot">🔥 Hot (70+)</SelectItem>
+                  <SelectItem value="warm">🟡 Warm (30+)</SelectItem>
+                  <SelectItem value="cold">❄️ Kalt (&lt;30)</SelectItem>
+                </SelectContent>
+              </Select>
+              {allTags.length > 0 && (
+                <Select value={filterTag} onValueChange={setFilterTag}>
+                  <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Tag" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Tags</SelectItem>
+                    {allTags.map(tag => (
+                      <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {(filterLeadType !== "all" || filterViewed !== "all" || filterScoreMin !== "all" || filterTag !== "all") && (
+                <Button variant="ghost" size="sm" onClick={() => { setFilterLeadType("all"); setFilterViewed("all"); setFilterScoreMin("all"); setFilterTag("all"); }}>
+                  <X className="w-3 h-3 mr-1" /> Zurücksetzen
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Bulk actions bar */}
+          {selectedContacts.size > 0 && (
+            <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <span className="text-sm font-medium">{selectedContacts.size} ausgewählt</span>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Tag eingeben..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  className="h-8 w-40"
+                  onKeyDown={(e) => { if (e.key === "Enter" && tagInput) bulkAddTag(tagInput); }}
+                />
+                <Button size="sm" variant="secondary" onClick={() => bulkAddTag(tagInput)} disabled={!tagInput.trim()}>
+                  <Tag className="w-3 h-3 mr-1" /> Tag setzen
+                </Button>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedContacts(new Set())}>Auswahl aufheben</Button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{filteredContacts.length} von {contacts.length} Kontakten</span>
+            {filteredContacts.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs h-6" onClick={toggleSelectAll}>
+                {selectedContacts.size === filteredContacts.length ? "Alle abwählen" : "Alle auswählen"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Contacts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredContacts.map(contact => (
-            <Card key={contact.id} className="hover:shadow-md transition-shadow border-l-4 border-l-cyan-500">
+            <Card key={contact.id} className={`hover:shadow-md transition-shadow border-l-4 ${(contact.lead_score || 0) >= 70 ? 'border-l-red-500' : (contact.lead_score || 0) >= 30 ? 'border-l-amber-500' : 'border-l-cyan-500'} ${selectedContacts.has(contact.id) ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => toggleSelectContact(contact.id)}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-lg">
-                    {contact.first_name} {contact.last_name}
-                  </h3>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditDialog(contact)}>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={selectedContacts.has(contact.id)} onChange={() => {}} className="rounded" onClick={(e) => e.stopPropagation()} />
+                    <h3 className="font-semibold text-lg">
+                      {contact.first_name} {contact.last_name}
+                    </h3>
+                    {(contact.lead_score || 0) >= 70 && <Badge variant="destructive" className="text-[10px]">🔥 {contact.lead_score}</Badge>}
+                    {(contact.lead_score || 0) >= 30 && (contact.lead_score || 0) < 70 && <Badge variant="secondary" className="text-[10px]">{contact.lead_score}</Badge>}
+                    {contact.viewed && <Badge variant="outline" className="text-[10px]"><Eye className="w-3 h-3 mr-0.5" />Gesehen</Badge>}
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); openEditDialog(contact); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </div>
+                {/* Tags */}
+                {contact.tags && contact.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {contact.tags.map((tag, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px] bg-primary/5">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
                 
                 {contact.company && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
