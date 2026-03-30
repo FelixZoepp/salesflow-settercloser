@@ -574,8 +574,40 @@ LG`
         return;
       }
 
-      // Insert leads with workflow_status = 'bereit_fuer_vernetzung'
-      const leadsToInsert = leads.map(lead => ({
+      // Duplicate detection: check existing contacts by name+company or linkedin_url
+      const { data: existingContacts } = await supabase
+        .from('contacts')
+        .select('first_name, last_name, company, linkedin_url')
+        .eq('account_id', profile?.account_id);
+
+      const existingSet = new Set(
+        (existingContacts || []).map(c =>
+          `${c.first_name?.toLowerCase()}|${c.last_name?.toLowerCase()}|${(c.company || '').toLowerCase()}`
+        )
+      );
+      const existingLinkedIn = new Set(
+        (existingContacts || []).filter(c => c.linkedin_url).map(c => c.linkedin_url!.toLowerCase())
+      );
+
+      const newLeads = leads.filter(lead => {
+        const key = `${lead.first_name.toLowerCase()}|${lead.last_name.toLowerCase()}|${(lead.company || '').toLowerCase()}`;
+        const liMatch = lead.linkedin_url && existingLinkedIn.has(lead.linkedin_url.toLowerCase());
+        return !existingSet.has(key) && !liMatch;
+      });
+
+      const duplicateCount = leads.length - newLeads.length;
+      if (duplicateCount > 0) {
+        toast.info(`${duplicateCount} Duplikat${duplicateCount > 1 ? 'e' : ''} übersprungen (bereits im Account)`);
+      }
+
+      if (newLeads.length === 0) {
+        toast.warning("Alle Leads sind bereits vorhanden");
+        setImporting(false);
+        return;
+      }
+
+      // Insert only non-duplicate leads
+      const leadsToInsert = newLeads.map(lead => ({
         first_name: lead.first_name,
         last_name: lead.last_name,
         company: lead.company || null,
@@ -595,7 +627,7 @@ LG`
 
       if (error) throw error;
 
-      toast.success(`${leads.length} Leads importiert und bereit für Vernetzung`);
+      toast.success(`${newLeads.length} Leads importiert${duplicateCount > 0 ? ` (${duplicateCount} Duplikate übersprungen)` : ''}`);
 
       // Auto-generate personalized URLs if landing page is linked
       if (landingPageSlug && insertedContacts && insertedContacts.length > 0) {

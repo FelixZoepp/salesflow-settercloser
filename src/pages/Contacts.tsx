@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X, Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -77,6 +77,8 @@ const Contacts = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
   
   // Form state
   const [formData, setFormData] = useState({
@@ -158,6 +160,7 @@ const Contacts = () => {
     }
 
     setFilteredContacts(filtered);
+    setCurrentPage(1);
   };
 
   // Get all unique tags across contacts
@@ -198,6 +201,36 @@ const Contacts = () => {
     } else {
       setSelectedContacts(new Set(filteredContacts.map(c => c.id)));
     }
+  };
+
+  const exportCSV = () => {
+    const rows = filteredContacts.map(c => ({
+      Vorname: c.first_name,
+      Nachname: c.last_name,
+      Firma: c.company || "",
+      Position: c.position || "",
+      "E-Mail": c.email || "",
+      Telefon: c.phone || "",
+      LinkedIn: c.linkedin_url || "",
+      Tags: (c.tags || []).join("; "),
+      Score: c.lead_score || 0,
+      Typ: c.lead_type || "",
+      Status: c.workflow_status || c.status || "",
+      Gesehen: c.viewed ? "Ja" : "Nein",
+    }));
+    const headers = Object.keys(rows[0] || {});
+    const csv = [
+      headers.join(","),
+      ...rows.map(r => headers.map(h => `"${String((r as any)[h]).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kontakte-export-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filteredContacts.length} Kontakte exportiert`);
   };
 
   const handleCreateContact = async () => {
@@ -556,17 +589,24 @@ const Contacts = () => {
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{filteredContacts.length} von {contacts.length} Kontakten</span>
-            {filteredContacts.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-xs h-6" onClick={toggleSelectAll}>
-                {selectedContacts.size === filteredContacts.length ? "Alle abwählen" : "Alle auswählen"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {filteredContacts.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs h-6" onClick={exportCSV}>
+                  <Download className="w-3 h-3 mr-1" /> CSV Export
+                </Button>
+              )}
+              {filteredContacts.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs h-6" onClick={toggleSelectAll}>
+                  {selectedContacts.size === filteredContacts.length ? "Alle abwählen" : "Alle auswählen"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Contacts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredContacts.map(contact => (
+          {filteredContacts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map(contact => (
             <Card key={contact.id} className={`hover:shadow-md transition-shadow border-l-4 ${(contact.lead_score || 0) >= 70 ? 'border-l-red-500' : (contact.lead_score || 0) >= 30 ? 'border-l-amber-500' : 'border-l-cyan-500'} ${selectedContacts.has(contact.id) ? 'ring-2 ring-primary' : ''}`}
               onClick={() => toggleSelectContact(contact.id)}>
               <CardContent className="pt-6">
@@ -698,6 +738,31 @@ const Contacts = () => {
         {filteredContacts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Keine Kontakte gefunden</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredContacts.length > PAGE_SIZE && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+            >
+              Zurück
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Seite {currentPage} von {Math.ceil(filteredContacts.length / PAGE_SIZE)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= Math.ceil(filteredContacts.length / PAGE_SIZE)}
+              onClick={() => setCurrentPage(p => p + 1)}
+            >
+              Weiter
+            </Button>
           </div>
         )}
 
