@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
+import {
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
   ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send, Search
@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHotLeadNotifications } from "@/hooks/useHotLeadNotifications";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import SoftphoneDialog from "@/components/SoftphoneDialog";
+import { useLeadOnlineStatus } from "@/hooks/useLeadOnlineStatus";
 import {
   HoverCard,
   HoverCardContent,
@@ -48,7 +50,30 @@ const Layout = ({ children }: LayoutProps) => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [viewingAccount, setViewingAccount] = useState<string | null>(null);
 
-  useHotLeadNotifications();
+  // Global softphone for hot lead instant calls
+  const [hotLeadCall, setHotLeadCall] = useState<{
+    open: boolean;
+    phone: string;
+    name: string;
+    contactId: string;
+  } | null>(null);
+
+  const handleHotLeadCall = useCallback((lead: any) => {
+    const phone = lead.phone || lead.mobile;
+    if (!phone) {
+      toast.error(`Keine Telefonnummer für ${lead.first_name} ${lead.last_name}`);
+      return;
+    }
+    setHotLeadCall({
+      open: true,
+      phone,
+      name: `${lead.first_name} ${lead.last_name}`,
+      contactId: lead.id,
+    });
+  }, []);
+
+  useHotLeadNotifications({ onHotLeadCall: handleHotLeadCall });
+  const { onlineLeads } = useLeadOnlineStatus();
   const { openCustomerPortal } = useSubscriptionContext();
   useEffect(() => {
     checkSuperAdmin();
@@ -357,6 +382,35 @@ const Layout = ({ children }: LayoutProps) => {
         <TopBar />
         
         <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6">
+          {/* Live Online Leads Banner */}
+          {onlineLeads.length > 0 && (
+            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </span>
+                  <span className="text-sm font-semibold text-green-400">{onlineLeads.length} Lead{onlineLeads.length > 1 ? "s" : ""} gerade online</span>
+                </div>
+                {onlineLeads.slice(0, 3).map((lead) => (
+                  <button
+                    key={lead.id}
+                    onClick={() => handleHotLeadCall(lead)}
+                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors text-sm"
+                  >
+                    <span className="text-green-300 font-medium">{lead.first_name} {lead.last_name}</span>
+                    {(lead.phone || lead.mobile) && (
+                      <Phone className="w-3 h-3 text-green-400" />
+                    )}
+                  </button>
+                ))}
+                {onlineLeads.length > 3 && (
+                  <span className="text-xs text-green-400/60">+{onlineLeads.length - 3} weitere</span>
+                )}
+              </div>
+            </div>
+          )}
           {children}
         </div>
         <footer className="hidden md:block py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
@@ -383,6 +437,17 @@ const Layout = ({ children }: LayoutProps) => {
       
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Global Softphone for Hot Lead Instant Calls */}
+      {hotLeadCall && (
+        <SoftphoneDialog
+          open={hotLeadCall.open}
+          onClose={() => setHotLeadCall(null)}
+          phoneNumber={hotLeadCall.phone}
+          contactName={hotLeadCall.name}
+          contactId={hotLeadCall.contactId}
+        />
+      )}
     </div>
   );
 };

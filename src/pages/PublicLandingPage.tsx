@@ -110,6 +110,27 @@ const PublicLandingPage = () => {
     loadPage();
   }, [slug]);
 
+  // Heartbeat: update viewed_at every 10s so the app knows lead is currently online
+  useEffect(() => {
+    const contactId = searchParams.get("cid");
+    if (!contactId) return;
+
+    // Mark as viewed immediately
+    supabase.from("contacts").update({
+      viewed: true,
+      viewed_at: new Date().toISOString(),
+    }).eq("id", contactId).then(() => {});
+
+    // Send heartbeat every 10 seconds
+    const heartbeat = setInterval(() => {
+      supabase.from("contacts").update({
+        viewed_at: new Date().toISOString(),
+      }).eq("id", contactId).then(() => {});
+    }, 10000);
+
+    return () => clearInterval(heartbeat);
+  }, [searchParams]);
+
   const loadPage = async () => {
     if (!slug) { setError("Seite nicht gefunden"); setLoading(false); return; }
 

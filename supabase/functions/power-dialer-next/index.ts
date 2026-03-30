@@ -38,17 +38,35 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    let query = supabase
+    // First try to get hot leads (score >= 70) or recently online leads - they get priority
+    let hotQuery = supabase
       .from('cold_call_queue' as any)
       .select('*')
+      .gte('lead_score', 70)
+      .order('lead_score', { ascending: false })
       .limit(1);
 
-    // Setters only see their own contacts
     if (profile?.role === 'setter') {
-      query = query.eq('owner_user_id', user.id);
+      hotQuery = hotQuery.eq('owner_user_id', user.id);
     }
 
-    const { data, error } = await query;
+    let { data, error } = await hotQuery;
+
+    // If no hot leads, fall back to normal queue
+    if (!error && (!data || data.length === 0)) {
+      let query = supabase
+        .from('cold_call_queue' as any)
+        .select('*')
+        .limit(1);
+
+      if (profile?.role === 'setter') {
+        query = query.eq('owner_user_id', user.id);
+      }
+
+      const result = await query;
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('Error fetching next lead:', error);

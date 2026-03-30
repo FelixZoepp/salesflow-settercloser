@@ -77,6 +77,8 @@ export default function SoftphoneDialog({
   const [systemContext, setSystemContext] = useState<string>("");
   const [showScript, setShowScript] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(true);
+  const [engagementEvents, setEngagementEvents] = useState<any[]>([]);
+  const [showEngagement, setShowEngagement] = useState(true);
 
   // AI Trainer for live objection handling
   const aiTrainer = useAITrainer();
@@ -132,6 +134,15 @@ export default function SoftphoneDialog({
           .eq('id', contactId)
           .single();
         if (contact) setLeadData({ ...contact, industry: null } as LeadData);
+
+        // Load engagement events for this contact
+        const { data: events } = await supabase
+          .from('lead_tracking_events')
+          .select('event_type, event_data, created_at')
+          .eq('contact_id', contactId)
+          .order('created_at', { ascending: false })
+          .limit(15);
+        if (events) setEngagementEvents(events);
       }
 
       // Load active call script
@@ -803,6 +814,50 @@ export default function SoftphoneDialog({
               >
                 {isSpeakerOn ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
               </Button>
+            </div>
+          )}
+
+          {/* Engagement Timeline - what the lead did on the landing page */}
+          {engagementEvents.length > 0 && (callStatus === 'connected' || callStatus === 'ringing' || callStatus === 'dialing') && (
+            <div className="rounded-lg border border-amber-500/20 overflow-hidden">
+              <div
+                className="flex items-center justify-between px-3 py-2 bg-amber-500/5 cursor-pointer"
+                onClick={() => setShowEngagement(!showEngagement)}
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium">Lead-Aktivität</span>
+                  <Badge variant="outline" className="text-[10px]">{engagementEvents.length}</Badge>
+                </div>
+                {showEngagement ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </div>
+              {showEngagement && (
+                <ScrollArea className="max-h-32">
+                  <div className="p-2 space-y-1">
+                    {engagementEvents.map((evt, i) => {
+                      const typeLabels: Record<string, string> = {
+                        page_view: "📄 Seite angesehen",
+                        video_play: "▶️ Video gestartet",
+                        video_progress: "🎬 Video geschaut",
+                        video_complete: "✅ Video komplett",
+                        cta_click: "🔘 CTA geklickt",
+                        button_click: "👆 Button geklickt",
+                        booking_click: "📅 Termin-Link geklickt",
+                        form_submit: "📝 Formular abgesendet",
+                        scroll_depth: "📜 Gescrollt",
+                      };
+                      const timeAgo = Math.round((Date.now() - new Date(evt.created_at).getTime()) / 60000);
+                      const timeStr = timeAgo < 1 ? "gerade eben" : timeAgo < 60 ? `vor ${timeAgo} Min` : `vor ${Math.round(timeAgo / 60)} Std`;
+                      return (
+                        <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-muted/30">
+                          <span>{typeLabels[evt.event_type] || evt.event_type}</span>
+                          <span className="text-muted-foreground">{timeStr}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
             </div>
           )}
 
