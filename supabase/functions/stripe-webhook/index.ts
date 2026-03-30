@@ -101,8 +101,8 @@ async function syncSubscription(
   subscription: Stripe.Subscription
 ) {
   // Skip credit product subscriptions - handled separately
-  const productId = subscription.items.data[0]?.price?.product as string;
-  if (isCreditProduct(productId)) {
+  const syncProductId = subscription.items.data[0]?.price?.product as string;
+  if (isCreditProduct(syncProductId)) {
     logStep("Credit product detected, routing to credit sync");
     await syncCreditSubscription(supabase, stripe, subscription);
     return;
