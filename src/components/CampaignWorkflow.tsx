@@ -415,11 +415,20 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     toast.success("Personalisierte Vorlage kopiert!");
   };
 
-  // Default follow-up templates
-  const DEFAULT_TEMPLATES = {
+  // Default templates for all message types
+  const DEFAULT_TEMPLATES: Record<string, string> = {
+    first_message: `Hey {{first_name}},
+
+ich habe mir {{company}} angeschaut und eine personalisierte Seite für euch erstellt:
+
+{{personalized_url}}
+
+Schau gerne mal rein – bin gespannt auf dein Feedback!
+
+LG`,
     fu1: `Hey {{first_name}},
 
-hast du dir mein Video schon angeschaut? 
+hast du dir meine Seite schon angeschaut?
 
 {{personalized_url}}
 
@@ -428,7 +437,7 @@ Würde mich freuen, wenn du mal kurz reinschaust!
 LG`,
     fu2: `Hey {{first_name}},
 
-ich wollte nochmal nachhaken – hast du das Video gesehen?
+ich wollte nochmal nachhaken – hast du die Seite gesehen?
 
 {{personalized_url}}
 
@@ -437,7 +446,7 @@ Falls du Fragen hast, meld dich gerne.
 LG`,
     fu3: `Hey {{first_name}},
 
-letzte Erinnerung zu meinem Video:
+letzte Erinnerung zu meiner Seite:
 
 {{personalized_url}}
 
@@ -446,17 +455,17 @@ Wenn es gerade nicht passt, kein Problem. Aber vielleicht ist es ja doch interes
 LG`
   };
 
-  const getTemplateForType = (type: 'fu1' | 'fu2' | 'fu3', contact: WorkflowContact): string => {
+  const getTemplateForType = (type: string, contact?: WorkflowContact): string => {
     // Check for custom templates first
     const customTemplates = templates.filter(t => t.template_type === type);
     if (customTemplates.length > 0) {
       return customTemplates[0].content;
     }
     // Fall back to default template
-    return DEFAULT_TEMPLATES[type];
+    return DEFAULT_TEMPLATES[type] || '';
   };
 
-  const copyPersonalizedFollowup = (type: 'fu1' | 'fu2' | 'fu3', contact: WorkflowContact) => {
+  const copyPersonalizedFollowup = (type: string, contact: WorkflowContact) => {
     const template = getTemplateForType(type, contact);
     copyTemplateContent(template, contact);
   };
@@ -486,12 +495,21 @@ LG`
   };
 
   const copyMessage = (contact: WorkflowContact) => {
-    if (!contact.outreach_message) {
+    // Use outreach_message if set, otherwise use default first_message template
+    const rawMessage = contact.outreach_message || getTemplateForType('first_message', contact);
+    if (!rawMessage) {
       toast.error("Keine Nachricht vorhanden");
       return;
     }
-    navigator.clipboard.writeText(contact.outreach_message);
-    toast.success("Nachricht kopiert!");
+    // Always personalize with contact data
+    const personalized = rawMessage
+      .replace(/\{\{first_name\}\}/gi, contact.first_name || '')
+      .replace(/\{\{last_name\}\}/gi, contact.last_name || '')
+      .replace(/\{\{company\}\}/gi, contact.company || '')
+      .replace(/\{\{position\}\}/gi, contact.position || '')
+      .replace(/\{\{personalized_url\}\}/gi, contact.personalized_url || '');
+    navigator.clipboard.writeText(personalized);
+    toast.success(`Nachricht für ${contact.first_name} kopiert!`);
   };
 
   const importLeads = async () => {
@@ -1225,33 +1243,40 @@ LG`
                         showLinkedIn={true}
                         actions={
                           <>
-                            {templates.filter(t => t.template_type === 'first_message').length > 0 && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button size="sm" variant="outline">
-                                    <FileText className="h-4 w-4" />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button size="sm" variant="outline">
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-2">
+                                <p className="text-xs text-muted-foreground mb-2">Vorlage für {contact.first_name} kopieren:</p>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="w-full justify-start text-left"
+                                  onClick={() => copyPersonalizedFollowup('first_message', contact)}
+                                >
+                                  Standard-Erstnachricht
+                                </Button>
+                                {templates.filter(t => t.template_type === 'first_message').map(t => (
+                                  <Button
+                                    key={t.id}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="w-full justify-start text-left"
+                                    onClick={() => copyTemplateContent(t.content, contact)}
+                                  >
+                                    {t.name}
                                   </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64 p-2">
-                                  <p className="text-xs text-muted-foreground mb-2">Vorlage kopieren:</p>
-                                  {templates.filter(t => t.template_type === 'first_message').map(t => (
-                                    <Button 
-                                      key={t.id}
-                                      size="sm" 
-                                      variant="ghost" 
-                                      className="w-full justify-start text-left"
-                                      onClick={() => copyTemplateContent(t.content)}
-                                    >
-                                      {t.name}
-                                    </Button>
-                                  ))}
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                            <Button 
-                              size="sm" 
+                                ))}
+                              </PopoverContent>
+                            </Popover>
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => copyMessage(contact)}
+                              title={`Nachricht für ${contact.first_name} ${contact.last_name} kopieren`}
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
