@@ -110,8 +110,11 @@ function generateLeadSlug(firstName: string, lastName: string, company: string |
     .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 40);
-  const rand = Math.random().toString(36).slice(2, 8);
+    .slice(0, 30);
+  // Use crypto-secure random for slug suffix (16 chars = ~82 bits entropy)
+  const arr = new Uint8Array(10);
+  crypto.getRandomValues(arr);
+  const rand = Array.from(arr, b => b.toString(36).slice(-1)).join("").slice(0, 16);
   return `${base}-${rand}`;
 }
 
@@ -123,11 +126,11 @@ function buildPersonalizedUrl(
 ): string {
   const origin = window.location.origin;
   const params = new URLSearchParams();
+  // Only include non-sensitive data in URL - NO email, phone, or LinkedIn
   if (contact.first_name) params.set("fn", contact.first_name);
   if (contact.last_name) params.set("ln", contact.last_name);
   if (contact.company) params.set("co", contact.company);
   if (contact.position) params.set("pos", contact.position);
-  if (contact.email) params.set("email", contact.email);
   if (pitchVideoUrl) params.set("video", pitchVideoUrl);
   params.set("cid", contact.id);
   params.set("tid", trackingId);

@@ -258,11 +258,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('API leads error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: errorMessage
+      JSON.stringify({
+        success: false,
+        error: 'Ein interner Fehler ist aufgetreten'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

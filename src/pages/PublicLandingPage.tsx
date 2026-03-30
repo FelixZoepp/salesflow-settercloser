@@ -3,6 +3,12 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Globe, Calendar, Play, ChevronDown } from "lucide-react";
 import { Helmet } from "react-helmet";
+import DOMPurify from "dompurify";
+
+// Escape HTML entities to prevent XSS via URL params
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
 
 // ============================================================
 // PUBLIC LANDING PAGE RENDERER
@@ -60,25 +66,29 @@ const PublicLandingPage = () => {
   const [pageData, setPageData] = useState<any>(null);
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
 
-  // Build variable map from URL params
+  // Build variable map from URL params - HTML-escape all values to prevent XSS
+  const safeParam = (key: string, ...alt: string[]) => {
+    const val = searchParams.get(key) || alt.reduce((r, k) => r || searchParams.get(k) || "", "");
+    return val ? escapeHtml(val) : "";
+  };
   const variableMap: Record<string, string> = {
-    "{{lead.firstName}}": searchParams.get("fn") || searchParams.get("firstName") || "",
-    "{{lead.lastName}}": searchParams.get("ln") || searchParams.get("lastName") || "",
-    "{{lead.company}}": searchParams.get("co") || searchParams.get("company") || "",
-    "{{lead.position}}": searchParams.get("pos") || searchParams.get("position") || "",
-    "{{lead.email}}": searchParams.get("email") || "",
-    "{{lead.industry}}": searchParams.get("ind") || searchParams.get("industry") || "",
-    "{{lead.city}}": searchParams.get("city") || "",
-    "{{lead.phone}}": searchParams.get("phone") || "",
-    "{{lead.linkedinUrl}}": searchParams.get("li") || "",
-    "{{lead.customField1}}": searchParams.get("cf1") || "",
-    "{{lead.videoUrl}}": searchParams.get("video") || searchParams.get("videoUrl") || "",
-    "{{sender.name}}": searchParams.get("sn") || searchParams.get("senderName") || "",
-    "{{sender.company}}": searchParams.get("sc") || searchParams.get("senderCompany") || "",
-    "{{sender.calendarLink}}": searchParams.get("cal") || searchParams.get("calendarLink") || "",
-    "{{tracking.id}}": searchParams.get("tid") || "",
-    "{{tracking.utm_source}}": searchParams.get("utm_source") || "",
-    "{{tracking.utm_campaign}}": searchParams.get("utm_campaign") || "",
+    "{{lead.firstName}}": safeParam("fn", "firstName"),
+    "{{lead.lastName}}": safeParam("ln", "lastName"),
+    "{{lead.company}}": safeParam("co", "company"),
+    "{{lead.position}}": safeParam("pos", "position"),
+    "{{lead.email}}": safeParam("email"),
+    "{{lead.industry}}": safeParam("ind", "industry"),
+    "{{lead.city}}": safeParam("city"),
+    "{{lead.phone}}": safeParam("phone"),
+    "{{lead.linkedinUrl}}": safeParam("li"),
+    "{{lead.customField1}}": safeParam("cf1"),
+    "{{lead.videoUrl}}": searchParams.get("video") || searchParams.get("videoUrl") || "", // URL - not escaped for iframe src
+    "{{sender.name}}": safeParam("sn", "senderName"),
+    "{{sender.company}}": safeParam("sc", "senderCompany"),
+    "{{sender.calendarLink}}": searchParams.get("cal") || searchParams.get("calendarLink") || "", // URL - not escaped
+    "{{tracking.id}}": safeParam("tid"),
+    "{{tracking.utm_source}}": safeParam("utm_source"),
+    "{{tracking.utm_campaign}}": safeParam("utm_campaign"),
   };
 
   const replaceVars = useCallback((str: any): string => {
@@ -89,7 +99,11 @@ const PublicLandingPage = () => {
     });
     // Remove unreplaced variables
     result = result.replace(/\{\{[^}]+\}\}/g, "");
-    return result;
+    // Sanitize HTML to prevent XSS - allow safe formatting tags only
+    return DOMPurify.sanitize(result, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br', 'span', 'p', 'u'],
+      ALLOWED_ATTR: ['style'],
+    });
   }, [variableMap]);
 
   useEffect(() => {
@@ -407,7 +421,9 @@ function PublicBlock({
     }
 
     case "button": {
-      const btnUrl = replaceVars(s.url);
+      const rawBtnUrl = replaceVars(s.url);
+      // Prevent javascript: protocol injection
+      const btnUrl = rawBtnUrl && !rawBtnUrl.trim().toLowerCase().startsWith("javascript:") ? rawBtnUrl : "#";
       const animStyle = s.animation === "pulse" ? "pulse 2s infinite" : s.animation === "shake" ? "shake 3s infinite" : s.animation === "glow" ? "glow 2s infinite" : "none";
       return <div style={{ textAlign: "center" }}>
         <a href={btnUrl || "#"} target={btnUrl?.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"

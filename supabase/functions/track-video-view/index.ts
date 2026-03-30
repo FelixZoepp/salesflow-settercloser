@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     console.log(`Successfully tracked view #${newViewCount} for contact ${contact.id}`);
 
     return new Response(
-      JSON.stringify({ success: true, view_count: newViewCount }),
+      JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
