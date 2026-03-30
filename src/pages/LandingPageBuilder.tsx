@@ -22,6 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import FunnelBuilder from "@/components/landing-builder/FunnelBuilder";
+import Layout from "@/components/Layout";
 
 interface LandingPage {
   id: string;
