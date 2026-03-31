@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
-import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus } from "lucide-react";
+import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook } from "lucide-react";
 import TeamInvite from "@/components/TeamInvite";
 
 interface ProfileData {
@@ -342,6 +342,58 @@ const Profile = () => {
             Änderungen speichern
           </Button>
         </div>
+
+        {/* Webhook Integration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Webhook className="w-5 h-5" />
+              Webhook / Slack Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Erhalte Benachrichtigungen bei Hot Leads über Slack, Zapier, Make oder einen eigenen Webhook.
+              Der Webhook empfängt ein JSON mit Lead-Name, Firma, Score und Telefonnummer.
+            </p>
+            <div>
+              <Label>Webhook URL</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="https://hooks.slack.com/... oder https://hook.eu1.make.com/..."
+                  id="webhook-url"
+                  defaultValue=""
+                  onFocus={async (e) => {
+                    // Load current value
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    const { data: profile } = await supabase.from('profiles').select('account_id').eq('id', user.id).single();
+                    if (!profile?.account_id) return;
+                    const { data: integrations } = await supabase.from('account_integrations').select('enrichment_webhook_url').eq('account_id', profile.account_id).single();
+                    if (integrations?.enrichment_webhook_url) e.target.value = integrations.enrichment_webhook_url;
+                  }}
+                />
+                <Button variant="outline" onClick={async () => {
+                  const input = document.getElementById('webhook-url') as HTMLInputElement;
+                  const url = input?.value?.trim();
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    const { data: profile } = await supabase.from('profiles').select('account_id').eq('id', user.id).single();
+                    if (!profile?.account_id) return;
+                    await supabase.from('account_integrations').upsert({
+                      account_id: profile.account_id,
+                      enrichment_webhook_url: url || null,
+                    }, { onConflict: 'account_id' });
+                    toast.success(url ? "Webhook gespeichert" : "Webhook entfernt");
+                  } catch { toast.error("Fehler beim Speichern"); }
+                }}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Team Management */}
         <TeamInvite />

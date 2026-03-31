@@ -354,6 +354,18 @@ const PublicLandingPage = () => {
           </div>
         )}
 
+        {/* Legal Footer */}
+        {((settings as any)?.impressumUrl || (settings as any)?.datenschutzUrl) && (
+          <div style={{ textAlign: "center", padding: "16px 24px", fontSize: 11, color: "#ffffff44", borderTop: "1px solid #ffffff0d" }}>
+            {(settings as any)?.impressumUrl && (
+              <a href={(settings as any).impressumUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
+            )}
+            {(settings as any)?.datenschutzUrl && (
+              <a href={(settings as any).datenschutzUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutz</a>
+            )}
+          </div>
+        )}
+
         <style>{`
           @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }

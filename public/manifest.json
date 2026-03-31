@@ -1,0 +1,15 @@
+{
+  "name": "Content Leads - Outreach Software",
+  "short_name": "Content Leads",
+  "start_url": "/startseite",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#6C5CE7",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

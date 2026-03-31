@@ -627,6 +627,11 @@ function PageSettingsPanel({ pageSettings, onChange }: { pageSettings: PageSetti
       <NumberInput label="Block-Abstand" value={pageSettings.blockGap} onChange={v => update("blockGap", v)} min={8} max={48} unit="px" />
       <NumberInput label="Seitenpadding" value={pageSettings.padding} onChange={v => update("padding", v)} min={12} max={60} unit="px" />
     </div>
+    <div style={{ marginTop: 16 }}>
+      <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 8 }}>Rechtliches (Footer)</div>
+      <TextInput label="Impressum URL" value={(pageSettings as any).impressumUrl} onChange={v => update("impressumUrl", v)} placeholder="https://meine-seite.de/impressum" />
+      <TextInput label="Datenschutz URL" value={(pageSettings as any).datenschutzUrl} onChange={v => update("datenschutzUrl", v)} placeholder="https://meine-seite.de/datenschutz" />
+    </div>
   </div>;
 }
 

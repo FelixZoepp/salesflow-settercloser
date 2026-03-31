@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X, Download, Users } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X, Download, Users, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -731,7 +731,7 @@ const Contacts = () => {
                     size="sm"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => createDealFromContact(contact)}
+                    onClick={(e) => { e.stopPropagation(); createDealFromContact(contact); }}
                   >
                     <UserPlus className="w-4 h-4 mr-1" />
                     Deal
@@ -741,12 +741,33 @@ const Contacts = () => {
                       size="sm"
                       variant="default"
                       className="flex-1"
-                      onClick={() => startCallWithContact(contact)}
+                      onClick={(e) => { e.stopPropagation(); startCallWithContact(contact); }}
                     >
                       <PhoneCall className="w-4 h-4 mr-1" />
                       Anrufen
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                    title="DSGVO: Alle Daten löschen"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm(`Alle Daten von ${contact.first_name} ${contact.last_name} unwiderruflich löschen? (DSGVO Art. 17)`)) return;
+                      try {
+                        // Delete tracking events, activities, deals, then contact
+                        await supabase.from("lead_tracking_events").delete().eq("contact_id", contact.id);
+                        await supabase.from("activities").delete().eq("contact_id", contact.id);
+                        await supabase.from("deals").delete().eq("contact_id", contact.id);
+                        await supabase.from("contacts").delete().eq("id", contact.id);
+                        toast.success("Alle Daten gelöscht (DSGVO Art. 17)");
+                        fetchContacts();
+                      } catch { toast.error("Fehler beim Löschen"); }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

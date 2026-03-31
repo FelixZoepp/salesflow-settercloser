@@ -25,7 +25,10 @@ import {
   Calendar,
   ThumbsUp,
   MessageSquare,
+  Download,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface CampaignStatisticsProps {
   campaignId: string;
@@ -180,6 +183,27 @@ export function CampaignStatistics({ campaignId, campaignName }: CampaignStatist
 
   return (
     <div className="space-y-6">
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={() => {
+          const rows = waterfallSteps.map(s => ({ Stufe: s.label, Anzahl: s.value, "Prozent vom Gesamt": stats.total > 0 ? ((s.value / stats.total) * 100).toFixed(1) + "%" : "0%" }));
+          rows.push({ Stufe: "", Anzahl: 0 as any, "Prozent vom Gesamt": "" });
+          rows.push({ Stufe: "Annahme-Rate", Anzahl: acceptanceRate.toFixed(1) + "%" as any, "Prozent vom Gesamt": `${connectionsAccepted}/${connectionsSent}` });
+          rows.push({ Stufe: "Antwort-Rate", Anzahl: replyRate.toFixed(1) + "%" as any, "Prozent vom Gesamt": `${replied}/${messagesSent}` });
+          rows.push({ Stufe: "Positiv-Rate", Anzahl: positiveRate.toFixed(1) + "%" as any, "Prozent vom Gesamt": `${positiveReplies}/${replied}` });
+          rows.push({ Stufe: "Termin-Rate", Anzahl: appointmentRate.toFixed(1) + "%" as any, "Prozent vom Gesamt": `${appointmentsBooked}/${stats.total}` });
+          const headers = Object.keys(rows[0]);
+          const csv = [headers.join(","), ...rows.map(r => headers.map(h => `"${(r as any)[h]}"`).join(","))].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = `kampagne-report-${campaignName.replace(/\s+/g, "-")}.csv`; a.click();
+          URL.revokeObjectURL(url);
+          toast.success("Report exportiert");
+        }}>
+          <Download className="w-4 h-4 mr-2" /> Report exportieren
+        </Button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <Card>

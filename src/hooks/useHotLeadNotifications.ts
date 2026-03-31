@@ -123,7 +123,37 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
               console.error('Error auto-creating deal:', error);
             }
 
-            // 4. In-app toast with "Sofort anrufen" button
+            // 4. Webhook notification (Slack, Zapier, Make, etc.)
+            try {
+              const { data: { user: currentUser } } = await supabase.auth.getUser();
+              if (currentUser) {
+                const { data: integrations } = await supabase
+                  .from('account_integrations')
+                  .select('enrichment_webhook_url')
+                  .eq('account_id', newLead.account_id)
+                  .single();
+
+                const webhookUrl = (integrations as any)?.enrichment_webhook_url;
+                if (webhookUrl) {
+                  fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      event: 'hot_lead_detected',
+                      lead: {
+                        name: `${newLead.first_name} ${newLead.last_name}`,
+                        company: newLead.company,
+                        score: newLead.lead_score,
+                        phone: newLead.phone || newLead.mobile,
+                      },
+                      timestamp: new Date().toISOString(),
+                    }),
+                  }).catch(() => {});
+                }
+              }
+            } catch {}
+
+            // 5. In-app toast with "Sofort anrufen" button
             const phoneNumber = newLead.phone || newLead.mobile;
             toast.success(
               `🔥 Hot Lead: ${newLead.first_name} ${newLead.last_name}`,
