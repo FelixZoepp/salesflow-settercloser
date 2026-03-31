@@ -213,7 +213,7 @@ async function syncSubscription(
   const interval = subscription.items.data[0]?.price?.recurring?.interval;
   const billingInterval = interval === "year" ? "yearly" : "monthly";
 
-  logStep("Subscription details", { priceId, productId, planName, billingInterval });
+  logStep("Subscription details", { priceId, detailProductId, planName, billingInterval });
 
   // Check if subscription already exists
   const { data: existingSubs } = await supabase

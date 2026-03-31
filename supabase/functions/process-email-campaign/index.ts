@@ -198,13 +198,15 @@ Deno.serve(async (req) => {
           }).eq('id', step.id);
 
           // Update contact channels_active
-          await supabase.rpc('update_contact_channels', { p_contact_id: contact.id, p_channel: 'email' }).then(() => {}).catch(() => {
+          try {
+            await supabase.rpc('update_contact_channels', { p_contact_id: contact.id, p_channel: 'email' });
+          } catch {
             // Fallback: direct update
-            supabase.from('contacts').update({
+            await supabase.from('contacts').update({
               channels_active: ['email'],
               updated_at: new Date().toISOString(),
             }).eq('id', contact.id);
-          });
+          }
 
           sentCount++;
           totalProcessed++;
