@@ -756,11 +756,14 @@ const Contacts = () => {
                       e.stopPropagation();
                       if (!confirm(`Alle Daten von ${contact.first_name} ${contact.last_name} unwiderruflich löschen? (DSGVO Art. 17)`)) return;
                       try {
-                        // Delete tracking events, activities, deals, then contact
-                        await supabase.from("lead_tracking_events").delete().eq("contact_id", contact.id);
-                        await supabase.from("activities").delete().eq("contact_id", contact.id);
-                        await supabase.from("deals").delete().eq("contact_id", contact.id);
-                        await supabase.from("contacts").delete().eq("id", contact.id);
+                        // Delete tracking events, activities, deals, then contact (RLS ensures account scope)
+                        const cid = contact.id;
+                        await Promise.all([
+                          supabase.from("lead_tracking_events").delete().eq("contact_id", cid),
+                          supabase.from("activities").delete().eq("contact_id", cid),
+                          supabase.from("deals").delete().eq("contact_id", cid),
+                        ]);
+                        await supabase.from("contacts").delete().eq("id", cid);
                         toast.success("Alle Daten gelöscht (DSGVO Art. 17)");
                         fetchContacts();
                       } catch { toast.error("Fehler beim Löschen"); }

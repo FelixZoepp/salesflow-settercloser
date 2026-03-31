@@ -82,10 +82,10 @@ const PublicLandingPage = () => {
     "{{lead.phone}}": safeParam("phone"),
     "{{lead.linkedinUrl}}": safeParam("li"),
     "{{lead.customField1}}": safeParam("cf1"),
-    "{{lead.videoUrl}}": searchParams.get("video") || searchParams.get("videoUrl") || "", // URL - not escaped for iframe src
+    "{{lead.videoUrl}}": (() => { const v = searchParams.get("video") || searchParams.get("videoUrl") || ""; try { return v && new URL(v).protocol.startsWith("http") ? v : ""; } catch { return ""; } })(),
     "{{sender.name}}": safeParam("sn", "senderName"),
     "{{sender.company}}": safeParam("sc", "senderCompany"),
-    "{{sender.calendarLink}}": searchParams.get("cal") || searchParams.get("calendarLink") || "", // URL - not escaped
+    "{{sender.calendarLink}}": (() => { const v = searchParams.get("cal") || searchParams.get("calendarLink") || ""; try { return v && new URL(v).protocol.startsWith("http") ? v : ""; } catch { return ""; } })(),
     "{{tracking.id}}": safeParam("tid"),
     "{{tracking.utm_source}}": safeParam("utm_source"),
     "{{tracking.utm_campaign}}": safeParam("utm_campaign"),
@@ -111,25 +111,26 @@ const PublicLandingPage = () => {
   }, [slug]);
 
   // Heartbeat: update viewed_at every 10s so the app knows lead is currently online
+  // Only update if contact belongs to the same account as the landing page
   useEffect(() => {
     const contactId = searchParams.get("cid");
-    if (!contactId) return;
+    if (!contactId || !pageData?.account_id) return;
 
-    // Mark as viewed immediately
-    supabase.from("contacts").update({
-      viewed: true,
-      viewed_at: new Date().toISOString(),
-    }).eq("id", contactId).then(() => {});
+    const safeUpdate = (fields: Record<string, any>) => {
+      supabase.from("contacts").update(fields)
+        .eq("id", contactId)
+        .eq("account_id", pageData.account_id) // Ensure same account
+        .then(() => {});
+    };
 
-    // Send heartbeat every 10 seconds
+    safeUpdate({ viewed: true, viewed_at: new Date().toISOString() });
+
     const heartbeat = setInterval(() => {
-      supabase.from("contacts").update({
-        viewed_at: new Date().toISOString(),
-      }).eq("id", contactId).then(() => {});
+      safeUpdate({ viewed_at: new Date().toISOString() });
     }, 10000);
 
     return () => clearInterval(heartbeat);
-  }, [searchParams]);
+  }, [searchParams, pageData?.account_id]);
 
   const loadPage = async () => {
     if (!slug) { setError("Seite nicht gefunden"); setLoading(false); return; }
@@ -355,16 +356,21 @@ const PublicLandingPage = () => {
         )}
 
         {/* Legal Footer */}
-        {((settings as any)?.impressumUrl || (settings as any)?.datenschutzUrl) && (
-          <div style={{ textAlign: "center", padding: "16px 24px", fontSize: 11, color: "#ffffff44", borderTop: "1px solid #ffffff0d" }}>
-            {(settings as any)?.impressumUrl && (
-              <a href={(settings as any).impressumUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
-            )}
-            {(settings as any)?.datenschutzUrl && (
-              <a href={(settings as any).datenschutzUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutz</a>
-            )}
-          </div>
-        )}
+        {((settings as any)?.impressumUrl || (settings as any)?.datenschutzUrl) && (() => {
+          const safeUrl = (url: string) => {
+            try { const u = new URL(url); return u.protocol === "https:" || u.protocol === "http:" ? url : "#"; } catch { return "#"; }
+          };
+          return (
+            <div style={{ textAlign: "center", padding: "16px 24px", fontSize: 11, color: "#ffffff44", borderTop: "1px solid #ffffff0d" }}>
+              {(settings as any)?.impressumUrl && (
+                <a href={safeUrl((settings as any).impressumUrl)} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
+              )}
+              {(settings as any)?.datenschutzUrl && (
+                <a href={safeUrl((settings as any).datenschutzUrl)} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutz</a>
+              )}
+            </div>
+          );
+        })()}
 
         <style>{`
           @keyframes bounce {

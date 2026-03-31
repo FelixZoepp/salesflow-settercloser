@@ -376,6 +376,13 @@ const Profile = () => {
                 <Button variant="outline" onClick={async () => {
                   const input = document.getElementById('webhook-url') as HTMLInputElement;
                   const url = input?.value?.trim();
+                  if (url) {
+                    try {
+                      const u = new URL(url);
+                      if (u.protocol !== 'https:') { toast.error("Nur HTTPS URLs erlaubt"); return; }
+                      if (['localhost', '127.0.0.1', '0.0.0.0'].includes(u.hostname)) { toast.error("Lokale URLs nicht erlaubt"); return; }
+                    } catch { toast.error("Ungültige URL"); return; }
+                  }
                   try {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (!user) return;

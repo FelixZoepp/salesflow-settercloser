@@ -134,7 +134,14 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
                   .single();
 
                 const webhookUrl = (integrations as any)?.enrichment_webhook_url;
-                if (webhookUrl) {
+                // Validate webhook URL - must be https, no localhost/internal IPs
+                const isValidWebhook = (url: string) => {
+                  try {
+                    const u = new URL(url);
+                    return u.protocol === 'https:' && !['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254'].includes(u.hostname);
+                  } catch { return false; }
+                };
+                if (webhookUrl && isValidWebhook(webhookUrl)) {
                   fetch(webhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
