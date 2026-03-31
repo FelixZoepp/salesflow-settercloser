@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X, Download } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building, Upload, PhoneCall, UserPlus, Video, Eye, Link, TrendingUp, Megaphone, Pencil, Tag, Filter, X, Download, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -569,21 +569,39 @@ const Contacts = () => {
 
           {/* Bulk actions bar */}
           {selectedContacts.size > 0 && (
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20 flex-wrap">
               <span className="text-sm font-medium">{selectedContacts.size} ausgewählt</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Input
                   placeholder="Tag eingeben..."
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  className="h-8 w-40"
+                  className="h-8 w-36"
                   onKeyDown={(e) => { if (e.key === "Enter" && tagInput) bulkAddTag(tagInput); }}
                 />
                 <Button size="sm" variant="secondary" onClick={() => bulkAddTag(tagInput)} disabled={!tagInput.trim()}>
-                  <Tag className="w-3 h-3 mr-1" /> Tag setzen
+                  <Tag className="w-3 h-3 mr-1" /> Tag
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={async () => {
+                    if (!confirm(`${selectedContacts.size} Kontakte wirklich löschen?`)) return;
+                    try {
+                      const ids = Array.from(selectedContacts);
+                      const { error } = await supabase.from("contacts").delete().in("id", ids);
+                      if (error) throw error;
+                      toast.success(`${ids.length} Kontakte gelöscht`);
+                      setSelectedContacts(new Set());
+                      fetchContacts();
+                    } catch { toast.error("Fehler beim Löschen"); }
+                  }}
+                >
+                  <X className="w-3 h-3 mr-1" /> Löschen
                 </Button>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedContacts(new Set())}>Auswahl aufheben</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedContacts(new Set())}>Abwählen</Button>
             </div>
           )}
 
@@ -735,9 +753,24 @@ const Contacts = () => {
           ))}
         </div>
 
-        {filteredContacts.length === 0 && (
+        {filteredContacts.length === 0 && contacts.length === 0 && (
+          <div className="text-center py-16 border-2 border-dashed border-border rounded-xl">
+            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
+            <h3 className="text-lg font-semibold mb-2">Noch keine Kontakte</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+              Importiere Leads in einer Kampagne oder erstelle Kontakte manuell.
+            </p>
+            <div className="flex justify-center gap-3">
+              <Button variant="outline" onClick={() => navigate("/campaigns")}>Zu Kampagnen</Button>
+              <Button onClick={() => navigate("/import-leads")}>
+                <Upload className="w-4 h-4 mr-2" /> Leads importieren
+              </Button>
+            </div>
+          </div>
+        )}
+        {filteredContacts.length === 0 && contacts.length > 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Keine Kontakte gefunden</p>
+            <p className="text-muted-foreground">Keine Kontakte für diesen Filter gefunden</p>
           </div>
         )}
 

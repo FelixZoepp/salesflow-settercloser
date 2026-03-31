@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { 
-  CheckCircle2, 
-  Circle, 
-  ArrowRight, 
-  Users, 
-  Flame, 
-  Calendar, 
+import {
+  CheckCircle2,
+  Circle,
+  ArrowRight,
+  Users,
+  Flame,
+  Calendar,
   LayoutDashboard,
   TrendingUp,
   Sparkles,
@@ -21,13 +21,25 @@ import {
   Clock,
   User,
   Building2,
-  Rocket
+  Rocket,
+  MessageSquare,
+  Phone as PhoneIcon,
+  ThumbsUp,
+  Target
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatDistanceToNow, isToday, isTomorrow, isPast, format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { DashboardLiveCallWidget } from "@/components/DashboardLiveCallWidget";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import TeamPerformance from "@/components/TeamPerformance";
 
 interface UserProfile {
   name: string;
@@ -53,6 +65,9 @@ interface QuickStats {
   hotLeads: number;
   appointmentsThisWeek: number;
   conversionRate: number;
+  messagesSent: number;
+  positiveReplies: number;
+  appointmentsBooked: number;
 }
 
 interface SetupTask {
@@ -73,14 +88,18 @@ const Startseite = () => {
     totalLeads: 0,
     hotLeads: 0,
     appointmentsThisWeek: 0,
-    conversionRate: 0
+    conversionRate: 0,
+    messagesSent: 0,
+    positiveReplies: 0,
+    appointmentsBooked: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState("7");
   const [setupTasks, setSetupTasks] = useState<SetupTask[]>();
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [timePeriod]);
 
   const fetchData = async () => {
     try {
@@ -122,41 +141,53 @@ const Startseite = () => {
 
       setTasks(tasksWithContacts as Task[]);
 
-      // Fetch quick stats
-      const daysAgo = subDays(new Date(), 7);
+      // Fetch quick stats with time period filter
+      const days = timePeriod === "all" ? 3650 : parseInt(timePeriod);
+      const periodStart = subDays(new Date(), days).toISOString();
 
       const { count: totalLeads } = await supabase
         .from('contacts')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', timePeriod === "all" ? '2000-01-01' : periodStart);
 
       const { count: hotLeads } = await supabase
         .from('contacts')
         .select('id', { count: 'exact', head: true })
         .gte('lead_score', 70);
 
+      // Count workflow statuses for outbound contacts in period
+      const { data: periodContacts } = await supabase
+        .from('contacts')
+        .select('workflow_status')
+        .eq('lead_type', 'outbound')
+        .gte('created_at', timePeriod === "all" ? '2000-01-01' : periodStart);
+
+      const countWf = (status: string) => (periodContacts || []).filter((c: any) => c.workflow_status === status).length;
+      const messagesSent = countWf('erstnachricht_gesendet') + countWf('fu1_gesendet') + countWf('fu2_gesendet') + countWf('fu3_gesendet') + countWf('reagiert_warm') + countWf('positiv_geantwortet') + countWf('termin_gebucht') + countWf('abgeschlossen');
+      const positiveReplies = countWf('positiv_geantwortet') + countWf('termin_gebucht') + countWf('abgeschlossen');
+      const appointmentsBooked = countWf('termin_gebucht') + countWf('abgeschlossen');
+
       const { data: weekDeals } = await supabase
         .from('deals')
         .select('stage, updated_at')
-        .gte('updated_at', daysAgo.toISOString());
+        .gte('updated_at', periodStart);
 
-      const appointmentsThisWeek = weekDeals?.filter(d => 
-        ['Setting terminiert', 'Closing terminiert', 'Termin gesetzt', 'Termin gelegt'].includes(d.stage as string)
+      const appointmentsThisWeek = weekDeals?.filter(d =>
+        ['Setting terminiert', 'Closing terminiert', 'Termin gesetzt', 'Termin gelegt', 'Heißer Lead - Anrufen'].includes(d.stage as string)
       ).length || 0;
 
-      const { count: closedDeals } = await supabase
-        .from('deals')
-        .select('id', { count: 'exact', head: true })
-        .eq('stage', 'Abgeschlossen');
-
-      const conversionRate = totalLeads && totalLeads > 0 
-        ? Math.round(((closedDeals || 0) / totalLeads) * 100) 
+      const conversionRate = (totalLeads || 0) > 0
+        ? Math.round((appointmentsBooked / (totalLeads || 1)) * 100)
         : 0;
 
       setStats({
         totalLeads: totalLeads || 0,
         hotLeads: hotLeads || 0,
         appointmentsThisWeek,
-        conversionRate
+        conversionRate,
+        messagesSent,
+        positiveReplies,
+        appointmentsBooked,
       });
 
       // Generate setup tasks based on profile completion
@@ -370,7 +401,23 @@ const Startseite = () => {
           <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
             {/* Left Column - Stats & Quick Actions */}
             <div className="lg:col-span-2 space-y-4 md:space-y-6">
-              {/* Quick Stats Row - 2x2 on mobile */}
+              {/* Time Period Filter + Stats */}
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-muted-foreground">Kennzahlen</h3>
+                <Select value={timePeriod} onValueChange={setTimePeriod}>
+                  <SelectTrigger className="w-[150px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">Letzte 7 Tage</SelectItem>
+                    <SelectItem value="14">Letzte 14 Tage</SelectItem>
+                    <SelectItem value="30">Letzte 30 Tage</SelectItem>
+                    <SelectItem value="90">Letzte 90 Tage</SelectItem>
+                    <SelectItem value="all">Gesamt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div className="stat-card">
                   <div className="flex items-start justify-between">
@@ -399,8 +446,32 @@ const Startseite = () => {
                 <div className="stat-card">
                   <div className="flex items-start justify-between">
                     <div>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Nachrichten</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.messagesSent}</p>
+                    </div>
+                    <div className="icon-glow icon-glow-blue">
+                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Positiv</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.positiveReplies}</p>
+                    </div>
+                    <div className="icon-glow icon-glow-green">
+                      <ThumbsUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="flex items-start justify-between">
+                    <div>
                       <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Termine</p>
-                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.appointmentsThisWeek}</p>
+                      <p className="text-xl md:text-2xl font-bold text-foreground">{stats.appointmentsBooked}</p>
                     </div>
                     <div className="icon-glow icon-glow-green">
                       <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -527,8 +598,9 @@ const Startseite = () => {
               )}
             </div>
 
-            {/* Right Column - Tasks */}
+            {/* Right Column - Team + Tasks */}
             <div className="space-y-6">
+              <TeamPerformance />
               <Card className="glass-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center justify-between">

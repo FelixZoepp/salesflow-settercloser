@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin, UserPlus, Globe } from "lucide-react";
+import { Plus, Users, Eye, MousePointer, Clock, Play, MoreVertical, Trash2, Edit, Workflow, BarChart3, GitCompare, ArrowLeft, X, Video, AlertTriangle, TrendingUp, Shield, Linkedin, UserPlus, Globe, Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -793,8 +793,18 @@ const Campaigns = () => {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {campaigns.length === 0 ? (
                     <Card className="bg-card border-border col-span-full">
-                      <CardContent className="p-6 text-center text-muted-foreground">
-                        Noch keine Kampagnen erstellt
+                      <CardContent className="p-12 text-center">
+                        <Megaphone className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
+                        <h3 className="text-lg font-semibold mb-2">Starte deine erste Kampagne</h3>
+                        <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                          Erstelle eine Outreach-Kampagne, importiere Leads und sende personalisierte LinkedIn-Nachrichten mit Tracking.
+                        </p>
+                        <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
+                          <span>1. Kampagne erstellen + Lead Page verknüpfen</span>
+                          <span>2. Leads importieren (CSV)</span>
+                          <span>3. LinkedIn-Nachrichten kopieren & senden</span>
+                          <span>4. Echtzeit-Alerts wenn Leads klicken</span>
+                        </div>
                       </CardContent>
                     </Card>
                   ) : (

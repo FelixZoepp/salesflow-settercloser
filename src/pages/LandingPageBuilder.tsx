@@ -46,6 +46,7 @@ const LandingPageBuilder = () => {
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedTemplate, setSelectedTemplate] = useState("video-pitch");
 
   useEffect(() => {
     if (session?.user?.id) loadPages();
@@ -94,23 +95,60 @@ const LandingPageBuilder = () => {
         .replace(/^-|-$/g, "")
         .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
 
-      const defaultContent = {
-        slides: [
-          {
-            id: "slide_1",
-            name: "Startseite",
-            blocks: [
-              { id: "blk_1", type: "spacer", settings: { height: 32 } },
-              { id: "blk_2", type: "heading", settings: { text: "Hallo {{lead.firstName}}, wir haben etwas für {{lead.company}}", level: "h1", align: "center", color: "#ffffff", fontSize: 32 } },
-              { id: "blk_3", type: "spacer", settings: { height: 8 } },
-              { id: "blk_4", type: "text", settings: { text: "Wir haben eine maßgeschneiderte Lösung für {{lead.company}} erstellt.", align: "center", color: "#ffffffcc", fontSize: 16, lineHeight: 1.6 } },
-              { id: "blk_5", type: "spacer", settings: { height: 24 } },
-              { id: "blk_6", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
-              { id: "blk_7", type: "spacer", settings: { height: 24 } },
-              { id: "blk_8", type: "button", settings: { text: "Termin buchen →", url: "{{sender.calendarLink}}", bgColor: "#6C5CE7", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "pulse" } },
-            ],
-          },
+      const TEMPLATES: Record<string, any[]> = {
+        "video-pitch": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "heading", settings: { text: "Hallo {{lead.firstName}}, wir haben etwas für {{lead.company}}", level: "h1", align: "center", color: "#ffffff", fontSize: 32 } },
+          { id: "blk_3", type: "spacer", settings: { height: 8 } },
+          { id: "blk_4", type: "text", settings: { text: "Wir haben eine maßgeschneiderte Lösung für {{lead.company}} erstellt.", align: "center", color: "#ffffffcc", fontSize: 16, lineHeight: 1.6 } },
+          { id: "blk_5", type: "spacer", settings: { height: 24 } },
+          { id: "blk_6", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_7", type: "spacer", settings: { height: 24 } },
+          { id: "blk_8", type: "button", settings: { text: "Termin buchen →", url: "{{sender.calendarLink}}", bgColor: "#6C5CE7", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "pulse" } },
         ],
+        "quiz-funnel": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "heading", settings: { text: "{{lead.firstName}}, eine kurze Frage:", level: "h1", align: "center", color: "#ffffff", fontSize: 28 } },
+          { id: "blk_3", type: "spacer", settings: { height: 16 } },
+          { id: "blk_4", type: "quiz", settings: { question: "Was ist aktuell eure größte Herausforderung bei {{lead.company}}?", options: ["Lead-Generierung", "Conversion", "Skalierung", "Kosten senken"], multiSelect: false, style: "cards" } },
+          { id: "blk_5", type: "spacer", settings: { height: 24 } },
+          { id: "blk_6", type: "text", settings: { text: "Basierend auf deiner Antwort haben wir eine Lösung vorbereitet:", align: "center", color: "#ffffffcc", fontSize: 16, lineHeight: 1.6 } },
+          { id: "blk_7", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_8", type: "spacer", settings: { height: 24 } },
+          { id: "blk_9", type: "button", settings: { text: "Kostenloses Strategiegespräch →", url: "{{sender.calendarLink}}", bgColor: "#00b894", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "pulse" } },
+        ],
+        "social-proof": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "logo", settings: { text: "Vertraut von führenden Unternehmen", logos: ["Kunde 1", "Kunde 2", "Kunde 3", "Kunde 4"] } },
+          { id: "blk_3", type: "spacer", settings: { height: 24 } },
+          { id: "blk_4", type: "heading", settings: { text: "{{lead.firstName}}, so helfen wir {{lead.company}}", level: "h1", align: "center", color: "#ffffff", fontSize: 30 } },
+          { id: "blk_5", type: "spacer", settings: { height: 8 } },
+          { id: "blk_6", type: "social", settings: { number: "150+", label: "Unternehmen vertrauen uns" } },
+          { id: "blk_7", type: "spacer", settings: { height: 16 } },
+          { id: "blk_8", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_9", type: "spacer", settings: { height: 16 } },
+          { id: "blk_10", type: "testimonial", settings: { quote: "Die Zusammenarbeit war hervorragend. Absolute Empfehlung!", author: "Max Mustermann", role: "CEO, Beispiel GmbH", avatar: "", rating: 5 } },
+          { id: "blk_11", type: "spacer", settings: { height: 16 } },
+          { id: "blk_12", type: "timer", settings: { hours: 48, label: "Angebot gültig für", bgColor: "#ff6b6b22", textColor: "#ff6b6b" } },
+          { id: "blk_13", type: "spacer", settings: { height: 16 } },
+          { id: "blk_14", type: "button", settings: { text: "Jetzt Termin sichern →", url: "{{sender.calendarLink}}", bgColor: "#6C5CE7", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "glow" } },
+        ],
+        "minimal": [
+          { id: "blk_1", type: "spacer", settings: { height: 48 } },
+          { id: "blk_2", type: "heading", settings: { text: "Hi {{lead.firstName}}.", level: "h1", align: "center", color: "#ffffff", fontSize: 36 } },
+          { id: "blk_3", type: "spacer", settings: { height: 16 } },
+          { id: "blk_4", type: "text", settings: { text: "Ich habe ein kurzes Video für {{lead.company}} aufgenommen.", align: "center", color: "#ffffffaa", fontSize: 18, lineHeight: 1.6 } },
+          { id: "blk_5", type: "spacer", settings: { height: 32 } },
+          { id: "blk_6", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 16 } },
+          { id: "blk_7", type: "spacer", settings: { height: 32 } },
+          { id: "blk_8", type: "button", settings: { text: "Lass uns sprechen", url: "{{sender.calendarLink}}", bgColor: "#ffffff", textColor: "#0a0a0f", borderRadius: 12, fontSize: 16, fullWidth: false, paddingY: 14, animation: "none" } },
+          { id: "blk_9", type: "spacer", settings: { height: 48 } },
+        ],
+      };
+
+      const templateBlocks = TEMPLATES[selectedTemplate] || TEMPLATES["video-pitch"];
+      const defaultContent = {
+        slides: [{ id: "slide_1", name: "Startseite", blocks: templateBlocks }],
         settings: {
           name: newPageName.trim(),
           slug,
@@ -118,7 +156,7 @@ const LandingPageBuilder = () => {
           favicon: "",
           metaTitle: newPageName.trim(),
           metaDescription: "",
-          theme: 0,
+          theme: selectedTemplate === "minimal" ? 0 : selectedTemplate === "social-proof" ? 1 : 0,
           accentOverride: "",
           maxWidth: 480,
           blockGap: 20,
@@ -493,6 +531,31 @@ const LandingPageBuilder = () => {
                   value={newPageSlug}
                   onChange={(e) => setNewPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
                 />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Template wählen</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "video-pitch", name: "Video Pitch", desc: "Video + CTA Button", emoji: "🎬" },
+                  { id: "quiz-funnel", name: "Quiz Funnel", desc: "Quiz → Video → CTA", emoji: "❓" },
+                  { id: "social-proof", name: "Social Proof", desc: "Logos + Testimonial + Timer", emoji: "⭐" },
+                  { id: "minimal", name: "Minimal", desc: "Clean & einfach", emoji: "✨" },
+                ].map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    onClick={() => setSelectedTemplate(tpl.id)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedTemplate === tpl.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <div className="text-lg mb-1">{tpl.emoji}</div>
+                    <div className="text-sm font-medium">{tpl.name}</div>
+                    <div className="text-[10px] text-muted-foreground">{tpl.desc}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
