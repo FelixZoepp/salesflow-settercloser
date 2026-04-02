@@ -797,7 +797,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
             >
               <div className="p-0" ref={previewScrollRef}>
                 {/* Header Preview */}
-                <header id="preview-branding" ref={headerSectionRef} className="border-b border-slate-800 px-6 py-4 scroll-mt-4">
+                <header id="preview-branding" ref={headerSectionRef} className="border-b px-6 py-4 scroll-mt-4" style={{ borderColor: `${template.text_color}15` }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {template.header_logo_url ? (
@@ -845,7 +845,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                     </div>
                     <div className="relative">
                       <div className="absolute -top-8 right-1/4 text-5xl animate-bounce">👇</div>
-                      <div className="rounded-xl overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
+                      <div className="rounded-xl overflow-hidden border aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10`, borderColor: `${template.text_color}20` }}>
                         <div className="text-center">
                           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${template.primary_color}30` }}>
                             <Play className="w-8 h-8" style={{ color: template.primary_color }} />
@@ -950,7 +950,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                           </div>
                           <p className="text-sm opacity-80">{study.description}</p>
                           {study.video_url && (
-                            <div className="mt-4 aspect-video rounded-lg overflow-hidden bg-black/20 flex items-center justify-center cursor-pointer hover:bg-black/30 transition-colors">
+                            <div className="mt-4 aspect-video rounded-lg overflow-hidden flex items-center justify-center cursor-pointer transition-colors" style={{ backgroundColor: `${template.text_color}12` }}
                               <div className="p-3 rounded-full" style={{ backgroundColor: `${template.primary_color}30` }}>
                                 <Play className="w-6 h-6" style={{ color: template.primary_color }} />
                               </div>
@@ -1035,8 +1035,8 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                               />
                             ) : (
                               <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: template.primary_color }}
+                                className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+                                style={{ backgroundColor: template.primary_color, color: template.background_color }}
                               >
                                 {testimonial.author.charAt(0)}
                               </div>
@@ -1133,7 +1133,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                 </section>
 
                 {/* Footer Preview */}
-                <footer id="preview-colors" ref={footerSectionRef} className="py-8 px-6 border-t border-slate-800 text-center scroll-mt-4">
+                <footer id="preview-colors" ref={footerSectionRef} className="py-8 px-6 border-t text-center scroll-mt-4" style={{ borderColor: `${template.text_color}15` }}>
                   <p className="text-sm opacity-60 mb-3">
                     © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
                   </p>
@@ -1999,7 +1999,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
             >
               <div className="max-w-6xl mx-auto">
                 {/* Header Preview */}
-                <header className="border-b border-slate-800 px-6 py-4">
+                <header className="border-b px-6 py-4" style={{ borderColor: `${template.text_color}15` }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {template.header_logo_url ? (
@@ -2047,7 +2047,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                     </div>
                     <div className="relative">
                       <div className="absolute -top-8 right-1/4 text-5xl animate-bounce">👇</div>
-                      <div className="rounded-xl overflow-hidden border border-slate-600 aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10` }}>
+                      <div className="rounded-xl overflow-hidden border aspect-video flex items-center justify-center" style={{ backgroundColor: `${template.primary_color}10`, borderColor: `${template.text_color}20` }}>
                         <div className="text-center">
                           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${template.primary_color}30` }}>
                             <Play className="w-8 h-8" style={{ color: template.primary_color }} />
@@ -2152,7 +2152,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                           </div>
                           <p className="text-sm opacity-80">{study.description}</p>
                           {study.video_url && (
-                            <div className="mt-4 aspect-video rounded-lg overflow-hidden bg-black/20 flex items-center justify-center">
+                            <div className="mt-4 aspect-video rounded-lg overflow-hidden flex items-center justify-center" style={{ backgroundColor: `${template.text_color}12` }}>
                               <div className="p-3 rounded-full" style={{ backgroundColor: `${template.primary_color}30` }}>
                                 <Play className="w-6 h-6" style={{ color: template.primary_color }} />
                               </div>
@@ -2210,7 +2210,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                 </section>
 
                 {/* Footer */}
-                <footer className="py-8 px-6 border-t border-slate-800 text-center">
+                <footer className="py-8 px-6 border-t text-center" style={{ borderColor: `${template.text_color}15` }}>
                   <p className="text-sm opacity-60 mb-3">
                     © {new Date().getFullYear()} {template.footer_company_name}. {template.footer_tagline}
                   </p>
