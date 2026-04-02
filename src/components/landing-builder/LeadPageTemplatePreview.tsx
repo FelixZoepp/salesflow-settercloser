@@ -950,7 +950,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                           </div>
                           <p className="text-sm opacity-80">{study.description}</p>
                           {study.video_url && (
-                            <div className="mt-4 aspect-video rounded-lg overflow-hidden flex items-center justify-center cursor-pointer transition-colors" style={{ backgroundColor: `${template.text_color}12` }}
+                            <div className="mt-4 aspect-video rounded-lg overflow-hidden flex items-center justify-center cursor-pointer transition-colors" style={{ backgroundColor: `${template.text_color}12` }}>
                               <div className="p-3 rounded-full" style={{ backgroundColor: `${template.primary_color}30` }}>
                                 <Play className="w-6 h-6" style={{ color: template.primary_color }} />
                               </div>
