@@ -639,7 +639,6 @@ const SequenceBuilder = ({ definition, onChange }: BuilderProps) => {
         onAdd={(type, config) => {
           if (!addAfter) return;
           insertNode(type, config, addAfter.nodeId, addAfter.edgeId);
-          setAddAfter(null);
         }}
       />
 
