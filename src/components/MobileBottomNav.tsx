@@ -29,7 +29,7 @@ const moreNavItems: NavItem[] = [
   { path: "/today", label: "Heute", icon: Home },
   { path: "/contacts", label: "Kontakte", icon: Home },
   { path: "/import-leads", label: "Leads importieren", icon: Home },
-  { path: "/power-dialer", label: "Power Dialer", icon: Home },
+  { path: "/sequences", label: "Sequenzen", icon: Home },
   { path: "/profile", label: "Profil", icon: Settings },
   { path: "/integrations", label: "Integrationen", icon: Settings },
   { path: "/billing", label: "Abrechnung", icon: Settings },

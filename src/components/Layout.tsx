@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, Target, Zap, Globe, Key, CreditCard,
-  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send, Search, GitBranch
+  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Search, GitBranch
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,69 +143,43 @@ const Layout = ({ children }: LayoutProps) => {
         { path: "/kpi", label: "KPIs", icon: Target },
       ]
     },
-    { 
-      path: "/campaigns", 
-      label: "Kampagnen", 
-      icon: Megaphone, 
+    {
+      path: "/campaigns",
+      label: "Kampagnen",
+      icon: Megaphone,
       color: "text-purple-400",
       subItems: [
         { path: "/campaigns", label: "Alle Kampagnen", icon: Megaphone },
-        { path: "/contacts", label: "Kontakte", icon: Users },
-        { path: "/lead-search", label: "Lead-Recherche", icon: Search },
-        { path: "/import-leads", label: "Leads importieren", icon: FolderOpen },
+        { path: "/sequences", label: "Sequenzen", icon: GitBranch },
         { path: "/landing-pages", label: "Lead-Seiten", icon: Globe },
         { path: "/video-note", label: "Video-Nachrichten", icon: Video },
-      ]
-    },
-    { 
-      path: "/pipeline", 
-      label: "Vertrieb", 
-      icon: Briefcase, 
-      color: "text-amber-400",
-      subItems: [
-        { path: "/pipeline", label: "Pipeline", icon: Briefcase },
-        { path: "/deal-analytics", label: "Deal-Analytics", icon: BarChart3 },
-        { path: "/activity-log", label: "Aktivitäten", icon: FileText },
-      ]
-    },
-    { 
-      path: "/power-dialer", 
-      label: "Calling", 
-      icon: Phone, 
-      color: "text-rose-400",
-      subItems: [
-        { path: "/power-dialer", label: "Power Dialer", icon: Phone },
-        { path: "/call-script", label: "Gesprächsleitfaden", icon: FileText },
-        { path: "/objections", label: "Einwand-Bibliothek", icon: MessageSquare },
-      ]
-    },
-    { 
-      path: "/email-campaigns", 
-      label: "E-Mail", 
-      icon: Mail, 
-      color: "text-green-400",
-      subItems: [
-        { path: "/email-campaigns", label: "Cold Mailing", icon: Send },
         { path: "/email-templates", label: "E-Mail Templates", icon: Mail },
       ]
     },
     {
-      path: "/sequences",
-      label: "Automatisierung",
-      icon: GitBranch,
-      color: "text-indigo-400",
+      path: "/pipeline",
+      label: "Vertrieb",
+      icon: Briefcase,
+      color: "text-amber-400",
       subItems: [
-        { path: "/sequences", label: "Sequenzen", icon: GitBranch },
+        { path: "/pipeline", label: "Pipeline", icon: Briefcase },
+        { path: "/contacts", label: "Kontakte", icon: Users },
+        { path: "/lead-search", label: "Lead-Recherche", icon: Search },
+        { path: "/import-leads", label: "Leads importieren", icon: FolderOpen },
+        { path: "/deal-analytics", label: "Deal-Analytics", icon: BarChart3 },
+        { path: "/activity-log", label: "Aktivitäten", icon: FileText },
       ]
     },
     {
-      path: "/profile", 
-      label: "Einstellungen", 
-      icon: Settings, 
+      path: "/profile",
+      label: "Einstellungen",
+      icon: Settings,
       color: "text-slate-400",
       subItems: [
         { path: "/profile", label: "Profil", icon: Settings },
         { path: "/integrations", label: "Integrationen", icon: Zap },
+        { path: "/call-script", label: "Gesprächsleitfaden", icon: FileText },
+        { path: "/objections", label: "Einwand-Bibliothek", icon: MessageSquare },
         { path: "/api-keys", label: "API-Schlüssel", icon: Key },
         { path: "/billing", label: "Abrechnung", icon: CreditCard },
         { path: "/partner-dashboard", label: "Partner-Programm", icon: Gift },

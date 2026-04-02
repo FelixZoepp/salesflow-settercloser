@@ -22,7 +22,6 @@ const pageTitles: Record<string, string> = {
   "/power-dialer": "Power Dialer",
   "/call-script": "Gesprächsleitfaden",
   "/objections": "Einwand-Bibliothek",
-  "/email-campaigns": "Cold Mailing",
   "/email-templates": "E-Mail Templates",
   "/sequences": "Sequenzen",
   "/profile": "Profil",

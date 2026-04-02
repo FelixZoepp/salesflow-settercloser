@@ -280,6 +280,10 @@ const Pipeline = () => {
               <Phone className="w-4 h-4 md:mr-2" />
               <span className="hidden md:inline">Telefon</span>
             </Button>
+            <Button size="sm" onClick={() => window.location.href = "/power-dialer"} className="shrink-0">
+              <Phone className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Power Dialer</span>
+            </Button>
           </div>
         </div>
 
