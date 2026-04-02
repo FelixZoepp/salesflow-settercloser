@@ -2155,6 +2155,53 @@ export type Database = {
           },
         ]
       }
+      sequences: {
+        Row: {
+          account_id: string
+          created_at: string
+          definition: Json
+          description: string | null
+          id: string
+          name: string
+          status: string
+          total_completed: number
+          total_leads: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          total_completed?: number
+          total_leads?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          total_completed?: number
+          total_leads?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequences_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           billing_interval: string
