@@ -24,7 +24,7 @@ const pageTitles: Record<string, string> = {
   "/objections": "Einwand-Bibliothek",
   "/email-campaigns": "Cold Mailing",
   "/email-templates": "E-Mail Templates",
-  "/training": "Training",
+  "/sequences": "Sequenzen",
   "/profile": "Profil",
   "/integrations": "Integrationen",
   "/api-keys": "API-Schlüssel",

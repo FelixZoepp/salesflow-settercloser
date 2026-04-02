@@ -31,8 +31,6 @@ const SubscriptionRequired = () => {
 
   const features = [
     "Pitchfirst Software – alle Features",
-    "1x/Woche Live-Gruppen-Coaching mit Felix Zoepp",
-    "Outreach-Videokurs inklusive",
     "Unbegrenzte KI-Landingpages",
     "Echtzeit-Tracking & Lead-Scoring"
   ];

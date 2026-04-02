@@ -30,6 +30,7 @@ interface LandingPageContent {
     author: string;
     company: string;
     role: string;
+    image_url?: string;
   }>;
   faq?: Array<{
     question: string;
@@ -118,7 +119,7 @@ export const LandingPageEditor = ({
   const addTestimonial = () => {
     onContentChange({
       ...content,
-      testimonials: [...(content.testimonials || []), { quote: "", author: "", company: "", role: "" }],
+      testimonials: [...(content.testimonials || []), { quote: "", author: "", company: "", role: "", image_url: "" }],
     });
   };
 
@@ -432,6 +433,15 @@ export const LandingPageEditor = ({
                     <Textarea
                       value={testimonial.quote}
                       onChange={(e) => updateTestimonial(index, "quote", e.target.value)}
+                      className="mt-1 bg-white/5 border-white/10"
+                    />
+                  </div>
+                  <div>
+                    <Label>Bild-URL</Label>
+                    <Input
+                      value={testimonial.image_url || ""}
+                      onChange={(e) => updateTestimonial(index, "image_url", e.target.value)}
+                      placeholder="https://..."
                       className="mt-1 bg-white/5 border-white/10"
                     />
                   </div>

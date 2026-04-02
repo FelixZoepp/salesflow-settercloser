@@ -2,8 +2,8 @@ import { ReactNode, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
-  Users, FileText, Mail, Video, BookOpen, Target, Zap, Globe, Key, CreditCard,
-  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send, Search
+  Users, FileText, Mail, Video, Target, Zap, Globe, Key, CreditCard,
+  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Send, Search, GitBranch
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -189,16 +189,16 @@ const Layout = ({ children }: LayoutProps) => {
         { path: "/email-templates", label: "E-Mail Templates", icon: Mail },
       ]
     },
-    { 
-      path: "/training", 
-      label: "Training", 
-      icon: BookOpen, 
-      color: "text-cyan-400",
+    {
+      path: "/sequences",
+      label: "Automatisierung",
+      icon: GitBranch,
+      color: "text-indigo-400",
       subItems: [
-        { path: "/training", label: "Videokurs & Live Call", icon: Video },
+        { path: "/sequences", label: "Sequenzen", icon: GitBranch },
       ]
     },
-    { 
+    {
       path: "/profile", 
       label: "Einstellungen", 
       icon: Settings, 

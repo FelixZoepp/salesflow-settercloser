@@ -125,6 +125,20 @@ const THEMES: Theme[] = [
   { name: "Sunset", bg: "linear-gradient(145deg, #1a0f1a 0%, #2e1a2e 50%, #3e163e 100%)", accent: "#fd79a8", text: "#ffffff" },
 ];
 
+// Helper: detect light theme and return theme-aware colors
+function isLightBg(theme: Theme): boolean {
+  const hex = theme.text.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
+function tc(theme: Theme) {
+  const light = isLightBg(theme);
+  const base = light ? "#000000" : "#ffffff";
+  return { text: theme.text, muted: theme.text + "cc", subtle: theme.text + "88", faint: theme.text + "66", vfaint: theme.text + "55", ghost: theme.text + "44", cardBg: base + "08", cardBorder: base + "11", inputBg: base + "0a", inputBorder: base + "22", overlay: base + "06" };
+}
+
 let blockIdCounter = 100;
 const newId = () => `blk_${++blockIdCounter}_${Date.now()}`;
 const newSlideId = () => `slide_${++blockIdCounter}_${Date.now()}`;
@@ -242,25 +256,26 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
   const s = block.settings;
   const mobile = previewMode === "mobile";
   const editable = isSelected && onUpdate;
+  const c = tc(theme);
 
   switch (block.type) {
     case "heading": {
       const sizes: Record<string, number> = { h1: mobile ? 26 : s.fontSize || 32, h2: mobile ? 22 : (s.fontSize || 28), h3: mobile ? 18 : (s.fontSize || 22) };
       const level = s.level || "h1";
-      const headingStyle: React.CSSProperties = { fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || "#fff", textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" };
+      const headingStyle: React.CSSProperties = { fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || c.text, textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" };
       if (editable) return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={headingStyle} tag={level} blockId={block.id} isSelected={!!isSelected} />;
       const Tag = level as keyof JSX.IntrinsicElements;
       return <Tag style={headingStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
     }
     case "text": {
-      const textStyle: React.CSSProperties = { fontSize: mobile ? 14 : (s.fontSize || 16), color: s.color || "#ffffffcc", textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" };
+      const textStyle: React.CSSProperties = { fontSize: mobile ? 14 : (s.fontSize || 16), color: s.color || c.muted, textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" };
       if (editable) return <InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={textStyle} tag="p" blockId={block.id} isSelected={!!isSelected} />;
       return <p style={textStyle} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.text) }} />;
     }
     case "image":
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", width: s.width || "100%" }}>
         {s.src ? <img src={s.src} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> :
-        <div style={{ background: "#ffffff11", height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff44", fontSize: 14 }}>Bild hier einfügen</div>}
+        <div style={{ background: c.cardBorder, height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: c.ghost, fontSize: 14 }}>Bild hier einfügen</div>}
       </div>;
     case "video":
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", background: "#000", position: "relative" }}>
@@ -282,42 +297,46 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       return <div style={{ maxWidth: 400, margin: "0 auto" }}>
         {(s.fields || []).map((f: any, i: number) => (
           <div key={i} style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 12, color: "#ffffff88", marginBottom: 4, fontWeight: 500 }}>{f.label}{f.required && " *"}</label>
-            <input type={f.type} placeholder={f.placeholder} style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #ffffff22", background: "#ffffff0a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} readOnly />
+            <label style={{ display: "block", fontSize: 12, color: c.subtle, marginBottom: 4, fontWeight: 500 }}>{f.label}{f.required && " *"}</label>
+            <input type={f.type} placeholder={f.placeholder} style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, background: c.inputBg, color: c.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} readOnly />
           </div>
         ))}
         <button style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: s.submitColor || theme.accent, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 8 }}>{s.submitText || "Absenden"}</button>
       </div>;
     case "spacer": return <div style={{ height: s.height || 40 }} />;
-    case "divider": return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || "#ffffff22"}` }} /></div>;
+    case "divider": return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || c.inputBorder}` }} /></div>;
     case "testimonial":
-      return <div style={{ background: "#ffffff08", borderRadius: 16, padding: mobile ? 20 : 28, border: "1px solid #ffffff11" }}>
+      return <div style={{ background: c.cardBg, borderRadius: 16, padding: mobile ? 20 : 28, border: `1px solid ${c.cardBorder}` }}>
         <div style={{ color: theme.accent, fontSize: 20, marginBottom: 8 }}>{"★".repeat(s.rating || 5)}</div>
-        <p style={{ fontSize: mobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }} dangerouslySetInnerHTML={{ __html: `"${replaceVarsForDisplay(s.quote)}"` }} />
+        <p style={{ fontSize: mobile ? 14 : 16, color: c.muted, lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }} dangerouslySetInnerHTML={{ __html: `"${replaceVarsForDisplay(s.quote)}"` }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>{(s.author || "A")[0]}</div>
-          <div><div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{s.author}</div><div style={{ fontSize: 12, color: "#ffffff66" }}>{s.role}</div></div>
+          {s.image_url ? (
+            <img src={s.image_url} alt={s.author} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>{(s.author || "A")[0]}</div>
+          )}
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: c.text }}>{s.author}</div><div style={{ fontSize: 12, color: c.faint }}>{s.role}</div></div>
         </div>
       </div>;
     case "quiz":
       return <div>
-        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.question) }} />
+        <p style={{ fontSize: mobile ? 16 : 18, fontWeight: 700, color: c.text, textAlign: "center", margin: "0 0 16px 0" }} dangerouslySetInnerHTML={{ __html: replaceVarsForDisplay(s.question) }} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 400, margin: "0 auto" }}>
           {(s.options || []).map((opt: string, i: number) => (
-            <div key={i} style={{ padding: "14px 16px", borderRadius: 12, border: `2px solid ${theme.accent}33`, background: "#ffffff06", textAlign: "center", fontSize: 14, color: "#fff", cursor: "pointer", fontWeight: 500, transition: "all 0.15s" }}>{opt}</div>
+            <div key={i} style={{ padding: "14px 16px", borderRadius: 12, border: `2px solid ${theme.accent}33`, background: c.overlay, textAlign: "center", fontSize: 14, color: c.text, cursor: "pointer", fontWeight: 500, transition: "all 0.15s" }}>{opt}</div>
           ))}
         </div>
       </div>;
     case "calendar":
-      return <div style={{ background: "#ffffff08", borderRadius: 12, height: mobile ? 300 : (s.height || 500), display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #ffffff11", flexDirection: "column", gap: 8 }}>
-        <Icons.Calendar /><div style={{ color: "#ffffff66", fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
+      return <div style={{ background: c.cardBg, borderRadius: 12, height: mobile ? 300 : (s.height || 500), display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${c.cardBorder}`, flexDirection: "column", gap: 8 }}>
+        <Icons.Calendar /><div style={{ color: c.faint, fontSize: 13 }}>Kalender-Embed: {replaceVarsForDisplay(s.calendarUrl)}</div>
       </div>;
     case "logo":
       return <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: 12, color: "#ffffff55", textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
+        <p style={{ fontSize: 12, color: c.vfaint, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
         <div style={{ display: "flex", justifyContent: "center", gap: mobile ? 16 : 24, flexWrap: "wrap" }}>
           {(s.logos || []).map((l: string, i: number) => (
-            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: "#ffffff0a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#ffffff44", border: "1px solid #ffffff11" }}>{l}</div>
+            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{l}</div>
           ))}
         </div>
       </div>;
@@ -336,10 +355,10 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
     case "social":
       return <div style={{ textAlign: "center", padding: 20 }}>
         <div style={{ fontSize: mobile ? 36 : 48, fontWeight: 900, color: theme.accent, letterSpacing: "-0.03em" }}>{s.number}</div>
-        <div style={{ fontSize: 14, color: "#ffffff88", marginTop: 4 }}>{s.label}</div>
+        <div style={{ fontSize: 14, color: c.subtle, marginTop: 4 }}>{s.label}</div>
       </div>;
     default:
-      return <div style={{ padding: 20, color: "#ffffff44", textAlign: "center" }}>Block: {block.type}</div>;
+      return <div style={{ padding: 20, color: c.ghost, textAlign: "center" }}>Block: {block.type}</div>;
   }
 }
 
@@ -513,6 +532,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Zitat" value={s.quote} onChange={v => update("quote", v)} multiline />
           <TextInput label="Name" value={s.author} onChange={v => update("author", v)} />
           <TextInput label="Rolle" value={s.role} onChange={v => update("role", v)} />
+          <TextInput label="Bild-URL" value={s.image_url} onChange={v => update("image_url", v)} placeholder="https://..." />
           <NumberInput label="Sterne" value={s.rating} onChange={v => update("rating", v)} min={1} max={5} />
         </>;
       case "quiz":

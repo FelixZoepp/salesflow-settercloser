@@ -39,7 +39,6 @@ import DealAnalytics from "./pages/DealAnalytics";
 import Upgrade from "./pages/Upgrade";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import PartnerDashboard from "./pages/PartnerDashboard";
-import Training from "./pages/Training";
 import Partner from "./pages/Partner";
 import LeadPagePreview from "./pages/LeadPagePreview";
 import LeadPagesFeature from "./pages/features/LeadPages";
@@ -51,6 +50,7 @@ import KIKonfiguratorFeature from "./pages/features/KIKonfigurator";
 import LeadScoringFeature from "./pages/features/LeadScoring";
 import KampagnenFeature from "./pages/features/Kampagnen";
 import EmailCampaigns from "./pages/EmailCampaigns";
+import Sequences from "./pages/Sequences";
 import LeadSearch from "./pages/LeadSearch";
 
 const queryClient = new QueryClient();
@@ -185,11 +185,11 @@ const AppRoutes = () => (
     
     <Route path="/email-campaigns" element={<SubscriptionRoute><EmailCampaigns /></SubscriptionRoute>} />
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
+    <Route path="/sequences" element={<SubscriptionRoute><Sequences /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
     <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
     <Route path="/partner-dashboard" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
-    <Route path="/training" element={<SubscriptionRoute><Training /></SubscriptionRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

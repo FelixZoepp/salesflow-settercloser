@@ -59,20 +59,6 @@ const features: FeatureRow[] = [
     pro: true,
     scale: true,
   },
-  {
-    name: "1x/Woche Live-Gruppen-Coaching",
-    description: "Wöchentliches Coaching mit Felix Zoepp",
-    starter: true,
-    pro: true,
-    scale: true,
-  },
-  {
-    name: "Outreach-Videokurs",
-    description: "Kompletter Videokurs zum Thema LinkedIn Outreach",
-    starter: true,
-    pro: true,
-    scale: true,
-  },
   // Pro Features (Pro + Scale)
   {
     name: "KI-Telefonie (Power Dialer)",

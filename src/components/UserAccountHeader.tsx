@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronRight, Camera, Loader2, User, Settings, LogOut } from "lucide-react";
+import { ChevronRight, Camera, Loader2, User, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
 
@@ -208,6 +208,29 @@ export default function UserAccountHeader() {
                 <span>Einstellungen</span>
                 <ChevronRight className="w-4 h-4 ml-auto" />
               </Link>
+              <button
+                onClick={() => {
+                  const html = document.documentElement;
+                  const isLight = html.classList.contains("light");
+                  if (isLight) {
+                    html.classList.remove("light");
+                    html.style.colorScheme = "dark";
+                    localStorage.setItem("theme", "dark");
+                  } else {
+                    html.classList.add("light");
+                    html.style.colorScheme = "light";
+                    localStorage.setItem("theme", "light");
+                  }
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors w-full"
+              >
+                {document.documentElement.classList.contains("light") ? (
+                  <Moon className="w-4 h-4" />
+                ) : (
+                  <Sun className="w-4 h-4" />
+                )}
+                <span>{document.documentElement.classList.contains("light") ? "Dark Mode" : "Light Mode"}</span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors w-full"

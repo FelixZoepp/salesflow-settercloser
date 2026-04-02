@@ -46,6 +46,20 @@ interface Theme {
   text: string;
 }
 
+// Helper: detect light theme and return theme-aware colors
+function isLightBg(theme: Theme): boolean {
+  const hex = theme.text.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
+function tc(theme: Theme) {
+  const light = isLightBg(theme);
+  const base = light ? "#000000" : "#ffffff";
+  return { text: theme.text, muted: theme.text + "cc", subtle: theme.text + "88", faint: theme.text + "66", vfaint: theme.text + "55", ghost: theme.text + "44", cardBg: base + "08", cardBorder: base + "11", inputBg: base + "0a", inputBorder: base + "22", overlay: base + "06" };
+}
+
 const THEMES: Theme[] = [
   { name: "Dark Pro", bg: "linear-gradient(145deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%)", accent: "#6C5CE7", text: "#ffffff" },
   { name: "Midnight Blue", bg: "linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%)", accent: "#00d2ff", text: "#ffffff" },
@@ -401,17 +415,18 @@ function PublicBlock({
 }) {
   const s = block.settings;
   const isMobile = window.innerWidth < 640;
+  const c = tc(theme);
 
   switch (block.type) {
     case "heading": {
       const sizes: Record<string, number> = { h1: isMobile ? 26 : s.fontSize || 32, h2: isMobile ? 22 : (s.fontSize || 28), h3: isMobile ? 18 : (s.fontSize || 22) };
       const level = s.level || "h1";
       const Tag = level as keyof JSX.IntrinsicElements;
-      return <Tag style={{ fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || "#fff", textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" }}
+      return <Tag style={{ fontSize: sizes[level] || 32, fontWeight: 800, color: s.color || c.text, textAlign: s.align || "center", lineHeight: 1.2, margin: 0, letterSpacing: "-0.02em" }}
         dangerouslySetInnerHTML={{ __html: replaceVars(s.text) }} />;
     }
     case "text":
-      return <p style={{ fontSize: isMobile ? 14 : (s.fontSize || 16), color: s.color || "#ffffffcc", textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}
+      return <p style={{ fontSize: isMobile ? 14 : (s.fontSize || 16), color: s.color || c.muted, textAlign: s.align || "center", lineHeight: s.lineHeight || 1.6, margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}
         dangerouslySetInnerHTML={{ __html: replaceVars(s.text) }} />;
 
     case "image":
@@ -483,13 +498,13 @@ function PublicBlock({
       return <form onSubmit={(e) => onFormSubmit(e, s.fields || [])} style={{ maxWidth: 400, margin: "0 auto" }}>
         {(s.fields || []).map((f: any, i: number) => (
           <div key={i} style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 12, color: "#ffffff88", marginBottom: 4, fontWeight: 500 }}>{f.label}{f.required && " *"}</label>
+            <label style={{ display: "block", fontSize: 12, color: c.subtle, marginBottom: 4, fontWeight: 500 }}>{f.label}{f.required && " *"}</label>
             {f.type === "textarea" ? (
               <textarea name={f.label} placeholder={f.placeholder} required={f.required} rows={3}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #ffffff22", background: "#ffffff0a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }} />
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, background: c.inputBg, color: c.text, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }} />
             ) : (
               <input type={f.type} name={f.label} placeholder={f.placeholder} required={f.required}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #ffffff22", background: "#ffffff0a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, background: c.inputBg, color: c.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
             )}
           </div>
         ))}
@@ -499,21 +514,25 @@ function PublicBlock({
       </form>;
 
     case "spacer": return <div style={{ height: s.height || 40 }} />;
-    case "divider": return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || "#ffffff22"}` }} /></div>;
+    case "divider": return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: s.width || "60%", height: 0, borderTop: `${s.thickness || 1}px ${s.style || "solid"} ${s.color || c.inputBorder}` }} /></div>;
 
     case "testimonial":
-      return <div style={{ background: "#ffffff08", borderRadius: 16, padding: isMobile ? 20 : 28, border: "1px solid #ffffff11" }}>
+      return <div style={{ background: c.cardBg, borderRadius: 16, padding: isMobile ? 20 : 28, border: `1px solid ${c.cardBorder}` }}>
         <div style={{ color: theme.accent, fontSize: 20, marginBottom: 8 }}>{"★".repeat(s.rating || 5)}</div>
-        <p style={{ fontSize: isMobile ? 14 : 16, color: "#ffffffcc", lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }}>
+        <p style={{ fontSize: isMobile ? 14 : 16, color: c.muted, lineHeight: 1.6, margin: "0 0 16px 0", fontStyle: "italic" }}>
           "{replaceVars(s.quote)}"
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>
-            {(s.author || "A")[0]}
-          </div>
+          {s.image_url ? (
+            <img src={s.image_url} alt={s.author} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: theme.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: theme.accent }}>
+              {(s.author || "A")[0]}
+            </div>
+          )}
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{s.author}</div>
-            <div style={{ fontSize: 12, color: "#ffffff66" }}>{s.role}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: c.text }}>{s.author}</div>
+            <div style={{ fontSize: 12, color: c.faint }}>{s.role}</div>
           </div>
         </div>
       </div>;
@@ -521,7 +540,7 @@ function PublicBlock({
     case "quiz": {
       const [selected, setSelected] = useState<number | null>(null);
       return <div>
-        <p style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: "#fff", textAlign: "center", margin: "0 0 16px 0" }}>
+        <p style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: c.text, textAlign: "center", margin: "0 0 16px 0" }}>
           {replaceVars(s.question)}
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 400, margin: "0 auto" }}>
@@ -530,8 +549,8 @@ function PublicBlock({
               style={{
                 padding: "14px 16px", borderRadius: 12,
                 border: `2px solid ${selected === i ? theme.accent : theme.accent + "33"}`,
-                background: selected === i ? theme.accent + "22" : "#ffffff06",
-                textAlign: "center", fontSize: 14, color: "#fff", cursor: "pointer", fontWeight: 500,
+                background: selected === i ? theme.accent + "22" : c.overlay,
+                textAlign: "center", fontSize: 14, color: c.text, cursor: "pointer", fontWeight: 500,
                 transition: "all 0.2s",
               }}>
               {opt}
@@ -556,10 +575,10 @@ function PublicBlock({
 
     case "logo":
       return <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: 12, color: "#ffffff55", textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
+        <p style={{ fontSize: 12, color: c.vfaint, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
         <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, flexWrap: "wrap" }}>
           {(s.logos || []).map((l: string, i: number) => (
-            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: "#ffffff0a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#ffffff44", border: "1px solid #ffffff11" }}>{l}</div>
+            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{l}</div>
           ))}
         </div>
       </div>;
@@ -602,7 +621,7 @@ function PublicBlock({
     case "social":
       return <div style={{ textAlign: "center", padding: 20 }}>
         <div style={{ fontSize: isMobile ? 36 : 48, fontWeight: 900, color: theme.accent, letterSpacing: "-0.03em" }}>{s.number}</div>
-        <div style={{ fontSize: 14, color: "#ffffff88", marginTop: 4 }}>{s.label}</div>
+        <div style={{ fontSize: 14, color: c.subtle, marginTop: 4 }}>{s.label}</div>
       </div>;
 
     default: return null;

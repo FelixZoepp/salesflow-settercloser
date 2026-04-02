@@ -456,12 +456,20 @@ const LeadPagePreview = () => {
                 >
                   <p className="italic text-lg mb-4 opacity-90">"{testimonial.quote}"</p>
                   <div className="flex items-center gap-3">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: template.primary_color }}
-                    >
-                      {testimonial.author.charAt(0)}
-                    </div>
+                    {testimonial.image_url ? (
+                      <img
+                        src={testimonial.image_url}
+                        alt={testimonial.author}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: template.primary_color }}
+                      >
+                        {testimonial.author.charAt(0)}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold">{testimonial.author}</p>
                       <p className="text-sm opacity-60">{testimonial.role}, {testimonial.company}</p>

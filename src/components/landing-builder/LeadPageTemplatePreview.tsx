@@ -96,6 +96,7 @@ export interface Testimonial {
   author: string;
   role: string;
   company: string;
+  image_url?: string;
 }
 
 export interface CaseStudy {
@@ -1026,12 +1027,20 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                         >
                           <p className="italic text-lg mb-4 opacity-90">"{testimonial.quote}"</p>
                           <div className="flex items-center gap-3">
-                            <div 
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                              style={{ backgroundColor: template.primary_color }}
-                            >
-                              {testimonial.author.charAt(0)}
-                            </div>
+                            {testimonial.image_url ? (
+                              <img
+                                src={testimonial.image_url}
+                                alt={testimonial.author}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                                style={{ backgroundColor: template.primary_color }}
+                              >
+                                {testimonial.author.charAt(0)}
+                              </div>
+                            )}
                             <div>
                               <p className="font-semibold">{testimonial.author}</p>
                               <p className="text-sm opacity-60">{testimonial.role}, {testimonial.company}</p>
@@ -1213,6 +1222,7 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                     { value: "coaching", icon: Users, label: "Coaching" },
                     { value: "comparison", icon: Star, label: "Vergleich" },
                     { value: "case-studies", icon: Trophy, label: "Fallstudien" },
+                    { value: "testimonials", icon: Users, label: "Testimonials" },
                     { value: "colors", icon: Palette, label: "Farben" },
                   ].map((tab) => (
                     <TabsTrigger 
@@ -1714,6 +1724,192 @@ export const LeadPageTemplatePreview = ({ calendarUrl, onSave }: LeadPageTemplat
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Fallstudie hinzufügen
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Testimonials Tab */}
+                  <TabsContent value="testimonials" className="space-y-4 m-0">
+                    <div className="space-y-4">
+                      <div className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06] space-y-3">
+                        <label className="text-sm font-medium text-foreground block">Abschnitts-Einstellungen</label>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Badge</label>
+                          <Input
+                            value={template.testimonials_badge}
+                            onChange={(e) => setTemplate({ ...template, testimonials_badge: e.target.value })}
+                            className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Überschrift</label>
+                          <Input
+                            value={template.testimonials_headline}
+                            onChange={(e) => setTemplate({ ...template, testimonials_headline: e.target.value })}
+                            className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Unterüberschrift</label>
+                          <Input
+                            value={template.testimonials_subheadline}
+                            onChange={(e) => setTemplate({ ...template, testimonials_subheadline: e.target.value })}
+                            className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
+                      {template.testimonials.map((testimonial, tIdx) => (
+                        <div key={tIdx} className="rounded-xl p-4 bg-white/[0.03] border border-white/[0.06] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Testimonial {tIdx + 1}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => {
+                                const updated = template.testimonials.filter((_, i) => i !== tIdx);
+                                setTemplate({ ...template, testimonials: updated });
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          {/* Image Upload */}
+                          <div>
+                            <label className="text-xs text-muted-foreground">Profilbild</label>
+                            {testimonial.image_url ? (
+                              <div className="mt-1 flex items-center gap-3">
+                                <img
+                                  src={testimonial.image_url}
+                                  alt={testimonial.author}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    const updated = [...template.testimonials];
+                                    updated[tIdx] = { ...updated[tIdx], image_url: "" };
+                                    setTemplate({ ...template, testimonials: updated });
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Entfernen
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="mt-1">
+                                <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border border-dashed border-white/20 hover:border-white/40 bg-white/[0.02] transition-colors">
+                                  <Upload className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground">Bild hochladen</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file || !accountId) return;
+                                      if (!file.type.startsWith("image/")) {
+                                        toast.error("Bitte nur Bilddateien hochladen");
+                                        return;
+                                      }
+                                      if (file.size > 5 * 1024 * 1024) {
+                                        toast.error("Datei ist zu groß (max. 5MB)");
+                                        return;
+                                      }
+                                      try {
+                                        const fileExt = file.name.split(".").pop();
+                                        const fileName = `${accountId}/testimonial-${tIdx}-${Date.now()}.${fileExt}`;
+                                        const { error: uploadError } = await supabase.storage
+                                          .from("account-logos")
+                                          .upload(fileName, file, { upsert: true });
+                                        if (uploadError) throw uploadError;
+                                        const { data: { publicUrl } } = supabase.storage
+                                          .from("account-logos")
+                                          .getPublicUrl(fileName);
+                                        const updated = [...template.testimonials];
+                                        updated[tIdx] = { ...updated[tIdx], image_url: publicUrl };
+                                        setTemplate({ ...template, testimonials: updated });
+                                        toast.success("Bild hochgeladen!");
+                                      } catch (error: any) {
+                                        console.error("Upload error:", error);
+                                        toast.error(error.message || "Fehler beim Hochladen");
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="text-xs text-muted-foreground">Zitat</label>
+                            <Textarea
+                              value={testimonial.quote}
+                              onChange={(e) => {
+                                const updated = [...template.testimonials];
+                                updated[tIdx] = { ...updated[tIdx], quote: e.target.value };
+                                setTemplate({ ...template, testimonials: updated });
+                              }}
+                              className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-xs text-muted-foreground">Name</label>
+                              <Input
+                                value={testimonial.author}
+                                onChange={(e) => {
+                                  const updated = [...template.testimonials];
+                                  updated[tIdx] = { ...updated[tIdx], author: e.target.value };
+                                  setTemplate({ ...template, testimonials: updated });
+                                }}
+                                className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground">Position</label>
+                              <Input
+                                value={testimonial.role}
+                                onChange={(e) => {
+                                  const updated = [...template.testimonials];
+                                  updated[tIdx] = { ...updated[tIdx], role: e.target.value };
+                                  setTemplate({ ...template, testimonials: updated });
+                                }}
+                                className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground">Firma</label>
+                              <Input
+                                value={testimonial.company}
+                                onChange={(e) => {
+                                  const updated = [...template.testimonials];
+                                  updated[tIdx] = { ...updated[tIdx], company: e.target.value };
+                                  setTemplate({ ...template, testimonials: updated });
+                                }}
+                                className="mt-1 bg-white/[0.03] border-white/10 rounded-xl"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 rounded-xl border-dashed border-white/20 hover:border-white/40 bg-white/[0.02]"
+                        onClick={() => {
+                          setTemplate({
+                            ...template,
+                            testimonials: [...template.testimonials, { quote: "", author: "", role: "", company: "", image_url: "" }],
+                          });
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Testimonial hinzufügen
                       </Button>
                     </div>
                   </TabsContent>

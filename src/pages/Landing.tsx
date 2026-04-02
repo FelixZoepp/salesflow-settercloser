@@ -2,11 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Lightbulb, Mic, Shield, Lock, UserCheck, Hand, Calendar } from "lucide-react";
+import { Linkedin, Eye, Video, Sparkles, BarChart3, Users, Target, Zap, Clock, MousePointer, Play, ArrowRight, Mail, Star, CheckCircle, X, TrendingUp, AlertTriangle, Flame, PieChart, Check, Phone, MessageSquare, Shield, Lock, UserCheck, Hand, Calendar } from "lucide-react";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import pitchfirstLogo from "@/assets/pitchfirst-logo-white.png";
 import crmDashboardScreenshot from "@/assets/crm-dashboard-screenshot.png";
-import felixLiveCallImage from "@/assets/felix-live-call.jpg";
 import logoTga from "@/assets/logos/tga.png";
 import logoIklaro from "@/assets/logos/iklaro.png";
 import logoOkTraining from "@/assets/logos/ok-training.png";
@@ -738,130 +737,6 @@ const Landing = () => {
 
       {/* Unique Features Section */}
       <UniqueFeatures />
-
-      {/* Weekly Live Call Section */}
-      <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1] overflow-hidden">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
-            {/* Left side - Text */}
-            <div className="scroll-animate scroll-fade-up order-2 md:order-1">
-              <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-[10px] md:text-sm font-medium mb-3 md:mb-4">
-                <Video className="h-3 w-3 md:h-4 md:w-4" />
-                Exklusiv für Kunden
-              </div>
-              <h2 className="text-xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 text-white">
-                Jede Woche <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Live Gruppen-Call</span>
-              </h2>
-              <p className="text-gray-300 text-xs md:text-lg mb-4 md:mb-6 leading-relaxed">
-                Jeden Mittwoch treffen wir uns live. Du stellst deine Fragen zu Outreach, Profil-Optimierung, 
-                Messaging oder Strategie – und bekommst sofort Antworten direkt von mir.
-              </p>
-              <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
-                {[
-                  "Live Q&A zu deinem LinkedIn-Profil",
-                  "Feedback zu deinen Nachrichten & Kampagnen",
-                  "Neue Strategien und Best Practices",
-                  "Networking mit anderen Nutzern"
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 md:gap-3 text-gray-300 text-xs md:text-base">
-                    <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-400 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {/* Right side - Animated Call Mockup */}
-            <div className="relative scroll-animate scroll-scale">
-              {/* Question bubble - above the screen */}
-              <div className="mb-3 md:mb-4 animate-[fade-in_1s_ease-out_0.5s_both]">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg md:rounded-xl p-2.5 md:p-4">
-                  <div className="flex items-start gap-2">
-                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="h-2.5 w-2.5 md:h-3 md:w-3 text-blue-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Teilnehmer fragt:</p>
-                      <p className="text-xs md:text-sm text-white font-medium leading-tight">"Was muss ich an meinem Profil ändern, um mehr Anfragen zu bekommen?"</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Apple Liquid Glass style monitor */}
-              <div className="rounded-[1.25rem] md:rounded-[2rem] overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 to-white/[0.02] p-2 md:p-3 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
-                <div className="rounded-[1rem] md:rounded-[1.5rem] bg-[#0d1117] overflow-hidden">
-                  {/* Video call header */}
-                  <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-3 border-b border-white/10 bg-[#161b22] rounded-t-[0.875rem] md:rounded-t-[1.25rem]">
-                    <div className="flex items-center gap-1.5 md:gap-2">
-                      <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-500 animate-pulse"></div>
-                      <span className="text-[10px] md:text-xs text-gray-400">LIVE</span>
-                    </div>
-                    <span className="text-[10px] md:text-xs text-gray-500">Mittwoch 17:00</span>
-                  </div>
-                  
-                  {/* Video area */}
-                  <div className="relative aspect-[4/3] md:aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
-                    {/* Host image - positioned lower to show face */}
-                    <img 
-                      src={felixLiveCallImage} 
-                      alt="Felix Zoepp - Live Call Host" 
-                      className="w-full h-full object-cover object-[center_30%] md:object-[center_35%]"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    
-                    {/* Speaking indicator overlay - top right corner */}
-                    <div className="absolute top-2 right-2 md:top-3 md:right-3 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-black/70 border border-green-500/50 backdrop-blur-sm">
-                      <div className="flex items-center gap-1.5 md:gap-2">
-                        <span className="text-[9px] md:text-xs text-white font-medium">Felix spricht</span>
-                        <div className="flex items-center gap-0.5 md:gap-1">
-                          <div className="w-1 h-2 md:w-1.5 md:h-3 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]"></div>
-                          <div className="w-1 h-3 md:w-1.5 md:h-5 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.1s_infinite]"></div>
-                          <div className="w-1 h-1.5 md:w-1.5 md:h-2 bg-green-400 rounded-full animate-[pulse_0.5s_ease-in-out_0.2s_infinite]"></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Answer bubble - appears with delay - hidden on small mobile */}
-                    <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 animate-[fade-in_1s_ease-out_2s_both] hidden sm:block">
-                      <div className="bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-lg md:rounded-xl p-2 md:p-3 max-w-[140px] md:max-w-[200px]">
-                        <div className="flex items-start gap-1.5 md:gap-2">
-                          <Lightbulb className="h-3 w-3 md:h-4 md:w-4 text-primary flex-shrink-0 mt-0.5" />
-                          <p className="text-[10px] md:text-xs text-white leading-tight">Live-Antwort mit konkreten Tipps...</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Participant count */}
-                    <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-black/50 border border-white/10">
-                      <Users className="h-2.5 w-2.5 md:h-3 md:w-3 text-gray-400" />
-                      <span className="text-[9px] md:text-xs text-gray-300">24 Teilnehmer</span>
-                    </div>
-                  </div>
-                  
-                  {/* Call controls */}
-                  <div className="flex items-center justify-center gap-3 md:gap-4 py-2.5 md:py-4 bg-[#161b22]">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Mic className="h-3 w-3 md:h-4 md:w-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Video className="h-3 w-3 md:h-4 md:w-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500 flex items-center justify-center">
-                      <Phone className="h-3 w-3 md:h-4 md:w-4 text-white rotate-[135deg]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Decorative elements - smaller on mobile */}
-              <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 w-16 h-16 md:w-24 md:h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
-              <div className="absolute -bottom-2 -left-2 md:-bottom-4 md:-left-4 w-20 h-20 md:w-32 md:h-32 bg-primary/20 rounded-full blur-2xl"></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Software Screenshots / Features Showcase */}
       <section className="py-12 md:py-20 px-4 md:px-6 relative z-[1]">

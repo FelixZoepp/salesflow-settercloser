@@ -37,7 +37,6 @@ import {
 import { formatDistanceToNow, isToday, isTomorrow, isPast, format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
-import { DashboardLiveCallWidget } from "@/components/DashboardLiveCallWidget";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import TeamPerformance from "@/components/TeamPerformance";
 
@@ -383,9 +382,6 @@ const Startseite = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Live Call Widget */}
-          <DashboardLiveCallWidget className="mb-4 md:mb-6" />
 
           {/* Welcome Header */}
           <div className="mb-6 md:mb-8">
