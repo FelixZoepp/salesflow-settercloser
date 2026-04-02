@@ -633,16 +633,15 @@ const SequenceBuilder = ({ definition, onChange }: BuilderProps) => {
       </div>
 
       {/* Add Node Dialog */}
-      {addAfter && (
-        <AddNodeDialog
-          open={!!addAfter}
-          onClose={() => setAddAfter(null)}
-          onAdd={(type, config) => {
-            insertNode(type, config, addAfter.nodeId, addAfter.edgeId);
-            setAddAfter(null);
-          }}
-        />
-      )}
+      <AddNodeDialog
+        open={!!addAfter}
+        onClose={() => setAddAfter(null)}
+        onAdd={(type, config) => {
+          if (!addAfter) return;
+          insertNode(type, config, addAfter.nodeId, addAfter.edgeId);
+          setAddAfter(null);
+        }}
+      />
 
       {/* Edit Node Dialog */}
       {editingNode && editingNode.type !== "start" && editingNode.type !== "end" && (
@@ -749,13 +748,13 @@ const AddNodeDialog = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
     let config: Record<string, any> = {};
     switch (selectedType) {
       case "send_email": config = { subject, body_text: bodyText }; break;
-      case "call_task": config = { note }; break;
-      case "linkedin_message": config = { message }; break;
+      case "call_task": config = { note: note || "Anruf tätigen" }; break;
+      case "linkedin_message": config = { message: message || "LinkedIn-Nachricht senden" }; break;
       case "wait": config = { delay_days: delayDays, delay_hours: delayHours }; break;
       case "condition": config = { type: condType, check_within_days: checkDays }; break;
     }
+    reset();
     onAdd(selectedType, config);
-    handleClose();
   };
 
   return (
