@@ -129,7 +129,7 @@ const Sequences = () => {
         .eq("account_id", accountId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as Sequence[];
+      return (data || []) as unknown as Sequence[];
     },
     enabled: !!accountId,
   });
