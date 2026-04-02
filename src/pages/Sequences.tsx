@@ -745,16 +745,18 @@ const AddNodeDialog = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
   const handleConfirm = () => {
     if (!selectedType) return;
+    const type = selectedType;
     let config: Record<string, any> = {};
-    switch (selectedType) {
+    switch (type) {
       case "send_email": config = { subject, body_text: bodyText }; break;
       case "call_task": config = { note: note || "Anruf tätigen" }; break;
       case "linkedin_message": config = { message: message || "LinkedIn-Nachricht senden" }; break;
       case "wait": config = { delay_days: delayDays, delay_hours: delayHours }; break;
       case "condition": config = { type: condType, check_within_days: checkDays }; break;
     }
+    onAdd(type, config);
     reset();
-    onAdd(selectedType, config);
+    onClose();
   };
 
   return (
