@@ -96,19 +96,24 @@ Deno.serve(async (req) => {
         .eq('id', contact.id);
     }
 
-    // Check if lead score hit 100 after this event (trigger recalculates it)
-    // Small delay to let the DB trigger update the score
+    // Check if lead score hit 100 → send webhook (Make, Zapier, etc.)
     const { data: updatedContact } = await supabase
       .from('contacts')
-      .select('lead_score, first_name, last_name, company, owner_user_id')
+      .select('lead_score, first_name, last_name, company, email, phone, mobile, owner_user_id, workflow_status')
       .eq('id', contact.id)
       .single();
 
     if (updatedContact && updatedContact.lead_score >= 100) {
-      // Send Slack notification with team stats
       try {
-        const slackWebhookUrl = Deno.env.get('SLACK_WEBHOOK_URL');
-        if (slackWebhookUrl) {
+        // Get account webhook URL from integrations settings
+        const { data: integrations } = await supabase
+          .from('account_integrations')
+          .select('enrichment_webhook_url')
+          .eq('account_id', contact.account_id)
+          .single();
+
+        const webhookUrl = integrations?.enrichment_webhook_url;
+        if (webhookUrl) {
           // Get team outreach stats
           const { data: teamContacts } = await supabase
             .from('contacts')
@@ -117,15 +122,12 @@ Deno.serve(async (req) => {
             .eq('lead_type', 'outbound');
 
           const statuses = (teamContacts || []).map((c: any) => c.workflow_status);
-          const sent = ['vernetzung_ausstehend','vernetzung_angenommen','erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
-          const messaged = ['erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
-          const fus = ['fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
-          const booked = ['termin_gebucht','abgeschlossen'];
+          const countIn = (list: string[]) => statuses.filter((s: string) => list.includes(s)).length;
 
-          const totalSent = statuses.filter((s: string) => sent.includes(s)).length;
-          const totalMessaged = statuses.filter((s: string) => messaged.includes(s)).length;
-          const totalFUs = statuses.filter((s: string) => fus.includes(s)).length;
-          const totalBooked = statuses.filter((s: string) => booked.includes(s)).length;
+          const SENT = ['vernetzung_ausstehend','vernetzung_angenommen','erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const MESSAGED = ['erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const FUS = ['fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const BOOKED = ['termin_gebucht','abgeschlossen'];
 
           // Get owner name
           let ownerName = '';
@@ -138,47 +140,36 @@ Deno.serve(async (req) => {
             ownerName = owner?.name || '';
           }
 
-          const slackPayload = {
-            blocks: [
-              {
-                type: "header",
-                text: { type: "plain_text", text: "🔥 Lead Score 100 erreicht!", emoji: true }
-              },
-              {
-                type: "section",
-                fields: [
-                  { type: "mrkdwn", text: `*Lead:*\n${updatedContact.first_name} ${updatedContact.last_name}` },
-                  { type: "mrkdwn", text: `*Firma:*\n${updatedContact.company || '—'}` },
-                  { type: "mrkdwn", text: `*Score:*\n${updatedContact.lead_score}/100` },
-                  { type: "mrkdwn", text: `*Zugewiesen an:*\n${ownerName || '—'}` },
-                ]
-              },
-              { type: "divider" },
-              {
-                type: "section",
-                text: { type: "mrkdwn", text: "*📊 Team Outreach-Zahlen*" }
-              },
-              {
-                type: "section",
-                fields: [
-                  { type: "mrkdwn", text: `*Vernetzungen:*\n${totalSent}` },
-                  { type: "mrkdwn", text: `*Nachrichten:*\n${totalMessaged}` },
-                  { type: "mrkdwn", text: `*Follow-ups:*\n${totalFUs}` },
-                  { type: "mrkdwn", text: `*Termine:*\n${totalBooked}` },
-                ]
-              }
-            ]
-          };
-
-          await fetch(slackWebhookUrl, {
+          await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(slackPayload),
+            body: JSON.stringify({
+              event: 'lead_score_100',
+              lead: {
+                id: contact.id,
+                first_name: updatedContact.first_name,
+                last_name: updatedContact.last_name,
+                company: updatedContact.company,
+                email: updatedContact.email,
+                phone: updatedContact.phone || updatedContact.mobile,
+                score: updatedContact.lead_score,
+                workflow_status: updatedContact.workflow_status,
+                owner: ownerName,
+              },
+              team_stats: {
+                connections_sent: countIn(SENT),
+                messages_sent: countIn(MESSAGED),
+                followups_sent: countIn(FUS),
+                appointments_booked: countIn(BOOKED),
+                total_leads: statuses.length,
+              },
+              timestamp: new Date().toISOString(),
+            }),
           });
-          console.log(`Slack notification sent for lead ${contact.id} (score 100)`);
+          console.log(`Webhook sent for lead ${contact.id} (score 100)`);
         }
-      } catch (slackErr) {
-        console.error('Slack notification error:', slackErr);
+      } catch (webhookErr) {
+        console.error('Webhook error:', webhookErr);
       }
     }
 
