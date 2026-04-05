@@ -22,6 +22,7 @@ import { CampaignComparison } from "@/components/CampaignComparison";
 import { CampaignLeadsTable } from "@/components/CampaignLeadsTable";
 import { VideoWorkflowPanel } from "@/components/VideoWorkflowPanel";
 import { ConnectionSuggestions } from "@/components/ConnectionSuggestions";
+import { CampaignTeamMembers } from "@/components/CampaignTeamMembers";
 
 interface Campaign {
   id: string;
