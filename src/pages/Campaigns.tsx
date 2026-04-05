@@ -33,6 +33,13 @@ interface Campaign {
   created_at: string;
   account_id: string | null;
   landing_page_id?: string | null;
+  assigned_user_id?: string | null;
+}
+
+interface TeamMemberOption {
+  id: string;
+  name: string;
+  email: string;
 }
 
 interface LandingPageOption {
@@ -59,6 +66,7 @@ const Campaigns = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberOption[]>([]);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     description: "",
@@ -70,12 +78,31 @@ const Campaigns = () => {
     max_daily_messages: 10,
     landing_page_id: "",
     pitch_video_url: "",
+    assigned_user_id: "",
   });
 
   useEffect(() => {
     fetchCampaigns();
     fetchLandingPages();
+    fetchTeamMembers();
   }, []);
+
+  const fetchTeamMembers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+      if (!profile?.account_id) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name, email")
+        .eq("account_id", profile.account_id)
+        .order("name");
+      setTeamMembers((data || []) as TeamMemberOption[]);
+    } catch (err) {
+      console.error("Error fetching team members:", err);
+    }
+  };
 
   const fetchLandingPages = async () => {
     try {
@@ -180,6 +207,7 @@ const Campaigns = () => {
         max_daily_connections: newCampaign.max_daily_connections,
         max_daily_messages: newCampaign.max_daily_messages,
         pitch_video_url: newCampaign.pitch_video_url || null,
+        assigned_user_id: newCampaign.assigned_user_id || null,
       };
       const { error } = await supabase.from("campaigns").insert(insertData);
 
@@ -198,6 +226,7 @@ const Campaigns = () => {
         max_daily_messages: 10,
         landing_page_id: "",
         pitch_video_url: "",
+        assigned_user_id: "",
       });
       fetchCampaigns();
     } catch (error: any) {
@@ -233,6 +262,7 @@ const Campaigns = () => {
     landing_page_id: string;
     max_daily_connections: number;
     max_daily_messages: number;
+    assigned_user_id: string;
   } | null>(null);
 
   const openEditDialog = (campaign: Campaign) => {
@@ -244,6 +274,7 @@ const Campaigns = () => {
       landing_page_id: (campaign as any).landing_page_id || "",
       max_daily_connections: (campaign as any).max_daily_connections || 15,
       max_daily_messages: (campaign as any).max_daily_messages || 10,
+      assigned_user_id: (campaign as any).assigned_user_id || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -257,6 +288,7 @@ const Campaigns = () => {
         pitch_video_url: editCampaign.pitch_video_url || null,
         max_daily_connections: editCampaign.max_daily_connections,
         max_daily_messages: editCampaign.max_daily_messages,
+        assigned_user_id: editCampaign.assigned_user_id || null,
       };
       const { error } = await supabase.from("campaigns").update(updateData).eq("id", editCampaign.id);
       if (error) throw error;
@@ -547,6 +579,35 @@ const Campaigns = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Team Member Assignment */}
+                  {teamMembers.length > 1 && (
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        <h4 className="font-medium">Zuständiges Teammitglied</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Wer soll bei heißen Leads aus dieser Kampagne benachrichtigt werden?
+                      </p>
+                      <Select
+                        value={newCampaign.assigned_user_id}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, assigned_user_id: value === "none" ? "" : value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Teammitglied auswählen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Kein bestimmtes Mitglied (Admin)</SelectItem>
+                          {teamMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.name} ({member.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <Button onClick={createCampaign} disabled={!newCampaign.name} className="w-full">
                     Kampagne erstellen
@@ -922,6 +983,29 @@ const Campaigns = () => {
                   />
                 </div>
               </div>
+              {teamMembers.length > 1 && (
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Users className="w-4 h-4" /> Zuständiges Teammitglied
+                  </Label>
+                  <Select
+                    value={editCampaign.assigned_user_id}
+                    onValueChange={(value) => setEditCampaign({ ...editCampaign, assigned_user_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Teammitglied auswählen..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Kein bestimmtes Mitglied (Admin)</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} ({member.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={saveEditCampaign} disabled={!editCampaign.name} className="w-full">
                 Speichern
               </Button>

@@ -555,6 +555,7 @@ export type Database = {
         Row: {
           acceptance_rate_pct: number | null
           account_id: string | null
+          assigned_user_id: string | null
           created_at: string
           description: string | null
           end_date: string | null
@@ -578,6 +579,7 @@ export type Database = {
         Insert: {
           acceptance_rate_pct?: number | null
           account_id?: string | null
+          assigned_user_id?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -601,6 +603,7 @@ export type Database = {
         Update: {
           acceptance_rate_pct?: number | null
           account_id?: string | null
+          assigned_user_id?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -627,6 +630,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_assigned_user_id_fkey"
+            columns: ["assigned_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

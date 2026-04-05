@@ -96,10 +96,23 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
             // 2. Browser push notification (works even on other tabs)
             showBrowserNotification(newLead);
 
-            // 3. Auto-create deal
+            // 3. Auto-create deal with campaign's assigned user
             try {
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) return;
+
+              // Check if campaign has an assigned user
+              let setterId = user.id;
+              if (newLead.campaign_id) {
+                const { data: campaign } = await supabase
+                  .from('campaigns')
+                  .select('assigned_user_id')
+                  .eq('id', newLead.campaign_id)
+                  .single();
+                if (campaign?.assigned_user_id) {
+                  setterId = campaign.assigned_user_id;
+                }
+              }
 
               const { data: existingDeal } = await supabase
                 .from('deals')
@@ -114,7 +127,7 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
                   stage: 'Heißer Lead - Anrufen' as any,
                   pipeline: 'cold',
                   amount_eur: 0,
-                  setter_id: user.id,
+                  setter_id: setterId,
                   account_id: newLead.account_id,
                   next_action: 'Sofort anrufen!'
                 });
