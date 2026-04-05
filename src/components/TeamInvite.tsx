@@ -110,6 +110,22 @@ export default function TeamInvite() {
     }
   };
 
+  const removeMember = async (memberId: string, memberName: string) => {
+    if (!confirm(`Möchtest du ${memberName} wirklich aus dem Team entfernen?`)) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ account_id: null })
+        .eq("id", memberId);
+      if (error) throw error;
+      toast.success(`${memberName} wurde aus dem Team entfernt`);
+      loadTeam();
+    } catch (err: any) {
+      console.error("Remove member error:", err);
+      toast.error(err.message || "Fehler beim Entfernen");
+    }
+  };
+
   const getRoleBadge = (role: string | null, isSuperAdmin: boolean) => {
     if (isSuperAdmin) return <Badge className="bg-purple-600">Super Admin</Badge>;
     switch (role) {
@@ -158,6 +174,16 @@ export default function TeamInvite() {
                 {getRoleBadge(member.role, member.is_super_admin)}
                 {member.id === session?.user?.id && (
                   <Badge variant="outline" className="text-[10px]">Du</Badge>
+                )}
+                {isAdmin && member.id !== session?.user?.id && !member.is_super_admin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeMember(member.id, member.name || "Unbenannt")}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 )}
               </div>
             </div>
