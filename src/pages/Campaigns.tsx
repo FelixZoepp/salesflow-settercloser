@@ -33,6 +33,13 @@ interface Campaign {
   created_at: string;
   account_id: string | null;
   landing_page_id?: string | null;
+  assigned_user_id?: string | null;
+}
+
+interface TeamMemberOption {
+  id: string;
+  name: string;
+  email: string;
 }
 
 interface LandingPageOption {
@@ -59,6 +66,7 @@ const Campaigns = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberOption[]>([]);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     description: "",
@@ -70,12 +78,31 @@ const Campaigns = () => {
     max_daily_messages: 10,
     landing_page_id: "",
     pitch_video_url: "",
+    assigned_user_id: "",
   });
 
   useEffect(() => {
     fetchCampaigns();
     fetchLandingPages();
+    fetchTeamMembers();
   }, []);
+
+  const fetchTeamMembers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+      if (!profile?.account_id) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name, email")
+        .eq("account_id", profile.account_id)
+        .order("name");
+      setTeamMembers((data || []) as TeamMemberOption[]);
+    } catch (err) {
+      console.error("Error fetching team members:", err);
+    }
+  };
 
   const fetchLandingPages = async () => {
     try {
