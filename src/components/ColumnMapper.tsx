@@ -119,6 +119,15 @@ export default function ColumnMapper({
 
   const { mapped, total } = getMappingStatus();
   const usedFields = getUsedFields();
+  
+  const missingRequired = isOutbound 
+    ? OUTBOUND_REQUIRED_FIELDS.filter(f => {
+        // phone can be satisfied by phone OR mobile
+        if (f === 'phone') return !usedFields.includes('phone') && !usedFields.includes('mobile');
+        return !usedFields.includes(f);
+      })
+    : [];
+  const allRequiredMapped = missingRequired.length === 0;
 
   return (
     <Card>
