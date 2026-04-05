@@ -762,6 +762,14 @@ const Campaigns = () => {
                           />
                         </TabsContent>
 
+                        <TabsContent value="team" className="mt-6">
+                          <CampaignTeamMembers
+                            campaignId={selectedCampaign.id}
+                            campaignName={selectedCampaign.name}
+                          />
+                        </TabsContent>
+
+
                         <TabsContent value="overview" className="mt-6">
                           {/* Stats Grid */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
