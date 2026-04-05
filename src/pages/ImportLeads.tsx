@@ -465,6 +465,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
             previewData={csvRows}
             onMappingConfirmed={handleMappingConfirmed}
             onCancel={handleCancel}
+            isOutbound={true}
           />
         )}
 
