@@ -22,6 +22,7 @@ import { CampaignComparison } from "@/components/CampaignComparison";
 import { CampaignLeadsTable } from "@/components/CampaignLeadsTable";
 import { VideoWorkflowPanel } from "@/components/VideoWorkflowPanel";
 import { ConnectionSuggestions } from "@/components/ConnectionSuggestions";
+import { CampaignTeamMembers } from "@/components/CampaignTeamMembers";
 
 interface Campaign {
   id: string;
@@ -718,6 +719,10 @@ const Campaigns = () => {
                             <Video className="h-4 w-4" />
                             Video-Workflow
                           </TabsTrigger>
+                          <TabsTrigger value="team" className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            Team
+                          </TabsTrigger>
                           <TabsTrigger value="overview">Übersicht</TabsTrigger>
                           <TabsTrigger value="tracking">Tracking</TabsTrigger>
                         </TabsList>
@@ -756,6 +761,14 @@ const Campaigns = () => {
                             campaignName={selectedCampaign.name} 
                           />
                         </TabsContent>
+
+                        <TabsContent value="team" className="mt-6">
+                          <CampaignTeamMembers
+                            campaignId={selectedCampaign.id}
+                            campaignName={selectedCampaign.name}
+                          />
+                        </TabsContent>
+
 
                         <TabsContent value="overview" className="mt-6">
                           {/* Stats Grid */}

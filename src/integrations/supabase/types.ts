@@ -554,6 +554,48 @@ export type Database = {
           },
         ]
       }
+      campaign_members: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_members_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           acceptance_rate_pct: number | null
@@ -693,6 +735,107 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_member_links: {
+        Row: {
+          campaign_id: string
+          connection_accepted_at: string | null
+          connection_sent_at: string | null
+          contact_id: string
+          created_at: string
+          first_message_sent_at: string | null
+          fu1_sent_at: string | null
+          fu2_sent_at: string | null
+          fu3_sent_at: string | null
+          heygen_video_id: string | null
+          id: string
+          outreach_message: string | null
+          personalized_url: string | null
+          slug: string | null
+          updated_at: string
+          user_id: string
+          video_error: string | null
+          video_generated_at: string | null
+          video_status: string | null
+          video_url: string | null
+          workflow_status: string | null
+        }
+        Insert: {
+          campaign_id: string
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
+          contact_id: string
+          created_at?: string
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          heygen_video_id?: string | null
+          id?: string
+          outreach_message?: string | null
+          personalized_url?: string | null
+          slug?: string | null
+          updated_at?: string
+          user_id: string
+          video_error?: string | null
+          video_generated_at?: string | null
+          video_status?: string | null
+          video_url?: string | null
+          workflow_status?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
+          contact_id?: string
+          created_at?: string
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          heygen_video_id?: string | null
+          id?: string
+          outreach_message?: string | null
+          personalized_url?: string | null
+          slug?: string | null
+          updated_at?: string
+          user_id?: string
+          video_error?: string | null
+          video_generated_at?: string | null
+          video_status?: string | null
+          video_url?: string | null
+          workflow_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_member_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_member_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_member_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_member_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
