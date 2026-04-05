@@ -193,18 +193,21 @@ export default function ColumnMapper({
                         <SelectItem disabled value="contact-header">
                           <span className="font-semibold text-xs uppercase">Kontakt</span>
                         </SelectItem>
-                        {SYSTEM_FIELDS.filter(f => f.category === 'contact').map(field => (
+                        {SYSTEM_FIELDS.filter(f => f.category === 'contact').map(field => {
+                          const isRequired = isOutbound && OUTBOUND_REQUIRED_FIELDS.includes(field.key);
+                          return (
                           <SelectItem 
                             key={field.key} 
                             value={field.key}
                             disabled={usedFields.includes(field.key) && mapping.systemField !== field.key}
                           >
-                            {field.label}
+                            {field.label}{isRequired && ' *'}
                             {usedFields.includes(field.key) && mapping.systemField !== field.key && (
                               <span className="text-muted-foreground ml-2">(bereits zugeordnet)</span>
                             )}
                           </SelectItem>
-                        ))}
+                          );
+                        })}
                         
                         <SelectItem disabled value="company-header">
                           <span className="font-semibold text-xs uppercase">Firma</span>
