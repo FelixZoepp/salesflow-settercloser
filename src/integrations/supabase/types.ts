@@ -2155,50 +2155,6 @@ export type Database = {
           },
         ]
       }
-      team_challenges: {
-        Row: {
-          id: string
-          account_id: string
-          name: string
-          goal_type: string
-          goal_value: number
-          is_active: boolean
-          created_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          account_id: string
-          name?: string
-          goal_type?: string
-          goal_value?: number
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          account_id?: string
-          name?: string
-          goal_type?: string
-          goal_value?: number
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_challenges_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: true
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sequences: {
         Row: {
           account_id: string
