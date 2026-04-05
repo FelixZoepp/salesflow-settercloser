@@ -15,6 +15,12 @@ import { Users, Search, Check, X, Flame, ThermometerSun, Snowflake, Calendar } f
 import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 
+interface OwnerProfile {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+}
+
 interface CampaignLead {
   id: string;
   first_name: string;
@@ -30,6 +36,7 @@ interface CampaignLead {
   hasPageView: boolean;
   hasVideoPlay: boolean;
   outreachCount: number;
+  owner_user_id: string | null;
 }
 
 interface CampaignLeadsTableProps {
@@ -39,6 +46,7 @@ interface CampaignLeadsTableProps {
 
 export const CampaignLeadsTable = ({ campaignId, campaignName }: CampaignLeadsTableProps) => {
   const [leads, setLeads] = useState<CampaignLead[]>([]);
+  const [owners, setOwners] = useState<Record<string, OwnerProfile>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -53,7 +61,7 @@ export const CampaignLeadsTable = ({ campaignId, campaignName }: CampaignLeadsTa
       // Fetch leads for this campaign
       const { data: contactsData, error: contactsError } = await supabase
         .from("contacts")
-        .select("id, first_name, last_name, company, lead_score, workflow_status, outreach_status, viewed, view_count, updated_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at")
+        .select("id, first_name, last_name, company, lead_score, workflow_status, outreach_status, viewed, view_count, updated_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, owner_user_id")
         .eq("campaign_id", campaignId)
         .order("lead_score", { ascending: false });
 
@@ -73,6 +81,18 @@ export const CampaignLeadsTable = ({ campaignId, campaignName }: CampaignLeadsTa
         .select("contact_id, event_type, created_at")
         .in("contact_id", leadIds)
         .order("created_at", { ascending: false });
+
+      // Load owner profiles for team display
+      const ownerIds = [...new Set((contactsData || []).map(c => c.owner_user_id).filter(Boolean))] as string[];
+      if (ownerIds.length > 1) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, name, avatar_url")
+          .in("id", ownerIds);
+        const ownerMap: Record<string, OwnerProfile> = {};
+        (profiles || []).forEach((p: any) => { ownerMap[p.id] = p; });
+        setOwners(ownerMap);
+      }
 
       // Process leads with activity data
       const processedLeads: CampaignLead[] = (contactsData || []).map(contact => {
@@ -108,6 +128,7 @@ export const CampaignLeadsTable = ({ campaignId, campaignName }: CampaignLeadsTa
           hasPageView,
           hasVideoPlay,
           outreachCount,
+          owner_user_id: contact.owner_user_id,
         };
       });
 
@@ -242,6 +263,18 @@ export const CampaignLeadsTable = ({ campaignId, campaignName }: CampaignLeadsTa
                   <TableCell>{getStatusBadge(lead.lead_score)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 min-w-[100px]">
+                      {lead.owner_user_id && owners[lead.owner_user_id] && (
+                        <div
+                          className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0"
+                          title={owners[lead.owner_user_id].name || ""}
+                        >
+                          {owners[lead.owner_user_id].avatar_url ? (
+                            <img src={owners[lead.owner_user_id].avatar_url!} alt="" className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            (owners[lead.owner_user_id].name || "?")[0].toUpperCase()
+                          )}
+                        </div>
+                      )}
                       <span className="font-semibold text-foreground w-8">
                         {lead.lead_score || 0}
                       </span>

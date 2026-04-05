@@ -80,6 +80,24 @@ export default function TeamInvite() {
       if (data?.error) throw new Error(data.error);
 
       toast.success(data?.message || "Einladung gesendet!");
+
+      // Open Stripe Checkout for team slot (50€/month)
+      try {
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-team-slot-checkout", {
+          body: {
+            origin: window.location.origin,
+            invitedEmail: inviteEmail.trim(),
+          },
+        });
+        if (!checkoutError && checkoutData?.url) {
+          window.location.href = checkoutData.url;
+          return; // Redirect to Stripe
+        }
+      } catch (checkoutErr) {
+        console.error("Checkout error:", checkoutErr);
+        // Non-blocking: invite still succeeded even if checkout fails
+      }
+
       setInviteEmail("");
       setInviteName("");
       setInviteRole("setter");

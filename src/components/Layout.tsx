@@ -49,6 +49,7 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [hasTeam, setHasTeam] = useState(false);
   const [viewingAccount, setViewingAccount] = useState<string | null>(null);
 
   // Global softphone for hot lead instant calls
@@ -78,21 +79,30 @@ const Layout = ({ children }: LayoutProps) => {
   useFollowupReminders();
   const { openCustomerPortal } = useSubscriptionContext();
   useEffect(() => {
-    checkSuperAdmin();
+    checkUserContext();
     checkViewingAccount();
   }, []);
 
-  const checkSuperAdmin = async () => {
+  const checkUserContext = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_super_admin')
+      .select('is_super_admin, account_id')
       .eq('id', user.id)
       .single();
 
     setIsSuperAdmin(profile?.is_super_admin || false);
+
+    // Check if account has multiple team members
+    if (profile?.account_id) {
+      const { count } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('account_id', profile.account_id);
+      setHasTeam((count || 0) > 1);
+    }
   };
 
   const checkViewingAccount = () => {
@@ -141,7 +151,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
         { path: "/today", label: "Heute", icon: CalendarDays },
         { path: "/kpi", label: "KPIs", icon: Target },
-        { path: "/team-arena", label: "Team Arena", icon: Trophy },
+        ...(hasTeam ? [{ path: "/team-arena", label: "Team Arena", icon: Trophy }] : []),
       ]
     },
     {

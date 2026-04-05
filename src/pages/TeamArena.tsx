@@ -14,12 +14,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Trophy, Users, Crown, MessageSquare, Calendar, TrendingUp,
   Phone, Target, Flame, Medal, Zap, ArrowUp, ArrowDown, Minus,
   Settings2, Rocket, Plus, Pause, Play, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { subDays } from "date-fns";
+import TeamInvite from "@/components/TeamInvite";
 
 // --- Types ---
 
@@ -36,6 +43,7 @@ interface MemberStats {
   id: string;
   name: string;
   avatarUrl: string | null;
+  role: string | null;
   connectionsSent: number;
   connectionsAccepted: number;
   acceptanceRate: number;
@@ -68,6 +76,18 @@ interface Activity {
   outcome: string | null;
   contactName: string;
   timestamp: string;
+}
+
+interface LandingPageStat {
+  pageUrl: string;
+  views: number;
+  uniqueContacts: number;
+}
+
+interface MemberDetail {
+  member: MemberStats;
+  landingPages: LandingPageStat[];
+  topLeads: { name: string; status: string; score: number | null }[];
 }
 
 // --- Constants ---
@@ -121,6 +141,15 @@ function rankBadge(index: number) {
   return <span className="text-xs text-muted-foreground font-bold">#{index + 1}</span>;
 }
 
+function roleBadge(role: string | null) {
+  switch (role) {
+    case "admin": return <Badge className="text-[9px] bg-blue-500/20 text-blue-400 border-blue-500/30 px-1.5">Admin</Badge>;
+    case "closer": return <Badge className="text-[9px] bg-purple-500/20 text-purple-400 border-purple-500/30 px-1.5">Closer</Badge>;
+    case "setter": return <Badge className="text-[9px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-1.5">Setter</Badge>;
+    default: return null;
+  }
+}
+
 function goalMetricForMember(member: MemberStats, goalType: string): number {
   switch (goalType) {
     case "connections_sent": return member.connectionsSent;
@@ -146,6 +175,10 @@ export default function TeamArena() {
   const [loading, setLoading] = useState(true);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Member detail sheet
+  const [selectedMember, setSelectedMember] = useState<MemberDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Setup dialog state
   const [showSetup, setShowSetup] = useState(false);
@@ -175,11 +208,16 @@ export default function TeamArena() {
       setAccountId(accId);
 
       // Load challenge settings
-      const { data: challengeData } = await supabase
+      const { data: challengeData, error: challengeError } = await supabase
         .from("team_challenges")
         .select("*")
         .eq("account_id", accId)
-        .single();
+        .maybeSingle();
+
+      if (challengeError) {
+        console.error("Challenge load error:", challengeError);
+        // Table might not exist yet - show setup screen
+      }
 
       if (!challengeData) {
         setLoading(false);
@@ -196,7 +234,7 @@ export default function TeamArena() {
 
       // Parallel queries
       const [teamRes, contactsRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
-        supabase.from("profiles").select("id, name, avatar_url").eq("account_id", accId),
+        supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
         supabase.from("contacts").select("owner_user_id, workflow_status").eq("account_id", accId).eq("lead_type", "outbound"),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
@@ -235,6 +273,7 @@ export default function TeamArena() {
           id: p.id,
           name: p.name || "Unbenannt",
           avatarUrl: p.avatar_url,
+          role: p.role,
           connectionsSent: sent,
           connectionsAccepted: accepted,
           acceptanceRate: pct(accepted, sent),
@@ -298,6 +337,69 @@ export default function TeamArena() {
     }
   };
 
+  const openMemberDetail = async (member: MemberStats) => {
+    setLoadingDetail(true);
+    setSelectedMember({ member, landingPages: [], topLeads: [] });
+    try {
+      // Get contacts owned by this member
+      const { data: memberContacts } = await supabase
+        .from("contacts")
+        .select("id, first_name, last_name, workflow_status, lead_score")
+        .eq("account_id", accountId!)
+        .eq("owner_user_id", member.id)
+        .eq("lead_type", "outbound")
+        .order("lead_score", { ascending: false })
+        .limit(100);
+
+      const contactIds = (memberContacts || []).map(c => c.id);
+
+      // Get landing page views for these contacts
+      let landingPages: LandingPageStat[] = [];
+      if (contactIds.length > 0) {
+        const { data: events } = await supabase
+          .from("lead_tracking_events")
+          .select("contact_id, page_url")
+          .in("contact_id", contactIds)
+          .eq("event_type", "page_view")
+          .not("page_url", "is", null);
+
+        // Group by page_url
+        const pageMap = new Map<string, { views: number; contacts: Set<string> }>();
+        (events || []).forEach((e: any) => {
+          const url = e.page_url || "";
+          if (!url) return;
+          const slug = url.replace(/^https?:\/\/[^/]+/, "") || url;
+          const existing = pageMap.get(slug) || { views: 0, contacts: new Set<string>() };
+          existing.views++;
+          existing.contacts.add(e.contact_id);
+          pageMap.set(slug, existing);
+        });
+
+        landingPages = Array.from(pageMap.entries())
+          .map(([pageUrl, data]) => ({
+            pageUrl,
+            views: data.views,
+            uniqueContacts: data.contacts.size,
+          }))
+          .sort((a, b) => b.views - a.views)
+          .slice(0, 10);
+      }
+
+      // Top leads
+      const topLeads = (memberContacts || []).slice(0, 8).map(c => ({
+        name: `${c.first_name} ${c.last_name}`,
+        status: c.workflow_status || "neu",
+        score: c.lead_score ? Number(c.lead_score) : null,
+      }));
+
+      setSelectedMember({ member, landingPages, topLeads });
+    } catch (err) {
+      console.error("Error loading member detail:", err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const handleSaveChallenge = async () => {
     if (!accountId || !userId) return;
     setSaving(true);
@@ -332,8 +434,9 @@ export default function TeamArena() {
       setShowSetup(false);
       setLoading(true);
       await fetchAll();
-    } catch (err) {
-      toast.error("Fehler beim Speichern");
+    } catch (err: any) {
+      console.error("Error saving challenge:", err);
+      toast.error(err?.message || "Fehler beim Speichern. Wurde die Migration ausgeführt?");
     } finally {
       setSaving(false);
     }
@@ -404,6 +507,11 @@ export default function TeamArena() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Team Management on setup screen */}
+          <div className="max-w-lg w-full mx-auto mt-6">
+            <TeamInvite />
+          </div>
         </div>
 
         <SetupDialog
@@ -572,7 +680,8 @@ export default function TeamArena() {
                   return (
                     <div
                       key={member.id}
-                      className={`flex items-center gap-4 p-3 rounded-xl transition-all ${
+                      onClick={() => openMemberDetail(member)}
+                      className={`flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer hover:ring-1 hover:ring-white/20 ${
                         idx === 0
                           ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                           : "bg-muted/20 border border-white/5"
@@ -594,6 +703,7 @@ export default function TeamArena() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm truncate">{member.name}</span>
                           {idx === 0 && <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 px-1.5">MVP</Badge>}
+                          {roleBadge(member.role)}
                         </div>
                         <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads zugewiesen</span>
                       </div>
@@ -694,6 +804,104 @@ export default function TeamArena() {
           </div>
         </div>
       </div>
+
+      {/* Team Management */}
+      <TeamInvite />
+
+      {/* Member Detail Sheet */}
+      <Sheet open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          {selectedMember && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${MEMBER_COLORS[sorted.findIndex(m => m.id === selectedMember.member.id) % MEMBER_COLORS.length]}`}>
+                    {selectedMember.member.avatarUrl ? (
+                      <img src={selectedMember.member.avatarUrl} alt={selectedMember.member.name} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      selectedMember.member.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {selectedMember.member.name}
+                      {roleBadge(selectedMember.member.role)}
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal">{selectedMember.member.totalLeads} Leads</p>
+                  </div>
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <MiniStat icon={<Users className="w-3.5 h-3.5 text-blue-400" />} label="Vernetzt" value={selectedMember.member.connectionsSent} />
+                  <MiniStat icon={<Zap className="w-3.5 h-3.5 text-amber-400" />} label="Annahme" value={`${selectedMember.member.acceptanceRate}%`} />
+                  <MiniStat icon={<Calendar className="w-3.5 h-3.5 text-pink-400" />} label="Termine" value={selectedMember.member.appointmentsBooked} />
+                </div>
+
+                {/* Landing Pages Breakdown */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-amber-400" />
+                    Top Landing Pages
+                  </h4>
+                  {loadingDetail ? (
+                    <p className="text-xs text-muted-foreground animate-pulse">Lädt...</p>
+                  ) : selectedMember.landingPages.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Noch keine Landing-Page-Besuche</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedMember.landingPages.map((lp, i) => {
+                        const maxViews = selectedMember.landingPages[0]?.views || 1;
+                        const barPct = (lp.views / maxViews) * 100;
+                        return (
+                          <div key={i} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="truncate text-muted-foreground max-w-[200px]" title={lp.pageUrl}>{lp.pageUrl}</span>
+                              <span className="font-semibold shrink-0 ml-2">{lp.views} Views / {lp.uniqueContacts} Leads</span>
+                            </div>
+                            <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                              <div className="h-full bg-amber-500/60 rounded-full transition-all" style={{ width: `${barPct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Top Leads */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    Top Leads
+                  </h4>
+                  {selectedMember.topLeads.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Noch keine Leads</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {selectedMember.topLeads.map((lead, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 text-xs">
+                          <span className="font-medium">{lead.name}</span>
+                          <div className="flex items-center gap-2">
+                            <WorkflowBadge status={lead.status} />
+                            {lead.score != null && (
+                              <span className={`font-bold ${lead.score >= 70 ? "text-orange-400" : lead.score >= 30 ? "text-amber-400" : "text-muted-foreground"}`}>
+                                {lead.score}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <SetupDialog
         open={showSetup}
@@ -839,4 +1047,23 @@ function timeAgo(ts: string): string {
   if (hours < 24) return `vor ${hours} Std.`;
   const days = Math.floor(hours / 24);
   return `vor ${days} Tag${days > 1 ? "en" : ""}`;
+}
+
+function WorkflowBadge({ status }: { status: string }) {
+  const labels: Record<string, { text: string; color: string }> = {
+    neu: { text: "Neu", color: "bg-slate-500/20 text-slate-400" },
+    bereit_fuer_vernetzung: { text: "Bereit", color: "bg-blue-500/20 text-blue-400" },
+    vernetzung_ausstehend: { text: "Ausstehend", color: "bg-cyan-500/20 text-cyan-400" },
+    vernetzung_angenommen: { text: "Vernetzt", color: "bg-emerald-500/20 text-emerald-400" },
+    erstnachricht_gesendet: { text: "DM gesendet", color: "bg-purple-500/20 text-purple-400" },
+    fu1_gesendet: { text: "FU1", color: "bg-purple-500/20 text-purple-400" },
+    fu2_gesendet: { text: "FU2", color: "bg-purple-500/20 text-purple-400" },
+    fu3_gesendet: { text: "FU3", color: "bg-purple-500/20 text-purple-400" },
+    reagiert_warm: { text: "Warm", color: "bg-orange-500/20 text-orange-400" },
+    positiv_geantwortet: { text: "Positiv", color: "bg-green-500/20 text-green-400" },
+    termin_gebucht: { text: "Termin", color: "bg-pink-500/20 text-pink-400" },
+    abgeschlossen: { text: "Abgeschlossen", color: "bg-amber-500/20 text-amber-400" },
+  };
+  const info = labels[status] || { text: status, color: "bg-muted text-muted-foreground" };
+  return <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${info.color}`}>{info.text}</span>;
 }
