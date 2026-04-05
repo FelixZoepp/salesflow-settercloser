@@ -337,7 +337,45 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Save Button */}
+        {/* Default Deal Amount */}
+        <Card className="glass-card border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Euro className="w-5 h-5 text-primary" />
+              Standard-Dealvolumen
+            </CardTitle>
+            <CardDescription>
+              Wird automatisch als Betrag für neue Deals in der Pipeline verwendet
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="deal-amount">Betrag in €</Label>
+              <Input
+                id="deal-amount"
+                type="number"
+                min={0}
+                value={defaultDealAmount}
+                onChange={(e) => setDefaultDealAmount(e.target.value)}
+                placeholder="z.B. 6000"
+                className="glass-input"
+              />
+            </div>
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                const { data: p } = await supabase.from('profiles').select('account_id').eq('id', user.id).single();
+                if (!p?.account_id) return;
+                await supabase.from('accounts').update({ default_deal_amount: Number(defaultDealAmount) || 0 } as any).eq('id', p.account_id);
+                toast.success("Standard-Dealvolumen gespeichert");
+              } catch { toast.error("Fehler beim Speichern"); }
+            }}>
+              <Save className="w-4 h-4 mr-2" /> Speichern
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="flex justify-end">
           <Button
             onClick={handleSave}
