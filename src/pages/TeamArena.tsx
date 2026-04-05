@@ -490,7 +490,7 @@ export default function TeamArena() {
     return (
       <Layout>
         <div className="min-h-[70vh] flex items-center justify-center">
-          <Card className="max-w-lg w-full border-dashed border-2 border-white/10">
+          <Card className="max-w-lg w-full border-dashed border-2 border-border">
             <CardContent className="pt-8 pb-8 text-center space-y-6">
               <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
                 <Trophy className="w-8 h-8 text-amber-400" />
@@ -619,7 +619,7 @@ export default function TeamArena() {
               </div>
 
               {/* Segmented progress bar */}
-              <div className="relative h-6 bg-muted/30 rounded-full overflow-hidden">
+              <div className="relative h-6 bg-muted rounded-full overflow-hidden">
                 <div className="absolute inset-0 flex">
                   {sorted.map((member, idx) => {
                     const memberVal = goalMetricForMember(member, goalType);
@@ -665,7 +665,7 @@ export default function TeamArena() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortMetric)}
-                  className="text-xs bg-muted/50 border border-white/10 rounded-lg px-3 py-1.5 text-foreground"
+                  className="text-xs bg-secondary border border-border rounded-lg px-3 py-1.5 text-foreground"
                 >
                   {SORT_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -681,10 +681,10 @@ export default function TeamArena() {
                     <div
                       key={member.id}
                       onClick={() => openMemberDetail(member)}
-                      className={`flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer hover:ring-1 hover:ring-white/20 ${
+                      className={`flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer hover:ring-1 hover:ring-ring/30 ${
                         idx === 0
                           ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
-                          : "bg-muted/20 border border-white/5"
+                          : "bg-muted/50 border border-border/50"
                       }`}
                     >
                       <div className="w-8 flex justify-center shrink-0">
@@ -861,7 +861,7 @@ export default function TeamArena() {
                               <span className="truncate text-muted-foreground max-w-[200px]" title={lp.pageUrl}>{lp.pageUrl}</span>
                               <span className="font-semibold shrink-0 ml-2">{lp.views} Views / {lp.uniqueContacts} Leads</span>
                             </div>
-                            <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                               <div className="h-full bg-amber-500/60 rounded-full transition-all" style={{ width: `${barPct}%` }} />
                             </div>
                           </div>
@@ -882,7 +882,7 @@ export default function TeamArena() {
                   ) : (
                     <div className="space-y-1.5">
                       {selectedMember.topLeads.map((lead, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 text-xs">
+                        <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs">
                           <span className="font-medium">{lead.name}</span>
                           <div className="flex items-center gap-2">
                             <WorkflowBadge status={lead.status} />
@@ -962,7 +962,7 @@ function SetupDialog({
             <select
               value={goalType}
               onChange={(e) => setGoalType(e.target.value)}
-              className="w-full bg-muted/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground"
             >
               {GOAL_TYPES.map(g => (
                 <option key={g.value} value={g.value}>{g.label}</option>
@@ -1010,7 +1010,7 @@ function StatCell({ label, value, highlight, trend }: { label: string; value: st
 
 function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
+    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
       {icon}
       <div>
         <div className="text-[10px] text-muted-foreground leading-none">{label}</div>
