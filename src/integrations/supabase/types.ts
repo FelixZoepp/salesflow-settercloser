@@ -2301,6 +2301,53 @@ export type Database = {
           },
         ]
       }
+      team_challenges: {
+        Row: {
+          account_id: string
+          created_at: string
+          end_date: string | null
+          goal_type: string
+          goal_value: number
+          id: string
+          is_active: boolean
+          name: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          end_date?: string | null
+          goal_type?: string
+          goal_value?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          end_date?: string | null
+          goal_type?: string
+          goal_value?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_challenges_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telephony_webhook_events: {
         Row: {
           account_id: string | null

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle, Trash2, Phone, Mail, MessageSquare, Users } from "lucide-react";
+import { Eye, Play, MousePointer, Clock, ScrollText, FormInput, Calendar, CheckCircle, Trash2, Phone, Mail, MessageSquare, Users, User } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ interface Activity {
   note: string | null;
   duration_min: number | null;
   created_at: string;
+  user_id?: string;
 }
 
 interface TimelineItem {
@@ -31,6 +32,12 @@ interface TimelineItem {
   data: any;
   created_at: string;
   note?: string | null;
+  user_id?: string | null;
+}
+
+interface TeamMember {
+  id: string;
+  name: string | null;
 }
 
 interface JourneyTimelineProps {
@@ -40,12 +47,13 @@ interface JourneyTimelineProps {
 const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teamMembers, setTeamMembers] = useState<Record<string, string>>({});
+  const [ownerName, setOwnerName] = useState<string | null>(null);
 
   useEffect(() => {
     if (contactId) {
       fetchAllEvents();
 
-      // Subscribe to new tracking events
       const trackingChannel = supabase
         .channel(`journey-tracking-${contactId}`)
         .on(
@@ -72,7 +80,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         )
         .subscribe();
 
-      // Subscribe to new activities (calls, emails, etc.)
       const activityChannel = supabase
         .channel(`journey-activities-${contactId}`)
         .on(
@@ -84,7 +91,7 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
             filter: `contact_id=eq.${contactId}`,
           },
           (payload) => {
-            const newActivity = payload.new as Activity;
+            const newActivity = payload.new as any;
             const newItem: TimelineItem = {
               id: newActivity.id,
               source: 'activity',
@@ -92,6 +99,7 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
               data: { outcome: newActivity.outcome, duration_min: newActivity.duration_min },
               created_at: newActivity.created_at,
               note: newActivity.note,
+              user_id: newActivity.user_id,
             };
             setTimelineItems((prev) => [newItem, ...prev].sort((a, b) => 
               new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -109,8 +117,8 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
 
   const fetchAllEvents = async () => {
     try {
-      // Fetch tracking events and activities in parallel
-      const [trackingResult, activitiesResult] = await Promise.all([
+      // Fetch tracking events, activities, contact owner, and team members in parallel
+      const [trackingResult, activitiesResult, contactResult] = await Promise.all([
         supabase
           .from("lead_tracking_events")
           .select("id, event_type, event_data, created_at, page_url")
@@ -119,11 +127,36 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
           .limit(50),
         supabase
           .from("activities")
-          .select("id, type, outcome, note, duration_min, created_at")
+          .select("id, type, outcome, note, duration_min, created_at, user_id")
           .eq("contact_id", contactId)
           .order("created_at", { ascending: false })
-          .limit(50)
+          .limit(50),
+        supabase
+          .from("contacts")
+          .select("owner_user_id, account_id")
+          .eq("id", contactId)
+          .single(),
       ]);
+
+      // Load team member names if we have an account
+      if (contactResult.data?.account_id) {
+        const { data: members } = await supabase
+          .from("profiles")
+          .select("id, name")
+          .eq("account_id", contactResult.data.account_id);
+        
+        if (members) {
+          const memberMap: Record<string, string> = {};
+          members.forEach((m) => {
+            memberMap[m.id] = m.name || "Unbenannt";
+          });
+          setTeamMembers(memberMap);
+
+          if (contactResult.data.owner_user_id && memberMap[contactResult.data.owner_user_id]) {
+            setOwnerName(memberMap[contactResult.data.owner_user_id]);
+          }
+        }
+      }
 
       const trackingItems: TimelineItem[] = (trackingResult.data || []).map((e) => ({
         id: e.id,
@@ -140,9 +173,9 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         data: { outcome: a.outcome, duration_min: a.duration_min },
         created_at: a.created_at,
         note: a.note,
+        user_id: a.user_id,
       }));
 
-      // Combine and sort by date
       const allItems = [...trackingItems, ...activityItems].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -165,20 +198,16 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
 
         if (error) throw error;
         
-        // Update local state
         const remainingItems = timelineItems.filter((e) => e.id !== item.id);
         setTimelineItems(remainingItems);
         
-        // Recalculate lead score using the database function
         const { data: scoreData } = await supabase.rpc('calculate_lead_score', {
           p_contact_id: contactId
         });
         
-        // Count remaining page_views for view_count
         const pageViewCount = remainingItems.filter(e => e.event_type === 'page_view').length;
         const hasViewed = pageViewCount > 0;
         
-        // Update contact with recalculated values
         await supabase
           .from("contacts")
           .update({
@@ -192,7 +221,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         
         toast.success("Event gelöscht, Lead Score aktualisiert");
       } else {
-        // Delete activity
         const { error } = await supabase
           .from("activities")
           .delete()
@@ -228,7 +256,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return <Clock className="w-4 h-4" />;
       case "form_submit":
         return <FormInput className="w-4 h-4" />;
-      // Activity types
       case "activity_call":
         return <Phone className="w-4 h-4" />;
       case "activity_email":
@@ -264,7 +291,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return "bg-cyan-500";
       case "form_submit":
         return "bg-pink-500";
-      // Activity types
       case "activity_call":
         return "bg-green-600";
       case "activity_email":
@@ -305,7 +331,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
         return `${minutes}:${seconds.toString().padStart(2, "0")} Min. auf Seite verbracht`;
       case "form_submit":
         return "Formular abgeschickt";
-      // Activity types
       case "activity_call":
         const duration = data.duration_min ? ` (${data.duration_min} Min.)` : '';
         const outcome = data.outcome === 'interested' ? ' - Interessiert' : 
@@ -338,7 +363,6 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       );
     }
     
-    // Badge for AI summary
     if (eventType === 'activity_call') {
       return (
         <Badge variant="secondary" className="text-xs">
@@ -347,6 +371,18 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       );
     }
     
+    return null;
+  };
+
+  const getMemberName = (item: TimelineItem): string | null => {
+    // For activities: show the team member who performed the action
+    if (item.source === 'activity' && item.user_id && teamMembers[item.user_id]) {
+      return teamMembers[item.user_id];
+    }
+    // For tracking events: show the lead owner (whose link the lead clicked)
+    if (item.source === 'tracking' && ownerName) {
+      return ownerName;
+    }
     return null;
   };
 
@@ -388,51 +424,64 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       </h3>
       
       <div className="space-y-4">
-        {timelineItems.map((item, index) => (
-          <div key={item.id} className="relative flex gap-3">
-            {/* Timeline line */}
-            {index < timelineItems.length - 1 && (
-              <div className="absolute left-[5px] top-6 w-0.5 h-full bg-border" />
-            )}
-            
-            {/* Icon */}
-            <div
-              className={`w-3 h-3 rounded-full ${getEventColor(item.event_type)} flex items-center justify-center flex-shrink-0 mt-1 ring-2 ring-background`}
-            />
-            
-            {/* Content */}
-            <div className="flex-1 min-w-0 pb-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-muted-foreground">
-                    {getEventIcon(item.event_type)}
-                  </span>
-                  <span className="text-sm font-medium">{getEventTitle(item)}</span>
-                  {getEventBadge(item.event_type, item.data)}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                  onClick={() => handleDeleteItem(item)}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-              
-              {/* Show note for activities (especially call summaries) */}
-              {item.note && (
-                <div className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-md p-2 whitespace-pre-wrap">
-                  {item.note}
-                </div>
+        {timelineItems.map((item, index) => {
+          const memberName = getMemberName(item);
+          return (
+            <div key={item.id} className="relative flex gap-3">
+              {/* Timeline line */}
+              {index < timelineItems.length - 1 && (
+                <div className="absolute left-[5px] top-6 w-0.5 h-full bg-border" />
               )}
               
-              <p className="text-xs text-muted-foreground mt-1">
-                {format(new Date(item.created_at), "dd.MM.yyyy, HH:mm", { locale: de })} Uhr
-              </p>
+              {/* Icon */}
+              <div
+                className={`w-3 h-3 rounded-full ${getEventColor(item.event_type)} flex items-center justify-center flex-shrink-0 mt-1 ring-2 ring-background`}
+              />
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0 pb-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-muted-foreground">
+                      {getEventIcon(item.event_type)}
+                    </span>
+                    <span className="text-sm font-medium">{getEventTitle(item)}</span>
+                    {getEventBadge(item.event_type, item.data)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                    onClick={() => handleDeleteItem(item)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+
+                {/* Team member attribution */}
+                {memberName && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <User className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {item.source === 'activity' ? `von ${memberName}` : `über ${memberName}`}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Show note for activities */}
+                {item.note && (
+                  <div className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-md p-2 whitespace-pre-wrap">
+                    {item.note}
+                  </div>
+                )}
+                
+                <p className="text-xs text-muted-foreground mt-1">
+                  {format(new Date(item.created_at), "dd.MM.yyyy, HH:mm", { locale: de })} Uhr
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
