@@ -135,7 +135,7 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
                   title: `${newLead.first_name} ${newLead.last_name} - ${newLead.company || 'Hot Lead'}`,
                   stage: 'Heißer Lead - Anrufen' as any,
                   pipeline: 'cold',
-                  amount_eur: 0,
+                  amount_eur: dealAmount,
                   setter_id: setterId,
                   account_id: newLead.account_id,
                   next_action: 'Sofort anrufen!'
