@@ -262,6 +262,7 @@ const Campaigns = () => {
     landing_page_id: string;
     max_daily_connections: number;
     max_daily_messages: number;
+    assigned_user_id: string;
   } | null>(null);
 
   const openEditDialog = (campaign: Campaign) => {
@@ -273,6 +274,7 @@ const Campaigns = () => {
       landing_page_id: (campaign as any).landing_page_id || "",
       max_daily_connections: (campaign as any).max_daily_connections || 15,
       max_daily_messages: (campaign as any).max_daily_messages || 10,
+      assigned_user_id: (campaign as any).assigned_user_id || "",
     });
     setIsEditDialogOpen(true);
   };
