@@ -101,7 +101,16 @@ export const useHotLeadNotifications = (options?: UseHotLeadNotificationsOptions
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) return;
 
-              // Check if campaign has an assigned user
+              // Get default deal amount from account
+              let dealAmount = 0;
+              const { data: account } = await supabase
+                .from('accounts')
+                .select('default_deal_amount')
+                .eq('id', newLead.account_id)
+                .single();
+              if (account?.default_deal_amount) {
+                dealAmount = Number(account.default_deal_amount);
+              }
               let setterId = user.id;
               if (newLead.campaign_id) {
                 const { data: campaign } = await supabase
