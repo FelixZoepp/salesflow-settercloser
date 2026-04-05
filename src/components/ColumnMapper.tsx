@@ -69,11 +69,14 @@ function autoDetectMapping(csvColumn: string): string | null {
   return null;
 }
 
+const OUTBOUND_REQUIRED_FIELDS = ['first_name', 'last_name', 'linkedin_url', 'email', 'phone'];
+
 interface ColumnMapperProps {
   csvHeaders: string[];
   previewData: string[][];
   onMappingConfirmed: (mappings: ColumnMapping[]) => void;
   onCancel: () => void;
+  isOutbound?: boolean;
 }
 
 export default function ColumnMapper({ 
