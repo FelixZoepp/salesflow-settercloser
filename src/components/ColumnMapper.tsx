@@ -69,18 +69,22 @@ function autoDetectMapping(csvColumn: string): string | null {
   return null;
 }
 
+const OUTBOUND_REQUIRED_FIELDS = ['first_name', 'last_name', 'linkedin_url', 'email', 'phone'];
+
 interface ColumnMapperProps {
   csvHeaders: string[];
   previewData: string[][];
   onMappingConfirmed: (mappings: ColumnMapping[]) => void;
   onCancel: () => void;
+  isOutbound?: boolean;
 }
 
 export default function ColumnMapper({ 
   csvHeaders, 
   previewData, 
   onMappingConfirmed,
-  onCancel 
+  onCancel,
+  isOutbound = false,
 }: ColumnMapperProps) {
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
 
@@ -115,6 +119,15 @@ export default function ColumnMapper({
 
   const { mapped, total } = getMappingStatus();
   const usedFields = getUsedFields();
+  
+  const missingRequired = isOutbound 
+    ? OUTBOUND_REQUIRED_FIELDS.filter(f => {
+        // phone can be satisfied by phone OR mobile
+        if (f === 'phone') return !usedFields.includes('phone') && !usedFields.includes('mobile');
+        return !usedFields.includes(f);
+      })
+    : [];
+  const allRequiredMapped = missingRequired.length === 0;
 
   return (
     <Card>
@@ -180,18 +193,21 @@ export default function ColumnMapper({
                         <SelectItem disabled value="contact-header">
                           <span className="font-semibold text-xs uppercase">Kontakt</span>
                         </SelectItem>
-                        {SYSTEM_FIELDS.filter(f => f.category === 'contact').map(field => (
+                        {SYSTEM_FIELDS.filter(f => f.category === 'contact').map(field => {
+                          const isRequired = isOutbound && OUTBOUND_REQUIRED_FIELDS.includes(field.key);
+                          return (
                           <SelectItem 
                             key={field.key} 
                             value={field.key}
                             disabled={usedFields.includes(field.key) && mapping.systemField !== field.key}
                           >
-                            {field.label}
+                            {field.label}{isRequired && ' *'}
                             {usedFields.includes(field.key) && mapping.systemField !== field.key && (
                               <span className="text-muted-foreground ml-2">(bereits zugeordnet)</span>
                             )}
                           </SelectItem>
-                        ))}
+                          );
+                        })}
                         
                         <SelectItem disabled value="company-header">
                           <span className="font-semibold text-xs uppercase">Firma</span>
@@ -237,6 +253,19 @@ export default function ColumnMapper({
           </div>
         )}
 
+        {/* Warning for missing required outbound fields */}
+        {isOutbound && missingRequired.length > 0 && mapped > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">
+              Pflichtfelder für Outbound-Import fehlen: {missingRequired.map(f => {
+                const field = SYSTEM_FIELDS.find(sf => sf.key === f);
+                return field?.label || f;
+              }).join(', ')}
+            </span>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={onCancel}>
@@ -244,7 +273,7 @@ export default function ColumnMapper({
           </Button>
           <Button 
             onClick={() => onMappingConfirmed(mappings)}
-            disabled={mapped === 0}
+            disabled={mapped === 0 || (isOutbound && !allRequiredMapped)}
           >
             Import starten ({mapped} Felder)
           </Button>
