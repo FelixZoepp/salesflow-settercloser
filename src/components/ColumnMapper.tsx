@@ -253,6 +253,19 @@ export default function ColumnMapper({
           </div>
         )}
 
+        {/* Warning for missing required outbound fields */}
+        {isOutbound && missingRequired.length > 0 && mapped > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">
+              Pflichtfelder für Outbound-Import fehlen: {missingRequired.map(f => {
+                const field = SYSTEM_FIELDS.find(sf => sf.key === f);
+                return field?.label || f;
+              }).join(', ')}
+            </span>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={onCancel}>
@@ -260,7 +273,7 @@ export default function ColumnMapper({
           </Button>
           <Button 
             onClick={() => onMappingConfirmed(mappings)}
-            disabled={mapped === 0}
+            disabled={mapped === 0 || (isOutbound && !allRequiredMapped)}
           >
             Import starten ({mapped} Felder)
           </Button>
