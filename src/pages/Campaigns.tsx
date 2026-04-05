@@ -719,6 +719,10 @@ const Campaigns = () => {
                             <Video className="h-4 w-4" />
                             Video-Workflow
                           </TabsTrigger>
+                          <TabsTrigger value="team" className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            Team
+                          </TabsTrigger>
                           <TabsTrigger value="overview">Übersicht</TabsTrigger>
                           <TabsTrigger value="tracking">Tracking</TabsTrigger>
                         </TabsList>
