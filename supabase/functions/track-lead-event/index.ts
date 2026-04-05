@@ -96,6 +96,92 @@ Deno.serve(async (req) => {
         .eq('id', contact.id);
     }
 
+    // Check if lead score hit 100 after this event (trigger recalculates it)
+    // Small delay to let the DB trigger update the score
+    const { data: updatedContact } = await supabase
+      .from('contacts')
+      .select('lead_score, first_name, last_name, company, owner_user_id')
+      .eq('id', contact.id)
+      .single();
+
+    if (updatedContact && updatedContact.lead_score >= 100) {
+      // Send Slack notification with team stats
+      try {
+        const slackWebhookUrl = Deno.env.get('SLACK_WEBHOOK_URL');
+        if (slackWebhookUrl) {
+          // Get team outreach stats
+          const { data: teamContacts } = await supabase
+            .from('contacts')
+            .select('workflow_status')
+            .eq('account_id', contact.account_id)
+            .eq('lead_type', 'outbound');
+
+          const statuses = (teamContacts || []).map((c: any) => c.workflow_status);
+          const sent = ['vernetzung_ausstehend','vernetzung_angenommen','erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const messaged = ['erstnachricht_gesendet','fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const fus = ['fu1_gesendet','fu2_gesendet','fu3_gesendet','reagiert_warm','positiv_geantwortet','termin_gebucht','abgeschlossen'];
+          const booked = ['termin_gebucht','abgeschlossen'];
+
+          const totalSent = statuses.filter((s: string) => sent.includes(s)).length;
+          const totalMessaged = statuses.filter((s: string) => messaged.includes(s)).length;
+          const totalFUs = statuses.filter((s: string) => fus.includes(s)).length;
+          const totalBooked = statuses.filter((s: string) => booked.includes(s)).length;
+
+          // Get owner name
+          let ownerName = '';
+          if (updatedContact.owner_user_id) {
+            const { data: owner } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', updatedContact.owner_user_id)
+              .single();
+            ownerName = owner?.name || '';
+          }
+
+          const slackPayload = {
+            blocks: [
+              {
+                type: "header",
+                text: { type: "plain_text", text: "🔥 Lead Score 100 erreicht!", emoji: true }
+              },
+              {
+                type: "section",
+                fields: [
+                  { type: "mrkdwn", text: `*Lead:*\n${updatedContact.first_name} ${updatedContact.last_name}` },
+                  { type: "mrkdwn", text: `*Firma:*\n${updatedContact.company || '—'}` },
+                  { type: "mrkdwn", text: `*Score:*\n${updatedContact.lead_score}/100` },
+                  { type: "mrkdwn", text: `*Zugewiesen an:*\n${ownerName || '—'}` },
+                ]
+              },
+              { type: "divider" },
+              {
+                type: "section",
+                text: { type: "mrkdwn", text: "*📊 Team Outreach-Zahlen*" }
+              },
+              {
+                type: "section",
+                fields: [
+                  { type: "mrkdwn", text: `*Vernetzungen:*\n${totalSent}` },
+                  { type: "mrkdwn", text: `*Nachrichten:*\n${totalMessaged}` },
+                  { type: "mrkdwn", text: `*Follow-ups:*\n${totalFUs}` },
+                  { type: "mrkdwn", text: `*Termine:*\n${totalBooked}` },
+                ]
+              }
+            ]
+          };
+
+          await fetch(slackWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(slackPayload),
+          });
+          console.log(`Slack notification sent for lead ${contact.id} (score 100)`);
+        }
+      } catch (slackErr) {
+        console.error('Slack notification error:', slackErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ success: true, event_id: eventData.id }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
