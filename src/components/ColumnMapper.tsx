@@ -83,7 +83,8 @@ export default function ColumnMapper({
   csvHeaders, 
   previewData, 
   onMappingConfirmed,
-  onCancel 
+  onCancel,
+  isOutbound = false,
 }: ColumnMapperProps) {
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
 
