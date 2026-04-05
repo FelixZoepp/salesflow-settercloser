@@ -580,6 +580,35 @@ const Campaigns = () => {
                     )}
                   </div>
 
+                  {/* Team Member Assignment */}
+                  {teamMembers.length > 1 && (
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        <h4 className="font-medium">Zuständiges Teammitglied</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Wer soll bei heißen Leads aus dieser Kampagne benachrichtigt werden?
+                      </p>
+                      <Select
+                        value={newCampaign.assigned_user_id}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, assigned_user_id: value === "none" ? "" : value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Teammitglied auswählen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Kein bestimmtes Mitglied (Admin)</SelectItem>
+                          {teamMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.name} ({member.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   <Button onClick={createCampaign} disabled={!newCampaign.name} className="w-full">
                     Kampagne erstellen
                   </Button>
@@ -954,6 +983,29 @@ const Campaigns = () => {
                   />
                 </div>
               </div>
+              {teamMembers.length > 1 && (
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Users className="w-4 h-4" /> Zuständiges Teammitglied
+                  </Label>
+                  <Select
+                    value={editCampaign.assigned_user_id}
+                    onValueChange={(value) => setEditCampaign({ ...editCampaign, assigned_user_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Teammitglied auswählen..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Kein bestimmtes Mitglied (Admin)</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} ({member.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={saveEditCampaign} disabled={!editCampaign.name} className="w-full">
                 Speichern
               </Button>
