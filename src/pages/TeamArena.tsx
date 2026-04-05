@@ -426,7 +426,6 @@ export default function TeamArena() {
             goal_type: setupGoalType,
             goal_value: setupGoalValue,
             is_active: true,
-            created_by: userId,
           });
         if (error) throw error;
         toast.success("Challenge erstellt!");
