@@ -207,6 +207,7 @@ const Campaigns = () => {
         max_daily_connections: newCampaign.max_daily_connections,
         max_daily_messages: newCampaign.max_daily_messages,
         pitch_video_url: newCampaign.pitch_video_url || null,
+        assigned_user_id: newCampaign.assigned_user_id || null,
       };
       const { error } = await supabase.from("campaigns").insert(insertData);
 
@@ -225,6 +226,7 @@ const Campaigns = () => {
         max_daily_messages: 10,
         landing_page_id: "",
         pitch_video_url: "",
+        assigned_user_id: "",
       });
       fetchCampaigns();
     } catch (error: any) {
