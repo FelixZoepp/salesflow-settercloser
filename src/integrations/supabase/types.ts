@@ -237,6 +237,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           custom_domain: string | null
+          default_deal_amount: number | null
           email: string | null
           id: string
           is_active: boolean
@@ -257,6 +258,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           custom_domain?: string | null
+          default_deal_amount?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -277,6 +279,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           custom_domain?: string | null
+          default_deal_amount?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
