@@ -288,6 +288,7 @@ const Campaigns = () => {
         pitch_video_url: editCampaign.pitch_video_url || null,
         max_daily_connections: editCampaign.max_daily_connections,
         max_daily_messages: editCampaign.max_daily_messages,
+        assigned_user_id: editCampaign.assigned_user_id || null,
       };
       const { error } = await supabase.from("campaigns").update(updateData).eq("id", editCampaign.id);
       if (error) throw error;
