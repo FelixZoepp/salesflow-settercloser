@@ -61,6 +61,15 @@ const Profile = () => {
         calendar_url: data?.calendar_url || null,
         avatar_url: data?.avatar_url || null,
       });
+
+      // Load default deal amount from account
+      const { data: pData } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+      if (pData?.account_id) {
+        const { data: account } = await supabase.from("accounts").select("default_deal_amount").eq("id", pData.account_id).single();
+        if (account?.default_deal_amount) {
+          setDefaultDealAmount(String(account.default_deal_amount));
+        }
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Fehler beim Laden des Profils");
