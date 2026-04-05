@@ -2457,6 +2457,55 @@ export type Database = {
           },
         ]
       }
+      team_contact_progress: {
+        Row: {
+          id: string
+          contact_id: string
+          user_id: string
+          account_id: string
+          workflow_status: string
+          connection_sent_at: string | null
+          connection_accepted_at: string | null
+          first_message_sent_at: string | null
+          fu1_sent_at: string | null
+          fu2_sent_at: string | null
+          fu3_sent_at: string | null
+          responded_at: string | null
+          positive_reply_at: string | null
+          appointment_booked_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          user_id: string
+          account_id: string
+          workflow_status?: string
+          connection_sent_at?: string | null
+          connection_accepted_at?: string | null
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          responded_at?: string | null
+          positive_reply_at?: string | null
+          appointment_booked_at?: string | null
+        }
+        Update: {
+          workflow_status?: string
+          connection_sent_at?: string | null
+          connection_accepted_at?: string | null
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          responded_at?: string | null
+          positive_reply_at?: string | null
+          appointment_booked_at?: string | null
+        }
+        Relationships: []
+      }
       team_challenges: {
         Row: {
           account_id: string

@@ -74,9 +74,9 @@ interface WorkflowContact {
   lead_score: number | null;
   linkedin_url: string | null;
   owner_user_id: string | null;
+  // For team mode: is this lead globally booked by anyone?
+  globally_booked: boolean;
 }
-
-type PoolFilter = 'mine' | 'available' | 'all' | 'booked';
 
 interface EditingContact {
   id: string;
@@ -175,7 +175,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [landingPageSlug, setLandingPageSlug] = useState<string | null>(null);
   const [pitchVideoUrl, setPitchVideoUrl] = useState<string | null>(null);
   const [generatingUrls, setGeneratingUrls] = useState(false);
-  const [poolFilter, setPoolFilter] = useState<PoolFilter>('mine');
+  const [hideBooked, setHideBooked] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [hasTeam, setHasTeam] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -274,7 +274,8 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
   const fetchContacts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    // Load base contact data
+    const { data: rawContacts, error } = await supabase
       .from('contacts')
       .select('id, first_name, last_name, company, position, email, phone, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url, owner_user_id')
       .eq('campaign_id', campaignId)
@@ -284,32 +285,89 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     if (error) {
       toast.error("Fehler beim Laden der Kontakte");
       console.error(error);
-    } else {
-      setContacts((data || []) as WorkflowContact[]);
-      
-      // Count today's activities - reset daily at midnight
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Count today's first messages
-      const todayMessages = (data || []).filter((c: any) => 
-        c.first_message_sent_at && c.first_message_sent_at.startsWith(today)
-      ).length;
-      setTodayMessageCount(todayMessages);
-      
-      // Count today's sent connections
-      const todayConnections = (data || []).filter((c: any) => 
-        c.connection_sent_at && c.connection_sent_at.startsWith(today)
-      ).length;
-      setTodayConnectionCount(todayConnections);
-      
-      // Count today's follow-ups
-      const todayFollowups = (data || []).filter((c: any) => 
-        (c.fu1_sent_at && c.fu1_sent_at.startsWith(today)) ||
-        (c.fu2_sent_at && c.fu2_sent_at.startsWith(today)) ||
-        (c.fu3_sent_at && c.fu3_sent_at.startsWith(today))
-      ).length;
-      setTodayFuCount(todayFollowups);
+      setLoading(false);
+      return;
     }
+
+    let finalContacts: WorkflowContact[] = [];
+
+    if (hasTeam && currentUserId) {
+      // TEAM MODE: Load per-user progress
+      const contactIds = (rawContacts || []).map(c => c.id);
+
+      if (contactIds.length > 0) {
+        // Ensure progress rows exist for current user
+        const { data: existingProgress } = await supabase
+          .from('team_contact_progress')
+          .select('contact_id')
+          .eq('user_id', currentUserId)
+          .in('contact_id', contactIds);
+
+        const existingIds = new Set((existingProgress || []).map(p => p.contact_id));
+        const missing = contactIds.filter(id => !existingIds.has(id));
+
+        if (missing.length > 0) {
+          const { data: profile } = await supabase.from('profiles').select('account_id').eq('id', currentUserId).single();
+          if (profile?.account_id) {
+            // Batch insert in chunks of 500
+            for (let i = 0; i < missing.length; i += 500) {
+              const chunk = missing.slice(i, i + 500);
+              await supabase.from('team_contact_progress').insert(
+                chunk.map(cid => ({
+                  contact_id: cid,
+                  user_id: currentUserId,
+                  account_id: profile.account_id,
+                  workflow_status: 'bereit_fuer_vernetzung',
+                }))
+              );
+            }
+          }
+        }
+
+        // Load user's progress
+        const { data: myProgress } = await supabase
+          .from('team_contact_progress')
+          .select('contact_id, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, responded_at, positive_reply_at, appointment_booked_at')
+          .eq('user_id', currentUserId)
+          .in('contact_id', contactIds);
+
+        const progressMap = new Map<string, any>();
+        (myProgress || []).forEach(p => progressMap.set(p.contact_id, p));
+
+        // Merge: contact base data + user's progress
+        const BOOKED = ['termin_gebucht', 'abgeschlossen'];
+        finalContacts = (rawContacts || []).map(c => {
+          const prog = progressMap.get(c.id);
+          const globallyBooked = BOOKED.includes(c.workflow_status || '');
+          return {
+            ...c,
+            // Override workflow fields with user's own progress
+            workflow_status: globallyBooked ? c.workflow_status : (prog?.workflow_status || 'bereit_fuer_vernetzung'),
+            connection_sent_at: prog?.connection_sent_at || null,
+            connection_accepted_at: prog?.connection_accepted_at || null,
+            first_message_sent_at: prog?.first_message_sent_at || null,
+            fu1_sent_at: prog?.fu1_sent_at || null,
+            fu2_sent_at: prog?.fu2_sent_at || null,
+            fu3_sent_at: prog?.fu3_sent_at || null,
+            globally_booked: globallyBooked,
+          } as WorkflowContact;
+        });
+      }
+    } else {
+      // SOLO MODE: Use contacts directly
+      finalContacts = (rawContacts || []).map(c => ({ ...c, globally_booked: false } as WorkflowContact));
+    }
+
+    setContacts(finalContacts);
+
+    // Count today's activities
+    const today = new Date().toISOString().split('T')[0];
+    setTodayMessageCount(finalContacts.filter(c => c.first_message_sent_at?.startsWith(today)).length);
+    setTodayConnectionCount(finalContacts.filter(c => c.connection_sent_at?.startsWith(today)).length);
+    setTodayFuCount(finalContacts.filter(c =>
+      c.fu1_sent_at?.startsWith(today) || c.fu2_sent_at?.startsWith(today) || c.fu3_sent_at?.startsWith(today)
+    ).length);
+
     setLoading(false);
   };
 
@@ -510,33 +568,60 @@ LG`
   };
 
   const updateStatus = async (contactId: string, newStatus: WorkflowStatus, timestampField?: string) => {
-    const updateData: Record<string, any> = {
-      workflow_status: newStatus,
-      updated_at: new Date().toISOString()
-    };
+    const now = new Date().toISOString();
 
-    if (timestampField) {
-      updateData[timestampField] = new Date().toISOString();
-    }
+    if (hasTeam && currentUserId) {
+      // TEAM MODE: Update team_contact_progress
+      const progressUpdate: Record<string, any> = {
+        workflow_status: newStatus,
+      };
+      if (timestampField) {
+        progressUpdate[timestampField] = now;
+      }
 
-    // Auto-claim: if lead has no owner, assign current user
-    const contact = contacts.find(c => c.id === contactId);
-    if (contact && !contact.owner_user_id && currentUserId) {
-      updateData.owner_user_id = currentUserId;
-    }
+      const { error } = await supabase
+        .from('team_contact_progress')
+        .update(progressUpdate)
+        .eq('contact_id', contactId)
+        .eq('user_id', currentUserId);
 
-    const { error } = await supabase
-      .from('contacts')
-      .update(updateData)
-      .eq('id', contactId);
+      if (error) {
+        toast.error("Fehler beim Aktualisieren");
+        console.error(error);
+        return;
+      }
 
-    if (error) {
-      toast.error("Fehler beim Aktualisieren");
-      console.error(error);
+      // If appointment booked → also mark globally on contacts table
+      if (newStatus === 'termin_gebucht' || newStatus === 'abgeschlossen') {
+        await supabase
+          .from('contacts')
+          .update({ workflow_status: newStatus, updated_at: now })
+          .eq('id', contactId);
+      }
     } else {
-      toast.success("Status aktualisiert");
-      fetchContacts();
+      // SOLO MODE: Update contacts directly
+      const updateData: Record<string, any> = {
+        workflow_status: newStatus,
+        updated_at: now,
+      };
+      if (timestampField) {
+        updateData[timestampField] = now;
+      }
+
+      const { error } = await supabase
+        .from('contacts')
+        .update(updateData)
+        .eq('id', contactId);
+
+      if (error) {
+        toast.error("Fehler beim Aktualisieren");
+        console.error(error);
+        return;
+      }
     }
+
+    toast.success("Status aktualisiert");
+    fetchContacts();
   };
 
   const copyMessage = (contact: WorkflowContact) => {
@@ -697,72 +782,45 @@ LG`
     }
   };
 
-  // Distribute unclaimed leads round-robin to team members
-  const distributeLeads = async () => {
-    if (teamMembers.length === 0) return;
-    const unclaimed = contacts.filter(c => !c.owner_user_id && c.workflow_status !== 'termin_gebucht' && c.workflow_status !== 'abgeschlossen');
-    if (unclaimed.length === 0) {
-      toast.info("Keine verfügbaren Leads zum Verteilen");
-      return;
-    }
-    try {
-      const updates = unclaimed.map((c, i) => ({
-        id: c.id,
-        owner_user_id: teamMembers[i % teamMembers.length].id,
-      }));
-      for (const u of updates) {
-        await supabase.from('contacts').update({ owner_user_id: u.owner_user_id }).eq('id', u.id);
-      }
-      toast.success(`${unclaimed.length} Leads auf ${teamMembers.length} Teammitglieder verteilt`);
-      fetchContacts();
-    } catch (err) {
-      toast.error("Fehler beim Verteilen");
-    }
-  };
-
-  // Pool filter: apply team filter to contacts before status filters
+  // Filter out globally booked leads (terminiert) if toggle is on
   const BOOKED_STATUSES: WorkflowStatus[] = ['termin_gebucht', 'abgeschlossen'];
-  const poolContacts = hasTeam
-    ? contacts.filter(c => {
-        if (poolFilter === 'mine') return c.owner_user_id === currentUserId && !BOOKED_STATUSES.includes(c.workflow_status!);
-        if (poolFilter === 'available') return !c.owner_user_id && !BOOKED_STATUSES.includes(c.workflow_status!);
-        if (poolFilter === 'booked') return BOOKED_STATUSES.includes(c.workflow_status!);
-        return true; // 'all'
-      })
+  const activeContacts = hideBooked
+    ? contacts.filter(c => !c.globally_booked && !BOOKED_STATUSES.includes(c.workflow_status!))
     : contacts;
+  const bookedCount = contacts.filter(c => c.globally_booked || BOOKED_STATUSES.includes(c.workflow_status!)).length;
 
-  // Filter contacts by status (use poolContacts instead of contacts for team filtering)
-  const pendingConnections = poolContacts.filter(c => c.workflow_status === 'vernetzung_ausstehend');
-  const readyForConnection = poolContacts.filter(c =>
+  // Filter contacts by status
+  const pendingConnections = activeContacts.filter(c => c.workflow_status === 'vernetzung_ausstehend');
+  const readyForConnection = activeContacts.filter(c =>
     c.workflow_status === 'neu' || c.workflow_status === 'bereit_fuer_vernetzung'
   );
-  const acceptedConnections = poolContacts.filter(c => c.workflow_status === 'vernetzung_angenommen');
+  const acceptedConnections = activeContacts.filter(c => c.workflow_status === 'vernetzung_angenommen');
   
   // Follow-up due logic (use poolContacts for team-filtered view)
-  const fu1Due = poolContacts.filter(c => {
+  const fu1Due = activeContacts.filter(c => {
     if (c.workflow_status !== 'erstnachricht_gesendet' || !c.first_message_sent_at || c.viewed) return false;
     const sentDate = new Date(c.first_message_sent_at);
     const dueDate = new Date(sentDate.getTime() + 3 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
 
-  const fu2Due = poolContacts.filter(c => {
+  const fu2Due = activeContacts.filter(c => {
     if (c.workflow_status !== 'fu1_gesendet' || !c.fu1_sent_at || c.viewed) return false;
     const sentDate = new Date(c.fu1_sent_at);
     const dueDate = new Date(sentDate.getTime() + 4 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
 
-  const fu3Due = poolContacts.filter(c => {
+  const fu3Due = activeContacts.filter(c => {
     if (c.workflow_status !== 'fu2_gesendet' || !c.fu2_sent_at || c.viewed) return false;
     const sentDate = new Date(c.fu2_sent_at);
     const dueDate = new Date(sentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
 
-  const warmLeads = poolContacts.filter(c => c.workflow_status === 'reagiert_warm');
-  const positiveReplies = poolContacts.filter(c => c.workflow_status === 'positiv_geantwortet');
-  const appointmentsBooked = poolContacts.filter(c => c.workflow_status === 'termin_gebucht');
+  const warmLeads = activeContacts.filter(c => c.workflow_status === 'reagiert_warm');
+  const positiveReplies = activeContacts.filter(c => c.workflow_status === 'positiv_geantwortet');
+  const appointmentsBooked = activeContacts.filter(c => c.workflow_status === 'termin_gebucht');
   
   // Calculate acceptance rate over last 7+ days
   const sevenDaysAgo = new Date();
@@ -1074,33 +1132,26 @@ LG`
         </div>
       </div>
 
-      {/* Team Pool Filter */}
+      {/* Team: Show active/booked counts and toggle */}
       {hasTeam && (
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-            {([
-              { key: 'mine' as PoolFilter, label: 'Meine', count: contacts.filter(c => c.owner_user_id === currentUserId && !BOOKED_STATUSES.includes(c.workflow_status!)).length },
-              { key: 'available' as PoolFilter, label: 'Verfügbar', count: contacts.filter(c => !c.owner_user_id && !BOOKED_STATUSES.includes(c.workflow_status!)).length },
-              { key: 'all' as PoolFilter, label: 'Alle', count: contacts.length },
-              { key: 'booked' as PoolFilter, label: 'Terminiert', count: contacts.filter(c => BOOKED_STATUSES.includes(c.workflow_status!)).length },
-            ]).map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setPoolFilter(tab.key)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  poolFilter === tab.key
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-muted-foreground">{activeContacts.length} aktive Leads</span>
+            {bookedCount > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {bookedCount} terminiert
+              </Badge>
+            )}
           </div>
-          {isAdmin && contacts.some(c => !c.owner_user_id) && (
-            <Button variant="outline" size="sm" onClick={distributeLeads} className="gap-2">
-              <Users className="h-3.5 w-3.5" />
-              Leads verteilen ({contacts.filter(c => !c.owner_user_id).length})
+          {bookedCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHideBooked(!hideBooked)}
+              className="text-xs"
+            >
+              {hideBooked ? "Terminierte anzeigen" : "Terminierte ausblenden"}
             </Button>
           )}
         </div>

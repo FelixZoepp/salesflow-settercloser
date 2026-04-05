@@ -232,42 +232,60 @@ export default function TeamArena() {
         return;
       }
 
-      // Parallel queries
-      const [teamRes, contactsRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
+      // Parallel queries - use team_contact_progress for per-user stats
+      const [teamRes, progressRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
-        supabase.from("contacts").select("owner_user_id, workflow_status").eq("account_id", accId).eq("lead_type", "outbound"),
+        supabase.from("team_contact_progress").select("user_id, workflow_status").eq("account_id", accId),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
         supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
       ]);
 
       const team = teamRes.data || [];
-      const contacts = contactsRes.data || [];
+      const progressData = progressRes.data || [];
       const callsToday = activitiesTodayRes.data || [];
       const callsWeek = activitiesWeekRes.data || [];
 
-      // Previous week for trends
-      const weekAgo = subDays(new Date(), 7).toISOString();
-      const twoWeeksAgo = subDays(new Date(), 14).toISOString();
-      const { data: prevContacts } = await supabase
-        .from("contacts")
-        .select("owner_user_id, workflow_status")
-        .eq("account_id", accId)
-        .eq("lead_type", "outbound")
-        .lte("created_at", weekAgo)
-        .gte("created_at", twoWeeksAgo);
+      // Fallback: if no team_contact_progress data, load from contacts (backwards compat)
+      let useProgress = progressData.length > 0;
+      let contactsFallback: { owner_user_id: string | null; workflow_status: string | null }[] = [];
+      if (!useProgress) {
+        const { data: fallback } = await supabase
+          .from("contacts")
+          .select("owner_user_id, workflow_status")
+          .eq("account_id", accId)
+          .eq("lead_type", "outbound");
+        contactsFallback = fallback || [];
+      }
 
       // Build stats
       const stats: MemberStats[] = team.map(p => {
-        const sent = countInStatuses(contacts, p.id, WORKFLOW_SENT);
-        const accepted = countInStatuses(contacts, p.id, WORKFLOW_ACCEPTED);
-        const messaged = countInStatuses(contacts, p.id, WORKFLOW_MESSAGED);
-        const replied = countInStatuses(contacts, p.id, WORKFLOW_REPLIED);
-        const positive = countInStatuses(contacts, p.id, WORKFLOW_POSITIVE);
-        const booked = countInStatuses(contacts, p.id, WORKFLOW_BOOKED);
+        let sent: number, accepted: number, messaged: number, replied: number, positive: number, booked: number, total: number;
+
+        if (useProgress) {
+          // Use per-user progress data
+          const myProgress = progressData.filter((pr: any) => pr.user_id === p.id);
+          const countStatus = (statuses: string[]) => myProgress.filter((pr: any) => statuses.includes(pr.workflow_status || "")).length;
+          sent = countStatus(WORKFLOW_SENT);
+          accepted = countStatus(WORKFLOW_ACCEPTED);
+          messaged = countStatus(WORKFLOW_MESSAGED);
+          replied = countStatus(WORKFLOW_REPLIED);
+          positive = countStatus(WORKFLOW_POSITIVE);
+          booked = countStatus(WORKFLOW_BOOKED);
+          total = myProgress.length;
+        } else {
+          // Fallback to contacts.owner_user_id
+          sent = countInStatuses(contactsFallback, p.id, WORKFLOW_SENT);
+          accepted = countInStatuses(contactsFallback, p.id, WORKFLOW_ACCEPTED);
+          messaged = countInStatuses(contactsFallback, p.id, WORKFLOW_MESSAGED);
+          replied = countInStatuses(contactsFallback, p.id, WORKFLOW_REPLIED);
+          positive = countInStatuses(contactsFallback, p.id, WORKFLOW_POSITIVE);
+          booked = countInStatuses(contactsFallback, p.id, WORKFLOW_BOOKED);
+          total = contactsFallback.filter(c => c.owner_user_id === p.id).length;
+        }
+
         const todayCalls = callsToday.filter((a: any) => a.user_id === p.id).length;
         const wkCalls = callsWeek.filter((a: any) => a.user_id === p.id).length;
-        const total = contacts.filter(c => c.owner_user_id === p.id).length;
 
         return {
           id: p.id,
@@ -288,19 +306,16 @@ export default function TeamArena() {
         };
       });
 
-      // Trends
-      const trendData: MemberTrend[] = team.map(p => {
-        const prev = prevContacts || [];
-        return {
-          id: p.id,
-          connectionsSentPrev: countInStatuses(prev, p.id, WORKFLOW_SENT),
-          connectionsAcceptedPrev: countInStatuses(prev, p.id, WORKFLOW_ACCEPTED),
-          messagesSentPrev: countInStatuses(prev, p.id, WORKFLOW_MESSAGED),
-          repliesPrev: countInStatuses(prev, p.id, WORKFLOW_REPLIED),
-          positiveRepliesPrev: countInStatuses(prev, p.id, WORKFLOW_POSITIVE),
-          appointmentsBookedPrev: countInStatuses(prev, p.id, WORKFLOW_BOOKED),
-        };
-      });
+      // Trends (placeholder - would need historical snapshots for accurate trends)
+      const trendData: MemberTrend[] = team.map(p => ({
+        id: p.id,
+        connectionsSentPrev: 0,
+        connectionsAcceptedPrev: 0,
+        messagesSentPrev: 0,
+        repliesPrev: 0,
+        positiveRepliesPrev: 0,
+        appointmentsBookedPrev: 0,
+      }));
 
       // Activity feed
       const contactIds = (recentActivitiesRes.data || []).map((a: any) => a.contact_id).filter(Boolean);
