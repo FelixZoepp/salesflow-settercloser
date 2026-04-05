@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 interface TrackingEvent {
@@ -44,11 +45,16 @@ interface JourneyTimelineProps {
   contactId: string;
 }
 
+interface MemberInfo {
+  name: string;
+  avatar_url: string | null;
+}
+
 const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [teamMembers, setTeamMembers] = useState<Record<string, string>>({});
-  const [ownerName, setOwnerName] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<Record<string, MemberInfo>>({});
+  const [ownerInfo, setOwnerInfo] = useState<MemberInfo | null>(null);
 
   useEffect(() => {
     if (contactId) {
@@ -138,22 +144,22 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
           .single(),
       ]);
 
-      // Load team member names if we have an account
+      // Load team member names + avatars if we have an account
       if (contactResult.data?.account_id) {
         const { data: members } = await supabase
           .from("profiles")
-          .select("id, name")
+          .select("id, name, avatar_url")
           .eq("account_id", contactResult.data.account_id);
         
         if (members) {
-          const memberMap: Record<string, string> = {};
+          const memberMap: Record<string, MemberInfo> = {};
           members.forEach((m) => {
-            memberMap[m.id] = m.name || "Unbenannt";
+            memberMap[m.id] = { name: m.name || "Unbenannt", avatar_url: m.avatar_url };
           });
           setTeamMembers(memberMap);
 
           if (contactResult.data.owner_user_id && memberMap[contactResult.data.owner_user_id]) {
-            setOwnerName(memberMap[contactResult.data.owner_user_id]);
+            setOwnerInfo(memberMap[contactResult.data.owner_user_id]);
           }
         }
       }
@@ -374,14 +380,12 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
     return null;
   };
 
-  const getMemberName = (item: TimelineItem): string | null => {
-    // For activities: show the team member who performed the action
+  const getMemberInfo = (item: TimelineItem): MemberInfo | null => {
     if (item.source === 'activity' && item.user_id && teamMembers[item.user_id]) {
       return teamMembers[item.user_id];
     }
-    // For tracking events: show the lead owner (whose link the lead clicked)
-    if (item.source === 'tracking' && ownerName) {
-      return ownerName;
+    if (item.source === 'tracking' && ownerInfo) {
+      return ownerInfo;
     }
     return null;
   };
@@ -425,7 +429,7 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
       
       <div className="space-y-4">
         {timelineItems.map((item, index) => {
-          const memberName = getMemberName(item);
+          const member = getMemberInfo(item);
           return (
             <div key={item.id} className="relative flex gap-3">
               {/* Timeline line */}
@@ -458,12 +462,19 @@ const JourneyTimeline = ({ contactId }: JourneyTimelineProps) => {
                   </Button>
                 </div>
 
-                {/* Team member attribution */}
-                {memberName && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <User className="w-3 h-3 text-muted-foreground" />
+                {/* Team member attribution with avatar */}
+                {member && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <Avatar className="h-5 w-5">
+                      {member.avatar_url ? (
+                        <AvatarImage src={member.avatar_url} alt={member.name} />
+                      ) : null}
+                      <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                        {member.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="text-xs text-muted-foreground">
-                      {item.source === 'activity' ? `von ${memberName}` : `über ${memberName}`}
+                      {item.source === 'activity' ? `von ${member.name}` : `über ${member.name}`}
                     </span>
                   </div>
                 )}
