@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
-import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook } from "lucide-react";
+import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook, Euro } from "lucide-react";
 import TeamInvite from "@/components/TeamInvite";
 
 interface ProfileData {
@@ -24,6 +24,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [defaultDealAmount, setDefaultDealAmount] = useState<string>("0");
   const [profile, setProfile] = useState<ProfileData>({
     id: "",
     name: "",
@@ -60,6 +61,15 @@ const Profile = () => {
         calendar_url: data?.calendar_url || null,
         avatar_url: data?.avatar_url || null,
       });
+
+      // Load default deal amount from account
+      const { data: pData } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
+      if (pData?.account_id) {
+        const { data: account } = await supabase.from("accounts").select("default_deal_amount").eq("id", pData.account_id).single();
+        if (account?.default_deal_amount) {
+          setDefaultDealAmount(String(account.default_deal_amount));
+        }
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Fehler beim Laden des Profils");
@@ -327,7 +337,45 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Save Button */}
+        {/* Default Deal Amount */}
+        <Card className="glass-card border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Euro className="w-5 h-5 text-primary" />
+              Standard-Dealvolumen
+            </CardTitle>
+            <CardDescription>
+              Wird automatisch als Betrag für neue Deals in der Pipeline verwendet
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="deal-amount">Betrag in €</Label>
+              <Input
+                id="deal-amount"
+                type="number"
+                min={0}
+                value={defaultDealAmount}
+                onChange={(e) => setDefaultDealAmount(e.target.value)}
+                placeholder="z.B. 6000"
+                className="glass-input"
+              />
+            </div>
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                const { data: p } = await supabase.from('profiles').select('account_id').eq('id', user.id).single();
+                if (!p?.account_id) return;
+                await supabase.from('accounts').update({ default_deal_amount: Number(defaultDealAmount) || 0 } as any).eq('id', p.account_id);
+                toast.success("Standard-Dealvolumen gespeichert");
+              } catch { toast.error("Fehler beim Speichern"); }
+            }}>
+              <Save className="w-4 h-4 mr-2" /> Speichern
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="flex justify-end">
           <Button
             onClick={handleSave}
