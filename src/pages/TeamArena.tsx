@@ -653,6 +653,26 @@ export default function TeamArena() {
             </CardContent>
           </Card>
 
+          {/* Appointments from Pool */}
+          {sorted.some(m => m.appointmentsBooked > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {sorted.map((member, idx) => (
+                <Card key={member.id} className={member.appointmentsBooked === Math.max(...sorted.map(m => m.appointmentsBooked)) && member.appointmentsBooked > 0 ? "border-pink-500/30" : ""}>
+                  <CardContent className="pt-4 text-center">
+                    <div className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center text-xs font-bold text-white ${MEMBER_COLORS[idx % MEMBER_COLORS.length]}`}>
+                      {member.avatarUrl ? (
+                        <img src={member.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                      ) : member.name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{member.name}</p>
+                    <p className="text-2xl font-bold text-pink-400">{member.appointmentsBooked}</p>
+                    <p className="text-[10px] text-muted-foreground">Termine gebucht</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
           {/* Leaderboard */}
           <Card>
             <CardHeader className="pb-3">

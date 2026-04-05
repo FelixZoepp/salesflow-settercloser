@@ -73,7 +73,10 @@ interface WorkflowContact {
   viewed: boolean | null;
   lead_score: number | null;
   linkedin_url: string | null;
+  owner_user_id: string | null;
 }
+
+type PoolFilter = 'mine' | 'available' | 'all' | 'booked';
 
 interface EditingContact {
   id: string;
@@ -172,6 +175,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [landingPageSlug, setLandingPageSlug] = useState<string | null>(null);
   const [pitchVideoUrl, setPitchVideoUrl] = useState<string | null>(null);
   const [generatingUrls, setGeneratingUrls] = useState(false);
+  const [poolFilter, setPoolFilter] = useState<PoolFilter>('mine');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [hasTeam, setHasTeam] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string }[]>([]);
   const MAX_DAILY_MESSAGES = 10;
   const MAX_DAILY_CONNECTIONS = 15;
   const MAX_DAILY_FOLLOWUPS = 20;
@@ -246,11 +254,29 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
     }
   };
 
+  // Load team info on mount
+  useEffect(() => {
+    const loadTeamInfo = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setCurrentUserId(user.id);
+      const { data: profile } = await supabase.from('profiles').select('account_id, role, is_super_admin').eq('id', user.id).single();
+      if (!profile?.account_id) return;
+      setIsAdmin(profile.role === 'admin' || profile.is_super_admin === true);
+      const { data: members } = await supabase.from('profiles').select('id, name').eq('account_id', profile.account_id);
+      if (members && members.length > 1) {
+        setHasTeam(true);
+        setTeamMembers(members.map(m => ({ id: m.id, name: m.name || 'Unbenannt' })));
+      }
+    };
+    loadTeamInfo();
+  }, []);
+
   const fetchContacts = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, company, position, email, phone, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url')
+      .select('id, first_name, last_name, company, position, email, phone, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, outreach_message, personalized_url, viewed, lead_score, linkedin_url, owner_user_id')
       .eq('campaign_id', campaignId)
       .eq('lead_type', 'outbound')
       .order('created_at', { ascending: true });
@@ -488,9 +514,15 @@ LG`
       workflow_status: newStatus,
       updated_at: new Date().toISOString()
     };
-    
+
     if (timestampField) {
       updateData[timestampField] = new Date().toISOString();
+    }
+
+    // Auto-claim: if lead has no owner, assign current user
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact && !contact.owner_user_id && currentUserId) {
+      updateData.owner_user_id = currentUserId;
     }
 
     const { error } = await supabase
@@ -606,7 +638,7 @@ LG`
         return;
       }
 
-      // Insert only non-duplicate leads
+      // Insert leads - shared pool (no owner) for team accounts, assigned for solo
       const leadsToInsert = newLeads.map(lead => ({
         first_name: lead.first_name,
         last_name: lead.last_name,
@@ -617,7 +649,7 @@ LG`
         lead_type: 'outbound' as const,
         workflow_status: 'bereit_fuer_vernetzung' as const,
         account_id: profile?.account_id,
-        owner_user_id: user.id,
+        owner_user_id: hasTeam ? null : user.id,
       }));
 
       const { data: insertedContacts, error } = await supabase
@@ -665,38 +697,72 @@ LG`
     }
   };
 
-  // Filter contacts by status
-  const pendingConnections = contacts.filter(c => c.workflow_status === 'vernetzung_ausstehend');
-  const readyForConnection = contacts.filter(c => 
+  // Distribute unclaimed leads round-robin to team members
+  const distributeLeads = async () => {
+    if (teamMembers.length === 0) return;
+    const unclaimed = contacts.filter(c => !c.owner_user_id && c.workflow_status !== 'termin_gebucht' && c.workflow_status !== 'abgeschlossen');
+    if (unclaimed.length === 0) {
+      toast.info("Keine verfügbaren Leads zum Verteilen");
+      return;
+    }
+    try {
+      const updates = unclaimed.map((c, i) => ({
+        id: c.id,
+        owner_user_id: teamMembers[i % teamMembers.length].id,
+      }));
+      for (const u of updates) {
+        await supabase.from('contacts').update({ owner_user_id: u.owner_user_id }).eq('id', u.id);
+      }
+      toast.success(`${unclaimed.length} Leads auf ${teamMembers.length} Teammitglieder verteilt`);
+      fetchContacts();
+    } catch (err) {
+      toast.error("Fehler beim Verteilen");
+    }
+  };
+
+  // Pool filter: apply team filter to contacts before status filters
+  const BOOKED_STATUSES: WorkflowStatus[] = ['termin_gebucht', 'abgeschlossen'];
+  const poolContacts = hasTeam
+    ? contacts.filter(c => {
+        if (poolFilter === 'mine') return c.owner_user_id === currentUserId && !BOOKED_STATUSES.includes(c.workflow_status!);
+        if (poolFilter === 'available') return !c.owner_user_id && !BOOKED_STATUSES.includes(c.workflow_status!);
+        if (poolFilter === 'booked') return BOOKED_STATUSES.includes(c.workflow_status!);
+        return true; // 'all'
+      })
+    : contacts;
+
+  // Filter contacts by status (use poolContacts instead of contacts for team filtering)
+  const pendingConnections = poolContacts.filter(c => c.workflow_status === 'vernetzung_ausstehend');
+  const readyForConnection = poolContacts.filter(c =>
     c.workflow_status === 'neu' || c.workflow_status === 'bereit_fuer_vernetzung'
   );
-  const acceptedConnections = contacts.filter(c => c.workflow_status === 'vernetzung_angenommen');
+  const acceptedConnections = poolContacts.filter(c => c.workflow_status === 'vernetzung_angenommen');
   
-  // Follow-up due logic
-  const fu1Due = contacts.filter(c => {
+  // Follow-up due logic (use poolContacts for team-filtered view)
+  const fu1Due = poolContacts.filter(c => {
     if (c.workflow_status !== 'erstnachricht_gesendet' || !c.first_message_sent_at || c.viewed) return false;
     const sentDate = new Date(c.first_message_sent_at);
     const dueDate = new Date(sentDate.getTime() + 3 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
-  
-  const fu2Due = contacts.filter(c => {
+
+  const fu2Due = poolContacts.filter(c => {
     if (c.workflow_status !== 'fu1_gesendet' || !c.fu1_sent_at || c.viewed) return false;
     const sentDate = new Date(c.fu1_sent_at);
     const dueDate = new Date(sentDate.getTime() + 4 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
-  
-  const fu3Due = contacts.filter(c => {
+
+  const fu3Due = poolContacts.filter(c => {
     if (c.workflow_status !== 'fu2_gesendet' || !c.fu2_sent_at || c.viewed) return false;
     const sentDate = new Date(c.fu2_sent_at);
     const dueDate = new Date(sentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     return new Date() >= dueDate;
   });
 
-  const warmLeads = contacts.filter(c => c.workflow_status === 'reagiert_warm');
-  const positiveReplies = contacts.filter(c => c.workflow_status === 'positiv_geantwortet');
-  const appointmentsBooked = contacts.filter(c => c.workflow_status === 'termin_gebucht');
+  const warmLeads = poolContacts.filter(c => c.workflow_status === 'reagiert_warm');
+  const positiveReplies = poolContacts.filter(c => c.workflow_status === 'positiv_geantwortet');
+  const appointmentsBooked = poolContacts.filter(c => c.workflow_status === 'termin_gebucht');
   
   // Calculate acceptance rate over last 7+ days
   const sevenDaysAgo = new Date();
@@ -810,7 +876,14 @@ LG`
     <div className="space-y-6">
       {/* Header with Import and Templates Buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h3 className="text-lg font-medium">Daily Workflow für {campaignName}</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-medium">Daily Workflow für {campaignName}</h3>
+          {hasTeam && (
+            <Badge variant="outline" className="text-xs">
+              {contacts.length} Leads im Pool
+            </Badge>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {/* Generate URLs Button */}
           {landingPageSlug && (
@@ -1000,6 +1073,38 @@ LG`
           </Dialog>
         </div>
       </div>
+
+      {/* Team Pool Filter */}
+      {hasTeam && (
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+            {([
+              { key: 'mine' as PoolFilter, label: 'Meine', count: contacts.filter(c => c.owner_user_id === currentUserId && !BOOKED_STATUSES.includes(c.workflow_status!)).length },
+              { key: 'available' as PoolFilter, label: 'Verfügbar', count: contacts.filter(c => !c.owner_user_id && !BOOKED_STATUSES.includes(c.workflow_status!)).length },
+              { key: 'all' as PoolFilter, label: 'Alle', count: contacts.length },
+              { key: 'booked' as PoolFilter, label: 'Terminiert', count: contacts.filter(c => BOOKED_STATUSES.includes(c.workflow_status!)).length },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setPoolFilter(tab.key)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  poolFilter === tab.key
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+          {isAdmin && contacts.some(c => !c.owner_user_id) && (
+            <Button variant="outline" size="sm" onClick={distributeLeads} className="gap-2">
+              <Users className="h-3.5 w-3.5" />
+              Leads verteilen ({contacts.filter(c => !c.owner_user_id).length})
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Daily Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
