@@ -51,6 +51,7 @@ import LeadScoringFeature from "./pages/features/LeadScoring";
 import KampagnenFeature from "./pages/features/Kampagnen";
 import Sequences from "./pages/Sequences";
 import LeadSearch from "./pages/LeadSearch";
+import TeamArena from "./pages/TeamArena";
 
 const queryClient = new QueryClient();
 
@@ -185,6 +186,7 @@ const AppRoutes = () => (
     <Route path="/email-templates" element={<SubscriptionRoute><EmailTemplates /></SubscriptionRoute>} />
     <Route path="/sequences" element={<SubscriptionRoute><Sequences /></SubscriptionRoute>} />
     <Route path="/deal-analytics" element={<SubscriptionRoute><DealAnalytics /></SubscriptionRoute>} />
+    <Route path="/team-arena" element={<SubscriptionRoute><TeamArena /></SubscriptionRoute>} />
     <Route path="/upgrade" element={<SubscriptionRoute><Upgrade /></SubscriptionRoute>} />
     <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
     <Route path="/partner-dashboard" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />

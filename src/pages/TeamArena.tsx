@@ -1,0 +1,842 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import Layout from "@/components/Layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Trophy, Users, Crown, MessageSquare, Calendar, TrendingUp,
+  Phone, Target, Flame, Medal, Zap, ArrowUp, ArrowDown, Minus,
+  Settings2, Rocket, Plus, Pause, Play, Pencil,
+} from "lucide-react";
+import { toast } from "sonner";
+import { subDays } from "date-fns";
+
+// --- Types ---
+
+interface TeamChallenge {
+  id: string;
+  account_id: string;
+  name: string;
+  goal_type: string;
+  goal_value: number;
+  is_active: boolean;
+}
+
+interface MemberStats {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  connectionsSent: number;
+  connectionsAccepted: number;
+  acceptanceRate: number;
+  messagesSent: number;
+  replies: number;
+  replyRate: number;
+  positiveReplies: number;
+  appointmentsBooked: number;
+  callsToday: number;
+  callsWeek: number;
+  totalLeads: number;
+}
+
+interface MemberTrend {
+  id: string;
+  connectionsSentPrev: number;
+  connectionsAcceptedPrev: number;
+  messagesSentPrev: number;
+  repliesPrev: number;
+  positiveRepliesPrev: number;
+  appointmentsBookedPrev: number;
+}
+
+type SortMetric = "connectionsSent" | "acceptanceRate" | "messagesSent" | "replyRate" | "positiveReplies" | "appointmentsBooked" | "callsWeek";
+
+interface Activity {
+  id: string;
+  userName: string;
+  type: string;
+  outcome: string | null;
+  contactName: string;
+  timestamp: string;
+}
+
+// --- Constants ---
+
+const WORKFLOW_SENT = ["vernetzung_ausstehend", "vernetzung_angenommen", "erstnachricht_gesendet", "fu1_gesendet", "fu2_gesendet", "fu3_gesendet", "reagiert_warm", "positiv_geantwortet", "termin_gebucht", "abgeschlossen"];
+const WORKFLOW_ACCEPTED = ["vernetzung_angenommen", "erstnachricht_gesendet", "fu1_gesendet", "fu2_gesendet", "fu3_gesendet", "reagiert_warm", "positiv_geantwortet", "termin_gebucht", "abgeschlossen"];
+const WORKFLOW_MESSAGED = ["erstnachricht_gesendet", "fu1_gesendet", "fu2_gesendet", "fu3_gesendet", "reagiert_warm", "positiv_geantwortet", "termin_gebucht", "abgeschlossen"];
+const WORKFLOW_REPLIED = ["reagiert_warm", "positiv_geantwortet", "termin_gebucht", "abgeschlossen"];
+const WORKFLOW_POSITIVE = ["positiv_geantwortet", "termin_gebucht", "abgeschlossen"];
+const WORKFLOW_BOOKED = ["termin_gebucht", "abgeschlossen"];
+
+const MEMBER_COLORS = ["bg-blue-500", "bg-emerald-500", "bg-purple-500", "bg-amber-500", "bg-pink-500", "bg-cyan-500"];
+
+const SORT_OPTIONS: { value: SortMetric; label: string }[] = [
+  { value: "connectionsSent", label: "Vernetzungen" },
+  { value: "acceptanceRate", label: "Annahmerate" },
+  { value: "messagesSent", label: "Nachrichten" },
+  { value: "replyRate", label: "Antwortrate" },
+  { value: "positiveReplies", label: "Positive Antworten" },
+  { value: "appointmentsBooked", label: "Termine" },
+  { value: "callsWeek", label: "Calls (Woche)" },
+];
+
+const GOAL_TYPES: { value: string; label: string }[] = [
+  { value: "connections_sent", label: "Vernetzungen gesendet" },
+  { value: "appointments_booked", label: "Termine gebucht" },
+  { value: "positive_replies", label: "Positive Antworten" },
+  { value: "messages_sent", label: "Nachrichten gesendet" },
+];
+
+// --- Helpers ---
+
+function countInStatuses(contacts: { owner_user_id: string | null; workflow_status: string | null }[], userId: string, statuses: string[]) {
+  return contacts.filter(c => c.owner_user_id === userId && statuses.includes(c.workflow_status || "")).length;
+}
+
+function pct(a: number, b: number): number {
+  return b > 0 ? Math.round((a / b) * 100) : 0;
+}
+
+function trendIcon(current: number, previous: number) {
+  if (current > previous) return <ArrowUp className="w-3 h-3 text-green-400" />;
+  if (current < previous) return <ArrowDown className="w-3 h-3 text-red-400" />;
+  return <Minus className="w-3 h-3 text-muted-foreground" />;
+}
+
+function rankBadge(index: number) {
+  if (index === 0) return <Crown className="w-5 h-5 text-amber-400" />;
+  if (index === 1) return <Medal className="w-4 h-4 text-slate-300" />;
+  if (index === 2) return <Medal className="w-4 h-4 text-amber-700" />;
+  return <span className="text-xs text-muted-foreground font-bold">#{index + 1}</span>;
+}
+
+function goalMetricForMember(member: MemberStats, goalType: string): number {
+  switch (goalType) {
+    case "connections_sent": return member.connectionsSent;
+    case "appointments_booked": return member.appointmentsBooked;
+    case "positive_replies": return member.positiveReplies;
+    case "messages_sent": return member.messagesSent;
+    default: return member.connectionsSent;
+  }
+}
+
+function goalTypeLabel(goalType: string): string {
+  return GOAL_TYPES.find(g => g.value === goalType)?.label || goalType;
+}
+
+// --- Component ---
+
+export default function TeamArena() {
+  const [challenge, setChallenge] = useState<TeamChallenge | null>(null);
+  const [members, setMembers] = useState<MemberStats[]>([]);
+  const [trends, setTrends] = useState<MemberTrend[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [sortBy, setSortBy] = useState<SortMetric>("appointmentsBooked");
+  const [loading, setLoading] = useState(true);
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Setup dialog state
+  const [showSetup, setShowSetup] = useState(false);
+  const [setupName, setSetupName] = useState("Team Challenge");
+  const [setupGoalType, setSetupGoalType] = useState("connections_sent");
+  const [setupGoalValue, setSetupGoalValue] = useState(2000);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const fetchAll = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_id")
+        .eq("id", user.id)
+        .single();
+      if (!profile?.account_id) return;
+
+      const accId = profile.account_id;
+      setAccountId(accId);
+
+      // Load challenge settings
+      const { data: challengeData } = await supabase
+        .from("team_challenges")
+        .select("*")
+        .eq("account_id", accId)
+        .single();
+
+      if (!challengeData) {
+        setLoading(false);
+        return; // No challenge configured -> show setup screen
+      }
+
+      setChallenge(challengeData as TeamChallenge);
+
+      // Only load stats if challenge is active
+      if (!challengeData.is_active) {
+        setLoading(false);
+        return;
+      }
+
+      // Parallel queries
+      const [teamRes, contactsRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
+        supabase.from("profiles").select("id, name, avatar_url").eq("account_id", accId),
+        supabase.from("contacts").select("owner_user_id, workflow_status").eq("account_id", accId).eq("lead_type", "outbound"),
+        supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
+        supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
+        supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
+      ]);
+
+      const team = teamRes.data || [];
+      const contacts = contactsRes.data || [];
+      const callsToday = activitiesTodayRes.data || [];
+      const callsWeek = activitiesWeekRes.data || [];
+
+      // Previous week for trends
+      const weekAgo = subDays(new Date(), 7).toISOString();
+      const twoWeeksAgo = subDays(new Date(), 14).toISOString();
+      const { data: prevContacts } = await supabase
+        .from("contacts")
+        .select("owner_user_id, workflow_status")
+        .eq("account_id", accId)
+        .eq("lead_type", "outbound")
+        .lte("created_at", weekAgo)
+        .gte("created_at", twoWeeksAgo);
+
+      // Build stats
+      const stats: MemberStats[] = team.map(p => {
+        const sent = countInStatuses(contacts, p.id, WORKFLOW_SENT);
+        const accepted = countInStatuses(contacts, p.id, WORKFLOW_ACCEPTED);
+        const messaged = countInStatuses(contacts, p.id, WORKFLOW_MESSAGED);
+        const replied = countInStatuses(contacts, p.id, WORKFLOW_REPLIED);
+        const positive = countInStatuses(contacts, p.id, WORKFLOW_POSITIVE);
+        const booked = countInStatuses(contacts, p.id, WORKFLOW_BOOKED);
+        const todayCalls = callsToday.filter((a: any) => a.user_id === p.id).length;
+        const wkCalls = callsWeek.filter((a: any) => a.user_id === p.id).length;
+        const total = contacts.filter(c => c.owner_user_id === p.id).length;
+
+        return {
+          id: p.id,
+          name: p.name || "Unbenannt",
+          avatarUrl: p.avatar_url,
+          connectionsSent: sent,
+          connectionsAccepted: accepted,
+          acceptanceRate: pct(accepted, sent),
+          messagesSent: messaged,
+          replies: replied,
+          replyRate: pct(replied, messaged),
+          positiveReplies: positive,
+          appointmentsBooked: booked,
+          callsToday: todayCalls,
+          callsWeek: wkCalls,
+          totalLeads: total,
+        };
+      });
+
+      // Trends
+      const trendData: MemberTrend[] = team.map(p => {
+        const prev = prevContacts || [];
+        return {
+          id: p.id,
+          connectionsSentPrev: countInStatuses(prev, p.id, WORKFLOW_SENT),
+          connectionsAcceptedPrev: countInStatuses(prev, p.id, WORKFLOW_ACCEPTED),
+          messagesSentPrev: countInStatuses(prev, p.id, WORKFLOW_MESSAGED),
+          repliesPrev: countInStatuses(prev, p.id, WORKFLOW_REPLIED),
+          positiveRepliesPrev: countInStatuses(prev, p.id, WORKFLOW_POSITIVE),
+          appointmentsBookedPrev: countInStatuses(prev, p.id, WORKFLOW_BOOKED),
+        };
+      });
+
+      // Activity feed
+      const contactIds = (recentActivitiesRes.data || []).map((a: any) => a.contact_id).filter(Boolean);
+      const contactMap: Record<string, string> = {};
+      if (contactIds.length > 0) {
+        const { data: contactNames } = await supabase
+          .from("contacts")
+          .select("id, first_name, last_name")
+          .in("id", contactIds);
+        (contactNames || []).forEach((c: any) => {
+          contactMap[c.id] = `${c.first_name} ${c.last_name}`;
+        });
+      }
+
+      const userMap: Record<string, string> = {};
+      team.forEach(p => { userMap[p.id] = p.name || "Unbenannt"; });
+
+      const feed: Activity[] = (recentActivitiesRes.data || []).map((a: any) => ({
+        id: a.id,
+        userName: userMap[a.user_id] || "Unbekannt",
+        type: a.type,
+        outcome: a.outcome,
+        contactName: contactMap[a.contact_id] || "",
+        timestamp: a.timestamp,
+      }));
+
+      setMembers(stats);
+      setTrends(trendData);
+      setActivities(feed);
+    } catch (err) {
+      console.error("Error fetching team arena:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveChallenge = async () => {
+    if (!accountId || !userId) return;
+    setSaving(true);
+    try {
+      if (challenge) {
+        // Update existing
+        const { error } = await supabase
+          .from("team_challenges")
+          .update({
+            name: setupName,
+            goal_type: setupGoalType,
+            goal_value: setupGoalValue,
+          })
+          .eq("id", challenge.id);
+        if (error) throw error;
+        toast.success("Challenge aktualisiert");
+      } else {
+        // Create new
+        const { error } = await supabase
+          .from("team_challenges")
+          .insert({
+            account_id: accountId,
+            name: setupName,
+            goal_type: setupGoalType,
+            goal_value: setupGoalValue,
+            is_active: true,
+            created_by: userId,
+          });
+        if (error) throw error;
+        toast.success("Challenge erstellt!");
+      }
+      setShowSetup(false);
+      setLoading(true);
+      await fetchAll();
+    } catch (err) {
+      toast.error("Fehler beim Speichern");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleChallengeActive = async () => {
+    if (!challenge) return;
+    const { error } = await supabase
+      .from("team_challenges")
+      .update({ is_active: !challenge.is_active })
+      .eq("id", challenge.id);
+    if (error) {
+      toast.error("Fehler beim Aktualisieren");
+      return;
+    }
+    toast.success(challenge.is_active ? "Challenge pausiert" : "Challenge fortgesetzt");
+    setLoading(true);
+    await fetchAll();
+  };
+
+  const openEditDialog = () => {
+    if (challenge) {
+      setSetupName(challenge.name);
+      setSetupGoalType(challenge.goal_type);
+      setSetupGoalValue(challenge.goal_value);
+    }
+    setShowSetup(true);
+  };
+
+  // Sorted members for leaderboard
+  const sorted = [...members].sort((a, b) => (b[sortBy] as number) - (a[sortBy] as number));
+
+  // Goal progress
+  const goalValue = challenge?.goal_value || 1;
+  const goalType = challenge?.goal_type || "connections_sent";
+  const totalGoalMetric = members.reduce((sum, m) => sum + goalMetricForMember(m, goalType), 0);
+  const goalPct = Math.min((totalGoalMetric / goalValue) * 100, 100);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-pulse text-muted-foreground">Lädt Team Arena...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ========== SETUP SCREEN ==========
+  if (!challenge) {
+    return (
+      <Layout>
+        <div className="min-h-[70vh] flex items-center justify-center">
+          <Card className="max-w-lg w-full border-dashed border-2 border-white/10">
+            <CardContent className="pt-8 pb-8 text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
+                <Trophy className="w-8 h-8 text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold mb-2">Team Challenge starten</h2>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Erstelle eine Challenge für dein Team. Setzt euch ein gemeinsames Ziel und seht, wer die besten Ergebnisse liefert.
+                </p>
+              </div>
+              <Button onClick={() => setShowSetup(true)} size="lg" className="gap-2">
+                <Rocket className="w-4 h-4" />
+                Challenge erstellen
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <SetupDialog
+          open={showSetup}
+          onClose={() => setShowSetup(false)}
+          name={setupName}
+          setName={setSetupName}
+          goalType={setupGoalType}
+          setGoalType={setSetupGoalType}
+          goalValue={setupGoalValue}
+          setGoalValue={setSetupGoalValue}
+          saving={saving}
+          onSave={handleSaveChallenge}
+          isEdit={false}
+        />
+      </Layout>
+    );
+  }
+
+  // ========== PAUSED SCREEN ==========
+  if (!challenge.is_active) {
+    return (
+      <Layout>
+        <div className="min-h-[70vh] flex items-center justify-center">
+          <Card className="max-w-lg w-full">
+            <CardContent className="pt-8 pb-8 text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto">
+                <Pause className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold mb-2">{challenge.name}</h2>
+                <p className="text-sm text-muted-foreground">Diese Challenge ist pausiert.</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={toggleChallengeActive} className="gap-2">
+                  <Play className="w-4 h-4" />
+                  Fortsetzen
+                </Button>
+                <Button variant="outline" onClick={openEditDialog} className="gap-2">
+                  <Pencil className="w-4 h-4" />
+                  Bearbeiten
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <SetupDialog
+          open={showSetup}
+          onClose={() => setShowSetup(false)}
+          name={setupName}
+          setName={setSetupName}
+          goalType={setupGoalType}
+          setGoalType={setSetupGoalType}
+          goalValue={setupGoalValue}
+          setGoalValue={setSetupGoalValue}
+          saving={saving}
+          onSave={handleSaveChallenge}
+          isEdit
+        />
+      </Layout>
+    );
+  }
+
+  // ========== ACTIVE CHALLENGE ==========
+  return (
+    <Layout>
+      <div className="min-h-screen noise-bg">
+        <div className="max-w-7xl mx-auto space-y-6">
+
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-amber-400" />
+                {challenge.name}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {members.length} Teammitglieder im Wettbewerb
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-orange-400 animate-pulse" />
+              <span className="text-sm font-semibold text-orange-400 hidden sm:inline">Challenge aktiv</span>
+              <Button variant="ghost" size="icon" onClick={openEditDialog} className="h-8 w-8">
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={toggleChallengeActive} className="h-8 w-8">
+                <Pause className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Shared Goal Progress */}
+          <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-amber-400" />
+                  <span className="font-semibold">Team-Ziel: {goalValue.toLocaleString()} {goalTypeLabel(goalType)}</span>
+                </div>
+                <span className="text-2xl font-bold text-amber-400">
+                  {totalGoalMetric.toLocaleString()} <span className="text-sm text-muted-foreground font-normal">/ {goalValue.toLocaleString()}</span>
+                </span>
+              </div>
+
+              {/* Segmented progress bar */}
+              <div className="relative h-6 bg-muted/30 rounded-full overflow-hidden">
+                <div className="absolute inset-0 flex">
+                  {sorted.map((member, idx) => {
+                    const memberVal = goalMetricForMember(member, goalType);
+                    const memberPct = goalValue > 0 ? (memberVal / goalValue) * 100 : 0;
+                    return (
+                      <div
+                        key={member.id}
+                        className={`${MEMBER_COLORS[idx % MEMBER_COLORS.length]} transition-all duration-700 h-full first:rounded-l-full last:rounded-r-full`}
+                        style={{ width: `${memberPct}%` }}
+                        title={`${member.name}: ${memberVal}`}
+                      />
+                    );
+                  })}
+                </div>
+                {goalPct >= 100 && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-bold text-white drop-shadow">ZIEL ERREICHT!</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-4 mt-3">
+                {sorted.map((member, idx) => (
+                  <div key={member.id} className="flex items-center gap-1.5 text-xs">
+                    <div className={`w-3 h-3 rounded-full ${MEMBER_COLORS[idx % MEMBER_COLORS.length]}`} />
+                    <span className="text-muted-foreground">{member.name}</span>
+                    <span className="font-semibold">{goalMetricForMember(member, goalType)}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leaderboard */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                  Leaderboard
+                </CardTitle>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortMetric)}
+                  className="text-xs bg-muted/50 border border-white/10 rounded-lg px-3 py-1.5 text-foreground"
+                >
+                  {SORT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {sorted.map((member, idx) => {
+                  const trend = trends.find(t => t.id === member.id);
+                  return (
+                    <div
+                      key={member.id}
+                      className={`flex items-center gap-4 p-3 rounded-xl transition-all ${
+                        idx === 0
+                          ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                          : "bg-muted/20 border border-white/5"
+                      }`}
+                    >
+                      <div className="w-8 flex justify-center shrink-0">
+                        {rankBadge(idx)}
+                      </div>
+
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${MEMBER_COLORS[idx % MEMBER_COLORS.length]}`}>
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt={member.name} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          member.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm truncate">{member.name}</span>
+                          {idx === 0 && <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 px-1.5">MVP</Badge>}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads zugewiesen</span>
+                      </div>
+
+                      <div className="hidden md:grid grid-cols-6 gap-4 text-center">
+                        <StatCell label="Vernetzt" value={member.connectionsSent} trend={trend ? trendIcon(member.connectionsSent, trend.connectionsSentPrev) : null} />
+                        <StatCell label="Annahme" value={`${member.acceptanceRate}%`} highlight={member.acceptanceRate >= 50} />
+                        <StatCell label="Nachrichten" value={member.messagesSent} trend={trend ? trendIcon(member.messagesSent, trend.messagesSentPrev) : null} />
+                        <StatCell label="Antwortrate" value={`${member.replyRate}%`} highlight={member.replyRate >= 30} />
+                        <StatCell label="Positive" value={member.positiveReplies} trend={trend ? trendIcon(member.positiveReplies, trend.positiveRepliesPrev) : null} />
+                        <StatCell label="Termine" value={member.appointmentsBooked} highlight={member.appointmentsBooked > 0} trend={trend ? trendIcon(member.appointmentsBooked, trend.appointmentsBookedPrev) : null} />
+                      </div>
+
+                      <div className="flex md:hidden items-center gap-3 text-xs">
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />{member.connectionsSent}</span>
+                        <span className="flex items-center gap-1 text-green-400"><TrendingUp className="w-3 h-3" />{member.positiveReplies}</span>
+                        <span className="flex items-center gap-1 text-pink-400"><Calendar className="w-3 h-3" />{member.appointmentsBooked}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bottom Row: Member Cards + Activity Feed */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {sorted.map((member, idx) => {
+                const isTop = idx === 0;
+                return (
+                  <Card key={member.id} className={isTop ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.08)]" : ""}>
+                    <CardContent className="pt-5">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white ${MEMBER_COLORS[idx % MEMBER_COLORS.length]}`}>
+                          {member.avatarUrl ? (
+                            <img src={member.avatarUrl} alt={member.name} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            member.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{member.name}</span>
+                            {isTop && <Crown className="w-4 h-4 text-amber-400" />}
+                          </div>
+                          <span className="text-xs text-muted-foreground">Platz {idx + 1}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <MiniStat icon={<Users className="w-3.5 h-3.5 text-blue-400" />} label="Vernetzungen" value={member.connectionsSent} />
+                        <MiniStat icon={<Zap className="w-3.5 h-3.5 text-amber-400" />} label="Annahmerate" value={`${member.acceptanceRate}%`} />
+                        <MiniStat icon={<MessageSquare className="w-3.5 h-3.5 text-purple-400" />} label="Nachrichten" value={member.messagesSent} />
+                        <MiniStat icon={<TrendingUp className="w-3.5 h-3.5 text-green-400" />} label="Antwortrate" value={`${member.replyRate}%`} />
+                        <MiniStat icon={<Target className="w-3.5 h-3.5 text-emerald-400" />} label="Positive" value={member.positiveReplies} />
+                        <MiniStat icon={<Calendar className="w-3.5 h-3.5 text-pink-400" />} label="Termine" value={member.appointmentsBooked} />
+                        <MiniStat icon={<Phone className="w-3.5 h-3.5 text-cyan-400" />} label="Calls heute" value={member.callsToday} />
+                        <MiniStat icon={<Phone className="w-3.5 h-3.5 text-cyan-400" />} label="Calls Woche" value={member.callsWeek} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Activity Feed */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  Live-Feed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  {activities.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Noch keine Aktivitäten</p>
+                  )}
+                  {activities.map(a => (
+                    <div key={a.id} className="flex items-start gap-2 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                      <div>
+                        <span className="font-medium">{a.userName}</span>
+                        <span className="text-muted-foreground">
+                          {" "}{activityLabel(a.type, a.outcome)}
+                          {a.contactName && <> mit <span className="text-foreground">{a.contactName}</span></>}
+                        </span>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {timeAgo(a.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <SetupDialog
+        open={showSetup}
+        onClose={() => setShowSetup(false)}
+        name={setupName}
+        setName={setSetupName}
+        goalType={setupGoalType}
+        setGoalType={setSetupGoalType}
+        goalValue={setupGoalValue}
+        setGoalValue={setSetupGoalValue}
+        saving={saving}
+        onSave={handleSaveChallenge}
+        isEdit
+      />
+    </Layout>
+  );
+}
+
+// --- Sub-components ---
+
+function SetupDialog({
+  open, onClose, name, setName, goalType, setGoalType, goalValue, setGoalValue, saving, onSave, isEdit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  name: string;
+  setName: (v: string) => void;
+  goalType: string;
+  setGoalType: (v: string) => void;
+  goalValue: number;
+  setGoalValue: (v: number) => void;
+  saving: boolean;
+  onSave: () => void;
+  isEdit: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-400" />
+            {isEdit ? "Challenge bearbeiten" : "Neue Challenge erstellen"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Challenge-Name</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="z.B. Q2 Vernetzungs-Sprint"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ziel-Metrik</Label>
+            <select
+              value={goalType}
+              onChange={(e) => setGoalType(e.target.value)}
+              className="w-full bg-muted/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground"
+            >
+              {GOAL_TYPES.map(g => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Zielwert (Team gesamt)</Label>
+            <Input
+              type="number"
+              min={1}
+              value={goalValue}
+              onChange={(e) => setGoalValue(parseInt(e.target.value) || 0)}
+              placeholder="z.B. 2000"
+            />
+            <p className="text-xs text-muted-foreground">
+              Dieses Ziel wird auf alle Teammitglieder verteilt angezeigt.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button onClick={onSave} disabled={saving || !name || goalValue < 1} className="gap-2">
+            {saving ? "Speichert..." : isEdit ? "Speichern" : "Challenge starten"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StatCell({ label, value, highlight, trend }: { label: string; value: string | number; highlight?: boolean; trend?: React.ReactNode }) {
+  return (
+    <div className="min-w-[70px]">
+      <div className="text-[10px] text-muted-foreground mb-0.5">{label}</div>
+      <div className="flex items-center justify-center gap-1">
+        <span className={`text-sm font-bold ${highlight ? "text-green-400" : ""}`}>{value}</span>
+        {trend}
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return (
+    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
+      {icon}
+      <div>
+        <div className="text-[10px] text-muted-foreground leading-none">{label}</div>
+        <div className="text-sm font-bold leading-tight">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function activityLabel(type: string, outcome: string | null): string {
+  const labels: Record<string, string> = {
+    call: "hat angerufen",
+    email: "hat gemailt",
+    dm: "hat geschrieben",
+    meeting: "hatte Meeting",
+    note: "hat Notiz erstellt",
+  };
+  const outcomeLabels: Record<string, string> = {
+    reached: "(erreicht)",
+    interested: "(interessiert)",
+    not_interested: "(kein Interesse)",
+    no_answer: "(nicht erreicht)",
+    callback: "(Rückruf)",
+  };
+  return `${labels[type] || type} ${outcome ? outcomeLabels[outcome] || "" : ""}`;
+}
+
+function timeAgo(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "gerade eben";
+  if (mins < 60) return `vor ${mins} Min.`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `vor ${hours} Std.`;
+  const days = Math.floor(hours / 24);
+  return `vor ${days} Tag${days > 1 ? "en" : ""}`;
+}

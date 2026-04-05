@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Megaphone, Briefcase, Phone, Settings, LogOut, Shield, BarChart3,
   Users, FileText, Mail, Video, Target, Zap, Globe, Key, CreditCard,
-  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Search, GitBranch
+  ChevronRight, FolderOpen, CalendarDays, MessageSquare, Home, Gift, Search, GitBranch, Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,15 +132,16 @@ const Layout = ({ children }: LayoutProps) => {
       icon: Home, 
       color: "text-emerald-400"
     },
-    { 
-      path: "/dashboard", 
-      label: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
       color: "text-blue-400",
       subItems: [
         { path: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
         { path: "/today", label: "Heute", icon: CalendarDays },
         { path: "/kpi", label: "KPIs", icon: Target },
+        { path: "/team-arena", label: "Team Arena", icon: Trophy },
       ]
     },
     {
