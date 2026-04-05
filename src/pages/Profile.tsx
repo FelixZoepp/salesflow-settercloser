@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
-import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook } from "lucide-react";
+import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook, Euro } from "lucide-react";
 import TeamInvite from "@/components/TeamInvite";
 
 interface ProfileData {
@@ -24,6 +24,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [defaultDealAmount, setDefaultDealAmount] = useState<string>("0");
   const [profile, setProfile] = useState<ProfileData>({
     id: "",
     name: "",
