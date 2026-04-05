@@ -208,6 +208,9 @@ const Campaigns = () => {
 
   const deleteCampaign = async (id: string) => {
     try {
+      // First detach contacts from this campaign so the FK doesn't block deletion
+      await supabase.from("contacts").update({ campaign_id: null }).eq("campaign_id", id);
+      // Also detach any deals linked via contacts of this campaign
       const { error } = await supabase.from("campaigns").delete().eq("id", id);
       if (error) throw error;
       toast.success("Kampagne gelöscht");
