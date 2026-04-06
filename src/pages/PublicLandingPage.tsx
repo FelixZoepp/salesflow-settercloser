@@ -369,8 +369,8 @@ const PublicLandingPage = () => {
           </div>
         )}
 
-        {/* Legal Footer */}
-        {((settings as any)?.impressumUrl || (settings as any)?.datenschutzUrl) && (() => {
+        {/* Legal Footer - always visible */}
+        {(() => {
           const safeUrl = (url: string) => {
             if (!url) return "#";
             try { const u = new URL(url); return u.protocol === "https:" || u.protocol === "http:" ? url : "#"; } catch { return "#"; }
