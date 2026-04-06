@@ -329,7 +329,7 @@ const LandingPageBuilder = () => {
 
   const importSharedTemplate = async (token: string) => {
     try {
-      const { data: shared, error: fetchErr } = await supabase
+      const { data: shared, error: fetchErr } = await (supabase as any)
         .from("landing_pages")
         .select("name, content, styles, meta_title, meta_description, calendar_url")
         .eq("share_token", token)

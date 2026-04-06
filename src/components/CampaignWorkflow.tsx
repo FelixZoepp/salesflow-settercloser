@@ -313,7 +313,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
       if (contactIds.length > 0) {
         // Ensure progress rows exist for current user
-        const { data: existingProgress } = await supabase
+        const { data: existingProgress } = await (supabase as any)
           .from('team_contact_progress')
           .select('contact_id')
           .eq('user_id', currentUserId)
@@ -328,7 +328,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
             // Batch insert in chunks of 500
             for (let i = 0; i < missing.length; i += 500) {
               const chunk = missing.slice(i, i + 500);
-              await supabase.from('team_contact_progress').insert(
+              await (supabase as any).from('team_contact_progress').insert(
                 chunk.map(cid => ({
                   contact_id: cid,
                   user_id: currentUserId,
@@ -341,7 +341,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         }
 
         // Load user's progress
-        const { data: myProgress } = await supabase
+        const { data: myProgress } = await (supabase as any)
           .from('team_contact_progress')
           .select('contact_id, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, responded_at, positive_reply_at, appointment_booked_at')
           .eq('user_id', currentUserId)
@@ -595,7 +595,7 @@ LG`
         progressUpdate[timestampField] = now;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('team_contact_progress')
         .update(progressUpdate)
         .eq('contact_id', contactId)

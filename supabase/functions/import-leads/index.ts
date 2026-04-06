@@ -138,8 +138,6 @@ Deno.serve(async (req) => {
         if (!row.first_name) missingFields.push('first_name');
         if (!row.last_name) missingFields.push('last_name');
         if (!row.linkedin_url) missingFields.push('linkedin_url');
-        if (!row.email) missingFields.push('email');
-        if (!row.phone && !row.mobile) missingFields.push('phone/mobile');
         
         if (missingFields.length > 0) {
           parseErrors.push({ 

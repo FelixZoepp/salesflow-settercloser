@@ -49,6 +49,8 @@ interface ContactData {
   video_url: string | null;
   pitch_video_url: string | null;
   account_id: string | null;
+  member_user_id?: string | null;
+  [key: string]: any;
 }
 
 // Helper to check if URL is YouTube
@@ -158,7 +160,7 @@ const VideoNote = () => {
     try {
       const rpcParams: Record<string, any> = { contact_slug: slug };
       if (memberCode) rpcParams.p_member_code = parseInt(memberCode, 10);
-      const { data: contactResult, error: contactError } = await supabase
+      const { data: contactResult, error: contactError } = await (supabase as any)
         .rpc('get_contact_by_slug', rpcParams);
 
       if (contactError) throw contactError;
