@@ -69,7 +69,7 @@ function autoDetectMapping(csvColumn: string): string | null {
   return null;
 }
 
-const OUTBOUND_REQUIRED_FIELDS = ['first_name', 'last_name'];
+const OUTBOUND_REQUIRED_FIELDS = ['first_name', 'last_name', 'linkedin_url'];
 
 interface ColumnMapperProps {
   csvHeaders: string[];

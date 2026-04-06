@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
         const missingFields: string[] = [];
         if (!row.first_name) missingFields.push('first_name');
         if (!row.last_name) missingFields.push('last_name');
+        if (!row.linkedin_url) missingFields.push('linkedin_url');
 
         if (missingFields.length > 0) {
           parseErrors.push({
