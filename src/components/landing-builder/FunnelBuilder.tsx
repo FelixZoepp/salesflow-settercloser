@@ -519,12 +519,55 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <NumberInput label="Zeilenhöhe" value={s.lineHeight} onChange={v => update("lineHeight", v)} min={1} max={2.5} step={0.1} />
           <ColorInput label="Grundfarbe" value={s.color} onChange={v => update("color", v)} />
         </>;
-      case "image":
+      case "image": {
+        const uploadImage = async (file: File) => {
+          if (!file.type.startsWith("image/")) { toast.error("Nur Bilder erlaubt"); return; }
+          if (file.size > 5 * 1024 * 1024) { toast.error("Max. 5 MB"); return; }
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { toast.error("Nicht eingeloggt"); return; }
+            const ext = file.name.split(".").pop() || "png";
+            const fileName = `${user.id}/images/${Date.now()}.${ext}`;
+            const { error: uploadErr } = await supabase.storage
+              .from("avatars")
+              .upload(fileName, file, { upsert: true, contentType: file.type });
+            if (uploadErr) throw uploadErr;
+            const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(fileName);
+            update("src", publicUrl);
+            toast.success("Bild hochgeladen");
+          } catch (err: any) {
+            console.error("Image upload error:", err);
+            toast.error("Upload fehlgeschlagen: " + (err?.message || ""));
+          }
+        };
         return <>
-          <TextInput label="Bild URL" value={s.src} onChange={v => update("src", v)} placeholder="https://..." />
+          {s.src ? (
+            <div style={{ marginBottom: 8 }}>
+              <img src={s.src} alt="" style={{ width: "100%", maxHeight: 120, objectFit: "contain", borderRadius: 6, marginBottom: 6 }} />
+              <div style={{ display: "flex", gap: 6 }}>
+                <div
+                  onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = () => { if (inp.files?.[0]) uploadImage(inp.files[0]); }; inp.click(); }}
+                  style={{ cursor: "pointer", color: "#6C5CE7", fontSize: 11, fontWeight: 600 }}
+                >Ersetzen</div>
+                <div onClick={() => update("src", "")} style={{ cursor: "pointer", color: "#ff6b6b88", fontSize: 11 }}>Entfernen</div>
+              </div>
+            </div>
+          ) : (
+            <div
+              onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#6C5CE7"; }}
+              onDragLeave={e => { e.currentTarget.style.borderColor = "#ffffff18"; }}
+              onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#ffffff18"; const f = e.dataTransfer.files[0]; if (f) uploadImage(f); }}
+              onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = () => { if (inp.files?.[0]) uploadImage(inp.files[0]); }; inp.click(); }}
+              style={{ padding: "16px 8px", borderRadius: 6, border: "2px dashed #ffffff18", background: "#ffffff04", textAlign: "center", cursor: "pointer", fontSize: 11, color: "#ffffff44", transition: "border-color 0.2s", marginBottom: 8 }}
+            >
+              Bild hochladen oder hierher ziehen
+            </div>
+          )}
+          <TextInput label="oder Bild-URL" value={s.src} onChange={v => update("src", v)} placeholder="https://..." />
           <TextInput label="Alt Text" value={s.alt} onChange={v => update("alt", v)} />
           <NumberInput label="Rundung" value={s.borderRadius} onChange={v => update("borderRadius", v)} min={0} max={50} unit="px" />
         </>;
+      }
       case "video":
         return <>
           <VarBtn field="src" />
