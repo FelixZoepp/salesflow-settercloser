@@ -297,11 +297,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
 
       if (contactIds.length > 0) {
         // Ensure progress rows exist for current user
-        const { data: existingProgress } = await supabase
-          .from('team_contact_progress')
+        const { data: existingProgress } = await (supabase
+          .from('team_contact_progress' as any)
           .select('contact_id')
           .eq('user_id', currentUserId)
-          .in('contact_id', contactIds);
+          .in('contact_id', contactIds) as any);
 
         const existingIds = new Set((existingProgress || []).map(p => p.contact_id));
         const missing = contactIds.filter(id => !existingIds.has(id));
@@ -312,7 +312,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
             // Batch insert in chunks of 500
             for (let i = 0; i < missing.length; i += 500) {
               const chunk = missing.slice(i, i + 500);
-              await supabase.from('team_contact_progress').insert(
+              await (supabase.from('team_contact_progress' as any) as any).insert(
                 chunk.map(cid => ({
                   contact_id: cid,
                   user_id: currentUserId,
@@ -325,11 +325,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         }
 
         // Load user's progress
-        const { data: myProgress } = await supabase
-          .from('team_contact_progress')
+        const { data: myProgress } = await (supabase
+          .from('team_contact_progress' as any)
           .select('contact_id, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, responded_at, positive_reply_at, appointment_booked_at')
           .eq('user_id', currentUserId)
-          .in('contact_id', contactIds);
+          .in('contact_id', contactIds) as any);
 
         const progressMap = new Map<string, any>();
         (myProgress || []).forEach(p => progressMap.set(p.contact_id, p));
@@ -580,7 +580,7 @@ LG`
       }
 
       const { error } = await supabase
-        .from('team_contact_progress')
+        .from('team_contact_progress' as any)
         .update(progressUpdate)
         .eq('contact_id', contactId)
         .eq('user_id', currentUserId);

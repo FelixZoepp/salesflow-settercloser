@@ -496,6 +496,8 @@ function VariablePicker({ onInsert, onClose }: { onInsert: (key: string) => void
 function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b: Block) => void; theme: Theme & { accent: string } }) {
   const [showVarPicker, setShowVarPicker] = useState(false);
   const [varTarget, setVarTarget] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const s = block.settings;
   const update = (key: string, val: any) => onChange({ ...block, settings: { ...s, [key]: val } });
   const insertVar = (varKey: string) => { if (varTarget) update(varTarget, (s[varTarget] || "") + varKey); };
@@ -730,8 +732,6 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />
         </>;
       case "html": {
-        const [aiPrompt, setAiPrompt] = useState("");
-        const [aiLoading, setAiLoading] = useState(false);
 
         const generateWithAI = async () => {
           if (!aiPrompt.trim()) return;
