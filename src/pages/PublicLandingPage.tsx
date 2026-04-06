@@ -378,9 +378,9 @@ const PublicLandingPage = () => {
           const impUrl = safeUrl((settings as any)?.impressumUrl || "");
           const dsUrl = safeUrl((settings as any)?.datenschutzUrl || "");
           return (
-            <div style={{ textAlign: "center", padding: "16px 24px", fontSize: 11, color: "#ffffff44", borderTop: "1px solid #ffffff0d" }}>
-              <a href={impUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
-              <a href={dsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutzerklärung</a>
+            <div style={{ textAlign: "center", padding: "20px 24px", fontSize: 12, color: "#ffffff66", borderTop: "1px solid #ffffff15", marginTop: 32 }}>
+              <a href={impUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff77", textDecoration: "underline", textUnderlineOffset: "3px", marginRight: 20 }}>Impressum</a>
+              <a href={dsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff77", textDecoration: "underline", textUnderlineOffset: "3px" }}>Datenschutzerklärung</a>
             </div>
           );
         })()}
