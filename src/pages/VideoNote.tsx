@@ -48,6 +48,7 @@ interface ContactData {
   company: string | null;
   video_url: string | null;
   pitch_video_url: string | null;
+  account_id: string | null;
 }
 
 // Helper to check if URL is YouTube
@@ -75,6 +76,7 @@ const VideoNote = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [youtubeApiReady, setYoutubeApiReady] = useState(false);
+  const [legalLinks, setLegalLinks] = useState({ impressum: "https://content-leads.de/impressum", datenschutz: "https://content-leads.de/datenschutz" });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const youtubePlayerRef = useRef<any>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
@@ -167,6 +169,21 @@ const VideoNote = () => {
       }
 
       setContact(contactData);
+
+      // Load legal links from account settings
+      if (contactData.account_id) {
+        const { data: account } = await supabase
+          .from('accounts')
+          .select('impressum_url, datenschutz_url')
+          .eq('id', contactData.account_id)
+          .single();
+        if (account) {
+          setLegalLinks({
+            impressum: (account as any).impressum_url || "https://content-leads.de/impressum",
+            datenschutz: (account as any).datenschutz_url || "https://content-leads.de/datenschutz",
+          });
+        }
+      }
     } catch (err) {
       console.error('Error loading video:', err);
       setError("Fehler beim Laden");
@@ -593,8 +610,8 @@ const VideoNote = () => {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <span>© {new Date().getFullYear()} Content-Leads. Alle Rechte vorbehalten.</span>
           <div className="flex items-center gap-6">
-            <a href="https://content-leads.de/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Impressum</a>
-            <a href="https://content-leads.de/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Datenschutz</a>
+            <a href={legalLinks.impressum} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Impressum</a>
+            <a href={legalLinks.datenschutz} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Datenschutzerklärung</a>
           </div>
         </div>
       </footer>

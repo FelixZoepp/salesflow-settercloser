@@ -237,9 +237,11 @@ export type Database = {
           company_name: string | null
           created_at: string
           custom_domain: string | null
+          datenschutz_url: string | null
           default_deal_amount: number | null
           email: string | null
           id: string
+          impressum_url: string | null
           is_active: boolean
           logo_url: string | null
           name: string
