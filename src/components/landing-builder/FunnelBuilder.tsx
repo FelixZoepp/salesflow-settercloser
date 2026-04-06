@@ -334,10 +334,15 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
     case "logo":
       return <div style={{ textAlign: "center" }}>
         <p style={{ fontSize: 12, color: c.vfaint, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: mobile ? 16 : 24, flexWrap: "wrap" }}>
-          {(s.logos || []).map((l: string, i: number) => (
-            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{l}</div>
-          ))}
+        <div style={{ display: "flex", justifyContent: "center", gap: mobile ? 16 : 24, flexWrap: "wrap", alignItems: "center" }}>
+          {(s.logos || []).map((l: any, i: number) => {
+            const logoObj = typeof l === "string" ? { text: l, imageUrl: "" } : l;
+            return logoObj.imageUrl ? (
+              <img key={i} src={logoObj.imageUrl} alt={logoObj.text || `Logo ${i + 1}`} style={{ height: 36, maxWidth: 120, objectFit: "contain", opacity: 0.7 }} />
+            ) : (
+              <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{logoObj.text}</div>
+            );
+          })}
         </div>
       </div>;
     case "timer":
@@ -557,18 +562,25 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Kalender URL" value={s.calendarUrl} onChange={v => update("calendarUrl", v)} />
           <NumberInput label="Höhe" value={s.height} onChange={v => update("height", v)} min={200} max={800} unit="px" />
         </>;
-      case "logo":
+      case "logo": {
+        // Normalize logos to objects
+        const normalizedLogos = (s.logos || []).map((l: any) => typeof l === "string" ? { text: l, imageUrl: "" } : l);
         return <>
           <TextInput label="Überschrift" value={s.text} onChange={v => update("text", v)} />
           <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 8, marginTop: 8 }}>Logos</div>
-          {(s.logos || []).map((l: string, i: number) => (
-            <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              <input value={l} onChange={e => { const nl = [...s.logos]; nl[i] = e.target.value; update("logos", nl); }} style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 12, outline: "none" }} />
-              <div onClick={() => update("logos", s.logos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "6px" }}><Icons.Trash /></div>
+          {normalizedLogos.map((logo: any, i: number) => (
+            <div key={i} style={{ marginBottom: 10, padding: 8, borderRadius: 8, border: "1px solid #ffffff10", background: "#ffffff05" }}>
+              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                <input placeholder="Name (Fallback)" value={logo.text} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], text: e.target.value }; update("logos", nl); }} style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 12, outline: "none" }} />
+                <div onClick={() => update("logos", normalizedLogos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "6px" }}><Icons.Trash /></div>
+              </div>
+              <input placeholder="Bild-URL (https://...)" value={logo.imageUrl || ""} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], imageUrl: e.target.value }; update("logos", nl); }} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 11, outline: "none" }} />
+              {logo.imageUrl && <img src={logo.imageUrl} alt="" style={{ height: 28, marginTop: 6, objectFit: "contain", opacity: 0.8 }} />}
             </div>
           ))}
-          <div onClick={() => update("logos", [...(s.logos || []), "Logo"])} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "#6C5CE7", fontSize: 12, fontWeight: 600 }}><Icons.Plus /> Logo hinzufügen</div>
+          <div onClick={() => update("logos", [...normalizedLogos, { text: "Logo", imageUrl: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "#6C5CE7", fontSize: 12, fontWeight: 600 }}><Icons.Plus /> Logo hinzufügen</div>
         </>;
+      }
       case "timer":
         return <>
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />

@@ -576,10 +576,15 @@ function PublicBlock({
     case "logo":
       return <div style={{ textAlign: "center" }}>
         <p style={{ fontSize: 12, color: c.vfaint, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px 0", fontWeight: 600 }}>{s.text}</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, flexWrap: "wrap" }}>
-          {(s.logos || []).map((l: string, i: number) => (
-            <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{l}</div>
-          ))}
+        <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, flexWrap: "wrap", alignItems: "center" }}>
+          {(s.logos || []).map((l: any, i: number) => {
+            const logoObj = typeof l === "string" ? { text: l, imageUrl: "" } : l;
+            return logoObj.imageUrl ? (
+              <img key={i} src={logoObj.imageUrl} alt={logoObj.text || `Logo ${i + 1}`} style={{ height: 36, maxWidth: 120, objectFit: "contain", opacity: 0.7 }} />
+            ) : (
+              <div key={i} style={{ width: 80, height: 36, borderRadius: 6, background: c.inputBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.ghost, border: `1px solid ${c.cardBorder}` }}>{logoObj.text}</div>
+            );
+          })}
         </div>
       </div>;
 
