@@ -637,24 +637,24 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 8, marginTop: 8 }}>Logos</div>
           {normalizedLogos.map((logo: any, i: number) => (
             <div key={i} style={{ marginBottom: 10, padding: 8, borderRadius: 8, border: "1px solid #ffffff10", background: "#ffffff05" }}>
-              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                <input placeholder="Name" value={logo.text} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], text: e.target.value }; update("logos", nl); }} style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 12, outline: "none" }} />
-                <div onClick={() => update("logos", normalizedLogos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "6px" }}><Icons.Trash /></div>
-              </div>
               {logo.imageUrl ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <img src={logo.imageUrl} alt="" style={{ height: 32, objectFit: "contain", borderRadius: 4 }} />
-                  <div onClick={() => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], imageUrl: "" }; update("logos", nl); }} style={{ cursor: "pointer", color: "#ff6b6b88", fontSize: 11 }}>Entfernen</div>
+                  <div onClick={() => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], imageUrl: "" }; update("logos", nl); }} style={{ cursor: "pointer", color: "#ff6b6b88", fontSize: 11, flex: 1 }}>Ersetzen</div>
+                  <div onClick={() => update("logos", normalizedLogos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "4px" }}><Icons.Trash /></div>
                 </div>
               ) : (
-                <div
-                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#6C5CE7"; }}
-                  onDragLeave={e => { e.currentTarget.style.borderColor = "#ffffff18"; }}
-                  onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#ffffff18"; const f = e.dataTransfer.files[0]; if (f) uploadLogoImage(f, i); }}
-                  onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = () => { if (inp.files?.[0]) uploadLogoImage(inp.files[0], i); }; inp.click(); }}
-                  style={{ marginTop: 4, padding: "12px 8px", borderRadius: 6, border: "2px dashed #ffffff18", background: "#ffffff04", textAlign: "center", cursor: "pointer", fontSize: 11, color: "#ffffff44", transition: "border-color 0.2s" }}
-                >
-                  Bild hierher ziehen oder klicken
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <div
+                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#6C5CE7"; }}
+                    onDragLeave={e => { e.currentTarget.style.borderColor = "#ffffff18"; }}
+                    onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#ffffff18"; const f = e.dataTransfer.files[0]; if (f) uploadLogoImage(f, i); }}
+                    onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = () => { if (inp.files?.[0]) uploadLogoImage(inp.files[0], i); }; inp.click(); }}
+                    style={{ flex: 1, padding: "12px 8px", borderRadius: 6, border: "2px dashed #ffffff18", background: "#ffffff04", textAlign: "center", cursor: "pointer", fontSize: 11, color: "#ffffff44", transition: "border-color 0.2s" }}
+                  >
+                    Logo-Bild hochladen
+                  </div>
+                  <div onClick={() => update("logos", normalizedLogos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "4px" }}><Icons.Trash /></div>
                 </div>
               )}
             </div>
