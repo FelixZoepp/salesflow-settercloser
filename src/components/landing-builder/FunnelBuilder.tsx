@@ -65,6 +65,7 @@ interface PageSettings {
   name: string; slug: string; customDomain: string; favicon: string;
   metaTitle: string; metaDescription: string; theme: number; accentOverride: string;
   maxWidth: number; blockGap: number; padding: number;
+  impressumUrl?: string; datenschutzUrl?: string;
 }
 
 interface FunnelBuilderProps {

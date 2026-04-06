@@ -372,16 +372,15 @@ const PublicLandingPage = () => {
         {/* Legal Footer */}
         {((settings as any)?.impressumUrl || (settings as any)?.datenschutzUrl) && (() => {
           const safeUrl = (url: string) => {
+            if (!url) return "#";
             try { const u = new URL(url); return u.protocol === "https:" || u.protocol === "http:" ? url : "#"; } catch { return "#"; }
           };
+          const impUrl = safeUrl((settings as any)?.impressumUrl || "");
+          const dsUrl = safeUrl((settings as any)?.datenschutzUrl || "");
           return (
             <div style={{ textAlign: "center", padding: "16px 24px", fontSize: 11, color: "#ffffff44", borderTop: "1px solid #ffffff0d" }}>
-              {(settings as any)?.impressumUrl && (
-                <a href={safeUrl((settings as any).impressumUrl)} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
-              )}
-              {(settings as any)?.datenschutzUrl && (
-                <a href={safeUrl((settings as any).datenschutzUrl)} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutz</a>
-              )}
+              <a href={impUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none", marginRight: 16 }}>Impressum</a>
+              <a href={dsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff55", textDecoration: "none" }}>Datenschutzerklärung</a>
             </div>
           );
         })()}

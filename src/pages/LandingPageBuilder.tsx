@@ -213,6 +213,8 @@ const LandingPageBuilder = () => {
           maxWidth: 480,
           blockGap: 20,
           padding: 24,
+          impressumUrl: "",
+          datenschutzUrl: "",
         },
       };
 
