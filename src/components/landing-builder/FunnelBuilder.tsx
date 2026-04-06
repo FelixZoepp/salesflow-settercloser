@@ -610,9 +610,13 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
 
         const uploadLogoImage = async (file: File, logoIndex: number) => {
           if (!file.type.startsWith("image/")) { toast.error("Nur Bilder erlaubt"); return; }
-          if (file.size > 2 * 1024 * 1024) { toast.error("Max. 2 MB"); return; }
+          if (file.size > 5 * 1024 * 1024) { toast.error("Max. 5 MB"); return; }
           try {
-            const fileName = `logos/${Date.now()}_${logoIndex}.${file.name.split(".").pop()}`;
+            // Get current user ID for storage path (RLS requires uid as first folder)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { toast.error("Nicht eingeloggt"); return; }
+            const ext = file.name.split(".").pop() || "png";
+            const fileName = `${user.id}/logos/${Date.now()}_${logoIndex}.${ext}`;
             const { error: uploadErr } = await supabase.storage
               .from("avatars")
               .upload(fileName, file, { upsert: true, contentType: file.type });
@@ -622,9 +626,9 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
             nl[logoIndex] = { ...nl[logoIndex], imageUrl: publicUrl };
             update("logos", nl);
             toast.success("Logo hochgeladen");
-          } catch (err) {
+          } catch (err: any) {
             console.error("Logo upload error:", err);
-            toast.error("Upload fehlgeschlagen");
+            toast.error("Upload fehlgeschlagen: " + (err?.message || "Unbekannter Fehler"));
           }
         };
 
