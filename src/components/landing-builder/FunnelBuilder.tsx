@@ -210,9 +210,19 @@ function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: { h
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastHtml = useRef(html);
+  const initialized = useRef(false);
 
+  // Set initial content once, then only sync when content changes externally
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== html && !ref.current.contains(document.activeElement)) {
+    if (!ref.current) return;
+    if (!initialized.current) {
+      ref.current.innerHTML = html;
+      lastHtml.current = html;
+      initialized.current = true;
+      return;
+    }
+    // Only update DOM if change came from outside (not from user typing)
+    if (html !== lastHtml.current && !ref.current.contains(document.activeElement)) {
       ref.current.innerHTML = html;
       lastHtml.current = html;
     }
@@ -238,7 +248,7 @@ function InlineEditable({ html, onChange, style, tag, blockId, isSelected }: { h
     <div ref={containerRef} style={{ position: "relative" }}>
       {isSelected && <FloatingToolbar containerRef={containerRef} />}
       <Tag ref={ref} contentEditable suppressContentEditableWarning onInput={handleInput} onKeyDown={handleKeyDown} onBlur={handleInput}
-        onClick={(e: React.MouseEvent) => e.stopPropagation()} dangerouslySetInnerHTML={{ __html: html }}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         style={{ ...style, outline: "none", cursor: "text", minHeight: "1em" }} />
     </div>
   );
