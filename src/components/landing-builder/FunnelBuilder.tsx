@@ -563,22 +563,56 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <NumberInput label="Höhe" value={s.height} onChange={v => update("height", v)} min={200} max={800} unit="px" />
         </>;
       case "logo": {
-        // Normalize logos to objects
         const normalizedLogos = (s.logos || []).map((l: any) => typeof l === "string" ? { text: l, imageUrl: "" } : l);
+
+        const uploadLogoImage = async (file: File, logoIndex: number) => {
+          if (!file.type.startsWith("image/")) { toast.error("Nur Bilder erlaubt"); return; }
+          if (file.size > 2 * 1024 * 1024) { toast.error("Max. 2 MB"); return; }
+          try {
+            const fileName = `logos/${Date.now()}_${logoIndex}.${file.name.split(".").pop()}`;
+            const { error: uploadErr } = await supabase.storage
+              .from("avatars")
+              .upload(fileName, file, { upsert: true, contentType: file.type });
+            if (uploadErr) throw uploadErr;
+            const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(fileName);
+            const nl = [...normalizedLogos];
+            nl[logoIndex] = { ...nl[logoIndex], imageUrl: publicUrl };
+            update("logos", nl);
+            toast.success("Logo hochgeladen");
+          } catch (err) {
+            console.error("Logo upload error:", err);
+            toast.error("Upload fehlgeschlagen");
+          }
+        };
+
         return <>
           <TextInput label="Überschrift" value={s.text} onChange={v => update("text", v)} />
           <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 8, marginTop: 8 }}>Logos</div>
           {normalizedLogos.map((logo: any, i: number) => (
             <div key={i} style={{ marginBottom: 10, padding: 8, borderRadius: 8, border: "1px solid #ffffff10", background: "#ffffff05" }}>
               <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                <input placeholder="Name (Fallback)" value={logo.text} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], text: e.target.value }; update("logos", nl); }} style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 12, outline: "none" }} />
+                <input placeholder="Name" value={logo.text} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], text: e.target.value }; update("logos", nl); }} style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 12, outline: "none" }} />
                 <div onClick={() => update("logos", normalizedLogos.filter((_: any, j: number) => j !== i))} style={{ cursor: "pointer", color: "#ff6b6b88", padding: "6px" }}><Icons.Trash /></div>
               </div>
-              <input placeholder="Bild-URL (https://...)" value={logo.imageUrl || ""} onChange={e => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], imageUrl: e.target.value }; update("logos", nl); }} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ffffff18", background: "#ffffff08", color: "#fff", fontSize: 11, outline: "none" }} />
-              {logo.imageUrl && <img src={logo.imageUrl} alt="" style={{ height: 28, marginTop: 6, objectFit: "contain", opacity: 0.8 }} />}
+              {logo.imageUrl ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                  <img src={logo.imageUrl} alt="" style={{ height: 32, objectFit: "contain", borderRadius: 4 }} />
+                  <div onClick={() => { const nl = [...normalizedLogos]; nl[i] = { ...nl[i], imageUrl: "" }; update("logos", nl); }} style={{ cursor: "pointer", color: "#ff6b6b88", fontSize: 11 }}>Entfernen</div>
+                </div>
+              ) : (
+                <div
+                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#6C5CE7"; }}
+                  onDragLeave={e => { e.currentTarget.style.borderColor = "#ffffff18"; }}
+                  onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#ffffff18"; const f = e.dataTransfer.files[0]; if (f) uploadLogoImage(f, i); }}
+                  onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = () => { if (inp.files?.[0]) uploadLogoImage(inp.files[0], i); }; inp.click(); }}
+                  style={{ marginTop: 4, padding: "12px 8px", borderRadius: 6, border: "2px dashed #ffffff18", background: "#ffffff04", textAlign: "center", cursor: "pointer", fontSize: 11, color: "#ffffff44", transition: "border-color 0.2s" }}
+                >
+                  Bild hierher ziehen oder klicken
+                </div>
+              )}
             </div>
           ))}
-          <div onClick={() => update("logos", [...normalizedLogos, { text: "Logo", imageUrl: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "#6C5CE7", fontSize: 12, fontWeight: 600 }}><Icons.Plus /> Logo hinzufügen</div>
+          <div onClick={() => update("logos", [...normalizedLogos, { text: "Logo", imageUrl: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "#6C5CE7", fontSize: 12, fontWeight: 600, marginTop: 4 }}><Icons.Plus /> Logo hinzufügen</div>
         </>;
       }
       case "timer":
