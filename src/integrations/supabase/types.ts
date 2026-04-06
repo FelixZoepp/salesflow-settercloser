@@ -1737,6 +1737,7 @@ export type Database = {
           og_image_url: string | null
           prompt: string | null
           published_at: string | null
+          share_token: string | null
           slug: string
           status: string
           styles: Json

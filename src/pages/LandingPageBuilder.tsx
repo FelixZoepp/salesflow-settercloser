@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import {
   Plus, Globe, Eye, Trash2, Pencil, Copy, MoreVertical,
-  FileText, Loader2, Search, LayoutGrid, List,
+  FileText, Loader2, Search, LayoutGrid, List, Share2, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,6 +144,58 @@ const LandingPageBuilder = () => {
           { id: "blk_8", type: "button", settings: { text: "Lass uns sprechen", url: "{{sender.calendarLink}}", bgColor: "#ffffff", textColor: "#0a0a0f", borderRadius: 12, fontSize: 16, fullWidth: false, paddingY: 14, animation: "none" } },
           { id: "blk_9", type: "spacer", settings: { height: 48 } },
         ],
+        "case-study": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "heading", settings: { text: "{{lead.firstName}}, so haben wir Unternehmen wie {{lead.company}} geholfen", level: "h1", align: "center", color: "#ffffff", fontSize: 28 } },
+          { id: "blk_3", type: "spacer", settings: { height: 8 } },
+          { id: "blk_4", type: "text", settings: { text: "Echte Ergebnisse aus der Zusammenarbeit mit Unternehmen in deiner Branche.", align: "center", color: "#ffffffcc", fontSize: 16, lineHeight: 1.6 } },
+          { id: "blk_5", type: "spacer", settings: { height: 24 } },
+          { id: "blk_6", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_7", type: "spacer", settings: { height: 24 } },
+          { id: "blk_8", type: "heading", settings: { text: "Fallstudie: +127% mehr qualifizierte Termine", level: "h2", align: "center", color: "#ffffff", fontSize: 22 } },
+          { id: "blk_9", type: "spacer", settings: { height: 8 } },
+          { id: "blk_10", type: "text", settings: { text: "<b>Ausgangslage:</b> Das Sales-Team hat über LinkedIn manuell Leads angeschrieben – ohne Tracking, ohne Systematik.\n\n<b>Lösung:</b> Personalisierte Video-Pitches mit automatischem Lead-Scoring und Follow-up-Sequenzen.\n\n<b>Ergebnis:</b> 127% mehr Settings in 60 Tagen. Die Annahmerate bei Vernetzungen stieg von 22% auf 58%.", align: "left", color: "#ffffffcc", fontSize: 15, lineHeight: 1.7 } },
+          { id: "blk_11", type: "spacer", settings: { height: 16 } },
+          { id: "blk_12", type: "testimonial", settings: { quote: "Wir konnten unser Setting-Team von 2 auf 5 Leute skalieren, weil das System endlich funktioniert.", author: "Markus B.", role: "Head of Sales", avatar: "", rating: 5 } },
+          { id: "blk_13", type: "spacer", settings: { height: 24 } },
+          { id: "blk_14", type: "button", settings: { text: "Gleiche Ergebnisse für {{lead.company}} →", url: "{{sender.calendarLink}}", bgColor: "#6C5CE7", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "pulse" } },
+        ],
+        "linkedin-authority": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "social", settings: { number: "2.847+", label: "Setter-Termine in 12 Monaten generiert" } },
+          { id: "blk_3", type: "spacer", settings: { height: 16 } },
+          { id: "blk_4", type: "heading", settings: { text: "{{lead.firstName}}, dein Team verdient ein System das funktioniert", level: "h1", align: "center", color: "#ffffff", fontSize: 28 } },
+          { id: "blk_5", type: "spacer", settings: { height: 8 } },
+          { id: "blk_6", type: "text", settings: { text: "Die meisten Sales-Teams verbrennen 80% ihrer Zeit mit manuellem Outreach. Hier ist warum {{lead.company}} das nicht muss.", align: "center", color: "#ffffffcc", fontSize: 16, lineHeight: 1.6 } },
+          { id: "blk_7", type: "spacer", settings: { height: 24 } },
+          { id: "blk_8", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_9", type: "spacer", settings: { height: 24 } },
+          { id: "blk_10", type: "logo", settings: { text: "Bekannt aus", logos: ["LinkedIn", "Sales Hacker", "OMR", "Gründerszene"] } },
+          { id: "blk_11", type: "spacer", settings: { height: 16 } },
+          { id: "blk_12", type: "testimonial", settings: { quote: "Endlich ein System, das LinkedIn-Outreach messbar macht. Unsere Closer haben jetzt eine volle Pipeline.", author: "Sandra K.", role: "VP Sales, SaaS Startup", avatar: "", rating: 5 } },
+          { id: "blk_13", type: "spacer", settings: { height: 8 } },
+          { id: "blk_14", type: "testimonial", settings: { quote: "Von 3 auf 15 Termine pro Woche. Die personalisierten Videos machen den Unterschied.", author: "Thomas L.", role: "Gründer, Agentur", avatar: "", rating: 5 } },
+          { id: "blk_15", type: "spacer", settings: { height: 24 } },
+          { id: "blk_16", type: "timer", settings: { hours: 24, label: "Dein Slot ist reserviert für", bgColor: "#6C5CE722", textColor: "#6C5CE7" } },
+          { id: "blk_17", type: "spacer", settings: { height: 16 } },
+          { id: "blk_18", type: "button", settings: { text: "Kostenloses Strategiegespräch buchen →", url: "{{sender.calendarLink}}", bgColor: "#00b894", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "glow" } },
+        ],
+        "ab-test": [
+          { id: "blk_1", type: "spacer", settings: { height: 32 } },
+          { id: "blk_2", type: "heading", settings: { text: "{{lead.firstName}}, kurze Frage zu {{lead.company}}", level: "h1", align: "center", color: "#ffffff", fontSize: 30 } },
+          { id: "blk_3", type: "spacer", settings: { height: 16 } },
+          { id: "blk_4", type: "quiz", settings: { question: "Was beschreibt eure aktuelle LinkedIn-Strategie am besten?", options: ["Wir posten Content, aber haben kein Outreach-System", "Wir machen manuelles Outreach ohne Tracking", "Wir nutzen Tools, aber die Ergebnisse sind mäßig", "Wir haben noch gar keine LinkedIn-Strategie"], multiSelect: false, style: "cards" } },
+          { id: "blk_5", type: "spacer", settings: { height: 24 } },
+          { id: "blk_6", type: "heading", settings: { text: "Hier ist, was wir für Teams wie deins gebaut haben:", level: "h2", align: "center", color: "#ffffff", fontSize: 22 } },
+          { id: "blk_7", type: "spacer", settings: { height: 8 } },
+          { id: "blk_8", type: "video", settings: { src: "{{lead.videoUrl}}", posterSrc: "", autoplay: false, controls: true, borderRadius: 12 } },
+          { id: "blk_9", type: "spacer", settings: { height: 16 } },
+          { id: "blk_10", type: "social", settings: { number: "58%", label: "durchschnittliche Vernetzungs-Annahmerate unserer Kunden" } },
+          { id: "blk_11", type: "spacer", settings: { height: 16 } },
+          { id: "blk_12", type: "testimonial", settings: { quote: "Wir haben unsere Antwortrate verdreifacht. Die personalisierten Landing Pages sind ein Game Changer.", author: "Julia M.", role: "Head of Growth", avatar: "", rating: 5 } },
+          { id: "blk_13", type: "spacer", settings: { height: 24 } },
+          { id: "blk_14", type: "button", settings: { text: "So funktioniert es für {{lead.company}} →", url: "{{sender.calendarLink}}", bgColor: "#6C5CE7", textColor: "#ffffff", borderRadius: 50, fontSize: 18, fullWidth: true, paddingY: 16, animation: "pulse" } },
+        ],
       };
 
       const templateBlocks = TEMPLATES[selectedTemplate] || TEMPLATES["video-pitch"];
@@ -244,6 +296,87 @@ const LandingPageBuilder = () => {
       toast.error("Fehler beim Duplizieren");
     }
   };
+
+  const sharePage = async (page: LandingPage) => {
+    try {
+      // Check if already has a share token
+      const { data: existing } = await supabase
+        .from("landing_pages")
+        .select("share_token")
+        .eq("id", page.id)
+        .single();
+
+      let token = (existing as any)?.share_token;
+      if (!token) {
+        token = crypto.randomUUID();
+        const { error } = await supabase
+          .from("landing_pages")
+          .update({ share_token: token } as any)
+          .eq("id", page.id);
+        if (error) throw error;
+      }
+
+      const shareUrl = `${window.location.origin}/landing-pages?import=${token}`;
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Share-Link kopiert! Andere Nutzer können diese Vorlage importieren.");
+    } catch (err) {
+      console.error("Error sharing page:", err);
+      toast.error("Fehler beim Teilen");
+    }
+  };
+
+  const importSharedTemplate = async (token: string) => {
+    try {
+      const { data: shared, error: fetchErr } = await supabase
+        .from("landing_pages")
+        .select("name, content, styles, meta_title, meta_description, calendar_url")
+        .eq("share_token", token)
+        .single();
+
+      if (fetchErr || !shared) {
+        toast.error("Vorlage nicht gefunden oder Link ungültig");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_id")
+        .eq("id", session!.user.id)
+        .single();
+
+      const slug = `imported-${Date.now()}`;
+      const { error } = await supabase.from("landing_pages").insert({
+        name: `${shared.name} (Import)`,
+        slug,
+        status: "draft",
+        content: shared.content,
+        styles: shared.styles,
+        user_id: session!.user.id,
+        account_id: profile?.account_id,
+        meta_title: shared.meta_title,
+        meta_description: shared.meta_description,
+        calendar_url: shared.calendar_url,
+      });
+
+      if (error) throw error;
+      toast.success(`Vorlage "${shared.name}" importiert!`);
+      loadPages();
+      // Clean URL
+      window.history.replaceState({}, "", "/landing-pages");
+    } catch (err) {
+      console.error("Error importing template:", err);
+      toast.error("Fehler beim Importieren");
+    }
+  };
+
+  // Check for import token in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const importToken = params.get("import");
+    if (importToken && session?.user?.id) {
+      importSharedTemplate(importToken);
+    }
+  }, [session?.user?.id]);
 
   const togglePublish = async (page: LandingPage) => {
     const newStatus = page.status === "published" ? "draft" : "published";
@@ -402,6 +535,9 @@ const LandingPageBuilder = () => {
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); duplicatePage(page); }}>
                         <Copy className="w-4 h-4 mr-2" /> Duplizieren
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); sharePage(page); }}>
+                        <Share2 className="w-4 h-4 mr-2" /> Als Vorlage teilen
+                      </DropdownMenuItem>
                       {page.status === "published" && (
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(`/lp/${page.slug}`, "_blank"); }}>
                           <Eye className="w-4 h-4 mr-2" /> Ansehen
@@ -541,6 +677,9 @@ const LandingPageBuilder = () => {
                   { id: "quiz-funnel", name: "Quiz Funnel", desc: "Quiz → Video → CTA", emoji: "❓" },
                   { id: "social-proof", name: "Social Proof", desc: "Logos + Testimonial + Timer", emoji: "⭐" },
                   { id: "minimal", name: "Minimal", desc: "Clean & einfach", emoji: "✨" },
+                  { id: "case-study", name: "Fallstudie", desc: "Case Study + Ergebnisse + Testimonial", emoji: "📊" },
+                  { id: "linkedin-authority", name: "LinkedIn Authority", desc: "Social Proof + 2 Testimonials + Timer", emoji: "🏆" },
+                  { id: "ab-test", name: "Quiz + Fallstudie", desc: "Quiz → Video → Stats + Testimonial", emoji: "🧪" },
                 ].map((tpl) => (
                   <div
                     key={tpl.id}
