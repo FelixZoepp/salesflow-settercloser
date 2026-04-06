@@ -730,48 +730,7 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />
         </>;
       case "html": {
-        const [aiPrompt, setAiPrompt] = useState("");
-        const [aiLoading, setAiLoading] = useState(false);
-
-        const generateWithAI = async () => {
-          if (!aiPrompt.trim()) return;
-          setAiLoading(true);
-          try {
-            const { data, error } = await supabase.functions.invoke("generate-html-block", {
-              body: { prompt: aiPrompt.trim() },
-            });
-            if (error) throw error;
-            if (data?.html) {
-              update("code", data.html);
-              toast.success("HTML generiert!");
-            } else {
-              toast.error("Keine Antwort vom KI-Modell");
-            }
-          } catch (err: any) {
-            console.error("AI generation error:", err);
-            toast.error("KI-Generierung fehlgeschlagen: " + (err?.message || ""));
-          } finally {
-            setAiLoading(false);
-          }
-        };
-
         return <>
-          <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 6 }}>KI-Assistent</div>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-            <input
-              value={aiPrompt}
-              onChange={e => setAiPrompt(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); generateWithAI(); } }}
-              placeholder="z.B. Preistabelle mit 3 Spalten, Vergleichstabelle, FAQ Akkordeon..."
-              style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: "1px solid #6C5CE744", background: "#6C5CE711", color: "#fff", fontSize: 12, outline: "none" }}
-            />
-            <div
-              onClick={generateWithAI}
-              style={{ padding: "8px 12px", borderRadius: 6, background: aiLoading ? "#6C5CE744" : "#6C5CE7", color: "#fff", fontSize: 12, fontWeight: 600, cursor: aiLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
-            >
-              <Icons.Sparkle /> {aiLoading ? "..." : "Generieren"}
-            </div>
-          </div>
           <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 6 }}>HTML Code</div>
           <textarea
             value={s.code || ""}
