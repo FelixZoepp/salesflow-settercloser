@@ -450,22 +450,23 @@ function PublicBlock({
         </div>;
       }
       // YouTube / Vimeo / Loom embed - track on first interaction
+      const iframeBase: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" };
       if (videoSrc.includes("youtube.com") || videoSrc.includes("youtu.be")) {
         const videoId = videoSrc.includes("youtu.be") ? videoSrc.split("/").pop() : (() => { try { return new URL(videoSrc).searchParams.get("v"); } catch { return videoSrc.split("v=")[1]?.split("&")[0]; } })();
         return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
-          <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=${s.autoplay ? 1 : 0}&enablejsapi=1`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; encrypted-media" allowFullScreen />
+          <iframe src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${s.autoplay ? 1 : 0}&rel=0`} style={iframeBase} allow="autoplay; encrypted-media; fullscreen" allowFullScreen referrerPolicy="no-referrer" />
         </div>;
       }
       if (videoSrc.includes("vimeo.com")) {
         const vimeoId = videoSrc.split("/").pop();
         return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
-          <iframe src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${s.autoplay ? 1 : 0}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; fullscreen" allowFullScreen />
+          <iframe src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${s.autoplay ? 1 : 0}`} style={iframeBase} allow="autoplay; fullscreen" allowFullScreen referrerPolicy="no-referrer" />
         </div>;
       }
       if (videoSrc.includes("loom.com")) {
         const loomId = videoSrc.split("/share/").pop()?.split("?")[0];
         return <div onClick={trackPlay} style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
-          <iframe src={`https://www.loom.com/embed/${loomId}?autoplay=${s.autoplay ? 1 : 0}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="autoplay; fullscreen" allowFullScreen />
+          <iframe src={`https://www.loom.com/embed/${loomId}?autoplay=${s.autoplay ? 1 : 0}`} style={iframeBase} allow="autoplay; fullscreen" allowFullScreen referrerPolicy="no-referrer" />
         </div>;
       }
       // Direct video - track on play event
@@ -589,11 +590,16 @@ function PublicBlock({
       </div>;
 
     case "timer": {
+      // Timer key includes contact ID so each lead gets their own countdown
+      const params = new URLSearchParams(window.location.search);
+      const timerContactId = params.get("cid") || "anon";
+      const timerKey = `timer_${block.id}_${timerContactId}`;
+
       const [timeLeft, setTimeLeft] = useState(() => {
-        const savedEnd = localStorage.getItem(`timer_${block.id}`);
+        const savedEnd = localStorage.getItem(timerKey);
         if (savedEnd) return Math.max(0, Math.floor((Number(savedEnd) - Date.now()) / 1000));
         const end = Date.now() + (s.hours || 48) * 3600 * 1000;
-        localStorage.setItem(`timer_${block.id}`, String(end));
+        localStorage.setItem(timerKey, String(end));
         return (s.hours || 48) * 3600;
       });
 
