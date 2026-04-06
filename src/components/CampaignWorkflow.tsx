@@ -325,11 +325,11 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
         }
 
         // Load user's progress
-        const { data: myProgress } = await supabase
+        const { data: myProgress } = await (supabase
           .from('team_contact_progress' as any)
           .select('contact_id, workflow_status, connection_sent_at, connection_accepted_at, first_message_sent_at, fu1_sent_at, fu2_sent_at, fu3_sent_at, responded_at, positive_reply_at, appointment_booked_at')
           .eq('user_id', currentUserId)
-          .in('contact_id', contactIds);
+          .in('contact_id', contactIds) as any);
 
         const progressMap = new Map<string, any>();
         (myProgress || []).forEach(p => progressMap.set(p.contact_id, p));
