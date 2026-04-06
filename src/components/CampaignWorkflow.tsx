@@ -125,9 +125,10 @@ function buildPersonalizedUrl(
   landingPageSlug: string,
   contact: { id: string; first_name: string; last_name: string; company: string | null; position: string | null; email: string | null; phone: string | null; },
   trackingId: string,
-  pitchVideoUrl?: string | null
+  pitchVideoUrl?: string | null,
+  customDomain?: string | null
 ): string {
-  const origin = window.location.origin;
+  const origin = customDomain ? `https://${customDomain}` : window.location.origin;
   const params = new URLSearchParams();
   // Only include non-sensitive data in URL - NO email, phone, or LinkedIn
   if (contact.first_name) params.set("fn", contact.first_name);
@@ -174,6 +175,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
   const [editingContact, setEditingContact] = useState<EditingContact | null>(null);
   const [landingPageSlug, setLandingPageSlug] = useState<string | null>(null);
   const [pitchVideoUrl, setPitchVideoUrl] = useState<string | null>(null);
+  const [accountDomain, setAccountDomain] = useState<string | null>(null);
   const [generatingUrls, setGeneratingUrls] = useState(false);
   const [hideBooked, setHideBooked] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -230,7 +232,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
       for (const contact of targets) {
         const slug = generateLeadSlug(contact.first_name, contact.last_name, contact.company);
         const trackingId = `trk_${contact.id.slice(0, 8)}`;
-        const url = buildPersonalizedUrl(landingPageSlug, contact, trackingId, pitchVideoUrl);
+        const url = buildPersonalizedUrl(landingPageSlug, contact, trackingId, pitchVideoUrl, accountDomain);
 
         const { error } = await supabase
           .from("contacts")
@@ -263,6 +265,9 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
       const { data: profile } = await supabase.from('profiles').select('account_id, role, is_super_admin').eq('id', user.id).single();
       if (!profile?.account_id) return;
       setIsAdmin(profile.role === 'admin' || profile.is_super_admin === true);
+      // Load custom domain for URL generation
+      const { data: account } = await supabase.from('accounts').select('custom_domain').eq('id', profile.account_id).single();
+      if (account?.custom_domain) setAccountDomain(account.custom_domain);
       const { data: members } = await supabase.from('profiles').select('id, name').eq('account_id', profile.account_id);
       if (members && members.length > 1) {
         setHasTeam(true);
@@ -760,7 +765,7 @@ LG`
             position: contact.position,
             email: contact.email,
             phone: contact.phone,
-          }, trackingId);
+          }, trackingId, pitchVideoUrl, accountDomain);
 
           await supabase
             .from('contacts')

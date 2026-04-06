@@ -119,50 +119,29 @@ export default function DomainSettings() {
             </Alert>
 
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
-              <h4 className="font-medium text-sm">Wähle eine der folgenden Optionen:</h4>
-              
-              {/* Option 1: A Record */}
+              <h4 className="font-medium text-sm">Einrichtung in 2 Schritten:</h4>
+
+              {/* Step 1: Lovable Dashboard */}
               <div className="space-y-2 p-3 bg-background rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">Option 1: A-Record (empfohlen)</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-2"
-                    onClick={() => copyToClipboard("76.76.21.21")}
-                  >
-                    <Copy className="h-3 w-3 mr-1" />
-                    <span className="text-xs">IP kopieren</span>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Typ</p>
-                    <p className="font-mono font-semibold">A</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Name/Host</p>
-                    <p className="font-mono">{cleanedDomain.includes('.') ? cleanedDomain.split('.')[0] : '@'}</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary">76.76.21.21</p>
-                  </div>
-                </div>
+                <span className="text-xs font-semibold text-foreground">Schritt 1: Domain im Hosting hinzufügen</span>
+                <p className="text-xs text-muted-foreground">
+                  Gehe zu <a href="https://lovable.dev/projects/4f53c2ca-95c3-4d43-b002-3bd9d8e39d32" target="_blank" rel="noopener noreferrer" className="text-primary underline">Lovable Dashboard</a> → Settings → Custom Domains → und füge <code className="bg-muted px-1 rounded">{cleanedDomain}</code> hinzu.
+                  Dort erhältst du die korrekten DNS-Einträge.
+                </p>
               </div>
 
-              {/* Option 2: CNAME Record */}
+              {/* Step 2: DNS */}
               <div className="space-y-2 p-3 bg-background rounded-lg border">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">Option 2: CNAME-Record (Alternative)</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <span className="text-xs font-semibold text-foreground">Schritt 2: CNAME-Record setzen</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-6 px-2"
-                    onClick={() => copyToClipboard("cname.vercel-dns.com")}
+                    onClick={() => copyToClipboard(cleanedDomain)}
                   >
                     <Copy className="h-3 w-3 mr-1" />
-                    <span className="text-xs">CNAME kopieren</span>
+                    <span className="text-xs">Kopieren</span>
                   </Button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
@@ -176,17 +155,13 @@ export default function DomainSettings() {
                   </div>
                   <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary">cname.vercel-dns.com</p>
+                    <p className="font-mono text-primary">Den CNAME-Wert aus dem Lovable Dashboard kopieren</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  ⚠️ CNAME funktioniert nur für Subdomains (z.B. leads.meine-firma.de), nicht für Root-Domains.
+                  Der CNAME-Wert wird dir im Lovable Dashboard angezeigt, nachdem du die Domain dort hinzugefügt hast. DNS-Änderungen können bis zu 24h dauern.
                 </p>
               </div>
-
-              <p className="text-xs text-muted-foreground">
-                Die DNS-Änderung kann bis zu 24–48 Stunden dauern, bis sie aktiv ist.
-              </p>
             </div>
 
             {/* Preview */}
