@@ -301,7 +301,7 @@ export function CampaignWorkflow({ campaignId, campaignName }: CampaignWorkflowP
           .from('team_contact_progress' as any)
           .select('contact_id')
           .eq('user_id', currentUserId)
-          .in('contact_id', contactIds);
+          .in('contact_id', contactIds) as any);
 
         const existingIds = new Set((existingProgress || []).map(p => p.contact_id));
         const missing = contactIds.filter(id => !existingIds.has(id));
