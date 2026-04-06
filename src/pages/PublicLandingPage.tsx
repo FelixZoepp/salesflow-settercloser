@@ -439,7 +439,8 @@ function PublicBlock({
       const [videoPlayed, setVideoPlayed] = useState(false);
       const trackPlay = () => { if (!videoPlayed) { setVideoPlayed(true); onVideoPlay(); } };
 
-      if (!videoSrc) {
+      // No video or unresolved variable → show placeholder
+      if (!videoSrc || videoSrc.includes("{{")) {
         return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", background: "#000", position: "relative" }}>
           <div style={{ paddingTop: "56.25%", position: "relative" }}>
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1a1a2e, #2d2d44)" }}>
@@ -468,9 +469,19 @@ function PublicBlock({
           <iframe src={`https://www.loom.com/embed/${loomId}?autoplay=${s.autoplay ? 1 : 0}`} style={iframeBase} allow="autoplay; fullscreen" allowFullScreen referrerPolicy="no-referrer" />
         </div>;
       }
-      // Direct video - track on play event
+      // Direct video - track on play event, muted autoplay to avoid browser block
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden" }}>
-        <video src={videoSrc} poster={replaceVars(s.posterSrc)} controls={s.controls !== false} autoPlay={s.autoplay} playsInline onPlay={trackPlay} style={{ width: "100%", display: "block" }} />
+        <video
+          src={videoSrc}
+          poster={replaceVars(s.posterSrc) || undefined}
+          controls={s.controls !== false}
+          autoPlay={s.autoplay}
+          muted={s.autoplay}
+          playsInline
+          onPlay={trackPlay}
+          onError={(e) => { (e.target as HTMLVideoElement).style.display = "none"; }}
+          style={{ width: "100%", display: "block" }}
+        />
       </div>;
     }
 

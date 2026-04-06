@@ -321,7 +321,7 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
       // Direct video file
       if (isRealUrl) {
         return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden" }}>
-          <video src={previewSrc} poster={s.posterSrc || undefined} controls playsInline style={{ width: "100%", display: "block" }} />
+          <video src={previewSrc} poster={s.posterSrc || undefined} controls playsInline onError={(e) => { (e.target as HTMLVideoElement).style.display = "none"; }} style={{ width: "100%", display: "block" }} />
         </div>;
       }
       // Variable or empty → placeholder
