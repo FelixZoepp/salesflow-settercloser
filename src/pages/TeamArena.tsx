@@ -55,6 +55,7 @@ interface MemberStats {
   callsToday: number;
   callsWeek: number;
   totalLeads: number;
+  linkClicks: number;
 }
 
 interface MemberTrend {
@@ -67,7 +68,7 @@ interface MemberTrend {
   appointmentsBookedPrev: number;
 }
 
-type SortMetric = "connectionsSent" | "acceptanceRate" | "messagesSent" | "replyRate" | "positiveReplies" | "appointmentsBooked" | "callsWeek";
+type SortMetric = "connectionsSent" | "acceptanceRate" | "messagesSent" | "replyRate" | "positiveReplies" | "appointmentsBooked" | "callsWeek" | "linkClicks";
 
 interface Activity {
   id: string;
@@ -109,6 +110,7 @@ const SORT_OPTIONS: { value: SortMetric; label: string }[] = [
   { value: "positiveReplies", label: "Positive Antworten" },
   { value: "appointmentsBooked", label: "Termine" },
   { value: "callsWeek", label: "Calls (Woche)" },
+  { value: "linkClicks", label: "Link-Klicks" },
 ];
 
 const GOAL_TYPES: { value: string; label: string }[] = [
@@ -243,6 +245,20 @@ export default function TeamArena() {
 
       const team = teamRes.data || [];
       const progressData = progressRes.data || [];
+
+      // Load page view clicks attributed to members
+      const { data: clickEvents } = await supabase
+        .from("lead_tracking_events")
+        .select("event_data")
+        .eq("account_id", accId)
+        .eq("event_type", "page_view")
+        .not("event_data->member_user_id", "is", null);
+
+      const clicksByMember = new Map<string, number>();
+      (clickEvents || []).forEach((e: any) => {
+        const uid = e.event_data?.member_user_id;
+        if (uid) clicksByMember.set(uid, (clicksByMember.get(uid) || 0) + 1);
+      });
       const callsToday = activitiesTodayRes.data || [];
       const callsWeek = activitiesWeekRes.data || [];
 
@@ -303,6 +319,7 @@ export default function TeamArena() {
           callsToday: todayCalls,
           callsWeek: wkCalls,
           totalLeads: total,
+          linkClicks: clicksByMember.get(p.id) || 0,
         };
       });
 
@@ -797,6 +814,7 @@ export default function TeamArena() {
                         <MiniStat icon={<Calendar className="w-3.5 h-3.5 text-pink-400" />} label="Termine" value={member.appointmentsBooked} />
                         <MiniStat icon={<Phone className="w-3.5 h-3.5 text-cyan-400" />} label="Calls heute" value={member.callsToday} />
                         <MiniStat icon={<Phone className="w-3.5 h-3.5 text-cyan-400" />} label="Calls Woche" value={member.callsWeek} />
+                        <MiniStat icon={<Target className="w-3.5 h-3.5 text-orange-400" />} label="Link-Klicks" value={member.linkClicks} />
                       </div>
                     </CardContent>
                   </Card>

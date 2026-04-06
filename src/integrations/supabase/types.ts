@@ -2252,6 +2252,7 @@ export type Database = {
           id: string
           invited_via: string | null
           is_super_admin: boolean
+          member_code: number | null
           name: string
           onboarding_completed: boolean | null
           onboarding_step: number | null

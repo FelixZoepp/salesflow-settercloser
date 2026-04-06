@@ -70,8 +70,9 @@ const getYouTubeVideoId = (url: string): string => {
 };
 
 const VideoNote = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, memberCode } = useParams<{ slug: string; memberCode?: string }>();
   const [contact, setContact] = useState<ContactData | null>(null);
+  const [memberUserId, setMemberUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -155,8 +156,10 @@ const VideoNote = () => {
 
   const loadContactAndTrackView = async () => {
     try {
+      const rpcParams: Record<string, any> = { contact_slug: slug };
+      if (memberCode) rpcParams.p_member_code = parseInt(memberCode, 10);
       const { data: contactResult, error: contactError } = await supabase
-        .rpc('get_contact_by_slug', { contact_slug: slug });
+        .rpc('get_contact_by_slug', rpcParams);
 
       if (contactError) throw contactError;
 
@@ -169,6 +172,7 @@ const VideoNote = () => {
       }
 
       setContact(contactData);
+      if (contactData.member_user_id) setMemberUserId(contactData.member_user_id);
 
       // Load legal links from account settings
       if (contactData.account_id) {
@@ -197,7 +201,7 @@ const VideoNote = () => {
     
     if (slug) {
       supabase.functions.invoke('track-video-view', {
-        body: { slug }
+        body: { slug, member_code: memberCode ? parseInt(memberCode, 10) : undefined, member_user_id: memberUserId }
       }).catch((trackError) => {
         console.error('Video view tracking error:', trackError);
       });

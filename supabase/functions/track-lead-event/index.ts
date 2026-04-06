@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { slug, event_type, event_data, page_url, session_id } = body;
+    const { slug, event_type, event_data, page_url, session_id, member_code, member_user_id } = body;
     
     console.log(`Received tracking event: ${event_type} for slug: ${slug}`);
     console.log('Event data:', JSON.stringify(event_data));
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
         contact_id: contact.id,
         account_id: contact.account_id,
         event_type,
-        event_data: event_data || {},
+        event_data: { ...(event_data || {}), ...(member_code ? { member_code, member_user_id } : {}) },
         page_url,
         session_id,
         ip_address,

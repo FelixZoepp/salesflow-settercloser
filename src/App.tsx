@@ -141,6 +141,7 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => (
   <Routes>
     {/* Fully public routes - no auth context needed */}
+    <Route path="/p/:slug/:memberCode" element={<VideoNote />} />
     <Route path="/p/:slug" element={<VideoNote />} />
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
     
@@ -207,6 +208,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Fully public routes OUTSIDE auth providers */}
+          <Route path="/p/:slug/:memberCode" element={<VideoNote />} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="/lp/:slug" element={<PublicLandingPage />} />
           

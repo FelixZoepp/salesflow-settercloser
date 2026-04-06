@@ -121,6 +121,17 @@ function generateLeadSlug(firstName: string, lastName: string, company: string |
   return `${base}-${rand}`;
 }
 
+function buildLeadPageUrl(
+  leadSlug: string,
+  memberCode: number | null,
+  customDomain?: string | null
+): string {
+  const origin = customDomain ? `https://${customDomain}` : window.location.origin;
+  return memberCode
+    ? `${origin}/p/${leadSlug}/${memberCode}`
+    : `${origin}/p/${leadSlug}`;
+}
+
 function buildPersonalizedUrl(
   landingPageSlug: string,
   contact: { id: string; first_name: string; last_name: string; company: string | null; position: string | null; email: string | null; phone: string | null; },
