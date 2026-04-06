@@ -32,6 +32,8 @@ const Icons: Record<string, React.FC> = {
   Phone: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
   Desktop: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
   Variable: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7c0-1.1.9-2 2-2h3l2 3h5l2-3h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/><path d="M8 14l2-2 2 2 2-2 2 2"/></svg>,
+  Code: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+  Sparkle: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>,
   Plus: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   Link: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   Layers: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
@@ -106,6 +108,7 @@ const BLOCK_TEMPLATES: Record<string, BlockTemplate> = {
   logo: { type: "logo", label: "Logo-Leiste", icon: "Logo", defaults: { text: "Bekannt aus & vertraut von", logos: ["Logo 1", "Logo 2", "Logo 3", "Logo 4", "Logo 5"] }},
   timer: { type: "timer", label: "Countdown", icon: "Timer", defaults: { hours: 48, label: "Angebot endet in", bgColor: "#ff6b6b22", textColor: "#ff6b6b" }},
   social: { type: "social", label: "Social Proof", icon: "Social", defaults: { number: "2.847+", label: "Unternehmen vertrauen uns", icon: "users" }},
+  html: { type: "html", label: "HTML / Code", icon: "Code", defaults: { code: '<div style="padding: 20px; text-align: center; color: #999;">Eigener HTML-Code hier</div>', aiPrompt: "" }},
 };
 
 const BLOCK_CATEGORIES = [
@@ -113,6 +116,7 @@ const BLOCK_CATEGORIES = [
   { name: "Interaktion", blocks: ["button", "form", "quiz", "calendar"] },
   { name: "Social Proof", blocks: ["testimonial", "logo", "social", "timer"] },
   { name: "Layout", blocks: ["spacer", "divider"] },
+  { name: "Erweitert", blocks: ["html"] },
 ];
 
 // --- THEME PRESETS ---
@@ -405,6 +409,14 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
         <div style={{ fontSize: mobile ? 36 : 48, fontWeight: 900, color: theme.accent, letterSpacing: "-0.03em" }}>{s.number}</div>
         <div style={{ fontSize: 14, color: c.subtle, marginTop: 4 }}>{s.label}</div>
       </div>;
+    case "html":
+      return s.code ? (
+        <div dangerouslySetInnerHTML={{ __html: s.code }} />
+      ) : (
+        <div style={{ padding: 20, color: c.ghost, textAlign: "center", border: `1px dashed ${c.cardBorder}`, borderRadius: 8 }}>
+          <Icons.Code /> HTML / Code Block
+        </div>
+      );
     default:
       return <div style={{ padding: 20, color: c.ghost, textAlign: "center" }}>Block: {block.type}</div>;
   }
@@ -717,6 +729,66 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Zahl" value={s.number} onChange={v => update("number", v)} />
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />
         </>;
+      case "html": {
+        const [aiPrompt, setAiPrompt] = useState("");
+        const [aiLoading, setAiLoading] = useState(false);
+
+        const generateWithAI = async () => {
+          if (!aiPrompt.trim()) return;
+          setAiLoading(true);
+          try {
+            const { data, error } = await supabase.functions.invoke("generate-html-block", {
+              body: { prompt: aiPrompt.trim() },
+            });
+            if (error) throw error;
+            if (data?.html) {
+              update("code", data.html);
+              toast.success("HTML generiert!");
+            } else {
+              toast.error("Keine Antwort vom KI-Modell");
+            }
+          } catch (err: any) {
+            console.error("AI generation error:", err);
+            toast.error("KI-Generierung fehlgeschlagen: " + (err?.message || ""));
+          } finally {
+            setAiLoading(false);
+          }
+        };
+
+        return <>
+          <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 6 }}>KI-Assistent</div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            <input
+              value={aiPrompt}
+              onChange={e => setAiPrompt(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); generateWithAI(); } }}
+              placeholder="z.B. Preistabelle mit 3 Spalten, Vergleichstabelle, FAQ Akkordeon..."
+              style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: "1px solid #6C5CE744", background: "#6C5CE711", color: "#fff", fontSize: 12, outline: "none" }}
+            />
+            <div
+              onClick={generateWithAI}
+              style={{ padding: "8px 12px", borderRadius: 6, background: aiLoading ? "#6C5CE744" : "#6C5CE7", color: "#fff", fontSize: 12, fontWeight: 600, cursor: aiLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
+            >
+              <Icons.Sparkle /> {aiLoading ? "..." : "Generieren"}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "#ffffff66", fontWeight: 600, textTransform: "uppercase", marginBottom: 6 }}>HTML Code</div>
+          <textarea
+            value={s.code || ""}
+            onChange={e => update("code", e.target.value)}
+            spellCheck={false}
+            style={{
+              width: "100%", minHeight: 200, padding: "10px", borderRadius: 8,
+              border: "1px solid #ffffff18", background: "#0d0d14", color: "#e2e8f0",
+              fontSize: 12, fontFamily: "monospace", lineHeight: 1.5, outline: "none",
+              resize: "vertical", boxSizing: "border-box",
+            }}
+          />
+          <div style={{ fontSize: 10, color: "#ffffff33", marginTop: 4 }}>
+            Variablen wie {"{{lead.firstName}}"} werden automatisch ersetzt.
+          </div>
+        </>;
+      }
       default: return <div style={{ color: "#ffffff44", fontSize: 13 }}>Keine Einstellungen verfügbar.</div>;
     }
   })();

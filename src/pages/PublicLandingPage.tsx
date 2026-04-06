@@ -635,6 +635,14 @@ function PublicBlock({
         <div style={{ fontSize: 14, color: c.subtle, marginTop: 4 }}>{s.label}</div>
       </div>;
 
+    case "html":
+      if (!s.code) return null;
+      // Replace variables in HTML code, sanitize to prevent script injection
+      const htmlContent = replaceVars(s.code)
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/on\w+\s*=/gi, "data-removed=");
+      return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+
     default: return null;
   }
 }

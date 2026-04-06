@@ -129,5 +129,8 @@ verify_jwt = true
 [functions.search-leads]
 verify_jwt = false
 
+[functions.generate-html-block]
+verify_jwt = true
+
 [functions.update-campaign-video]
 verify_jwt = false
