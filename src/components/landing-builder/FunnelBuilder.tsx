@@ -277,7 +277,39 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
         {s.src ? <img src={s.src} alt={s.alt} style={{ width: "100%", display: "block", objectFit: s.objectFit || "cover" }} /> :
         <div style={{ background: c.cardBorder, height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: c.ghost, fontSize: 14 }}>Bild hier einfügen</div>}
       </div>;
-    case "video":
+    case "video": {
+      const previewSrc = s.src || "";
+      const isVariable = previewSrc.includes("{{");
+      const isRealUrl = !isVariable && (previewSrc.startsWith("http") || previewSrc.startsWith("/"));
+
+      // YouTube embed
+      if (isRealUrl && (previewSrc.includes("youtube.com") || previewSrc.includes("youtu.be"))) {
+        const videoId = previewSrc.includes("youtu.be") ? previewSrc.split("/").pop() : (() => { try { return new URL(previewSrc).searchParams.get("v"); } catch { return previewSrc.split("v=")[1]?.split("&")[0]; } })();
+        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+          <iframe src={`https://www.youtube.com/embed/${videoId}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="encrypted-media" allowFullScreen />
+        </div>;
+      }
+      // Vimeo embed
+      if (isRealUrl && previewSrc.includes("vimeo.com")) {
+        const vimeoId = previewSrc.split("/").pop();
+        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+          <iframe src={`https://player.vimeo.com/video/${vimeoId}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="fullscreen" allowFullScreen />
+        </div>;
+      }
+      // Loom embed
+      if (isRealUrl && previewSrc.includes("loom.com")) {
+        const loomId = previewSrc.split("/share/").pop()?.split("?")[0];
+        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+          <iframe src={`https://www.loom.com/embed/${loomId}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allow="fullscreen" allowFullScreen />
+        </div>;
+      }
+      // Direct video file
+      if (isRealUrl) {
+        return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden" }}>
+          <video src={previewSrc} poster={s.posterSrc || undefined} controls playsInline style={{ width: "100%", display: "block" }} />
+        </div>;
+      }
+      // Variable or empty → placeholder
       return <div style={{ borderRadius: s.borderRadius || 12, overflow: "hidden", background: "#000", position: "relative" }}>
         <div style={{ paddingTop: "56.25%", position: "relative" }}>
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1a1a2e, #2d2d44)" }}>
@@ -285,9 +317,10 @@ function BlockPreview({ block, theme, previewMode, onUpdate, isSelected }: { blo
               <div style={{ width: 0, height: 0, borderLeft: "22px solid " + theme.accent, borderTop: "13px solid transparent", borderBottom: "13px solid transparent", marginLeft: 4 }}/>
             </div>
           </div>
-          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>KI Erklärfilm für {replaceVarsForDisplay("{{lead.company}}")}</div>
+          <div style={{ position: "absolute", bottom: 12, left: 12, fontSize: 11, color: "#ffffff99", background: "#00000066", padding: "4px 10px", borderRadius: 20 }}>{isVariable ? replaceVarsForDisplay(previewSrc) : "Video-URL einfügen"}</div>
         </div>
       </div>;
+    }
     case "button": {
       const btnStyle: React.CSSProperties = { background: s.bgColor || theme.accent, color: s.textColor || "#fff", border: "none", borderRadius: s.borderRadius || 50, padding: `${s.paddingY || 16}px 40px`, fontSize: mobile ? 16 : (s.fontSize || 18), fontWeight: 700, cursor: "pointer", width: s.fullWidth ? "100%" : "auto", maxWidth: 400, letterSpacing: "0.01em", boxShadow: `0 4px 24px ${(s.bgColor || theme.accent)}44`, transition: "all 0.2s", display: "inline-block", textAlign: "center" as const };
       if (editable) return <div style={{ textAlign: "center" }}><InlineEditable html={s.text || ""} onChange={v => updateSetting("text", v)} style={btnStyle} blockId={block.id} isSelected={!!isSelected} /></div>;
