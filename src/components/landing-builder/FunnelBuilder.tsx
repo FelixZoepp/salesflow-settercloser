@@ -732,8 +732,6 @@ function BlockSettings({ block, onChange, theme }: { block: Block; onChange: (b:
           <TextInput label="Label" value={s.label} onChange={v => update("label", v)} />
         </>;
       case "html": {
-        const [aiPrompt, setAiPrompt] = useState("");
-        const [aiLoading, setAiLoading] = useState(false);
 
         const generateWithAI = async () => {
           if (!aiPrompt.trim()) return;
