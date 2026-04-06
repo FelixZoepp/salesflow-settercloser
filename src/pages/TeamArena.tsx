@@ -237,7 +237,7 @@ export default function TeamArena() {
       // Parallel queries - use team_contact_progress for per-user stats
       const [teamRes, progressRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
-        supabase.from("team_contact_progress").select("user_id, workflow_status").eq("account_id", accId),
+        (supabase as any).from("team_contact_progress").select("user_id, workflow_status").eq("account_id", accId),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
         supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
