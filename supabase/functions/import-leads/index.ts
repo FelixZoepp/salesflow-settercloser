@@ -24,13 +24,6 @@ interface CSVRow {
   mobile?: string;
 }
 
-interface ImportResult {
-  imported_count: number;
-  updated_count: number;
-  skipped_count: number;
-  errors: Array<{ row: number; message: string }>;
-}
-
 interface DuplicateMatch {
   csvRowIndex: number;
   csvData: Record<string, string>;
@@ -45,10 +38,134 @@ interface DuplicateMatch {
   matchReason: 'email' | 'linkedin' | 'name_company';
 }
 
-interface DuplicateCheckResult {
-  duplicates: DuplicateMatch[];
-  newLeadsCount: number;
-  parsedRows: Array<{ index: number; data: CSVRow }>;
+function parseCSV(csvData: string): { headers: string[]; rows: Array<{ index: number; data: CSVRow }> } {
+  const lines = csvData.trim().split('\n');
+  if (lines.length < 2) {
+    throw new Error('CSV must contain header row and at least one data row');
+  }
+
+  // Parse header - handle quoted fields
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const rows: Array<{ index: number; data: CSVRow }> = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const values = parseCSVLine(line);
+    const row: CSVRow = {};
+
+    headers.forEach((header, idx) => {
+      if (values[idx]) {
+        row[header as keyof CSVRow] = values[idx].trim();
+      }
+    });
+
+    rows.push({ index: i - 1, data: row });
+  }
+
+  return { headers, rows };
+}
+
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+async function batchDuplicateCheck(
+  supabase: any,
+  accountId: string,
+  validRows: Array<{ index: number; data: CSVRow }>
+) {
+  const duplicates: DuplicateMatch[] = [];
+
+  const allEmails = validRows.map(r => r.data.email).filter((e): e is string => !!e);
+  const allLinkedins = validRows.map(r => r.data.linkedin_url).filter((l): l is string => !!l);
+
+  const existingByEmail: Record<string, any> = {};
+  const existingByLinkedin: Record<string, any> = {};
+
+  // Batch email lookup
+  for (let i = 0; i < allEmails.length; i += 200) {
+    const chunk = allEmails.slice(i, i + 200);
+    const { data } = await supabase
+      .from('contacts')
+      .select('id, first_name, last_name, email, company, linkedin_url')
+      .eq('account_id', accountId)
+      .in('email', chunk);
+    if (data) {
+      for (const c of data) {
+        if (c.email) existingByEmail[c.email.toLowerCase()] = c;
+      }
+    }
+  }
+
+  // Batch linkedin lookup
+  for (let i = 0; i < allLinkedins.length; i += 200) {
+    const chunk = allLinkedins.slice(i, i + 200);
+    const { data } = await supabase
+      .from('contacts')
+      .select('id, first_name, last_name, email, company, linkedin_url')
+      .eq('account_id', accountId)
+      .in('linkedin_url', chunk);
+    if (data) {
+      for (const c of data) {
+        if (c.linkedin_url) existingByLinkedin[c.linkedin_url] = c;
+      }
+    }
+  }
+
+  let newLeadsCount = 0;
+
+  for (const { index, data: row } of validRows) {
+    let foundDuplicate = false;
+
+    if (row.email && existingByEmail[row.email.toLowerCase()]) {
+      duplicates.push({
+        csvRowIndex: index,
+        csvData: row as Record<string, string>,
+        existingContact: existingByEmail[row.email.toLowerCase()],
+        matchReason: 'email',
+      });
+      foundDuplicate = true;
+    }
+
+    if (!foundDuplicate && row.linkedin_url && existingByLinkedin[row.linkedin_url]) {
+      duplicates.push({
+        csvRowIndex: index,
+        csvData: row as Record<string, string>,
+        existingContact: existingByLinkedin[row.linkedin_url],
+        matchReason: 'linkedin',
+      });
+      foundDuplicate = true;
+    }
+
+    if (!foundDuplicate) {
+      newLeadsCount++;
+    }
+  }
+
+  return { duplicates, newLeadsCount };
 }
 
 Deno.serve(async (req) => {
@@ -58,479 +175,195 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Missing authorization header');
-    }
+    if (!authHeader) throw new Error('Missing authorization header');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
+    if (userError || !user) throw new Error('Unauthorized');
 
-    console.log(`Import leads request from user: ${user.id}`);
-
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('account_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile?.account_id) {
-      throw new Error('User account not found');
-    }
-
+    if (!profile?.account_id) throw new Error('User account not found');
     const accountId = profile.account_id;
-    console.log(`User account_id: ${accountId}`);
 
     const { csvData, leadType, campaignId, mode, duplicateActions } = await req.json();
-    if (!csvData) {
-      throw new Error('Missing CSV data');
-    }
-    
+    if (!csvData) throw new Error('Missing CSV data');
+
     const isOutbound = leadType === 'outbound';
     const isPreviewMode = mode === 'check_duplicates';
     console.log(`Import type: ${leadType}, campaign_id: ${campaignId || 'none'}, mode: ${mode || 'import'}`);
 
-    const lines = csvData.trim().split('\n');
-    if (lines.length < 2) {
-      throw new Error('CSV must contain header row and at least one data row');
-    }
+    const { rows: parsedRows } = parseCSV(csvData);
+    console.log(`Parsed ${parsedRows.length} rows`);
 
-    const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
-    
-    const parsedRows: Array<{ index: number; data: CSVRow; valid: boolean }> = [];
-    const parseErrors: Array<{ row: number; message: string }> = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map((v: string) => v.trim());
-      const row: CSVRow = {};
-      
-      headers.forEach((header: string, idx: number) => {
-        if (values[idx]) {
-          row[header as keyof CSVRow] = values[idx];
-        }
-      });
-
-      const companyName = row.company_name || row.company;
-      
-      // Minimal validation: outbound needs at least first_name OR last_name
-      // Inbound needs company_name or email
-      let valid = true;
-      if (isOutbound) {
-        if (!row.first_name && !row.last_name && !row.email && !row.linkedin_url) {
-          parseErrors.push({
-            row: i + 1,
-            message: 'Mindestens ein identifizierendes Feld erforderlich (Name, E-Mail oder LinkedIn)'
-          });
-          valid = false;
-        }
-      } else {
-        if (!companyName && !row.email) {
-          parseErrors.push({ 
-            row: i + 1, 
-            message: 'Missing required field: company_name or email' 
-          });
-          valid = false;
-        }
-      }
-      
-      parsedRows.push({ index: i - 1, data: row, valid });
-    }
-
-    // DUPLICATE CHECK MODE — batch queries
+    // DUPLICATE CHECK MODE
     if (isPreviewMode) {
       console.log(`Running batch duplicate check for ${parsedRows.length} rows...`);
-      const duplicates: DuplicateMatch[] = [];
-      const validRows = parsedRows.filter(r => r.valid);
-      
-      // Collect all emails and linkedin_urls for batch lookup
-      const allEmails = validRows
-        .map(r => r.data.email)
-        .filter((e): e is string => !!e);
-      const allLinkedins = validRows
-        .map(r => r.data.linkedin_url)
-        .filter((l): l is string => !!l);
-
-      // Batch query: find all existing contacts matching any email or linkedin
-      let existingByEmail: Record<string, any> = {};
-      let existingByLinkedin: Record<string, any> = {};
-
-      if (allEmails.length > 0) {
-        // Query in chunks of 200 to avoid URL length limits
-        for (let i = 0; i < allEmails.length; i += 200) {
-          const chunk = allEmails.slice(i, i + 200);
-          const { data } = await supabase
-            .from('contacts')
-            .select('id, first_name, last_name, email, company, linkedin_url')
-            .eq('account_id', accountId)
-            .in('email', chunk);
-          if (data) {
-            for (const c of data) {
-              if (c.email) existingByEmail[c.email.toLowerCase()] = c;
-            }
-          }
-        }
-      }
-
-      if (allLinkedins.length > 0) {
-        for (let i = 0; i < allLinkedins.length; i += 200) {
-          const chunk = allLinkedins.slice(i, i + 200);
-          const { data } = await supabase
-            .from('contacts')
-            .select('id, first_name, last_name, email, company, linkedin_url')
-            .eq('account_id', accountId)
-            .in('linkedin_url', chunk);
-          if (data) {
-            for (const c of data) {
-              if (c.linkedin_url) existingByLinkedin[c.linkedin_url] = c;
-            }
-          }
-        }
-      }
-
-      let newLeadsCount = 0;
-      
-      for (const { index, data: row } of validRows) {
-        let foundDuplicate = false;
-        
-        if (row.email && existingByEmail[row.email.toLowerCase()]) {
-          duplicates.push({
-            csvRowIndex: index,
-            csvData: row as Record<string, string>,
-            existingContact: existingByEmail[row.email.toLowerCase()],
-            matchReason: 'email',
-          });
-          foundDuplicate = true;
-        }
-        
-        if (!foundDuplicate && row.linkedin_url && existingByLinkedin[row.linkedin_url]) {
-          duplicates.push({
-            csvRowIndex: index,
-            csvData: row as Record<string, string>,
-            existingContact: existingByLinkedin[row.linkedin_url],
-            matchReason: 'linkedin',
-          });
-          foundDuplicate = true;
-        }
-        
-        if (!foundDuplicate) {
-          newLeadsCount++;
-        }
-      }
-      
+      const { duplicates, newLeadsCount } = await batchDuplicateCheck(supabase, accountId, parsedRows);
       console.log(`Batch duplicate check complete: ${duplicates.length} duplicates, ${newLeadsCount} new`);
-      
+
       return new Response(
-        JSON.stringify({ 
-          mode: 'check_duplicates', 
-          duplicates, 
-          newLeadsCount, 
-          parsedRows: validRows.map(r => ({ index: r.index, data: r.data })),
-          parseErrors 
+        JSON.stringify({
+          mode: 'check_duplicates',
+          duplicates,
+          newLeadsCount,
+          parsedRows: parsedRows.map(r => ({ index: r.index, data: r.data })),
+          parseErrors: [],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // IMPORT MODE
+    // IMPORT MODE — use batch inserts
     const actionMap: Record<number, 'update' | 'skip' | 'create'> = {};
     if (duplicateActions && Array.isArray(duplicateActions)) {
       for (const action of duplicateActions) {
         actionMap[action.csvRowIndex] = action.action;
       }
     }
-    
-    const result: ImportResult = {
-      imported_count: 0,
-      updated_count: 0,
-      skipped_count: parseErrors.length,
-      errors: [...parseErrors],
-    };
 
-    // Process rows in batches of 50 for better performance
-    const validRows = parsedRows.filter(r => r.valid);
-    
-    for (const { index, data: row } of validRows) {
-      const rowNumber = index + 2;
-      try {
-        const companyName = row.company_name || row.company;
-        
-        const duplicateAction = actionMap[index];
-        if (duplicateAction === 'skip') {
-          result.skipped_count++;
-          continue;
-        }
+    // Separate rows into: skip, update, create
+    const rowsToSkip: number[] = [];
+    const rowsToUpdate: Array<{ index: number; data: CSVRow }> = [];
+    const rowsToCreate: Array<{ index: number; data: CSVRow }> = [];
 
-        // Find or create company
-        let companyId: string | null = null;
-        if (companyName) {
-          let existingCompany = null;
-          
-          if (row.website) {
-            const { data } = await supabase
-              .from('companies')
-              .select('id')
-              .eq('website', row.website)
-              .eq('owner_user_id', user.id)
-              .maybeSingle();
-            existingCompany = data;
-          }
-          
-          if (!existingCompany && row.zip) {
-            const { data } = await supabase
-              .from('companies')
-              .select('id')
-              .eq('name', companyName)
-              .eq('zip', row.zip)
-              .eq('owner_user_id', user.id)
-              .maybeSingle();
-            existingCompany = data;
-          }
-
-          if (existingCompany) {
-            companyId = existingCompany.id;
-            await supabase
-              .from('companies')
-              .update({
-                website: row.website || null,
-                phone: row.phone || null,
-                street: row.street || null,
-                zip: row.zip || null,
-                city: row.city || null,
-                country: row.country || null,
-              })
-              .eq('id', companyId);
-          } else {
-            const { data: newCompany, error: companyError } = await supabase
-              .from('companies')
-              .insert({
-                owner_user_id: user.id,
-                account_id: accountId,
-                name: companyName,
-                website: row.website || null,
-                phone: row.phone || null,
-                street: row.street || null,
-                zip: row.zip || null,
-                city: row.city || null,
-                country: row.country || null,
-              })
-              .select()
-              .single();
-            if (companyError) throw companyError;
-            companyId = newCompany.id;
-          }
-        }
-
-        // Find or create contact
-        let contactId: string | null = null;
-        
-        if (isOutbound) {
-          let existingContact = null;
-          
-          if (duplicateAction !== 'create') {
-            if (row.linkedin_url) {
-              const { data } = await supabase
-                .from('contacts')
-                .select('id')
-                .eq('linkedin_url', row.linkedin_url)
-                .eq('account_id', accountId)
-                .maybeSingle();
-              existingContact = data;
-            }
-            
-            if (!existingContact && row.email) {
-              const { data } = await supabase
-                .from('contacts')
-                .select('id')
-                .eq('email', row.email)
-                .eq('account_id', accountId)
-                .maybeSingle();
-              existingContact = data;
-            }
-          }
-
-          if (existingContact && duplicateAction !== 'create') {
-            await supabase
-              .from('contacts')
-              .update({
-                first_name: row.first_name || '',
-                last_name: row.last_name || '',
-                company: companyName || null,
-                company_id: companyId,
-                phone: row.phone || null,
-                mobile: row.mobile || null,
-                position: row.position || null,
-                source: row.source || null,
-                linkedin_url: row.linkedin_url || null,
-                email: row.email || null,
-                campaign_id: campaignId || null,
-              })
-              .eq('id', existingContact.id);
-            
-            contactId = existingContact.id;
-            result.updated_count++;
-          } else {
-            const { data: newContact, error: contactError } = await supabase
-              .from('contacts')
-              .insert({
-                owner_user_id: user.id,
-                account_id: accountId,
-                first_name: row.first_name || '',
-                last_name: row.last_name || '',
-                company: companyName || null,
-                company_id: companyId,
-                email: row.email || null,
-                phone: row.phone || null,
-                mobile: row.mobile || null,
-                position: row.position || null,
-                source: row.source || null,
-                linkedin_url: row.linkedin_url || null,
-                lead_type: 'outbound',
-                workflow_status: 'bereit_fuer_vernetzung',
-                campaign_id: campaignId || null,
-              })
-              .select()
-              .single();
-            
-            if (contactError) throw contactError;
-            contactId = newContact.id;
-            result.imported_count++;
-          }
-        } else if (row.email) {
-          let existingContact = null;
-          
-          if (duplicateAction !== 'create') {
-            const { data } = await supabase
-              .from('contacts')
-              .select('id')
-              .eq('email', row.email)
-              .eq('account_id', accountId)
-              .maybeSingle();
-            existingContact = data;
-          }
-
-          if (existingContact && duplicateAction !== 'create') {
-            await supabase
-              .from('contacts')
-              .update({
-                first_name: row.first_name || '',
-                last_name: row.last_name || '',
-                company: companyName || null,
-                company_id: companyId,
-                phone: row.phone || null,
-                position: row.position || null,
-                source: row.source || null,
-                external_id: row.external_id || null,
-                linkedin_url: row.linkedin_url || null,
-                campaign_id: campaignId || null,
-              })
-              .eq('id', existingContact.id);
-            
-            contactId = existingContact.id;
-            result.updated_count++;
-          } else {
-            const { data: newContact, error: contactError } = await supabase
-              .from('contacts')
-              .insert({
-                owner_user_id: user.id,
-                account_id: accountId,
-                first_name: row.first_name || '',
-                last_name: row.last_name || '',
-                company: companyName || null,
-                company_id: companyId,
-                email: row.email,
-                phone: row.phone || null,
-                position: row.position || null,
-                source: row.source || null,
-                external_id: row.external_id || null,
-                linkedin_url: row.linkedin_url || null,
-                lead_type: 'inbound',
-                campaign_id: campaignId || null,
-              })
-              .select()
-              .single();
-            
-            if (contactError) throw contactError;
-            contactId = newContact.id;
-            result.imported_count++;
-
-            await supabase
-              .from('deals')
-              .insert({
-                contact_id: contactId,
-                setter_id: user.id,
-                account_id: accountId,
-                title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
-                stage: 'Lead',
-                pipeline: 'cold',
-                amount_eur: 0,
-                probability_pct: 0,
-              });
-          }
-        } else if (companyId) {
-          const { data: newContact, error: contactError } = await supabase
-            .from('contacts')
-            .insert({
-              owner_user_id: user.id,
-              account_id: accountId,
-              first_name: row.first_name || '',
-              last_name: row.last_name || '',
-              company: companyName || null,
-              company_id: companyId,
-              phone: row.phone || null,
-              position: row.position || null,
-              source: row.source || null,
-              external_id: row.external_id || null,
-              linkedin_url: row.linkedin_url || null,
-              lead_type: 'inbound',
-              campaign_id: campaignId || null,
-            })
-            .select()
-            .single();
-          
-          if (contactError) throw contactError;
-          contactId = newContact.id;
-          result.imported_count++;
-
-          await supabase
-            .from('deals')
-            .insert({
-              contact_id: contactId,
-              setter_id: user.id,
-              account_id: accountId,
-              title: `${row.first_name || ''} ${row.last_name || ''} - ${companyName || 'Lead'}`.trim(),
-              stage: 'Lead',
-              pipeline: 'cold',
-              amount_eur: 0,
-              probability_pct: 0,
-            });
-        }
-
-      } catch (error) {
-        console.error(`Error processing row ${rowNumber}:`, error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        result.errors.push({ row: rowNumber, message: errorMessage });
-        result.skipped_count++;
+    for (const row of parsedRows) {
+      const action = actionMap[row.index];
+      if (action === 'skip') {
+        rowsToSkip.push(row.index);
+      } else if (action === 'update') {
+        rowsToUpdate.push(row);
+      } else {
+        rowsToCreate.push(row);
       }
     }
 
-    console.log('Import completed:', result);
+    let imported_count = 0;
+    let updated_count = 0;
+    const skipped_count = rowsToSkip.length;
+    const errors: Array<{ row: number; message: string }> = [];
+
+    // Process updates individually (they need existing contact lookup)
+    for (const { index, data: row } of rowsToUpdate) {
+      try {
+        let existingContact = null;
+        if (row.email) {
+          const { data } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('email', row.email)
+            .eq('account_id', accountId)
+            .maybeSingle();
+          existingContact = data;
+        }
+        if (!existingContact && row.linkedin_url) {
+          const { data } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('linkedin_url', row.linkedin_url)
+            .eq('account_id', accountId)
+            .maybeSingle();
+          existingContact = data;
+        }
+        if (existingContact) {
+          const companyName = row.company_name || row.company;
+          await supabase
+            .from('contacts')
+            .update({
+              first_name: row.first_name || '',
+              last_name: row.last_name || '',
+              company: companyName || null,
+              phone: row.phone || null,
+              mobile: row.mobile || null,
+              position: row.position || null,
+              source: row.source || null,
+              linkedin_url: row.linkedin_url || null,
+              email: row.email || null,
+              campaign_id: campaignId || null,
+            })
+            .eq('id', existingContact.id);
+          updated_count++;
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        errors.push({ row: index + 2, message: msg });
+      }
+    }
+
+    // Batch create new contacts in chunks of 100
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < rowsToCreate.length; i += BATCH_SIZE) {
+      const chunk = rowsToCreate.slice(i, i + BATCH_SIZE);
+      const contactInserts = chunk.map(({ data: row }) => {
+        const companyName = row.company_name || row.company;
+        return {
+          owner_user_id: user.id,
+          account_id: accountId,
+          first_name: row.first_name || '',
+          last_name: row.last_name || '',
+          company: companyName || null,
+          email: row.email || null,
+          phone: row.phone || null,
+          mobile: row.mobile || null,
+          position: row.position || null,
+          source: row.source || null,
+          linkedin_url: row.linkedin_url || null,
+          external_id: row.external_id || null,
+          lead_type: isOutbound ? 'outbound' : 'inbound',
+          workflow_status: isOutbound ? 'bereit_fuer_vernetzung' : null,
+          campaign_id: campaignId || null,
+        };
+      });
+
+      try {
+        const { data: insertedContacts, error: insertError } = await supabase
+          .from('contacts')
+          .insert(contactInserts)
+          .select('id');
+
+        if (insertError) {
+          console.error(`Batch insert error (rows ${i}-${i + chunk.length}):`, insertError);
+          // Fallback: try one-by-one for this chunk
+          for (let j = 0; j < chunk.length; j++) {
+            try {
+              const { error: singleErr } = await supabase
+                .from('contacts')
+                .insert(contactInserts[j]);
+              if (singleErr) throw singleErr;
+              imported_count++;
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Unknown error';
+              errors.push({ row: chunk[j].index + 2, message: msg });
+            }
+          }
+        } else {
+          imported_count += insertedContacts?.length || chunk.length;
+        }
+      } catch (error) {
+        console.error(`Chunk error:`, error);
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        for (const { index } of chunk) {
+          errors.push({ row: index + 2, message: msg });
+        }
+      }
+    }
+
+    const result = { imported_count, updated_count, skipped_count, errors };
+    console.log('Import completed:', JSON.stringify({ imported_count, updated_count, skipped_count, errorCount: errors.length }));
 
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
     console.error('Import leads error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
