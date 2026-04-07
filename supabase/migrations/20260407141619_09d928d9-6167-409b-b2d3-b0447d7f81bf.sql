@@ -1,0 +1,1 @@
+ALTER TABLE public.team_challenges ADD COLUMN IF NOT EXISTS start_date timestamptz NOT NULL DEFAULT now();
