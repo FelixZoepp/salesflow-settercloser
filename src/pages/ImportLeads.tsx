@@ -211,6 +211,9 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,+49 172 7654321,Beispielweg 5,80
   };
 
   const handleMappingConfirmed = async (mappings: ColumnMapping[]) => {
+    // Prevent double-clicks
+    if (isProcessing) return;
+
     // Validate campaign is selected
     if (!selectedCampaignId) {
       toast({
