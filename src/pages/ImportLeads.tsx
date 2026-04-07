@@ -160,9 +160,9 @@ export default function ImportLeads() {
     loadCampaigns();
   }, []);
 
-  const csvTemplate = `company_name,website,phone,street,zip,city,country,first_name,last_name,email,position,source,external_id
-Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,Geschäftsführer,Website,ext_001
-Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,Erika,Musterfrau,erika@beispiel.de,Vertriebsleiterin,Messe,ext_002`;
+  const csvTemplate = `company_name,website,phone,mobile,street,zip,city,country,first_name,last_name,email,position,linkedin_url,source,external_id
+Musterfirma GmbH,https://musterfirma.de,+49 30 12345678,+49 171 1234567,Musterstraße 1,10115,Berlin,DE,Max,Mustermann,max@musterfirma.de,Geschäftsführer,https://www.linkedin.com/in/max-mustermann,Website,ext_001
+Beispiel AG,https://beispiel.de,+49 89 87654321,+49 172 7654321,Beispielweg 5,80331,München,DE,Erika,Musterfrau,erika@beispiel.de,Vertriebsleiterin,https://www.linkedin.com/in/erika-musterfrau,Messe,ext_002`;
 
   const downloadTemplate = () => {
     const blob = new Blob([csvTemplate], { type: 'text/csv' });
@@ -329,7 +329,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Leads importieren</h1>
           <p className="text-muted-foreground">
-            Importieren Sie Kontakte und Firmen per CSV-Datei
+            Importieren Sie Outbound-Leads per CSV-Datei
           </p>
         </div>
 
@@ -339,7 +339,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
               <CardHeader>
                 <CardTitle>CSV-Vorlage</CardTitle>
                 <CardDescription>
-                  Laden Sie unsere Vorlage herunter und füllen Sie sie mit Ihren Daten aus
+                  Laden Sie unsere Vorlage herunter und füllen Sie die Pflichtfelder für den Outbound-Import aus
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -349,25 +349,24 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                 </Button>
                 
                 <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold mb-2">Erforderliche Felder:</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Mindestens eines der folgenden Felder muss ausgefüllt sein:
-                  </p>
+                  <h4 className="font-semibold mb-2">Pflichtfelder für Outbound-Import:</h4>
                   <ul className="text-sm list-disc list-inside space-y-1">
-                    <li><code>company_name</code> - Firmenname</li>
-                    <li><code>email</code> - E-Mail-Adresse</li>
+                    <li><code>first_name</code> - Vorname</li>
+                    <li><code>last_name</code> - Nachname</li>
+                    <li><code>linkedin_url</code> - LinkedIn Profil-URL</li>
                   </ul>
                   
                   <h4 className="font-semibold mt-4 mb-2">Optionale Felder:</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div><code>company_name</code> - Firmenname</div>
                     <div><code>website</code> - Webseite</div>
+                    <div><code>email</code> - E-Mail</div>
                     <div><code>phone</code> - Telefon</div>
+                    <div><code>mobile</code> - Mobil</div>
                     <div><code>street</code> - Straße</div>
                     <div><code>zip</code> - PLZ</div>
                     <div><code>city</code> - Stadt</div>
                     <div><code>country</code> - Land</div>
-                    <div><code>first_name</code> - Vorname</div>
-                    <div><code>last_name</code> - Nachname</div>
                     <div><code>position</code> - Position</div>
                     <div><code>source</code> - Quelle</div>
                     <div><code>external_id</code> - Externe ID</div>
@@ -416,7 +415,7 @@ Beispiel AG,https://beispiel.de,+49 89 87654321,Beispielweg 5,80331,München,DE,
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Outbound-Leads benötigen Vorname + Nachname
+                    Outbound-Leads benötigen Vorname + Nachname + LinkedIn URL
                   </p>
                 </div>
               </CardContent>
