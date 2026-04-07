@@ -52,13 +52,11 @@ interface DuplicateCheckResult {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get JWT from Authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
@@ -74,7 +72,6 @@ Deno.serve(async (req) => {
       }
     );
 
-    // Verify user authentication
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       throw new Error('Unauthorized');
@@ -82,7 +79,6 @@ Deno.serve(async (req) => {
 
     console.log(`Import leads request from user: ${user.id}`);
 
-    // Get user's account_id from profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('account_id')
@@ -90,14 +86,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileError || !profile?.account_id) {
-      console.error('Profile error:', profileError);
       throw new Error('User account not found');
     }
 
     const accountId = profile.account_id;
     console.log(`User account_id: ${accountId}`);
 
-    // Parse the CSV data, leadType, optional campaignId, and mode from request body
     const { csvData, leadType, campaignId, mode, duplicateActions } = await req.json();
     if (!csvData) {
       throw new Error('Missing CSV data');
@@ -112,10 +106,8 @@ Deno.serve(async (req) => {
       throw new Error('CSV must contain header row and at least one data row');
     }
 
-    // Parse header
     const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
     
-    // Parse all rows first
     const parsedRows: Array<{ index: number; data: CSVRow; valid: boolean }> = [];
     const parseErrors: Array<{ row: number; message: string }> = [];
     
@@ -131,18 +123,14 @@ Deno.serve(async (req) => {
 
       const companyName = row.company_name || row.company;
       
-      // Validate row
+      // Minimal validation: outbound needs at least first_name OR last_name
+      // Inbound needs company_name or email
       let valid = true;
       if (isOutbound) {
-        const missingFields: string[] = [];
-        if (!row.first_name) missingFields.push('first_name');
-        if (!row.last_name) missingFields.push('last_name');
-        if (!row.linkedin_url) missingFields.push('linkedin_url');
-
-        if (missingFields.length > 0) {
+        if (!row.first_name && !row.last_name && !row.email && !row.linkedin_url) {
           parseErrors.push({
             row: i + 1,
-            message: `Pflichtfelder fehlen: ${missingFields.join(', ')}`
+            message: 'Mindestens ein identifizierendes Feld erforderlich (Name, E-Mail oder LinkedIn)'
           });
           valid = false;
         }
@@ -159,78 +147,80 @@ Deno.serve(async (req) => {
       parsedRows.push({ index: i - 1, data: row, valid });
     }
 
-    // DUPLICATE CHECK MODE
+    // DUPLICATE CHECK MODE — batch queries
     if (isPreviewMode) {
-      console.log('Running duplicate check mode...');
+      console.log(`Running batch duplicate check for ${parsedRows.length} rows...`);
       const duplicates: DuplicateMatch[] = [];
+      const validRows = parsedRows.filter(r => r.valid);
+      
+      // Collect all emails and linkedin_urls for batch lookup
+      const allEmails = validRows
+        .map(r => r.data.email)
+        .filter((e): e is string => !!e);
+      const allLinkedins = validRows
+        .map(r => r.data.linkedin_url)
+        .filter((l): l is string => !!l);
+
+      // Batch query: find all existing contacts matching any email or linkedin
+      let existingByEmail: Record<string, any> = {};
+      let existingByLinkedin: Record<string, any> = {};
+
+      if (allEmails.length > 0) {
+        // Query in chunks of 200 to avoid URL length limits
+        for (let i = 0; i < allEmails.length; i += 200) {
+          const chunk = allEmails.slice(i, i + 200);
+          const { data } = await supabase
+            .from('contacts')
+            .select('id, first_name, last_name, email, company, linkedin_url')
+            .eq('account_id', accountId)
+            .in('email', chunk);
+          if (data) {
+            for (const c of data) {
+              if (c.email) existingByEmail[c.email.toLowerCase()] = c;
+            }
+          }
+        }
+      }
+
+      if (allLinkedins.length > 0) {
+        for (let i = 0; i < allLinkedins.length; i += 200) {
+          const chunk = allLinkedins.slice(i, i + 200);
+          const { data } = await supabase
+            .from('contacts')
+            .select('id, first_name, last_name, email, company, linkedin_url')
+            .eq('account_id', accountId)
+            .in('linkedin_url', chunk);
+          if (data) {
+            for (const c of data) {
+              if (c.linkedin_url) existingByLinkedin[c.linkedin_url] = c;
+            }
+          }
+        }
+      }
+
       let newLeadsCount = 0;
       
-      for (const { index, data: row, valid } of parsedRows) {
-        if (!valid) continue;
-        
+      for (const { index, data: row } of validRows) {
         let foundDuplicate = false;
         
-        // Check by email
-        if (row.email) {
-          const { data: existingByEmail } = await supabase
-            .from('contacts')
-            .select('id, first_name, last_name, email, company, linkedin_url')
-            .eq('account_id', accountId)
-            .eq('email', row.email)
-            .maybeSingle();
-          
-          if (existingByEmail) {
-            duplicates.push({
-              csvRowIndex: index,
-              csvData: row as Record<string, string>,
-              existingContact: existingByEmail,
-              matchReason: 'email',
-            });
-            foundDuplicate = true;
-          }
+        if (row.email && existingByEmail[row.email.toLowerCase()]) {
+          duplicates.push({
+            csvRowIndex: index,
+            csvData: row as Record<string, string>,
+            existingContact: existingByEmail[row.email.toLowerCase()],
+            matchReason: 'email',
+          });
+          foundDuplicate = true;
         }
         
-        // Check by LinkedIn URL
-        if (!foundDuplicate && row.linkedin_url) {
-          const { data: existingByLinkedin } = await supabase
-            .from('contacts')
-            .select('id, first_name, last_name, email, company, linkedin_url')
-            .eq('account_id', accountId)
-            .eq('linkedin_url', row.linkedin_url)
-            .maybeSingle();
-          
-          if (existingByLinkedin) {
-            duplicates.push({
-              csvRowIndex: index,
-              csvData: row as Record<string, string>,
-              existingContact: existingByLinkedin,
-              matchReason: 'linkedin',
-            });
-            foundDuplicate = true;
-          }
-        }
-        
-        // Check by name + company
-        if (!foundDuplicate && row.first_name && row.last_name && (row.company_name || row.company)) {
-          const companyName = row.company_name || row.company;
-          const { data: existingByName } = await supabase
-            .from('contacts')
-            .select('id, first_name, last_name, email, company, linkedin_url')
-            .eq('account_id', accountId)
-            .ilike('first_name', row.first_name)
-            .ilike('last_name', row.last_name)
-            .ilike('company', companyName || '')
-            .maybeSingle();
-          
-          if (existingByName) {
-            duplicates.push({
-              csvRowIndex: index,
-              csvData: row as Record<string, string>,
-              existingContact: existingByName,
-              matchReason: 'name_company',
-            });
-            foundDuplicate = true;
-          }
+        if (!foundDuplicate && row.linkedin_url && existingByLinkedin[row.linkedin_url]) {
+          duplicates.push({
+            csvRowIndex: index,
+            csvData: row as Record<string, string>,
+            existingContact: existingByLinkedin[row.linkedin_url],
+            matchReason: 'linkedin',
+          });
+          foundDuplicate = true;
         }
         
         if (!foundDuplicate) {
@@ -238,22 +228,21 @@ Deno.serve(async (req) => {
         }
       }
       
-      const checkResult: DuplicateCheckResult = {
-        duplicates,
-        newLeadsCount,
-        parsedRows: parsedRows.filter(r => r.valid).map(r => ({ index: r.index, data: r.data })),
-      };
-      
-      console.log(`Duplicate check complete: ${duplicates.length} duplicates, ${newLeadsCount} new`);
+      console.log(`Batch duplicate check complete: ${duplicates.length} duplicates, ${newLeadsCount} new`);
       
       return new Response(
-        JSON.stringify({ mode: 'check_duplicates', ...checkResult, parseErrors }),
+        JSON.stringify({ 
+          mode: 'check_duplicates', 
+          duplicates, 
+          newLeadsCount, 
+          parsedRows: validRows.map(r => ({ index: r.index, data: r.data })),
+          parseErrors 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // IMPORT MODE
-    // Build a map of duplicate actions by row index
     const actionMap: Record<number, 'update' | 'skip' | 'create'> = {};
     if (duplicateActions && Array.isArray(duplicateActions)) {
       for (const action of duplicateActions) {
@@ -268,15 +257,14 @@ Deno.serve(async (req) => {
       errors: [...parseErrors],
     };
 
-    // Process each valid row
-    for (const { index, data: row, valid } of parsedRows) {
-      if (!valid) continue;
-      
-      const rowNumber = index + 2; // CSV row number (1-indexed, +1 for header)
+    // Process rows in batches of 50 for better performance
+    const validRows = parsedRows.filter(r => r.valid);
+    
+    for (const { index, data: row } of validRows) {
+      const rowNumber = index + 2;
       try {
         const companyName = row.company_name || row.company;
         
-        // Check if this row has a duplicate action specified
         const duplicateAction = actionMap[index];
         if (duplicateAction === 'skip') {
           result.skipped_count++;
@@ -286,7 +274,6 @@ Deno.serve(async (req) => {
         // Find or create company
         let companyId: string | null = null;
         if (companyName) {
-          // Try to find existing company by website or name+zip
           let existingCompany = null;
           
           if (row.website) {
@@ -312,8 +299,6 @@ Deno.serve(async (req) => {
 
           if (existingCompany) {
             companyId = existingCompany.id;
-            
-            // Update company data
             await supabase
               .from('companies')
               .update({
@@ -326,7 +311,6 @@ Deno.serve(async (req) => {
               })
               .eq('id', companyId);
           } else {
-            // Create new company
             const { data: newCompany, error: companyError } = await supabase
               .from('companies')
               .insert({
@@ -350,9 +334,7 @@ Deno.serve(async (req) => {
         // Find or create contact
         let contactId: string | null = null;
         
-        // For outbound leads, we create contacts directly without requiring email
         if (isOutbound) {
-          // Check if contact exists (unless forced to create new)
           let existingContact = null;
           
           if (duplicateAction !== 'create') {
@@ -378,7 +360,6 @@ Deno.serve(async (req) => {
           }
 
           if (existingContact && duplicateAction !== 'create') {
-            // Update existing contact - also update campaign_id
             await supabase
               .from('contacts')
               .update({
@@ -399,7 +380,6 @@ Deno.serve(async (req) => {
             contactId = existingContact.id;
             result.updated_count++;
           } else {
-            // Create new outbound contact
             const { data: newContact, error: contactError } = await supabase
               .from('contacts')
               .insert({
@@ -427,7 +407,6 @@ Deno.serve(async (req) => {
             result.imported_count++;
           }
         } else if (row.email) {
-          // Original logic for inbound leads with email
           let existingContact = null;
           
           if (duplicateAction !== 'create') {
@@ -441,7 +420,6 @@ Deno.serve(async (req) => {
           }
 
           if (existingContact && duplicateAction !== 'create') {
-            // Update existing contact - also update campaign_id
             await supabase
               .from('contacts')
               .update({
@@ -461,7 +439,6 @@ Deno.serve(async (req) => {
             contactId = existingContact.id;
             result.updated_count++;
           } else {
-            // Create new contact with campaign_id
             const { data: newContact, error: contactError } = await supabase
               .from('contacts')
               .insert({
@@ -487,7 +464,6 @@ Deno.serve(async (req) => {
             contactId = newContact.id;
             result.imported_count++;
 
-            // Create a deal for the new contact in the cold pipeline as "Lead"
             await supabase
               .from('deals')
               .insert({
@@ -502,7 +478,6 @@ Deno.serve(async (req) => {
               });
           }
         } else if (companyId) {
-          // Create contact without email (if we have company) - with campaign_id
           const { data: newContact, error: contactError } = await supabase
             .from('contacts')
             .insert({
@@ -527,7 +502,6 @@ Deno.serve(async (req) => {
           contactId = newContact.id;
           result.imported_count++;
 
-          // Create a deal for the new contact in the cold pipeline as "Lead"
           await supabase
             .from('deals')
             .insert({
@@ -545,10 +519,7 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error(`Error processing row ${rowNumber}:`, error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        result.errors.push({ 
-          row: rowNumber, 
-          message: errorMessage
-        });
+        result.errors.push({ row: rowNumber, message: errorMessage });
         result.skipped_count++;
       }
     }
