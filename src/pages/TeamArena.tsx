@@ -280,7 +280,8 @@ export default function TeamArena() {
           .from("contacts")
           .select("owner_user_id, workflow_status")
           .eq("account_id", accId)
-          .eq("lead_type", "outbound");
+          .eq("lead_type", "outbound")
+          .gte("created_at", startDate);
         contactsFallback = fallback || [];
       }
 
@@ -447,19 +448,18 @@ export default function TeamArena() {
     setSaving(true);
     try {
       if (challenge) {
-        // Update existing
         const { error } = await supabase
           .from("team_challenges")
           .update({
             name: setupName,
             goal_type: setupGoalType,
             goal_value: setupGoalValue,
+            start_date: setupStartDate.toISOString(),
           })
           .eq("id", challenge.id);
         if (error) throw error;
         toast.success("Challenge aktualisiert");
       } else {
-        // Create new
         const { error } = await supabase
           .from("team_challenges")
           .insert({
@@ -467,6 +467,7 @@ export default function TeamArena() {
             name: setupName,
             goal_type: setupGoalType,
             goal_value: setupGoalValue,
+            start_date: setupStartDate.toISOString(),
             is_active: true,
           });
         if (error) throw error;
@@ -503,6 +504,7 @@ export default function TeamArena() {
       setSetupName(challenge.name);
       setSetupGoalType(challenge.goal_type);
       setSetupGoalValue(challenge.goal_value);
+      setSetupStartDate(new Date(challenge.start_date));
     }
     setShowSetup(true);
   };
