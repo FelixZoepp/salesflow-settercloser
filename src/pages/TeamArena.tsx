@@ -774,7 +774,7 @@ export default function TeamArena() {
                           {idx === 0 && <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 px-1.5">MVP</Badge>}
                           {roleBadge(member.role)}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads zugewiesen</span>
+                        <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads im Pool</span>
                       </div>
 
                       <div className="hidden md:grid grid-cols-6 gap-4 text-center">
