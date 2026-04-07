@@ -613,6 +613,8 @@ export default function TeamArena() {
           setGoalType={setSetupGoalType}
           goalValue={setupGoalValue}
           setGoalValue={setSetupGoalValue}
+          startDate={setupStartDate}
+          setStartDate={setSetupStartDate}
           saving={saving}
           onSave={handleSaveChallenge}
           isEdit
@@ -978,6 +980,8 @@ export default function TeamArena() {
         setGoalType={setSetupGoalType}
         goalValue={setupGoalValue}
         setGoalValue={setSetupGoalValue}
+        startDate={setupStartDate}
+        setStartDate={setSetupStartDate}
         saving={saving}
         onSave={handleSaveChallenge}
         isEdit
@@ -989,7 +993,7 @@ export default function TeamArena() {
 // --- Sub-components ---
 
 function SetupDialog({
-  open, onClose, name, setName, goalType, setGoalType, goalValue, setGoalValue, saving, onSave, isEdit,
+  open, onClose, name, setName, goalType, setGoalType, goalValue, setGoalValue, startDate, setStartDate, saving, onSave, isEdit,
 }: {
   open: boolean;
   onClose: () => void;
@@ -999,6 +1003,8 @@ function SetupDialog({
   setGoalType: (v: string) => void;
   goalValue: number;
   setGoalValue: (v: number) => void;
+  startDate: Date;
+  setStartDate: (v: Date) => void;
   saving: boolean;
   onSave: () => void;
   isEdit: boolean;
@@ -1047,6 +1053,36 @@ function SetupDialog({
             />
             <p className="text-xs text-muted-foreground">
               Dieses Ziel wird auf alle Teammitglieder verteilt angezeigt.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Startdatum (nur Kontakte ab diesem Datum zählen)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "dd. MMM yyyy", { locale: de }) : "Datum wählen"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(d) => d && setStartDate(d)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <p className="text-xs text-muted-foreground">
+              Alle Statistiken werden erst ab diesem Datum gezählt, sodass du bei 0 startest.
             </p>
           </div>
         </div>
