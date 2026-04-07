@@ -2504,6 +2504,92 @@ export type Database = {
           },
         ]
       }
+      team_contact_progress: {
+        Row: {
+          account_id: string
+          appointment_booked_at: string | null
+          connection_accepted_at: string | null
+          connection_sent_at: string | null
+          contact_id: string
+          created_at: string
+          first_message_sent_at: string | null
+          fu1_sent_at: string | null
+          fu2_sent_at: string | null
+          fu3_sent_at: string | null
+          id: string
+          positive_reply_at: string | null
+          responded_at: string | null
+          updated_at: string
+          user_id: string
+          workflow_status: string
+        }
+        Insert: {
+          account_id: string
+          appointment_booked_at?: string | null
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
+          contact_id: string
+          created_at?: string
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          id?: string
+          positive_reply_at?: string | null
+          responded_at?: string | null
+          updated_at?: string
+          user_id: string
+          workflow_status?: string
+        }
+        Update: {
+          account_id?: string
+          appointment_booked_at?: string | null
+          connection_accepted_at?: string | null
+          connection_sent_at?: string | null
+          contact_id?: string
+          created_at?: string
+          first_message_sent_at?: string | null
+          fu1_sent_at?: string | null
+          fu2_sent_at?: string | null
+          fu3_sent_at?: string | null
+          id?: string
+          positive_reply_at?: string | null
+          responded_at?: string | null
+          updated_at?: string
+          user_id?: string
+          workflow_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_contact_progress_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_contact_progress_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "cold_call_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_contact_progress_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_contact_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telephony_webhook_events: {
         Row: {
           account_id: string | null
