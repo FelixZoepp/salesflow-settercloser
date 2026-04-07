@@ -633,7 +633,7 @@ export default function TeamArena() {
                 {challenge.name}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {members.length} Teammitglieder im Wettbewerb
+                {members.length} Teammitglieder · seit {format(new Date(challenge.start_date), "dd. MMM yyyy", { locale: de })}
               </p>
             </div>
             <div className="flex items-center gap-2">
