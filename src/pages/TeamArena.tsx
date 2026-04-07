@@ -244,26 +244,17 @@ export default function TeamArena() {
 
       const startDate = challengeData.start_date || '2000-01-01';
 
-      // Get campaign IDs for this account
-      const { data: accountCampaigns } = await supabase
-        .from("campaigns")
-        .select("id")
-        .eq("account_id", accId);
-      const campaignIds = (accountCampaigns || []).map((c: any) => c.id);
-
-      // Parallel queries - use contact_member_links for independent per-user stats
-      const [teamRes, memberLinksRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
+      // Use DB function for efficient per-member stats (avoids 1000 row limit)
+      const [teamRes, memberStatsRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
-        campaignIds.length > 0
-          ? supabase.from("contact_member_links").select("user_id, workflow_status, created_at").in("campaign_id", campaignIds).gte("created_at", startDate)
-          : Promise.resolve({ data: [] as any[] }),
+        supabase.rpc("get_member_link_stats", { p_account_id: accId, p_start_date: startDate }),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
         supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
       ]);
 
       const team = teamRes.data || [];
-      const memberLinksData = (memberLinksRes as any)?.data || [];
+      const memberStatsData = (memberStatsRes.data || []) as any[];
 
       // Load page view clicks attributed to members
       const { data: clickEvents } = await supabase
@@ -281,20 +272,16 @@ export default function TeamArena() {
       const callsToday = activitiesTodayRes.data || [];
       const callsWeek = activitiesWeekRes.data || [];
 
-      // Build stats from contact_member_links (each member has independent progress)
+      // Build stats from DB function (each member has independent progress)
       const stats: MemberStats[] = team.map(p => {
-        const myLinks = memberLinksData.filter((l: any) => l.user_id === p.id);
-        const countStatus = (statuses: string[]) => myLinks.filter((l: any) => statuses.includes(l.workflow_status || "")).length;
-
-        const sent = countStatus(WORKFLOW_SENT);
-        const accepted = countStatus(WORKFLOW_ACCEPTED);
-        const messaged = countStatus(WORKFLOW_MESSAGED);
-        const replied = countStatus(WORKFLOW_REPLIED);
-        const positive = countStatus(WORKFLOW_POSITIVE);
-        const booked = countStatus(WORKFLOW_BOOKED);
+        const mStats = memberStatsData.find((s: any) => s.user_id === p.id);
 
         const todayCalls = callsToday.filter((a: any) => a.user_id === p.id).length;
         const wkCalls = callsWeek.filter((a: any) => a.user_id === p.id).length;
+        const sent = Number(mStats?.connections_sent || 0);
+        const accepted = Number(mStats?.connections_accepted || 0);
+        const messaged = Number(mStats?.messages_sent || 0);
+        const replied = Number(mStats?.replies || 0);
 
         return {
           id: p.id,
@@ -307,11 +294,11 @@ export default function TeamArena() {
           messagesSent: messaged,
           replies: replied,
           replyRate: pct(replied, messaged),
-          positiveReplies: positive,
-          appointmentsBooked: booked,
+          positiveReplies: Number(mStats?.positive_replies || 0),
+          appointmentsBooked: Number(mStats?.appointments_booked || 0),
           callsToday: todayCalls,
           callsWeek: wkCalls,
-          totalLeads: myLinks.length,
+          totalLeads: Number(mStats?.total_leads || 0),
           linkClicks: clicksByMember.get(p.id) || 0,
         };
       });
