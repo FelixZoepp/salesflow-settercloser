@@ -95,10 +95,8 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Erfolgreich eingeloggt!");
       } else if (mode === "forgot-password") {
-        // Use production domain for password reset
-        const resetRedirectUrl = window.location.hostname.includes('lovable') 
-          ? `${window.location.origin}/auth#type=recovery`
-          : `https://pitchfirst.io/auth#type=recovery`;
+        // Always redirect to production domain for password reset
+        const resetRedirectUrl = `https://hochpreis-leads.de/auth#type=recovery`;
         
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: resetRedirectUrl,
