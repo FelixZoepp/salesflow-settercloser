@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +43,7 @@ interface TeamChallenge {
   goal_type: string;
   goal_value: number;
   is_active: boolean;
+  start_date: string;
 }
 
 interface MemberStats {
@@ -187,6 +194,7 @@ export default function TeamArena() {
   const [setupName, setSetupName] = useState("Team Challenge");
   const [setupGoalType, setSetupGoalType] = useState("connections_sent");
   const [setupGoalValue, setSetupGoalValue] = useState(2000);
+  const [setupStartDate, setSetupStartDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -234,10 +242,12 @@ export default function TeamArena() {
         return;
       }
 
+      const startDate = challengeData.start_date || '2000-01-01';
+
       // Parallel queries - use team_contact_progress for per-user stats
       const [teamRes, progressRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
-        (supabase as any).from("team_contact_progress").select("user_id, workflow_status").eq("account_id", accId),
+        (supabase as any).from("team_contact_progress").select("user_id, workflow_status, created_at").eq("account_id", accId).gte("created_at", startDate),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
         supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
@@ -270,7 +280,8 @@ export default function TeamArena() {
           .from("contacts")
           .select("owner_user_id, workflow_status")
           .eq("account_id", accId)
-          .eq("lead_type", "outbound");
+          .eq("lead_type", "outbound")
+          .gte("created_at", startDate);
         contactsFallback = fallback || [];
       }
 
@@ -437,19 +448,18 @@ export default function TeamArena() {
     setSaving(true);
     try {
       if (challenge) {
-        // Update existing
         const { error } = await supabase
           .from("team_challenges")
           .update({
             name: setupName,
             goal_type: setupGoalType,
             goal_value: setupGoalValue,
+            start_date: setupStartDate.toISOString(),
           })
           .eq("id", challenge.id);
         if (error) throw error;
         toast.success("Challenge aktualisiert");
       } else {
-        // Create new
         const { error } = await supabase
           .from("team_challenges")
           .insert({
@@ -457,6 +467,7 @@ export default function TeamArena() {
             name: setupName,
             goal_type: setupGoalType,
             goal_value: setupGoalValue,
+            start_date: setupStartDate.toISOString(),
             is_active: true,
           });
         if (error) throw error;
@@ -493,6 +504,7 @@ export default function TeamArena() {
       setSetupName(challenge.name);
       setSetupGoalType(challenge.goal_type);
       setSetupGoalValue(challenge.goal_value);
+      setSetupStartDate(new Date(challenge.start_date));
     }
     setShowSetup(true);
   };
@@ -554,6 +566,8 @@ export default function TeamArena() {
           setGoalType={setSetupGoalType}
           goalValue={setupGoalValue}
           setGoalValue={setSetupGoalValue}
+          startDate={setupStartDate}
+          setStartDate={setSetupStartDate}
           saving={saving}
           onSave={handleSaveChallenge}
           isEdit={false}
@@ -599,6 +613,8 @@ export default function TeamArena() {
           setGoalType={setSetupGoalType}
           goalValue={setupGoalValue}
           setGoalValue={setSetupGoalValue}
+          startDate={setupStartDate}
+          setStartDate={setSetupStartDate}
           saving={saving}
           onSave={handleSaveChallenge}
           isEdit
@@ -621,7 +637,7 @@ export default function TeamArena() {
                 {challenge.name}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {members.length} Teammitglieder im Wettbewerb
+                {members.length} Teammitglieder · seit {format(new Date(challenge.start_date), "dd. MMM yyyy", { locale: de })}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -964,6 +980,8 @@ export default function TeamArena() {
         setGoalType={setSetupGoalType}
         goalValue={setupGoalValue}
         setGoalValue={setSetupGoalValue}
+        startDate={setupStartDate}
+        setStartDate={setSetupStartDate}
         saving={saving}
         onSave={handleSaveChallenge}
         isEdit
@@ -975,7 +993,7 @@ export default function TeamArena() {
 // --- Sub-components ---
 
 function SetupDialog({
-  open, onClose, name, setName, goalType, setGoalType, goalValue, setGoalValue, saving, onSave, isEdit,
+  open, onClose, name, setName, goalType, setGoalType, goalValue, setGoalValue, startDate, setStartDate, saving, onSave, isEdit,
 }: {
   open: boolean;
   onClose: () => void;
@@ -985,6 +1003,8 @@ function SetupDialog({
   setGoalType: (v: string) => void;
   goalValue: number;
   setGoalValue: (v: number) => void;
+  startDate: Date;
+  setStartDate: (v: Date) => void;
   saving: boolean;
   onSave: () => void;
   isEdit: boolean;
@@ -1033,6 +1053,36 @@ function SetupDialog({
             />
             <p className="text-xs text-muted-foreground">
               Dieses Ziel wird auf alle Teammitglieder verteilt angezeigt.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Startdatum (nur Kontakte ab diesem Datum zählen)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "dd. MMM yyyy", { locale: de }) : "Datum wählen"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(d) => d && setStartDate(d)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <p className="text-xs text-muted-foreground">
+              Alle Statistiken werden erst ab diesem Datum gezählt, sodass du bei 0 startest.
             </p>
           </div>
         </div>
