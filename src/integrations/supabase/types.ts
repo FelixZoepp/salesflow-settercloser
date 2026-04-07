@@ -2742,6 +2742,19 @@ export type Database = {
         }
         Returns: string
       }
+      get_member_link_stats: {
+        Args: { p_account_id: string; p_start_date?: string }
+        Returns: {
+          appointments_booked: number
+          connections_accepted: number
+          connections_sent: number
+          messages_sent: number
+          positive_replies: number
+          replies: number
+          total_leads: number
+          user_id: string
+        }[]
+      }
       get_user_account_id: { Args: never; Returns: string }
       is_super_admin: { Args: never; Returns: boolean }
       refresh_contact_last_activity: { Args: never; Returns: undefined }

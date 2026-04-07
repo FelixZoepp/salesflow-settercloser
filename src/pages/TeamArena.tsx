@@ -244,17 +244,17 @@ export default function TeamArena() {
 
       const startDate = challengeData.start_date || '2000-01-01';
 
-      // Parallel queries - use team_contact_progress for per-user stats
-      const [teamRes, progressRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
+      // Use DB function for efficient per-member stats (avoids 1000 row limit)
+      const [teamRes, memberStatsRes, activitiesTodayRes, activitiesWeekRes, recentActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("id, name, avatar_url, role").eq("account_id", accId),
-        (supabase as any).from("team_contact_progress").select("user_id, workflow_status, created_at").eq("account_id", accId).gte("created_at", startDate),
+        supabase.rpc("get_member_link_stats", { p_account_id: accId, p_start_date: startDate }),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", new Date().toISOString().slice(0, 10)),
         supabase.from("activities").select("user_id").eq("account_id", accId).eq("type", "call").gte("timestamp", subDays(new Date(), 7).toISOString()),
         supabase.from("activities").select("id, user_id, type, outcome, contact_id, timestamp").eq("account_id", accId).order("timestamp", { ascending: false }).limit(20),
       ]);
 
       const team = teamRes.data || [];
-      const progressData = progressRes.data || [];
+      const memberStatsData = (memberStatsRes.data || []) as any[];
 
       // Load page view clicks attributed to members
       const { data: clickEvents } = await supabase
@@ -272,49 +272,16 @@ export default function TeamArena() {
       const callsToday = activitiesTodayRes.data || [];
       const callsWeek = activitiesWeekRes.data || [];
 
-      // Fallback: if no team_contact_progress data, load from contacts (backwards compat)
-      let useProgress = progressData.length > 0;
-      let contactsFallback: { owner_user_id: string | null; workflow_status: string | null }[] = [];
-      if (!useProgress) {
-        const { data: fallback } = await supabase
-          .from("contacts")
-          .select("owner_user_id, workflow_status")
-          .eq("account_id", accId)
-          .eq("lead_type", "outbound")
-          .gte("created_at", startDate);
-        contactsFallback = fallback || [];
-      }
-
-      // Total shared pool count (all contacts in account, not per user)
-      const sharedPoolTotal = useProgress ? progressData.length : contactsFallback.length;
-
-      // Build stats
+      // Build stats from DB function (each member has independent progress)
       const stats: MemberStats[] = team.map(p => {
-        let sent: number, accepted: number, messaged: number, replied: number, positive: number, booked: number;
-
-        if (useProgress) {
-          // Use per-user progress data
-          const myProgress = progressData.filter((pr: any) => pr.user_id === p.id);
-          const countStatus = (statuses: string[]) => myProgress.filter((pr: any) => statuses.includes(pr.workflow_status || "")).length;
-          sent = countStatus(WORKFLOW_SENT);
-          accepted = countStatus(WORKFLOW_ACCEPTED);
-          messaged = countStatus(WORKFLOW_MESSAGED);
-          replied = countStatus(WORKFLOW_REPLIED);
-          positive = countStatus(WORKFLOW_POSITIVE);
-          booked = countStatus(WORKFLOW_BOOKED);
-        } else {
-          // Shared pool: count all contacts in account (not filtered by owner_user_id)
-          const countAllStatus = (statuses: string[]) => contactsFallback.filter(c => statuses.includes(c.workflow_status || "")).length;
-          sent = countAllStatus(WORKFLOW_SENT);
-          accepted = countAllStatus(WORKFLOW_ACCEPTED);
-          messaged = countAllStatus(WORKFLOW_MESSAGED);
-          replied = countAllStatus(WORKFLOW_REPLIED);
-          positive = countAllStatus(WORKFLOW_POSITIVE);
-          booked = countAllStatus(WORKFLOW_BOOKED);
-        }
+        const mStats = memberStatsData.find((s: any) => s.user_id === p.id);
 
         const todayCalls = callsToday.filter((a: any) => a.user_id === p.id).length;
         const wkCalls = callsWeek.filter((a: any) => a.user_id === p.id).length;
+        const sent = Number(mStats?.connections_sent || 0);
+        const accepted = Number(mStats?.connections_accepted || 0);
+        const messaged = Number(mStats?.messages_sent || 0);
+        const replied = Number(mStats?.replies || 0);
 
         return {
           id: p.id,
@@ -327,11 +294,11 @@ export default function TeamArena() {
           messagesSent: messaged,
           replies: replied,
           replyRate: pct(replied, messaged),
-          positiveReplies: positive,
-          appointmentsBooked: booked,
+          positiveReplies: Number(mStats?.positive_replies || 0),
+          appointmentsBooked: Number(mStats?.appointments_booked || 0),
           callsToday: todayCalls,
           callsWeek: wkCalls,
-          totalLeads: sharedPoolTotal,
+          totalLeads: Number(mStats?.total_leads || 0),
           linkClicks: clicksByMember.get(p.id) || 0,
         };
       });
@@ -774,7 +741,7 @@ export default function TeamArena() {
                           {idx === 0 && <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 px-1.5">MVP</Badge>}
                           {roleBadge(member.role)}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads im Pool</span>
+                        <span className="text-[10px] text-muted-foreground">{member.totalLeads} Leads zugewiesen</span>
                       </div>
 
                       <div className="hidden md:grid grid-cols-6 gap-4 text-center">
