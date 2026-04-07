@@ -285,9 +285,12 @@ export default function TeamArena() {
         contactsFallback = fallback || [];
       }
 
+      // Total shared pool count (all contacts in account, not per user)
+      const sharedPoolTotal = useProgress ? progressData.length : contactsFallback.length;
+
       // Build stats
       const stats: MemberStats[] = team.map(p => {
-        let sent: number, accepted: number, messaged: number, replied: number, positive: number, booked: number, total: number;
+        let sent: number, accepted: number, messaged: number, replied: number, positive: number, booked: number;
 
         if (useProgress) {
           // Use per-user progress data
@@ -299,16 +302,15 @@ export default function TeamArena() {
           replied = countStatus(WORKFLOW_REPLIED);
           positive = countStatus(WORKFLOW_POSITIVE);
           booked = countStatus(WORKFLOW_BOOKED);
-          total = myProgress.length;
         } else {
-          // Fallback to contacts.owner_user_id
-          sent = countInStatuses(contactsFallback, p.id, WORKFLOW_SENT);
-          accepted = countInStatuses(contactsFallback, p.id, WORKFLOW_ACCEPTED);
-          messaged = countInStatuses(contactsFallback, p.id, WORKFLOW_MESSAGED);
-          replied = countInStatuses(contactsFallback, p.id, WORKFLOW_REPLIED);
-          positive = countInStatuses(contactsFallback, p.id, WORKFLOW_POSITIVE);
-          booked = countInStatuses(contactsFallback, p.id, WORKFLOW_BOOKED);
-          total = contactsFallback.filter(c => c.owner_user_id === p.id).length;
+          // Shared pool: count all contacts in account (not filtered by owner_user_id)
+          const countAllStatus = (statuses: string[]) => contactsFallback.filter(c => statuses.includes(c.workflow_status || "")).length;
+          sent = countAllStatus(WORKFLOW_SENT);
+          accepted = countAllStatus(WORKFLOW_ACCEPTED);
+          messaged = countAllStatus(WORKFLOW_MESSAGED);
+          replied = countAllStatus(WORKFLOW_REPLIED);
+          positive = countAllStatus(WORKFLOW_POSITIVE);
+          booked = countAllStatus(WORKFLOW_BOOKED);
         }
 
         const todayCalls = callsToday.filter((a: any) => a.user_id === p.id).length;
@@ -329,7 +331,7 @@ export default function TeamArena() {
           appointmentsBooked: booked,
           callsToday: todayCalls,
           callsWeek: wkCalls,
-          totalLeads: total,
+          totalLeads: sharedPoolTotal,
           linkClicks: clicksByMember.get(p.id) || 0,
         };
       });
