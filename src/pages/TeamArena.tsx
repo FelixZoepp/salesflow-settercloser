@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +43,7 @@ interface TeamChallenge {
   goal_type: string;
   goal_value: number;
   is_active: boolean;
+  start_date: string;
 }
 
 interface MemberStats {
@@ -187,6 +194,7 @@ export default function TeamArena() {
   const [setupName, setSetupName] = useState("Team Challenge");
   const [setupGoalType, setSetupGoalType] = useState("connections_sent");
   const [setupGoalValue, setSetupGoalValue] = useState(2000);
+  const [setupStartDate, setSetupStartDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
