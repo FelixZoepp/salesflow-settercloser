@@ -34,9 +34,8 @@ serve(async (req: Request) => {
       },
     });
 
-    // Get the redirect URL from the request origin or use a default
-    const origin = req.headers.get("origin") || "https://salesflow-settercloser.lovable.app";
-    const redirectTo = `${origin}/auth?type=recovery`;
+    // Always redirect to production domain
+    const redirectTo = `https://hochpreis-leads.de/auth?type=recovery`;
 
     console.log(`Redirect URL: ${redirectTo}`);
 

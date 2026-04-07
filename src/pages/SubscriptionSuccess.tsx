@@ -111,7 +111,7 @@ export default function SubscriptionSuccess() {
           data: {
             name: customerName || customerEmail.split("@")[0],
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `https://hochpreis-leads.de/dashboard`,
         },
       });
       
