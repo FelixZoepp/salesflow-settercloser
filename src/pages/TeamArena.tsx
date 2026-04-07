@@ -566,6 +566,8 @@ export default function TeamArena() {
           setGoalType={setSetupGoalType}
           goalValue={setupGoalValue}
           setGoalValue={setSetupGoalValue}
+          startDate={setupStartDate}
+          setStartDate={setSetupStartDate}
           saving={saving}
           onSave={handleSaveChallenge}
           isEdit={false}
