@@ -196,6 +196,7 @@ export default function TeamArena() {
   const [setupGoalValue, setSetupGoalValue] = useState(2000);
   const [setupStartDate, setSetupStartDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     fetchAll();
