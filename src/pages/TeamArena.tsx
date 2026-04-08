@@ -28,7 +28,7 @@ import {
 import {
   Trophy, Users, Crown, MessageSquare, Calendar, TrendingUp,
   Phone, Target, Flame, Medal, Zap, ArrowUp, ArrowDown, Minus,
-  Settings2, Rocket, Plus, Pause, Play, Pencil,
+  Settings2, Rocket, Plus, Pause, Play, Pencil, HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { subDays } from "date-fns";
