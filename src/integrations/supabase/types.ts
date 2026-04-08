@@ -1094,6 +1094,59 @@ export type Database = {
           },
         ]
       }
+      custom_domains: {
+        Row: {
+          account_id: string
+          created_at: string
+          domain: string
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          ssl_activated_at: string | null
+          ssl_active: boolean
+          status: string
+          updated_at: string
+          verified: boolean
+          verified_at: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          domain: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          ssl_activated_at?: string | null
+          ssl_active?: boolean
+          status?: string
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          ssl_activated_at?: string | null
+          ssl_active?: boolean
+          status?: string
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           account_id: string | null
