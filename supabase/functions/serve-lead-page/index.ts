@@ -69,20 +69,22 @@ Deno.serve(async (req) => {
     return html(rootPage(account, host))
   }
 
-  if (segments.length < 2) {
+  // Support /p/slug format (skip "p" prefix)
+  let slug: string
+  if (segments[0] === 'p' && segments.length >= 2) {
+    slug = segments[1]
+  } else if (segments.length >= 1) {
+    slug = segments[0]
+  } else {
     return html(notFoundPage(), 404)
   }
 
-  const slug = segments[0]
-  const memberCode = parseInt(segments[1], 10)
-  if (isNaN(memberCode)) return html(notFoundPage(), 404)
-
-  // ── 3. Fetch lead via RPC ──
+  // ── 3. Fetch lead via slug ──
   const { data: contactResult } = await supabase
-    .rpc('get_contact_by_slug', { contact_slug: slug, p_member_code: memberCode })
+    .rpc('get_contact_by_slug', { contact_slug: slug })
 
   const contact = Array.isArray(contactResult) ? contactResult[0] : contactResult
-  if (!contact || contact.account_id !== accountId) {
+  if (!contact) {
     return html(notFoundPage(), 404)
   }
 
