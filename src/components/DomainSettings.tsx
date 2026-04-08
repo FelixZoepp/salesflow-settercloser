@@ -41,7 +41,7 @@ export default function DomainSettings() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!accountId) throw new Error("Kein Account");
-      
+
       const cleanDomain = domain
         .replace(/^https?:\/\//, "")
         .replace(/\/$/, "")
@@ -131,7 +131,7 @@ export default function DomainSettings() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            z.B. <code>leads.meine-firma.de</code> oder <code>hochpreis-leads.de</code>
+            z.B. <code>leads.meine-firma.de</code> oder <code>meine-firma.de</code>
           </p>
         </div>
 
@@ -141,26 +141,17 @@ export default function DomainSettings() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>DNS-Einrichtung:</strong> Füge bei deinem Domain-Provider folgende DNS-Einträge hinzu.
+                <strong>DNS-Einrichtung:</strong> Hinterlege folgende DNS-Einträge bei deinem Domain-Provider (z.B. IONOS, Strato, Namecheap, GoDaddy).
               </AlertDescription>
             </Alert>
 
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
-              <h4 className="font-medium text-sm">Einrichtung in 3 Schritten:</h4>
+              <h4 className="font-medium text-sm">So verbindest du deine Domain:</h4>
 
-              {/* Step 1: Lovable Dashboard */}
-              <div className="space-y-2 p-3 bg-background rounded-lg border">
-                <span className="text-xs font-semibold text-foreground">Schritt 1: Domain im Hosting hinzufügen</span>
-                <p className="text-xs text-muted-foreground">
-                  Gehe zu den <strong>Lovable Projekt-Einstellungen → Domains</strong> und füge <code className="bg-muted px-1 rounded">{cleanedDomain}</code> hinzu.
-                  Dort wird die Domain verifiziert und mit deiner App verbunden.
-                </p>
-              </div>
-
-              {/* Step 2: A-Records */}
+              {/* A-Records */}
               <div className="space-y-2 p-3 bg-background rounded-lg border">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">Schritt 2: DNS A-Records setzen</span>
+                  <span className="text-xs font-semibold text-foreground">A-Records bei deinem Domain-Provider setzen</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -180,7 +171,7 @@ export default function DomainSettings() {
                   </div>
                   <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Name/Host</p>
-                    <p className="font-mono">@</p>
+                    <p className="font-mono">@ (Root-Domain)</p>
                   </div>
                   <div className="p-2 bg-muted rounded border">
                     <p className="text-muted-foreground">Wert/Ziel</p>
@@ -205,29 +196,7 @@ export default function DomainSettings() {
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-2">
-                  Setze <strong>zwei A-Records</strong> bei deinem Domain-Provider (z.B. IONOS, Strato, Namecheap). DNS-Änderungen können bis zu 24h dauern.
-                </p>
-              </div>
-
-              {/* Step 3: TXT Record */}
-              <div className="space-y-2 p-3 bg-background rounded-lg border">
-                <span className="text-xs font-semibold text-foreground">Schritt 3: TXT-Record zur Verifizierung</span>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Typ</p>
-                    <p className="font-mono font-semibold">TXT</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Name/Host</p>
-                    <p className="font-mono">_lovable</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border">
-                    <p className="text-muted-foreground">Wert/Ziel</p>
-                    <p className="font-mono text-primary text-[10px]">Wert aus den Lovable Projekt-Einstellungen kopieren</p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Den TXT-Verifizierungswert findest du in den Lovable Projekt-Einstellungen unter Domains, nachdem du die Domain hinzugefügt hast.
+                  Logge dich bei deinem Domain-Provider ein, gehe zu den DNS-Einstellungen und erstelle diese beiden A-Records. Änderungen können bis zu 24 Stunden dauern.
                 </p>
               </div>
             </div>
@@ -243,8 +212,8 @@ export default function DomainSettings() {
         )}
 
         <div className="flex gap-2">
-          <Button 
-            onClick={() => saveMutation.mutate()} 
+          <Button
+            onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
           >
             {saveMutation.isPending ? "Speichert..." : "Domain speichern"}
