@@ -959,6 +959,61 @@ export default function TeamArena() {
         onSave={handleSaveChallenge}
         isEdit
       />
+
+      {/* Help Dialog */}
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              Hilfe – Team Arena
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-muted-foreground">
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Was ist die Team Arena?</h3>
+              <p>Die Team Arena zeigt die Leistung deines gesamten Teams auf einen Blick. Jedes Teammitglied arbeitet mit demselben Lead-Pool, hat aber eine <strong className="text-foreground">eigenständige Ansicht</strong>. Das bedeutet: Wenn du dich mit einem Lead vernetzt, bleibt dieser Lead für deine Kollegen weiterhin unberührt.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Leaderboard & Statistiken</h3>
+              <p>Das Leaderboard zeigt folgende Kennzahlen pro Teammitglied:</p>
+              <ul className="list-disc list-inside space-y-1 mt-1 ml-2">
+                <li><strong className="text-foreground">Vernetzungen</strong> – Anzahl gesendeter Vernetzungsanfragen</li>
+                <li><strong className="text-foreground">Annahmerate</strong> – Prozent der angenommenen Anfragen</li>
+                <li><strong className="text-foreground">Nachrichten</strong> – Gesendete Erstnachrichten & Follow-ups</li>
+                <li><strong className="text-foreground">Antwortrate</strong> – Prozent der Leads, die reagiert haben</li>
+                <li><strong className="text-foreground">Positive Antworten</strong> – Leads mit Interesse</li>
+                <li><strong className="text-foreground">Termine</strong> – Gebuchte Termine</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Team Challenge</h3>
+              <p>Der Admin kann ein gemeinsames Ziel setzen (z.B. „8.000 Vernetzungen"). Der farbige Fortschrittsbalken zeigt den Beitrag jedes Mitglieds zum Gesamtziel. Das Startdatum bestimmt, ab wann Aktivitäten gezählt werden.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Eigenständige Leads</h3>
+              <p>Jeder im Team sieht alle Leads, aber dein Fortschritt (z.B. „vernetzt", „Nachricht gesendet") wird <strong className="text-foreground">nur für dich</strong> getrackt. Deine Kollegen können sich unabhängig mit denselben Leads vernetzen.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Sortierung & Detail-Ansicht</h3>
+              <p>Nutze das Dropdown oben rechts, um das Leaderboard nach verschiedenen Metriken zu sortieren. Klicke auf ein Teammitglied, um dessen Detail-Ansicht mit Top-Leads und Landing-Page-Statistiken zu öffnen.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Buttons im Header</h3>
+              <ul className="list-disc list-inside space-y-1 mt-1 ml-2">
+                <li><Pencil className="w-3 h-3 inline mr-1" /> Challenge bearbeiten (Name, Ziel, Startdatum)</li>
+                <li><Pause className="w-3 h-3 inline mr-1" /> Challenge pausieren/fortsetzen</li>
+                <li><HelpCircle className="w-3 h-3 inline mr-1" /> Diese Hilfe anzeigen</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
