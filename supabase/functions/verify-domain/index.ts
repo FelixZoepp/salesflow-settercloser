@@ -1,138 +1,201 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+/**
+ * verify-domain
+ *
+ * Checks domain verification status via Vercel Domains API.
+ * Called from the DomainSettings UI as a fallback / direct Supabase call.
+ * The primary flow uses /api/domains/status on Vercel, but this edge function
+ * keeps backward compatibility and can be used for cron-based checks.
+ */
+
+const VERCEL_API_TOKEN = Deno.env.get('VERCEL_API_TOKEN') || ''
+const VERCEL_PROJECT_ID = Deno.env.get('VERCEL_PROJECT_ID') || ''
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { domain } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-    if (!domain) {
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Domain ist erforderlich' }),
+        JSON.stringify({ error: 'Nicht autorisiert' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Nicht autorisiert' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { domain, account_id } = await req.json()
+
+    if (!domain || !account_id) {
+      return new Response(
+        JSON.stringify({ error: 'Domain und Account-ID erforderlich' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
     }
 
-    // Clean domain
-    const cleanDomain = domain
-      .replace(/^https?:\/\//, '')
-      .replace(/\/$/, '')
-      .trim();
+    // Verify user belongs to this account and is admin
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('account_id, role')
+      .eq('id', user.id)
+      .single()
 
-    console.log(`Verifying domain: ${cleanDomain}`);
-
-    // Try to resolve the domain via DNS by making a request
-    const testUrl = `https://${cleanDomain}`;
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const response = await fetch(testUrl, {
-        method: 'HEAD',
-        signal: controller.signal,
-        redirect: 'follow',
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log(`Domain ${cleanDomain} responded with status: ${response.status}`);
-
-      // Check if we got a response (any status means domain is reachable)
-      if (response.status >= 200 && response.status < 600) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            reachable: true,
-            status: response.status,
-            message: 'Domain ist erreichbar und konfiguriert!'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } catch (fetchError: unknown) {
-      const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      console.log(`Fetch error for ${cleanDomain}:`, errorMessage);
-
-      // Check if it's a DNS or connection error
-      if (errorMessage.includes('dns') || 
-          errorMessage.includes('resolve') ||
-          errorMessage.includes('ENOTFOUND')) {
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            reachable: false,
-            dnsConfigured: false,
-            message: 'DNS-Eintrag noch nicht gefunden. Bitte A-Record hinzufügen und bis zu 24h warten.'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // SSL errors often mean domain is reachable but SSL not yet configured
-      if (errorMessage.includes('ssl') || 
-          errorMessage.includes('certificate') ||
-          errorMessage.includes('SSL')) {
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            reachable: true,
-            sslPending: true,
-            message: 'Domain ist erreichbar! SSL-Zertifikat wird noch eingerichtet.'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Connection refused or timeout might mean DNS is set but server not responding yet
-      if (errorMessage.includes('refused') || 
-          errorMessage.includes('timeout') ||
-          errorMessage.includes('abort')) {
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            reachable: false,
-            dnsConfigured: true,
-            message: 'DNS scheint konfiguriert, Server antwortet noch nicht. Bitte kurz warten.'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Generic error
+    if (!profile || profile.account_id !== account_id || profile.role !== 'admin') {
       return new Response(
-        JSON.stringify({ 
-          success: true,
-          reachable: false,
-          message: 'Domain noch nicht erreichbar. Prüfe den DNS-Eintrag.'
+        JSON.stringify({ error: 'Keine Berechtigung. Nur Admins können Domains verwalten.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Clean domain input
+    const cleanDomain = domain
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '')
+      .replace(/^www\./, '')
+      .trim()
+
+    if (!cleanDomain || !cleanDomain.includes('.')) {
+      return new Response(
+        JSON.stringify({ error: 'Ungültige Domain.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`Verifying domain via Vercel API: ${cleanDomain} for account: ${account_id}`)
+
+    // Check if domain is taken by another account
+    const { data: existingDomain } = await supabase
+      .from('custom_domains')
+      .select('id, account_id')
+      .ilike('domain', cleanDomain)
+      .neq('account_id', account_id)
+      .maybeSingle()
+
+    if (existingDomain) {
+      return new Response(
+        JSON.stringify({
+          verified: false,
+          error: 'Diese Domain wird bereits von einem anderen Account verwendet.',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check domain status on Vercel
+    let isVerified = false
+    let sslActive = false
+    let errorMessage: string | null = null
+    let verification: any[] = []
+
+    if (VERCEL_API_TOKEN && VERCEL_PROJECT_ID) {
+      const vercelRes = await fetch(
+        `https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains/${encodeURIComponent(cleanDomain)}`,
+        { headers: { Authorization: `Bearer ${VERCEL_API_TOKEN}` } }
+      )
+
+      if (vercelRes.ok) {
+        const vercelDomain = await vercelRes.json()
+        verification = vercelDomain.verification || []
+
+        if (!vercelDomain.verified) {
+          errorMessage = 'Domain-Inhaberschaft noch nicht verifiziert. Bitte setze den TXT-Record.'
+        } else if (vercelDomain.misconfigured) {
+          isVerified = true
+          errorMessage = 'DNS-Records zeigen noch nicht auf Vercel. Bitte A-Record auf 76.76.21.21 setzen.'
+        } else {
+          isVerified = true
+          sslActive = true
+        }
+      } else {
+        errorMessage = 'Domain nicht bei Vercel registriert. Bitte zuerst über die Einstellungen hinzufügen.'
+      }
+    } else {
+      // Fallback: DNS lookup if Vercel env vars not set
+      errorMessage = 'Vercel API nicht konfiguriert. Bitte Domain über die Einstellungen verwalten.'
+    }
+
+    // Upsert domain record
+    const now = new Date().toISOString()
+    const domainData: Record<string, any> = {
+      account_id,
+      domain: cleanDomain,
+      last_checked_at: now,
+      verified: isVerified,
+      ssl_active: sslActive,
+      status: sslActive ? 'ssl_active' : (isVerified ? 'dns_verified' : 'pending_dns'),
+      last_error: errorMessage,
+    }
+
+    if (isVerified) domainData.verified_at = now
+    if (sslActive) domainData.ssl_activated_at = now
+
+    const { data: existing } = await supabase
+      .from('custom_domains')
+      .select('id')
+      .eq('account_id', account_id)
+      .maybeSingle()
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('custom_domains')
+        .update(domainData)
+        .eq('id', existing.id)
+        .select()
+        .single()
+      if (error) throw error
+      result = data
+    } else {
+      const { data, error } = await supabase
+        .from('custom_domains')
+        .insert(domainData)
+        .select()
+        .single()
+      if (error) throw error
+      result = data
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        reachable: false,
-        message: 'Domain-Status unbekannt'
+      JSON.stringify({
+        verified: isVerified,
+        ssl_active: sslActive,
+        domain: result,
+        verification,
+        message: sslActive
+          ? 'Domain erfolgreich verifiziert! SSL-Zertifikat wird automatisch von Vercel verwaltet.'
+          : errorMessage,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Error verifying domain:', errorMessage);
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Domain verification error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ error: 'Fehler bei der Domain-Verifizierung: ' + (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    )
   }
-});
+})

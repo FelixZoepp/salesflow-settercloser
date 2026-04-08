@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { prepareAvatarUpload } from "@/lib/avatarImage";
 import { User, Calendar, Phone, Mail, Save, Loader2, Camera, ImagePlus, Webhook, Euro } from "lucide-react";
 import TeamInvite from "@/components/TeamInvite";
+import DomainSettings from "@/components/DomainSettings";
 
 interface ProfileData {
   id: string;
@@ -253,7 +254,7 @@ const Profile = () => {
               Persönliche Daten
             </CardTitle>
             <CardDescription>
-              Deine grundlegenden Kontaktinformationen
+              Diese Daten werden auf deinen personalisierten Lead-Seiten angezeigt
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -280,7 +281,7 @@ const Profile = () => {
                 className="glass-input opacity-60"
               />
               <p className="text-xs text-muted-foreground">
-                E-Mail-Adresse kann nicht geändert werden
+                E-Mail-Adresse kann nicht geändert werden. Sie wird als Kontaktmöglichkeit auf deinen Lead-Seiten angezeigt.
               </p>
             </div>
 
@@ -322,7 +323,7 @@ const Profile = () => {
                 className="glass-input"
               />
               <p className="text-xs text-muted-foreground">
-                Dieser Link wird auf deinen Landing Pages für Terminbuchungen verwendet
+                Dieser Link wird auf deinen Lead-Seiten als CTA-Button für Terminbuchungen verwendet
               </p>
             </div>
 
@@ -449,6 +450,9 @@ const Profile = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Custom Domain */}
+        <DomainSettings />
 
         {/* Team Management */}
         <TeamInvite />

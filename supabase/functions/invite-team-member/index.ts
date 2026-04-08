@@ -73,7 +73,7 @@ serve(async (req) => {
     }
 
     const memberRole = role || "setter";
-    const origin = req.headers.get("origin") || supabaseUrl;
+    const origin = req.headers.get("origin") || "https://pitchfirst.io";
     console.log(`Inviting ${email} as ${memberRole} to account ${callerProfile.account_id}`);
 
     // Create invitation record

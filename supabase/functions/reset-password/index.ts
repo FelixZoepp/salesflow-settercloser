@@ -34,8 +34,9 @@ serve(async (req: Request) => {
       },
     });
 
-    // Always redirect to production domain
-    const redirectTo = `https://hochpreis-leads.de/auth?type=recovery`;
+    // Get the redirect URL from the request origin or use a default
+    const origin = req.headers.get("origin") || "https://pitchfirst.io";
+    const redirectTo = `${origin}/auth?type=recovery`;
 
     console.log(`Redirect URL: ${redirectTo}`);
 

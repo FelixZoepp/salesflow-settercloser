@@ -1,5 +1,14 @@
 project_id = "dxdknkeexankgtkpeuvt"
 
+[functions.verify-domain]
+verify_jwt = true
+
+[functions.serve-lead-page]
+verify_jwt = false
+
+[functions.check-domain-allowed]
+verify_jwt = false
+
 [functions.download-from-drive]
 verify_jwt = false
 

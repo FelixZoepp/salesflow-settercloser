@@ -126,7 +126,14 @@ function buildLeadPageUrl(
   memberCode: number | null,
   customDomain?: string | null
 ): string {
-  const origin = customDomain ? `https://${customDomain}` : window.location.origin;
+  if (customDomain) {
+    // Custom domain: no /p/ prefix, Caddy handles all traffic
+    return memberCode
+      ? `https://${customDomain}/${leadSlug}/${memberCode}`
+      : `https://${customDomain}/${leadSlug}`;
+  }
+  // Fallback: SPA route with /p/ prefix
+  const origin = window.location.origin;
   return memberCode
     ? `${origin}/p/${leadSlug}/${memberCode}`
     : `${origin}/p/${leadSlug}`;
