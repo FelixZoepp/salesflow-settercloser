@@ -5,7 +5,7 @@
       "has": [
         {
           "type": "host",
-          "value": "^(?!pitchfirst\\.io$)(?!.*\\.vercel\\.app$)(?!localhost)(?!127\\.0\\.0\\.1).+$"
+          "value": "^(?!(?:www\\.)?pitchfirst\\.io$)(?!.*\\.vercel\\.app$)(?!localhost)(?!127\\.0\\.0\\.1).+$"
         }
       ],
       "destination": "/api/serve-lead-page"
