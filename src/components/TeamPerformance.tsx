@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Trophy, Phone, MessageSquare, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { Users, Trophy, MessageSquare, Calendar, TrendingUp } from "lucide-react";
 
 interface MemberStats {
   id: string;
   name: string;
-  connectionsAccepted: number;
+  connectionsSent: number;
   messagesSent: number;
   positiveReplies: number;
   appointmentsBooked: number;
@@ -29,36 +29,35 @@ export default function TeamPerformance() {
       const { data: profile } = await supabase.from("profiles").select("account_id").eq("id", user.id).single();
       if (!profile?.account_id) return;
 
-      // Get all team members
+      const accId = profile.account_id;
+
+      // Get team members
       const { data: teamProfiles } = await supabase
         .from("profiles")
         .select("id, name")
-        .eq("account_id", profile.account_id);
+        .eq("account_id", accId);
 
       if (!teamProfiles || teamProfiles.length <= 1) { setLoading(false); return; }
 
-      // Get all outbound contacts with owner
-      const { data: contacts } = await supabase
-        .from("contacts")
-        .select("owner_user_id, workflow_status")
-        .eq("account_id", profile.account_id)
-        .eq("lead_type", "outbound");
+      // Use the RPC for independent per-member stats from contact_member_links
+      const { data: memberStatsData } = await supabase.rpc("get_member_link_stats", {
+        p_account_id: accId,
+        p_start_date: '2000-01-01',
+      });
+
+      const statsMap = new Map<string, any>();
+      (memberStatsData || []).forEach((s: any) => statsMap.set(s.user_id, s));
 
       const memberStats: MemberStats[] = teamProfiles.map(p => {
-        const myContacts = (contacts || []).filter((c: any) => c.owner_user_id === p.id);
-        const countStatus = (statuses: string[]) => myContacts.filter((c: any) => statuses.includes(c.workflow_status)).length;
-
-        const advanced = ['vernetzung_angenommen', 'erstnachricht_gesendet', 'fu1_gesendet', 'fu2_gesendet', 'fu3_gesendet', 'reagiert_warm', 'positiv_geantwortet', 'termin_gebucht', 'abgeschlossen'];
-        const messaged = ['erstnachricht_gesendet', 'fu1_gesendet', 'fu2_gesendet', 'fu3_gesendet', 'reagiert_warm', 'positiv_geantwortet', 'termin_gebucht', 'abgeschlossen'];
-
+        const s = statsMap.get(p.id);
         return {
           id: p.id,
           name: p.name || "Unbenannt",
-          connectionsAccepted: countStatus(advanced),
-          messagesSent: countStatus(messaged),
-          positiveReplies: countStatus(['positiv_geantwortet', 'termin_gebucht', 'abgeschlossen']),
-          appointmentsBooked: countStatus(['termin_gebucht', 'abgeschlossen']),
-          totalLeads: myContacts.length,
+          connectionsSent: Number(s?.connections_sent || 0),
+          messagesSent: Number(s?.messages_sent || 0),
+          positiveReplies: Number(s?.positive_replies || 0),
+          appointmentsBooked: Number(s?.appointments_booked || 0),
+          totalLeads: Number(s?.total_leads || 0),
         };
       }).sort((a, b) => b.appointmentsBooked - a.appointmentsBooked);
 
@@ -71,9 +70,7 @@ export default function TeamPerformance() {
   };
 
   if (loading) return null;
-  if (members.length <= 1) return null; // Don't show for solo users
-
-  const topPerformer = members[0];
+  if (members.length <= 1) return null;
 
   return (
     <Card>
