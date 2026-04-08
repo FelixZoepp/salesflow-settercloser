@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     event_data: { domain: host, slug, member_code: memberCode, member_user_id: contact.member_user_id },
     ip_address: clientIp,
     user_agent: userAgent,
-  }).then(() => {}).catch(e => console.error('tracking error:', e))
+  }).then(() => {}).then(null, (e: unknown) => console.error('tracking error:', e))
 
   // ── 6. Render ──
   const firstName = contact.first_name || ''
