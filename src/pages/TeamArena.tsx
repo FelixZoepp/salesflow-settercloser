@@ -619,6 +619,9 @@ export default function TeamArena() {
               <Button variant="ghost" size="icon" onClick={toggleChallengeActive} className="h-8 w-8">
                 <Pause className="w-4 h-4" />
               </Button>
+              <Button variant="ghost" size="icon" onClick={() => setShowHelp(true)} className="h-8 w-8">
+                <HelpCircle className="w-4 h-4" />
+              </Button>
             </div>
           </div>
 
