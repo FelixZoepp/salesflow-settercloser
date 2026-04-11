@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN!;
 const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID!;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY!;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,16 +12,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Auth
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ error: 'Nicht autorisiert' });
     }
 
-    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Nicht autorisiert' });
     }
@@ -32,8 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Domain und Account-ID erforderlich' });
     }
 
-    // Verify user is admin
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    // Verify admin via RLS-readable profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('account_id, role')
@@ -49,9 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Check domain status on Vercel
     const vercelRes = await fetch(
       `https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains/${encodeURIComponent(cleanDomain)}`,
-      {
-        headers: { Authorization: `Bearer ${VERCEL_API_TOKEN}` },
-      }
+      { headers: { Authorization: `Bearer ${VERCEL_API_TOKEN}` } }
     );
 
     if (!vercelRes.ok) {
@@ -65,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const vercelDomain = await vercelRes.json();
 
-    // Map Vercel status to our status
+    // Map Vercel status → our status
     const now = new Date().toISOString();
     let status: string;
     let verified = false;
@@ -85,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sslActive = true;
     }
 
-    // Update Supabase
+    // Update Supabase (RLS enforces admin check)
     const updateData: Record<string, any> = {
       status,
       verified,
@@ -114,6 +110,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Domain status error:', error);
-    return res.status(500).json({ error: 'Fehler bei der Domain-Überprüfung' });
+    return res.status(500).json({ error: 'Fehler bei der Domain-Überprüfung: ' + (error as Error).message });
   }
 }
