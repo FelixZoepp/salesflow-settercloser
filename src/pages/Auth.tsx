@@ -95,8 +95,8 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Erfolgreich eingeloggt!");
       } else if (mode === "forgot-password") {
-        // Always redirect to production domain for password reset
-        const resetRedirectUrl = `https://hochpreis-leads.de/auth#type=recovery`;
+        // Always redirect to the published reset page because preview auth links are blocked
+        const resetRedirectUrl = `https://hochpreis-leads.de/reset-password`;
         
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: resetRedirectUrl,
