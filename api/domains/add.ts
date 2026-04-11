@@ -117,6 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       domain: cleanDomain,
       vercel: vercelData,
       verification: vercelData.verification || [],
+      vercel_warning: vercelError || undefined,
     });
   } catch (error) {
     console.error('Domain add error:', error);
