@@ -1,18 +1,25 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/:path*",
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
       "has": [
         {
           "type": "host",
           "value": "^(?!(?:www\\.)?pitchfirst\\.io$)(?!.*\\.vercel\\.app$)(?!localhost)(?!127\\.0\\.0\\.1).+$"
         }
       ],
-      "destination": "/api/serve-lead-page"
+      "dest": "/api/serve-lead-page"
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
