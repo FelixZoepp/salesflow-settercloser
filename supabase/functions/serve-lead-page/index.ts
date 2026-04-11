@@ -71,10 +71,13 @@ Deno.serve(async (req) => {
 
   // Support /p/slug format (skip "p" prefix)
   let slug: string
+  let memberCode: string | undefined
   if (segments[0] === 'p' && segments.length >= 2) {
     slug = segments[1]
+    memberCode = segments[2] // optional member code after slug
   } else if (segments.length >= 1) {
     slug = segments[0]
+    memberCode = segments[1]
   } else {
     return html(notFoundPage(), 404)
   }
