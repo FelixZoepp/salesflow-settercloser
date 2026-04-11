@@ -70,9 +70,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const vercelData = await vercelRes.json();
 
-    if (!vercelRes.ok) {
-      const errMsg = vercelData.error?.message || 'Fehler beim Hinzufügen der Domain bei Vercel';
-      return res.status(vercelRes.status).json({ error: errMsg });
+    // Even if Vercel returns an error (e.g. domain already exists), 
+    // we still write the DB row below. Only log the Vercel error.
+    const vercelError = !vercelRes.ok
+      ? vercelData.error?.message || 'Vercel-Fehler'
+      : null;
+    if (vercelError) {
+      console.warn('Vercel domain add warning (continuing with DB write):', vercelError);
     }
 
     // Upsert in Supabase (RLS enforces admin check via policies)
