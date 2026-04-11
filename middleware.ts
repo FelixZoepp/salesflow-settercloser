@@ -13,6 +13,8 @@ export default function middleware(request: Request) {
   const isMainHost =
     hostname === 'pitchfirst.io' ||
     hostname === 'www.pitchfirst.io' ||
+    hostname === 'hochpreis-leads.de' ||
+    hostname === 'www.hochpreis-leads.de' ||
     hostname.endsWith('.vercel.app') ||
     hostname === 'localhost' ||
     hostname.startsWith('127.0.0.1') ||
