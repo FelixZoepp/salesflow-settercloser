@@ -1,26 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "^(?!(?:www\\.)?pitchfirst\\.io$)(?!.*\\.vercel\\.app$)(?!localhost)(?!127\\.0\\.0\\.1).+$"
-        }
-      ],
-      "destination": "/api/serve-lead-page"
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "^(?!(?:www\\.)?pitchfirst\\.io$)(?!.*\\.vercel\\.app$)(?!localhost)(?!127\\.0\\.0\\.1).+$"
-        }
-      ],
-      "destination": "/api/serve-lead-page"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
