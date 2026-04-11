@@ -1,145 +1,103 @@
 project_id = "dxdknkeexankgtkpeuvt"
 
-[functions.verify-domain]
-verify_jwt = true
-
-[functions.serve-lead-page]
-verify_jwt = false
-
-[functions.check-domain-allowed]
-verify_jwt = false
-
-[functions.download-from-drive]
-verify_jwt = false
-
-[functions.track-lead-event]
-verify_jwt = false
-
-[functions.power-dialer-log]
-verify_jwt = true
-
-[functions.power-dialer-next]
-verify_jwt = true
-
-[functions.create-checkout]
-verify_jwt = false
-
-[functions.create-team-slot-checkout]
-verify_jwt = true
-
-[functions.check-subscription]
-verify_jwt = true
-
-[functions.customer-portal]
-verify_jwt = true
-
-[functions.import-leads]
-verify_jwt = true
-
-[functions.realtime-objection-handler]
-verify_jwt = false
-
-[functions.realtime-session]
-verify_jwt = true
-
-[functions.summarize-call]
-verify_jwt = true
-
-[functions.transcribe-audio]
-verify_jwt = true
-
-[functions.analyze-objections]
-verify_jwt = true
-
-[functions.api-leads]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.track-video-view]
-verify_jwt = false
-
-[functions.update-lead-video]
-verify_jwt = false
-
-[functions.generate-heygen-video]
-verify_jwt = false
-
-[functions.list-heygen-voices]
-verify_jwt = false
-
-[functions.check-heygen-status]
-verify_jwt = false
-
-[functions.merge-videos]
-verify_jwt = true
-
-[functions.save-heygen-key]
-verify_jwt = true
-
-[functions.check-heygen-key]
-verify_jwt = false
-
-[functions.test-heygen-connection]
-verify_jwt = true
-
-[functions.get-heygen-key]
-verify_jwt = true
-
-[functions.list-invoices]
-verify_jwt = true
-
-[functions.send-email]
-verify_jwt = true
-
-[functions.track-email]
-verify_jwt = false
-
-[functions.process-pending-videos]
-verify_jwt = false
-
-[functions.telephony-webhook]
-verify_jwt = false
-
-[functions.twilio-token]
-verify_jwt = false
-
-[functions.twilio-voice]
-verify_jwt = false
-
-[functions.upgrade-subscription]
-verify_jwt = true
-
-[functions.get-checkout-customer]
-verify_jwt = false
-
-[functions.sync-contacts-external]
-verify_jwt = true
-
-[functions.sync-contact-single]
-verify_jwt = false
-
-[functions.sync-table-single]
-verify_jwt = false
-
-[functions.sync-all-tables]
-verify_jwt = true
-
-[functions.enrich-lead]
-verify_jwt = false
-
-[functions.process-email-campaign]
-verify_jwt = false
-
-[functions.manage-credits]
-verify_jwt = true
-
-[functions.search-leads]
-verify_jwt = false
-
-[functions.generate-html-block]
-verify_jwt = true
-
-[functions.update-campaign-video]
-verify_jwt = false
+[functions]
+  [functions.analyze-objections]
+    verify_jwt = true
+  [functions.api-leads]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-domain-allowed]
+    verify_jwt = false
+  [functions.check-heygen-key]
+    verify_jwt = false
+  [functions.check-heygen-status]
+    verify_jwt = false
+  [functions.check-subscription]
+    verify_jwt = true
+  [functions.create-checkout]
+    verify_jwt = false
+  [functions.create-team-slot-checkout]
+    verify_jwt = true
+  [functions.customer-portal]
+    verify_jwt = true
+  [functions.download-from-drive]
+    verify_jwt = false
+  [functions.enrich-lead]
+    verify_jwt = false
+  [functions.generate-heygen-video]
+    verify_jwt = false
+  [functions.generate-html-block]
+    verify_jwt = true
+  [functions.get-checkout-customer]
+    verify_jwt = false
+  [functions.get-heygen-key]
+    verify_jwt = true
+  [functions.import-leads]
+    verify_jwt = true
+  [functions.list-heygen-voices]
+    verify_jwt = false
+  [functions.list-invoices]
+    verify_jwt = true
+  [functions.manage-credits]
+    verify_jwt = true
+  [functions.merge-videos]
+    verify_jwt = true
+  [functions.power-dialer-log]
+    verify_jwt = true
+  [functions.power-dialer-next]
+    verify_jwt = true
+  [functions.process-email-campaign]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.process-pending-videos]
+    verify_jwt = false
+  [functions.realtime-objection-handler]
+    verify_jwt = false
+  [functions.realtime-session]
+    verify_jwt = true
+  [functions.save-heygen-key]
+    verify_jwt = true
+  [functions.search-leads]
+    verify_jwt = false
+  [functions.send-email]
+    verify_jwt = true
+  [functions.serve-lead-page]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.summarize-call]
+    verify_jwt = true
+  [functions.sync-all-tables]
+    verify_jwt = true
+  [functions.sync-contact-single]
+    verify_jwt = false
+  [functions.sync-contacts-external]
+    verify_jwt = true
+  [functions.sync-table-single]
+    verify_jwt = false
+  [functions.telephony-webhook]
+    verify_jwt = false
+  [functions.test-heygen-connection]
+    verify_jwt = true
+  [functions.track-email]
+    verify_jwt = false
+  [functions.track-lead-event]
+    verify_jwt = false
+  [functions.track-video-view]
+    verify_jwt = false
+  [functions.transcribe-audio]
+    verify_jwt = true
+  [functions.twilio-token]
+    verify_jwt = false
+  [functions.twilio-voice]
+    verify_jwt = false
+  [functions.update-campaign-video]
+    verify_jwt = false
+  [functions.update-lead-video]
+    verify_jwt = false
+  [functions.upgrade-subscription]
+    verify_jwt = true
+  [functions.verify-domain]
+    verify_jwt = true
