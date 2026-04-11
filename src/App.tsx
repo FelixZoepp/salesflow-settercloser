@@ -41,6 +41,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import Partner from "./pages/Partner";
 import LeadPagePreview from "./pages/LeadPagePreview";
+import ResetPassword from "./pages/ResetPassword";
 import LeadPagesFeature from "./pages/features/LeadPages";
 import KIVideosFeature from "./pages/features/KIVideos";
 import CRMFeature from "./pages/features/CRM";
@@ -144,6 +145,7 @@ const AppRoutes = () => (
     <Route path="/p/:slug/:memberCode" element={<VideoNote />} />
     <Route path="/p/:slug" element={<VideoNote />} />
     <Route path="/lp/:slug" element={<PublicLandingPage />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
     
     <Route path="/partner" element={<Partner />} />
     <Route path="/features/lead-seiten" element={<LeadPagesFeature />} />
@@ -211,6 +213,7 @@ const App = () => (
           <Route path="/p/:slug/:memberCode" element={<VideoNote />} />
           <Route path="/p/:slug" element={<VideoNote />} />
           <Route path="/lp/:slug" element={<PublicLandingPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* All other routes with auth context */}
           <Route path="/*" element={

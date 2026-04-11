@@ -34,9 +34,8 @@ serve(async (req: Request) => {
       },
     });
 
-    // Get the redirect URL from the request origin or use a default
-    const origin = req.headers.get("origin") || "https://pitchfirst.io";
-    const redirectTo = `${origin}/auth?type=recovery`;
+    // Always use the published reset page because preview auth links are blocked
+    const redirectTo = "https://hochpreis-leads.de/reset-password";
 
     console.log(`Redirect URL: ${redirectTo}`);
 
