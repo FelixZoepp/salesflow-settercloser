@@ -1412,13 +1412,13 @@ const Landing = () => {
               <h3 className="font-bold mb-2 md:mb-4 text-white text-sm md:text-base">Rechtliches</h3>
               <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
                 <li><a href="https://www.pitchfirst.io/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Datenschutz</a></li>
-                <li><a href="https://www.pitchfirst.io/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
+                <li><a href="https://zh-digitalisierung.de/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Impressum</a></li>
                 <li><a href="/agb" className="hover:text-primary transition-colors">AGB</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center text-xs md:text-sm text-muted-foreground gap-4">
-            <p className="text-center md:text-left">© 2025 pitchfirst.io. Eine Marke der Zoepp Media UG.</p>
+            <p className="text-center md:text-left">© 2025 pitchfirst.io. Eine Software der ZH Digitalisierung UG.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-primary transition-colors">
                 <Linkedin className="h-4 w-4 md:h-5 md:w-5" />
