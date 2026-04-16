@@ -415,7 +415,7 @@ const Layout = ({ children }: LayoutProps) => {
                 Impressum
               </a>
               <a 
-                href="https://www.content-leads.de/datenschutz" 
+                href="https://zh-digitalisierung.de/datenschutz" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-primary transition-colors"

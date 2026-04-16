@@ -79,7 +79,7 @@ const VideoNote = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [youtubeApiReady, setYoutubeApiReady] = useState(false);
-  const [legalLinks, setLegalLinks] = useState({ impressum: "https://content-leads.de/impressum", datenschutz: "https://content-leads.de/datenschutz" });
+  const [legalLinks, setLegalLinks] = useState({ impressum: "https://zh-digitalisierung.de/impressum", datenschutz: "https://zh-digitalisierung.de/datenschutz" });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const youtubePlayerRef = useRef<any>(null);
   const videoTrackingCleanupRef = useRef<null | (() => void)>(null);
@@ -185,8 +185,8 @@ const VideoNote = () => {
           .single();
         if (account) {
           setLegalLinks({
-            impressum: (account as any).impressum_url || "https://content-leads.de/impressum",
-            datenschutz: (account as any).datenschutz_url || "https://content-leads.de/datenschutz",
+            impressum: (account as any).impressum_url || "https://zh-digitalisierung.de/impressum",
+            datenschutz: (account as any).datenschutz_url || "https://zh-digitalisierung.de/datenschutz",
           });
         }
       }
