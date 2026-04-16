@@ -401,23 +401,28 @@ const Layout = ({ children }: LayoutProps) => {
           {children}
         </div>
         <footer className="hidden md:block py-4 px-6 border-t border-white/5 text-center text-muted-foreground text-sm">
-          <div className="flex justify-center gap-6">
-            <a 
-              href="https://zh-digitalisierung.de/impressum" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-colors"
-            >
-              Impressum
-            </a>
-            <a 
-              href="https://www.content-leads.de/datenschutz" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-colors"
-            >
-              Datenschutzerklärung
-            </a>
+          <div className="flex flex-col gap-3">
+            <div className="text-xs">
+              Eine Software der ZH Digitalisierung UG
+            </div>
+            <div className="flex justify-center gap-6">
+              <a 
+                href="https://zh-digitalisierung.de/impressum" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Impressum
+              </a>
+              <a 
+                href="https://www.content-leads.de/datenschutz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Datenschutzerklärung
+              </a>
+            </div>
           </div>
         </footer>
       </main>
