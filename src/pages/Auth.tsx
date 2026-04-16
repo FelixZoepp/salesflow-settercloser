@@ -266,7 +266,7 @@ const Auth = () => {
       <footer className="mt-8 text-center text-muted-foreground text-sm">
         <div className="flex justify-center gap-6">
           <a 
-            href="https://content-leads.de/impressum" 
+            href="https://zh-digitalisierung.de/impressum" 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
@@ -274,7 +274,7 @@ const Auth = () => {
             Impressum
           </a>
           <a 
-            href="https://content-leads.de/datenschutz" 
+            href="https://zh-digitalisierung.de/datenschutz" 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"

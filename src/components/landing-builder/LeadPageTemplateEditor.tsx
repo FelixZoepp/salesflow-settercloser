@@ -120,8 +120,8 @@ const defaultTemplate: LeadPageTemplate = {
   calendar_url: "",
   footer_company_name: "Content-Leads",
   footer_tagline: "Alle Rechte vorbehalten.",
-  footer_impressum_url: "https://content-leads.de/impressum",
-  footer_datenschutz_url: "https://content-leads.de/datenschutz"
+  footer_impressum_url: "https://zh-digitalisierung.de/impressum",
+  footer_datenschutz_url: "https://zh-digitalisierung.de/datenschutz"
 };
 
 interface LeadPageTemplateEditorProps {

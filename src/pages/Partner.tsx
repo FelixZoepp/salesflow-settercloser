@@ -315,12 +315,12 @@ const Partner = () => {
             </a>
             <div className="flex gap-6 text-sm text-gray-400">
               <a href="/" className="hover:text-white transition-colors">Startseite</a>
-              <a href="https://www.pitchfirst.io/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Datenschutz</a>
-              <a href="https://www.pitchfirst.io/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Impressum</a>
+              <a href="https://zh-digitalisierung.de/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Datenschutz</a>
+              <a href="https://zh-digitalisierung.de/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Impressum</a>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-white/10 text-center text-xs text-gray-500">
-            © 2025 pitchfirst.io. Eine Marke der Zoepp Media UG.
+            © 2025 pitchfirst.io. Eine Software der ZH Digitalisierung UG.
           </div>
         </div>
       </footer>
